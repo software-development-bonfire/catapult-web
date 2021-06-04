@@ -1,0 +1,16 @@
+/node_modules
+/public/css/
+/public/fonts/vendor/font-awesome/fontawesome-webfont.svg
+/public/js/
+/public/hot
+/public/mix-manifest.json
+/public/storage
+/storage/*.key
+/vendor
+.env
+.env.backup
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
