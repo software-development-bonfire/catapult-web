@@ -11,14 +11,26 @@
                         <span class="catapult-logo-letter--sub">atapult</span>
                     </div>
                 </div>
-                <label v-if="errors.hasOwnProperty('username')" class="text-danger">{{errors.username[0]}}</label>
-                <div class="form-group">
-                    <input type="text" v-model="form.login.username" class="form-control" placeholder="Username"
-                    :class="{'is-invalid': errors.hasOwnProperty('username')}">
+                <div align="center" v-if="errors.hasOwnProperty('username')">
+                    <label class="text-danger error-message">
+                        {{ errors.username[0] }}
+                    </label>
                 </div>
                 <div class="form-group">
-                    <input type="password" v-model="form.login.password" class="form-control" placeholder="Password"
-                    :class="{'is-invalid': errors.hasOwnProperty('username')}">
+                    <input
+                        type="text"
+                        v-model="form.login.username"
+                        class="form-control"
+                        placeholder="Username"
+                        :class="{ 'is-invalid': errors.hasOwnProperty('username') }">
+                </div>
+                <div class="form-group">
+                    <input
+                        type="password"
+                        v-model="form.login.password"
+                        class="form-control"
+                        placeholder="Password"
+                        :class="{ 'is-invalid': errors.hasOwnProperty('username') }">
                 </div>
                 <div>
                     <button class="button button-default button-login" type="submit">Login</button>
