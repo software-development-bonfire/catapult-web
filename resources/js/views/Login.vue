@@ -118,20 +118,4 @@
             background-color: lighten(#f1f2f6, 2%);
         }
     }
-    .catapult-logo {
-        font-family: 'Montserrat-Bold';
-        text-transform: uppercase;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        &-letter {
-            &--main {
-                color:#DE0900;
-                font-size: 32px;
-            }
-            &--sub {
-                font-size: 25px;
-            }
-        }
-    }
 </style>
