@@ -4,30 +4,50 @@
             <i class="fa fa-gears fa-2x"></i>
         </div>
         <div class="login-form shadow-sm">
-            <div class="form-group" align="center">
-                <div class="catapult-logo">
-                    <span class="catapult-logo-letter--main">C</span>
-                    <span class="catapult-logo-letter--sub">atapult</span>
+            <form @submit.prevent="login()">
+                <div class="form-group" align="center">
+                    <div class="catapult-logo">
+                        <span class="catapult-logo-letter--main">C</span>
+                        <span class="catapult-logo-letter--sub">atapult</span>
+                    </div>
                 </div>
-            </div>
-            <div class="form-group">
-                <input type="email" class="form-control" placeholder="Username">
-            </div>
-            <div class="form-group">
-                <input type="password" class="form-control" placeholder="Password">
-            </div>
-            <div>
-                <button class="button button-default button-login" @click="login">Login</button>
-            </div>
+                <div class="form-group">
+                    <input type="text" v-model="form.login.username" class="form-control" placeholder="Username">
+                </div>
+                <div class="form-group">
+                    <input type="password" v-model="form.login.password" class="form-control" placeholder="Password">
+                </div>
+                <div>
+                    <button class="button button-default button-login" type="submit">Login</button>
+                </div>
+            </form>
         </div>
     </div>
 </template>
 
 <script>
     export default {
+        created() {
+            
+        },
+        data() {
+            return {
+                form: {
+                    login: {
+                        username: '',
+                        password: '',
+                    }
+                }
+            }
+        },
         methods: {
             login() {
-                window.location.href = 'dashboard';
+                axios.post('/login', this.form.login)
+                .then(response => {
+                    if(response.data.username == this.form.login.username) {
+                        window.location.href = 'dashboard';
+                    }
+                })
             }
         }
     }
