@@ -15,7 +15,7 @@ use App\Http\Controllers\HomeController;
 
 
 Route::get('/', 'LoginController@index');
-Route::post('/login', 'LoginController@login');
+Route::post('/login', 'LoginController@login')->name('login');
 
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/dashboard', 'DashboardController@index');

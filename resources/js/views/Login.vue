@@ -11,11 +11,14 @@
                         <span class="catapult-logo-letter--sub">atapult</span>
                     </div>
                 </div>
+                <label v-if="errors.hasOwnProperty('username')" class="text-danger">{{errors.username[0]}}</label>
                 <div class="form-group">
-                    <input type="text" v-model="form.login.username" class="form-control" placeholder="Username">
+                    <input type="text" v-model="form.login.username" class="form-control" placeholder="Username"
+                    :class="{'is-invalid': errors.hasOwnProperty('username')}">
                 </div>
                 <div class="form-group">
-                    <input type="password" v-model="form.login.password" class="form-control" placeholder="Password">
+                    <input type="password" v-model="form.login.password" class="form-control" placeholder="Password"
+                    :class="{'is-invalid': errors.hasOwnProperty('username')}">
                 </div>
                 <div>
                     <button class="button button-default button-login" type="submit">Login</button>
@@ -37,7 +40,8 @@
                         username: '',
                         password: '',
                     }
-                }
+                },
+                errors: {},
             }
         },
         methods: {
@@ -45,8 +49,11 @@
                 axios.post('/login', this.form.login)
                 .then(response => {
                     if(response.data.username == this.form.login.username) {
+                        this.errors = {}
                         window.location.href = 'dashboard';
                     }
+                }).catch(error => {
+                    this.errors = error.response.data.errors
                 })
             }
         }
