@@ -16,7 +16,7 @@ class LoginController extends Controller
      */
     public function index()
     {
-        if(Auth::user()) {
+        if (Auth::user()) {
             return redirect('dashboard');
         }
         return view('auth.login');

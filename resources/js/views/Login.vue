@@ -60,7 +60,7 @@
             login() {
                 axios.post('/login', this.form.login)
                 .then(response => {
-                    if(response.data.username == this.form.login.username) {
+                    if (response.data.username == this.form.login.username) {
                         this.errors = {}
                         window.location.href = 'dashboard';
                     }
