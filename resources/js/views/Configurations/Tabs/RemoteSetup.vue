@@ -4,7 +4,9 @@
             <button class="button button--dark" @click="create">Add New</button>
         </div>
         <datatable
-            class="datatable--full-width"
+            class="
+                datatable--full-width
+                datatable--hoverable"
             :header-fields="table.header"
             :settings="table.settings"
             :table="table.values">
@@ -13,7 +15,8 @@
                     v-for="(tableData, tableDataIndex) in table.values.data" :key="tableDataIndex"
                     :values="tableData"
                     :settings="table.settings"
-                    :rowIndex="tableDataIndex">
+                    :rowIndex="tableDataIndex"
+                    v-on:row-click="openDetail(tableData, tableDataIndex)">
                     <td class="datatable-cell">
                         <span v-text="tableData.remote_setup_name"></span>
                     </td>
@@ -36,7 +39,7 @@
                         <span v-text="tableData.status"></span>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <i class="fa fa-times-circle fa-lg row-delete" @click="deleteRow(tableDataIndex)"></i>
+                        <i class="fa fa-times-circle fa-lg row-delete" @click.stop="deleteRow(tableDataIndex)"></i>
                     </td>
                 </table-row>
             </template>
@@ -52,35 +55,35 @@
             <template slot="content">
                 <div class="form-group">
                     <label>Remote Setup Name</label>
-                    <input type="text" class="form-control" v-model="form.remote_setup_name">
+                    <input type="text" class="form-control" v-model="form.values.remote_setup_name">
                 </div>
                 <div class="form-group">
                     <label>Remote Path</label>
-                    <input type="text" class="form-control" v-model="form.remote_path">
+                    <input type="text" class="form-control" v-model="form.values.remote_path">
                 </div>
                 <div class="form-group">
                     <label>Remote Server</label>
-                    <input type="text" class="form-control" v-model="form.remote_server">
+                    <input type="text" class="form-control" v-model="form.values.remote_server">
                 </div>
                 <div class="form-group">
                     <label>Remote IP</label>
-                    <input type="text" class="form-control" v-model="form.remote_ip">
+                    <input type="text" class="form-control" v-model="form.values.remote_ip">
                 </div>
                 <div class="form-group">
                     <label>Remote Port</label>
-                    <input type="text" class="form-control" v-model="form.remote_port">
+                    <input type="text" class="form-control" v-model="form.values.remote_port">
                 </div>
                 <div class="form-group">
                     <label>Remote User</label>
-                    <input type="text" class="form-control" v-model="form.remote_user">
+                    <input type="text" class="form-control" v-model="form.values.remote_user">
                 </div>
                 <div class="form-group">
                     <label>Remote Password</label>
-                    <input type="text" class="form-control" v-model="form.remote_password">
+                    <input type="password" class="form-control" v-model="form.values.remote_password">
                 </div>
                 <div class="form-group">
                     <label>Setup Status</label>
-                    <select class="form-control" v-model="form.status">
+                    <select class="form-control" v-model="form.values.status">
                         <option value="Active">Active</option>
                         <option value="Inactive">Inactive</option>
                     </select>
@@ -141,14 +144,17 @@
                     visible: false
                 },
                 form: {
-                    remote_setup_name: '',
-                    remote_path: '',
-                    remote_server: '',
-                    remote_ip: '',
-                    remote_port: '',
-                    remote_user: '',
-                    remote_password: '',
-                    status: 'Active',
+                    mode: 'create',
+                    values: {
+                        remote_setup_name: '',
+                        remote_path: '',
+                        remote_server: '',
+                        remote_ip: '',
+                        remote_port: '',
+                        remote_user: '',
+                        remote_password: '',
+                        status: 'Active',
+                    }
                 },
                 table: {
                     header: [
@@ -266,7 +272,9 @@
             },
 
             clearForm() {
-                this.form = {
+                this.form.mode = 'create';
+
+                this.form.values = {
                     remote_setup_name: '',
                     remote_path: '',
                     remote_server: '',
@@ -296,23 +304,63 @@
             },
 
             save() {
-                this.table.values.data.push({
-                    remote_setup_name: this.form.remote_setup_name,
-                    remote_path: this.form.remote_path,
-                    remote_server: this.form.remote_server,
-                    remote_ip: this.form.remote_ip,
-                    remote_port: this.form.remote_port,
-                    remote_user: this.form.remote_user,
-                    status: this.form.status
-                });
+                if (this.form.mode === 'create') {
+                    this.table.values.data.push({
+                        remote_setup_name: this.form.values.remote_setup_name,
+                        remote_path: this.form.values.remote_path,
+                        remote_server: this.form.values.remote_server,
+                        remote_ip: this.form.values.remote_ip,
+                        remote_port: this.form.values.remote_port,
+                        remote_user: this.form.values.remote_user,
+                        status: this.form.values.status
+                    });
 
-                this.dialog.visible = true;
-                this.dialog.status = 'success';
-                this.dialog.message = 'Successfully added a new Remote Setup!';
-                this.dialog.ok.function = () => {
-                    this.dialog.visible = false;
-                    this.modal.visible = false;
-                };
+                    this.dialog.visible = true;
+                    this.dialog.status = 'success';
+                    this.dialog.message = 'Successfully added a new Remote Setup!';
+                    this.dialog.ok.function = () => {
+                        this.dialog.visible = false;
+                        this.modal.visible = false;
+                    };
+                } else {
+                    let index = this.form.values.index;
+
+                    this.table.values.data[index] = {
+                        remote_setup_name: this.form.values.remote_setup_name,
+                        remote_path: this.form.values.remote_path,
+                        remote_server: this.form.values.remote_server,
+                        remote_ip: this.form.values.remote_ip,
+                        remote_port: this.form.values.remote_port,
+                        remote_user: this.form.values.remote_user,
+                        status: this.form.values.status
+                    }
+
+                    this.dialog.visible = true;
+                    this.dialog.status = 'success';
+                    this.dialog.message = 'Successfully updated the Remote Setup!';
+                    this.dialog.ok.function = () => {
+                        this.dialog.visible = false;
+                        this.modal.visible = false;
+                    };
+                }
+            },
+
+            openDetail(data, index) {
+                this.form.mode = 'update';
+
+                this.form.values = {
+                    index: index,
+                    remote_setup_name: data.remote_setup_name,
+                    remote_path: data.remote_path,
+                    remote_server: data.remote_server,
+                    remote_ip: data.remote_ip,
+                    remote_port: data.remote_port,
+                    remote_user: data.remote_user,
+                    remote_password: '',
+                    status: data.status
+                }
+
+                this.modal.visible = true;
             }
         }
     }

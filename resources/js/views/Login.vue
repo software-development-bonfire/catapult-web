@@ -5,8 +5,8 @@
         </div>
         <div class="login-form shadow-sm">
             <form @submit.prevent="login()">
-                <div class="form-group" align="center">
-                    <div class="catapult-logo">
+                <div class="form-group">
+                    <div class="catapult-logo justify-content-center">
                         <span class="catapult-logo-letter--main">C</span>
                         <span class="catapult-logo-letter--sub">atapult</span>
                     </div>

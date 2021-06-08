@@ -4,7 +4,9 @@
             <button class="button button--dark" @click="create">Add New</button>
         </div>
         <datatable
-            class="datatable--full-width"
+            class="
+                datatable--full-width
+                datatable--hoverable"
             :header-fields="table.header"
             :settings="table.settings"
             :table="table.values">
@@ -13,7 +15,8 @@
                     v-for="(tableData, tableDataIndex) in table.values.data" :key="tableDataIndex"
                     :values="tableData"
                     :settings="table.settings"
-                    :rowIndex="tableDataIndex">
+                    :rowIndex="tableDataIndex"
+                    v-on:row-click="openDetail(tableData, tableDataIndex)">
                     <td class="datatable-cell">
                         <span v-text="tableData.catapult_db_setup_name"></span>
                     </td>
@@ -33,7 +36,7 @@
                         <span v-text="tableData.status"></span>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <i class="fa fa-times-circle fa-lg row-delete" @click="deleteRow(tableDataIndex)"></i>
+                        <i class="fa fa-times-circle fa-lg row-delete" @click.stop="deleteRow(tableDataIndex)"></i>
                     </td>
                 </table-row>
             </template>
@@ -49,31 +52,31 @@
             <template slot="content">
                 <div class="form-group">
                     <label>Catapul DB Setup Name</label>
-                    <input type="text" class="form-control" v-model="form.catapult_db_setup_name">
+                    <input type="text" class="form-control" v-model="form.values.catapult_db_setup_name">
                 </div>
                 <div class="form-group">
                     <label>IP Address</label>
-                    <input type="text" class="form-control" v-model="form.ip_address">
+                    <input type="text" class="form-control" v-model="form.values.ip_address">
                 </div>
                 <div class="form-group">
                     <label>Port</label>
-                    <input type="text" class="form-control" v-model="form.port">
+                    <input type="text" class="form-control" v-model="form.values.port">
                 </div>
                 <div class="form-group">
                     <label>DB Name</label>
-                    <input type="text" class="form-control" v-model="form.db_name">
+                    <input type="text" class="form-control" v-model="form.values.db_name">
                 </div>
                 <div class="form-group">
                     <label>DB User</label>
-                    <input type="text" class="form-control" v-model="form.db_user">
+                    <input type="text" class="form-control" v-model="form.values.db_user">
                 </div>
                 <div class="form-group">
                     <label>DB Password</label>
-                    <input type="password" class="form-control" v-model="form.db_password">
+                    <input type="password" class="form-control" v-model="form.values.db_password">
                 </div>
                 <div class="form-group">
                     <label>Setup Status</label>
-                    <select class="form-control" v-model="form.status">
+                    <select class="form-control" v-model="form.values.status">
                         <option value="Active">Active</option>
                         <option value="Inactive">Inactive</option>
                     </select>
@@ -134,13 +137,16 @@
                     visible: false
                 },
                 form: {
-                    catapult_db_setup_name: '',
-                    ip_address: '',
-                    port: '',
-                    db_name: '',
-                    db_user: '',
-                    db_password: '',
-                    status: 'Active',
+                    mode: 'create',
+                    values: {
+                        catapult_db_setup_name: '',
+                        ip_address: '',
+                        port: '',
+                        db_name: '',
+                        db_user: '',
+                        db_password: '',
+                        status: 'Active',
+                    }
                 },
                 table: {
                     header: [
@@ -248,7 +254,9 @@
             },
 
             clearForm() {
-                this.form = {
+                this.form.mode = 'create';
+
+                this.form.values = {
                     catapult_db_setup_name: '',
                     ip_address: '',
                     port: '',
@@ -277,22 +285,60 @@
             },
 
             save() {
-                this.table.values.data.push({
-                    catapult_db_setup_name: this.form.catapult_db_setup_name,
-                    ip_address: this.form.ip_address,
-                    port: this.form.port,
-                    db_name: this.form.db_name,
-                    db_user: this.form.db_user,
-                    status: this.form.status
-                });
+                if (this.form.mode === 'create') {
+                    this.table.values.data.push({
+                        catapult_db_setup_name: this.form.values.catapult_db_setup_name,
+                        ip_address: this.form.values.ip_address,
+                        port: this.form.values.port,
+                        db_name: this.form.values.db_name,
+                        db_user: this.form.values.db_user,
+                        status: this.form.values.status
+                    });
 
-                this.dialog.visible = true;
-                this.dialog.status = 'success';
-                this.dialog.message = 'Successfully added a new Catapult DB Setup!';
-                this.dialog.ok.function = () => {
-                    this.dialog.visible = false;
-                    this.modal.visible = false;
-                };
+                    this.dialog.visible = true;
+                    this.dialog.status = 'success';
+                    this.dialog.message = 'Successfully added a new Catapult DB Setup!';
+                    this.dialog.ok.function = () => {
+                        this.dialog.visible = false;
+                        this.modal.visible = false;
+                    };
+                } else {
+                    let index = this.form.values.index;
+
+                    this.table.values.data[index] = {
+                        catapult_db_setup_name: this.form.values.catapult_db_setup_name,
+                        ip_address: this.form.values.ip_address,
+                        port: this.form.values.port,
+                        db_name: this.form.values.db_name,
+                        db_user: this.form.values.db_user,
+                        status: this.form.values.status
+                    }
+
+                    this.dialog.visible = true;
+                    this.dialog.status = 'success';
+                    this.dialog.message = 'Successfully updated the Catapult DB Setup!';
+                    this.dialog.ok.function = () => {
+                        this.dialog.visible = false;
+                        this.modal.visible = false;
+                    };
+                }
+            },
+
+            openDetail(data, index) {
+                this.form.mode = 'update';
+
+                this.form.values = {
+                    index: index,
+                    catapult_db_setup_name: data.catapult_db_setup_name,
+                    ip_address: data.ip_address,
+                    port: data.port,
+                    db_name: data.db_name,
+                    db_user: data.db_user,
+                    db_password: '',
+                    status: data.status
+                }
+
+                this.modal.visible = true;
             }
         }
     }

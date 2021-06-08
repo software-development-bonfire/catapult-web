@@ -21,5 +21,4 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/dashboard', 'DashboardController@index');
 });
 
-Route::get('/{any_path?}', [HomeController::class, 'index'])->where('any_path', '(.*)');
-
+Route::get('/configurations', 'ConfigurationsController@index');
