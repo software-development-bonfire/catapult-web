@@ -2,21 +2,26 @@
 
 namespace App;
 
+use App\Traits\BidObserverTrait;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
     use Notifiable;
-
+    use SoftDeletes;
+    use BidObserverTrait;
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
+    protected $primaryKey = 'bid';
+    
     protected $fillable = [
-        'name', 'email', 'password',
+        'name', 'username', 'password', 'full_name'
     ];
 
     /**

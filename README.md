@@ -11,6 +11,7 @@ php artisan key:generate
 php artisan make:schema
 php artisan migrate:install
 php artisan migrate
+php artisan seed
 yarn install
 yarn run dev
 php artisan serve

@@ -1,10 +1,10 @@
 /node_modules
-/public/css/
-/public/fonts/vendor/font-awesome/fontawesome-webfont.svg
-/public/js/
 /public/hot
-/public/mix-manifest.json
 /public/storage
+/public/fonts/vendor
+/public/js
+/public/css
+/public/mix-manifest.json
 /storage/*.key
 /vendor
 .env

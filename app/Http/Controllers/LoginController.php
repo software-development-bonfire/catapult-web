@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
@@ -13,7 +16,27 @@ class LoginController extends Controller
      */
     public function index()
     {
-        return view('login');
+        if (Auth::user()) {
+            return redirect('dashboard');
+        }
+        return view('auth.login');
+    }
+
+    /**
+     * Authenticate user if success
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function login(Request $request)
+    {
+        $credentials = $request->only('username', 'password');
+        if (Auth::attempt($credentials)) {
+            return response()->json(Auth::user(), 200); 
+        }
+        throw ValidationException::withMessages([
+            'username' => ['The provided credentials are incorrect.']
+        ]);
     }
 
     /**
@@ -80,5 +103,15 @@ class LoginController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->middleware('guest')->except('logout');
     }
 }
