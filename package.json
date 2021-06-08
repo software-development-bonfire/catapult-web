@@ -24,6 +24,7 @@
         "vue-template-compiler": "^2.6.13"
     },
     "dependencies": {
-        "font-awesome": "^4.7.0"
+        "font-awesome": "^4.7.0",
+        "vue-inputmask": "^0.2.1"
     }
 }
