@@ -22,6 +22,12 @@ class LoginController extends Controller
         return view('auth.login');
     }
 
+    /**
+     * Authenticate user if success
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
     public function login(Request $request)
     {
         $credentials = $request->only('username', 'password');
