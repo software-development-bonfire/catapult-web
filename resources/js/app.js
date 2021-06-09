@@ -8,6 +8,10 @@ require('./bootstrap');
 import axios from 'axios'
 window.Vue = require('vue');
 
+import VueInputMask from "vue-inputmask";
+
+Vue.use(VueInputMask.default);
+
 /**
  * The following block of code may be used to automatically register your
  * Vue components. It will recursively scan this directory for the Vue
@@ -19,9 +23,13 @@ window.Vue = require('vue');
 // const files = require.context('./', true, /\.vue$/i);
 // files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default));
 
+Vue.component('top-navigation', require('./layouts/TopNavigation.vue').default);
+Vue.component('side-navigation', require('./layouts/SideNavigation.vue').default);
+Vue.component('footer-panel', require('./layouts/FooterPanel.vue').default);
 Vue.component('core', require('./views/Core.vue').default);
 Vue.component('login', require('./views/Login.vue').default);
 Vue.component('dashboard', require('./views/Dashboard.vue').default);
+Vue.component('configurations', require('./views/Configurations/List.vue').default);
 /**
  * Next, we will create a fresh Vue application instance and attach it to
  * the page. Then, you may begin adding components to this application

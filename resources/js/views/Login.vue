@@ -5,8 +5,8 @@
         </div>
         <div class="login-form shadow-sm">
             <form @submit.prevent="login()">
-                <div class="form-group" align="center">
-                    <div class="catapult-logo">
+                <div class="form-group">
+                    <div class="catapult-logo justify-content-center">
                         <span class="catapult-logo-letter--main">C</span>
                         <span class="catapult-logo-letter--sub">atapult</span>
                     </div>
@@ -116,22 +116,6 @@
         font-size: 18px;
         &:hover {
             background-color: lighten(#f1f2f6, 2%);
-        }
-    }
-    .catapult-logo {
-        font-family: 'Montserrat-Bold';
-        text-transform: uppercase;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        &-letter {
-            &--main {
-                color:#DE0900;
-                font-size: 32px;
-            }
-            &--sub {
-                font-size: 25px;
-            }
         }
     }
 </style>

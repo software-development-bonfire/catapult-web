@@ -1,16 +1,62 @@
 html, body, #app {
     height: 100%;
 }
+
 body {
+    overflow: hidden;
     &.login {
         padding-top: 0px;
     }
 }
+
 #app {
     display: flex;
     flex-direction: column;
     flex: 1;
 }
+
+.catapult-logo {
+    font-family: 'Montserrat-Bold';
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    &-letter {
+        &--main {
+            color:#DE0900;
+            font-size: 32px;
+        }
+        &--sub {
+            font-size: 25px;
+        }
+    }
+}
+
 .page {
+    display: flex;
     flex: 1;
+    overflow: hidden;
+}
+
+.main-content-title {
+    padding: 10px;
+    background-color: #fff;
+    text-align: center;
+    font-size: 18px;
+    text-transform: uppercase;
+    font-weight: bold;
+    border-bottom: 1px #ced6e0 solid;
+}
+
+.main-content-container {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.module-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
 }

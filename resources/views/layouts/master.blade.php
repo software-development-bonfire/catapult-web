@@ -19,8 +19,18 @@
     <body>
         <div id="app">
             <core>
+                <top-navigation></top-navigation>
                 <div class="page">
-                    @yield('content')
+                    <side-navigation
+                        page="@yield('page-link')">
+                    </side-navigation>
+                    <div class="main-content-container">
+                        <div class="main-content-title">
+                            @yield('title')
+                        </div>
+                        @yield('content')
+                        <footer-panel></footer-panel>
+                    </div>
                 </div>
             </core>
         </div>
