@@ -16,13 +16,23 @@
                         Admin <i class="fa fa-user fa-lg"></i>
                     </a>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="/">Logout</a>
+                        <a class="dropdown-item" @click="logout()" href="/">Logout</a>
                     </div>
                 </li>
             </ul>
         </div>
     </nav>
 </template>
+
+<script>
+    export default {
+        methods: {
+            logout() {
+                axios.post('/logout')
+            }
+        }
+    }
+</script>
 
 <style lang="scss" scoped>
     .top-navigation {
