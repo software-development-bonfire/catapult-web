@@ -7,11 +7,33 @@
             <h3>Batch Syncing</h3>
             <div class="form-group">
                 <label>Set the entry limit per batch syncing (POS TO CDIS PROCESS)</label>
-                <input type="text" class="form-control w-50">
+                <input
+                    type="text"
+                    class="form-control w-25 text-left"
+                    v-model.number="form.values.pos_to_cdis_entry_limit"
+                    v-mask="{
+                        alias: 'integer',
+                        autoGroup: true,
+                        digitsOptional: false,
+                        showMaskOnHover: false,
+                        showMaskOnFocus : false,
+                        min: 0
+                    }">
             </div>
             <div class="form-group">
                 <label>Set the entry limit per batch syncing (CDIS TO POS PROCESS)</label>
-                <input type="text" class="form-control w-50">
+                <input
+                    type="text"
+                    class="form-control w-25 text-left"
+                    v-model.number="form.values.cdis_to_pos_entry_limit"
+                    v-mask="{
+                        alias: 'integer',
+                        autoGroup: true,
+                        digitsOptional: false,
+                        showMaskOnHover: false,
+                        showMaskOnFocus : false,
+                        min: 0
+                    }">
             </div>
             <h3>Syncing Prioritization</h3>
             <div class="w-50" align="center">
@@ -56,6 +78,12 @@
         },
         data() {
             return {
+                form: {
+                    values: {
+                        pos_to_cdis_entry_limit: 0,
+                        cdis_to_pos_entry_limit: 0
+                    }
+                },
                 ranking: [
                     { name: "Transaction" },
                     { name: "Zread" },
