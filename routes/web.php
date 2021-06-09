@@ -23,5 +23,6 @@ Route::group(['middleware' => 'auth'], function () {
 });
 
 Route::get('/configurations', 'ConfigurationsController@index');
+Route::get('/syncing-setup', 'SyncingSetupController@index');
 
 Route::get('/{any_path?}', [HomeController::class, 'index'])->where('any_path', '(.*)');

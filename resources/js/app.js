@@ -30,6 +30,7 @@ Vue.component('core', require('./views/Core.vue').default);
 Vue.component('login', require('./views/Login.vue').default);
 Vue.component('dashboard', require('./views/Dashboard.vue').default);
 Vue.component('configurations', require('./views/Configurations/List.vue').default);
+Vue.component('syncing-setup', require('./views/SyncingSetup/List.vue').default);
 /**
  * Next, we will create a fresh Vue application instance and attach it to
  * the page. Then, you may begin adding components to this application
