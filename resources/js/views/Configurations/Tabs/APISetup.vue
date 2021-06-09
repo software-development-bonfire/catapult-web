@@ -39,12 +39,18 @@
             </template>
             <template slot="content">
                 <div class="form-group">
-                    <label>API Setup Name</label>
+                    <label>API Setup Name <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.api_setup_name">
+                    <label class="text-danger error-message m-0">
+                        API Setup is required.
+                    </label>
                 </div>
                 <div class="form-group">
-                    <label>End Point</label>
+                    <label>End Point <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.end_point">
+                    <label class="text-danger error-message m-0">
+                        End Point is required.
+                    </label>
                 </div>
                 <div class="form-group">
                     <label>Setup Status</label>

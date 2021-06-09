@@ -15,21 +15,30 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Host</td>
+                            <td>Host <span class="required">*</span></td>
                             <td>
-                                <input type="text" class="form-control">
+                                <input type="text" class="form-control" v-model="form.values.host">
+                                <label class="text-danger error-message m-0">
+                                    Host is required.
+                                </label>
                             </td>
                         </tr>
                         <tr>
-                            <td>Client ID</td>
+                            <td>Client ID <span class="required">*</span></td>
                             <td>
-                                <input type="text" class="form-control">
+                                <input type="text" class="form-control" v-model="form.values.client_id">
+                                <label class="text-danger error-message m-0">
+                                    Client ID is required.
+                                </label>
                             </td>
                         </tr>
                         <tr>
-                            <td>Product Key</td>
+                            <td>Product Key <span class="required">*</span></td>
                             <td>
-                                <input type="text" class="form-control">
+                                <input type="text" class="form-control" v-model="form.values.product_key">
+                                <label class="text-danger error-message m-0">
+                                    Product Key is required.
+                                </label>
                             </td>
                         </tr>
                     </tbody>
@@ -61,6 +70,13 @@
         },
         data() {
             return {
+                form: {
+                    values: {
+                        host: '',
+                        client_id: '',
+                        product_key: '',
+                    }
+                },
                 dialog: {
                     visible: false,
                     type: '',

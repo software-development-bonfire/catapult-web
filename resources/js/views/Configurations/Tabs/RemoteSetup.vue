@@ -54,32 +54,53 @@
             </template>
             <template slot="content">
                 <div class="form-group">
-                    <label>Remote Setup Name</label>
+                    <label>Remote Setup Name <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.remote_setup_name">
+                    <label class="text-danger error-message m-0">
+                        Remote Setup Name is required.
+                    </label>
                 </div>
                 <div class="form-group">
-                    <label>Remote Path</label>
+                    <label>Remote Path <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.remote_path">
+                    <label class="text-danger error-message m-0">
+                        Remote Path is required.
+                    </label>
                 </div>
                 <div class="form-group">
-                    <label>Remote Server</label>
+                    <label>Remote Server <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.remote_server">
+                    <label class="text-danger error-message m-0">
+                        Remote Server is required.
+                    </label>
                 </div>
                 <div class="form-group">
-                    <label>Remote IP</label>
+                    <label>Remote IP <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.remote_ip">
+                    <label class="text-danger error-message m-0">
+                        Remote IP is required.
+                    </label>
                 </div>
                 <div class="form-group">
-                    <label>Remote Port</label>
+                    <label>Remote Port <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.remote_port">
+                    <label class="text-danger error-message m-0">
+                        Remote Port is required.
+                    </label>
                 </div>
                 <div class="form-group">
-                    <label>Remote User</label>
+                    <label>Remote User <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.remote_user">
+                    <label class="text-danger error-message m-0">
+                        Remote User is required.
+                    </label>
                 </div>
                 <div class="form-group">
-                    <label>Remote Password</label>
+                    <label>Remote Password <span class="required">*</span></label>
                     <input type="password" class="form-control" v-model="form.values.remote_password">
+                    <label class="text-danger error-message m-0">
+                        Remote Password is required.
+                    </label>
                 </div>
                 <div class="form-group">
                     <label>Setup Status</label>

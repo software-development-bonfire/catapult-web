@@ -51,28 +51,46 @@
             </template>
             <template slot="content">
                 <div class="form-group">
-                    <label>Catapul DB Setup Name</label>
+                    <label>Catapult DB Setup Name <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.catapult_db_setup_name">
+                    <label class="text-danger error-message m-0">
+                        Catapult DB Setup is required.
+                    </label>
                 </div>
                 <div class="form-group">
-                    <label>IP Address</label>
+                    <label>IP Address <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.ip_address">
+                    <label class="text-danger error-message m-0">
+                        IP Address is required.
+                    </label>
                 </div>
                 <div class="form-group">
-                    <label>Port</label>
+                    <label>Port <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.port">
+                    <label class="text-danger error-message m-0">
+                        Port is required.
+                    </label>
                 </div>
                 <div class="form-group">
-                    <label>DB Name</label>
+                    <label>DB Name <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.db_name">
+                    <label class="text-danger error-message m-0">
+                        DB Name is required.
+                    </label>
                 </div>
                 <div class="form-group">
-                    <label>DB User</label>
+                    <label>DB User <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.db_user">
+                    <label class="text-danger error-message m-0">
+                        DB User is required.
+                    </label>
                 </div>
                 <div class="form-group">
-                    <label>DB Password</label>
+                    <label>DB Password <span class="required">*</span></label>
                     <input type="password" class="form-control" v-model="form.values.db_password">
+                    <label class="text-danger error-message m-0">
+                        DB Password is required.
+                    </label>
                 </div>
                 <div class="form-group">
                     <label>Setup Status</label>
