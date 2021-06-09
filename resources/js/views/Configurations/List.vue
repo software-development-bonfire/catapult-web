@@ -1,6 +1,6 @@
 <template>
     <div class="module-container">
-        <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <ul class="nav nav-tabs nav-tabs--black" id="myTab" role="tablist">
             <li class="nav-item">
                 <a class="nav-link active" id="licensing-tab" data-toggle="tab" href="#licensing" role="tab" aria-controls="licensing" aria-selected="true">
                     Licensing
