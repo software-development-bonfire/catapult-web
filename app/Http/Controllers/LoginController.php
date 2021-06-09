@@ -39,6 +39,12 @@ class LoginController extends Controller
         ]);
     }
 
+    /**
+     * Logout authenticated user
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
     public function logout(Request $request)
     {
         Auth::logout();
