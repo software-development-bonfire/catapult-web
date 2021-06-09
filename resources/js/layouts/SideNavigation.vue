@@ -50,7 +50,7 @@
             </a>
             <div class="list-group collapse show" aria-expanded="true" id="admin-settings">
                 <a
-                    href="#"
+                    href="/syncing-setup"
                     class="list-group-item"
                     :class="page === 'syncing-setup' ? 'active' : ''">
                     Syncing Setup

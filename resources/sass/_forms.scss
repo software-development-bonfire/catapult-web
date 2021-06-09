@@ -30,3 +30,11 @@ ul.nav-tabs {
         }
     }
 }
+
+.box-row {
+    &--white {
+        background-color: #fff;
+        border-top: 1px #ced6e0 solid;
+        border-bottom: 1px #ced6e0 solid;
+    }
+}
