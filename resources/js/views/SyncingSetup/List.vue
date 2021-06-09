@@ -1,7 +1,7 @@
 <template>
     <div class="module-container">
         <div class="box-row box-row--white p-1" align="right">
-            <button class="button button--light module-action-button">Save</button>
+            <button class="button button--light module-action-button" @click="save">Save</button>
         </div>
         <div class="overflow-auto p-4">
             <h3>Batch Syncing</h3>
@@ -56,15 +56,27 @@
                 </draggable>
             </div>
         </div>
+        <dialog-box
+            :status="dialog.status"
+            :type="dialog.type"
+            :visible.sync="dialog.visible"
+            @ok="dialog.ok.function"
+            @cancel="dialog.cancel.function">
+            <template slot="message">
+                <span v-text="dialog.message"></span>
+            </template>
+        </dialog-box>
     </div>
 </template>
 
 <script>
     import Draggable from 'vuedraggable';
+    import DialogBox from '../../components/Message/DialogBox.vue';
 
     export default {
         components: {
-            Draggable
+            Draggable,
+            DialogBox
         },
         computed: {
             dragOptions() {
@@ -78,6 +90,21 @@
         },
         data() {
             return {
+                dialog: {
+                    visible: false,
+                    type: '',
+                    message: '',
+                    ok: {
+                        function: () => {},
+                        function: () => {}
+                    },
+                    cancel: {
+                        function: () => {
+                            this.dialog.visible = false;
+                        },
+                        function: () => {}
+                    },
+                },
                 form: {
                     values: {
                         pos_to_cdis_entry_limit: 0,
@@ -92,6 +119,16 @@
                     { name: "Cash Drawer" },
                     { name: "Audit Trail" },
                 ],
+            }
+        },
+        methods: {
+            save() {
+                this.dialog.visible = true;
+                this.dialog.status = 'success';
+                this.dialog.message = 'Syncing Setup saved successfully!';
+                this.dialog.ok.function = () => {
+                    this.dialog.visible = false;
+                };
             }
         }
     }
