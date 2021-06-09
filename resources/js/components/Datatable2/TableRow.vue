@@ -101,7 +101,7 @@
                 if (this.rowType === 'view') {
                     this.rowType = 'edit';
 
-                    if (!this.rowEnabling) {
+                    if (! this.rowEnabling) {
                         row.querySelectorAll('input, button, select, checkbox, radio').forEach(function(element) {
                             element.disabled = false;
                         });
@@ -175,7 +175,7 @@
                     this.rowType = 'view';
                     this.isActive = false;
 
-                    if (!this.rowEnabling) {
+                    if (! this.rowEnabling) {
                         row.querySelectorAll('input, button, select, checkbox, radio').forEach(function(element) {
                             element.disabled = true;
                         });
