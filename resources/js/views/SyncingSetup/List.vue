@@ -5,6 +5,10 @@
         </div>
         <div class="overflow-auto p-4">
             <h3>Batch Syncing</h3>
+            <label>
+                NOTE: The entered value will apply on the 5 mins Interval setting ONLY. Limit for the other intervals will be automatically determined by the system multiplier<br>
+                <span class="text-indent">(Ex. 5mins interval = 60 limit, 10mins interval = 120 limit and so on.)</span>
+            </label>
             <div class="form-group">
                 <label>Set the entry limit per batch syncing (POS TO CDIS PROCESS)</label>
                 <input
@@ -17,7 +21,8 @@
                         digitsOptional: false,
                         showMaskOnHover: false,
                         showMaskOnFocus : false,
-                        min: 0
+                        min: 60,
+                        max: 1000
                     }">
             </div>
             <div class="form-group">
@@ -32,10 +37,11 @@
                         digitsOptional: false,
                         showMaskOnHover: false,
                         showMaskOnFocus : false,
-                        min: 0
+                        min: 60,
+                        max: 1000
                     }">
             </div>
-            <h3>Syncing Prioritization</h3>
+            <h3 class="mt-4">Syncing Prioritization</h3>
             <div class="w-50" align="center">
                 <label>NOTE: Set the Syncing priority ranking of data entries from POS</label>
             </div>
@@ -107,8 +113,8 @@
                 },
                 form: {
                     values: {
-                        pos_to_cdis_entry_limit: 0,
-                        cdis_to_pos_entry_limit: 0
+                        pos_to_cdis_entry_limit: 60,
+                        cdis_to_pos_entry_limit: 60
                     }
                 },
                 ranking: [
@@ -149,5 +155,8 @@
             padding: 5px 10px;
             font-size: 14px;
         }
+    }
+    .text-indent {
+        margin-left: 40px;
     }
 </style>
