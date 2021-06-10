@@ -6,9 +6,19 @@
 
 require('./bootstrap');
 import axios from 'axios'
-window.Vue = require('vue');
-
+import Vue from 'vue';
+import VueInternationalization from 'vue-i18n';
+import Locale from './vue-i18n-locales.generated';
 import VueInputMask from "vue-inputmask";
+
+Vue.use(VueInternationalization);
+
+const lang = document.documentElement.lang.substr(0, 2);
+
+const i18n = new VueInternationalization({
+    locale: lang,
+    messages: Locale
+});
 
 Vue.use(VueInputMask.default);
 
@@ -39,4 +49,5 @@ Vue.component('syncing-setup', require('./views/SyncingSetup/List.vue').default)
 
 const app = new Vue({
     el: '#app',
+    i18n
 });

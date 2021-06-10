@@ -33,7 +33,7 @@
                         :class="{ 'is-invalid': errors.hasOwnProperty('username') }">
                 </div>
                 <div>
-                    <button class="button button-default button-login" type="submit">Login</button>
+                    <button class="button button-default button-login" type="submit">{{ $t('label.login') }}</button>
                 </div>
             </form>
         </div>
