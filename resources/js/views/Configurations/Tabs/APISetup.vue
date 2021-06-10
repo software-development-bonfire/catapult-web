@@ -7,7 +7,8 @@
             class="datatable--hoverable"
             :header-fields="table.header"
             :settings="table.settings"
-            :table="table.values">
+            :table="table.values"
+            v-on:paginate="paginate">
             <template slot="content">
                 <table-row
                     v-for="(tableData, tableDataIndex) in table.values.data" :key="tableDataIndex"
@@ -16,7 +17,7 @@
                     :rowIndex="tableDataIndex"
                     v-on:row-click="openDetail(tableData, tableDataIndex)">
                     <td class="datatable-cell">
-                        <span v-text="tableData.api_setup_name"></span>
+                        <span v-text="tableData.name"></span>
                     </td>
                     <td class="datatable-cell">
                         <span v-text="tableData.end_point"></span>
@@ -25,7 +26,7 @@
                         <span v-text="tableData.status"></span>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <i class="fa fa-times-circle fa-lg row-delete" @click.stop="deleteRow(tableDataIndex)"></i>
+                        <i class="fa fa-times-circle fa-lg row-delete" @click.stop="deleteRow(tableDataIndex, tableData)"></i>
                     </td>
                 </table-row>
             </template>
@@ -40,16 +41,18 @@
             <template slot="content">
                 <div class="form-group">
                     <label>API Setup Name <span class="required">*</span></label>
-                    <input type="text" class="form-control" v-model="form.values.api_setup_name">
-                    <label class="text-danger error-message m-0">
-                        API Setup is required.
+                    <input type="text" class="form-control" v-model="form.values.name"
+                    :class="{ 'is-invalid': errors.hasOwnProperty('name') }">
+                    <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('name')">
+                        {{errors.name[0]}}
                     </label>
                 </div>
                 <div class="form-group">
                     <label>End Point <span class="required">*</span></label>
-                    <input type="text" class="form-control" v-model="form.values.end_point">
-                    <label class="text-danger error-message m-0">
-                        End Point is required.
+                    <input type="text" class="form-control" v-model="form.values.end_point"
+                    :class="{ 'is-invalid': errors.hasOwnProperty('end_point') }">
+                    <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('end_point')">
+                        {{errors.end_point[0]}}
                     </label>
                 </div>
                 <div class="form-group">
@@ -93,9 +96,14 @@
             Modal,
             DialogBox
         },
+        mounted() {
+            this.paginate()
+        },
         mixins: [ Util ],
         data() {
             return {
+                errors: {},
+                filters: {},
                 dialog: {
                     visible: false,
                     type: '',
@@ -117,7 +125,8 @@
                 form: {
                     mode: 'create',
                     values: {
-                        api_setup_name: '',
+                        id: '',
+                        name: '',
                         end_point: '',
                         status: 'Active',
                     }
@@ -125,7 +134,7 @@
                 table: {
                     header: [
                         {
-                            name: "api_setup_name",
+                            name: "name",
                             label: "API Setup Name",
                             width: '200'
                         },
@@ -148,27 +157,27 @@
                     values: {
                         data: [
                             {
-                                api_setup_name: 'Transactions',
+                                name: 'Transactions',
                                 end_point: 'ftp://pathto POS Transactions',
                                 status: 'Active',
                             },
                             {
-                                api_setup_name: 'Transactions',
+                                name: 'Transactions',
                                 end_point: 'ftp://pathto POS Transactions',
                                 status: 'Active',
                             },
                             {
-                                api_setup_name: 'Transactions',
+                                name: 'Transactions',
                                 end_point: 'ftp://pathto POS Transactions',
                                 status: 'Active',
                             },
                             {
-                                api_setup_name: 'Transactions',
+                                name: 'Transactions',
                                 end_point: 'ftp://pathto POS Transactions',
                                 status: 'Active',
                             },
                             {
-                                api_setup_name: 'Transactions',
+                                name: 'Transactions',
                                 end_point: 'ftp://pathto POS Transactions',
                                 status: 'Active',
                             }
@@ -192,26 +201,42 @@
             }
         },
         methods: {
+            paginate(page = 1) {
+                if (this.$root.isLoading) return;
+                axios.get('api-setup'+'?page='+page, {
+                    params: {
+                        itemsPerPage: this.table.settings.itemsPerPage,
+                    }
+                })
+                .then(response => {
+                   this.table.values.data = response.data.data.data
+                   this.table.values.meta  = response.data.data.meta
+
+                })
+            },
+
             create() {
                 this.clearForm();
                 this.modal.visible = true;
             },
 
             clearForm() {
+                this.errors = {}
                 this.form.mode = 'create';
 
                 this.form.values = {
-                    api_setup_name: '',
+                    name: '',
                     end_point: '',
                     status: 'Active',
                 }
             },
 
-            deleteRow(index) {
+            deleteRow(index, data) {
                 this.dialog.visible = true;
                 this.dialog.status = 'confirm';
                 this.dialog.message = 'Do you want to remove this data?';
                 this.dialog.ok.function = () => {
+                    axios.delete(`api-setup/${data.id}`)
                     this.table.values.data.splice(index, 1);
                     this.dialog.status = 'success';
                     this.dialog.message = 'Successfully removed the data!';
@@ -226,44 +251,60 @@
 
             save() {
                 if (this.form.mode === 'create') {
-                    this.table.values.data.push({
-                        api_setup_name: this.form.api_setup_name,
-                        end_point: this.form.end_point,
-                        status: this.form.status
-                    });
+                    
+                    axios.post('api-setup', this.form.values)
+                    .then(response => {
+                        this.table.values.data.push({
+                            name: this.form.name,
+                            end_point: this.form.end_point,
+                            status: this.form.status
+                        });
 
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = 'Successfully added a new API Setup!';
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                        this.modal.visible = false;
-                    };
+                        this.dialog.visible = true;
+                        this.dialog.status = 'success';
+                        this.dialog.message = 'Successfully added a new API Setup!';
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                            this.modal.visible = false;
+                        };
+                        this.errors = {}
+                    }).catch(error => {
+                        this.errors = error.response.data.errors
+                    })
                 } else {
                     let index = this.form.values.index;
 
-                    this.table.values.data[index] = {
-                        api_setup_name: this.form.values.api_setup_name,
-                        end_point: this.form.values.end_point,
-                        status: this.form.values.status
-                    }
 
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = 'Successfully updated the API Setup!';
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                        this.modal.visible = false;
-                    };
+                    axios.put(`api-setup/${this.form.values.id}`, this.form.values)
+                    .then(response => {
+                        this.table.values.data[index] = {
+                            name: this.form.values.name,
+                            end_point: this.form.values.end_point,
+                            status: this.form.values.status
+                        }
+
+                        this.dialog.visible = true;
+                        this.dialog.status = 'success';
+                        this.dialog.message = 'Successfully updated the API Setup!';
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                            this.modal.visible = false;
+                        };
+                        this.errors = {}
+                    }).catch(error => {
+                        this.errors = error.response.data.errors
+                    })
                 }
             },
 
             openDetail(data, index) {
+                this.errors = {}
                 this.form.mode = 'update';
 
                 this.form.values = {
+                    id: data.id,
                     index: index,
-                    api_setup_name: data.api_setup_name,
+                    name: data.name,
                     end_point: data.end_point,
                     status: data.status
                 }
