@@ -255,14 +255,15 @@
                     axios.post('api-setup', this.form.values)
                     .then(response => {
                         this.table.values.data.push({
-                            name: this.form.name,
-                            end_point: this.form.end_point,
-                            status: this.form.status
+                            id: response.data.data.id,
+                            name: this.form.values.name,
+                            end_point: this.form.values.end_point,
+                            status: this.form.values.status
                         });
 
                         this.dialog.visible = true;
                         this.dialog.status = 'success';
-                        this.dialog.message = 'Successfully added a new API Setup!';
+                        this.dialog.message = response.data.message;
                         this.dialog.ok.function = () => {
                             this.dialog.visible = false;
                             this.modal.visible = false;
@@ -277,7 +278,9 @@
 
                     axios.put(`api-setup/${this.form.values.id}`, this.form.values)
                     .then(response => {
+                        
                         this.table.values.data[index] = {
+                            id: this.form.values.id,
                             name: this.form.values.name,
                             end_point: this.form.values.end_point,
                             status: this.form.values.status
@@ -285,7 +288,7 @@
 
                         this.dialog.visible = true;
                         this.dialog.status = 'success';
-                        this.dialog.message = 'Successfully updated the API Setup!';
+                        this.dialog.message = response.data.message;
                         this.dialog.ok.function = () => {
                             this.dialog.visible = false;
                             this.modal.visible = false;

@@ -334,17 +334,19 @@
                     axios.post('catapult-db-setup', this.form.values)
                     .then(response => {
                         this.table.values.data.push({
+                            id: response.data.data.id,
                             name: this.form.values.name,
                             host: this.form.values.host,
                             port: this.form.values.port,
                             db_name: this.form.values.db_name,
                             username: this.form.values.username,
-                            status: this.form.values.status
+                            status: this.form.values.status,
+                            password: this.form.values.password
                         });
 
                         this.dialog.visible = true;
                         this.dialog.status = 'success';
-                        this.dialog.message = 'Successfully added a new Catapult DB Setup!';
+                        this.dialog.message = response.data.message;
                         this.dialog.ok.function = () => {
                             this.dialog.visible = false;
                             this.modal.visible = false;
@@ -360,16 +362,18 @@
                     axios.put(`catapult-db-setup/${this.form.values.id}`, this.form.values)
                     .then(response => {
                         this.table.values.data[index] = {
+                            id: this.form.values.id,
                             name: this.form.values.name,
                             host: this.form.values.host,
                             port: this.form.values.port,
                             db_name: this.form.values.db_name,
                             username: this.form.values.username,
+                            password: this.form.values.password,
                             status: this.form.values.status
                         }
                         this.dialog.visible = true;
                         this.dialog.status = 'success';
-                        this.dialog.message = 'Successfully updated the Catapult DB Setup!';
+                        this.dialog.message = response.data.message;
                         this.dialog.ok.function = () => {
                             this.dialog.visible = false;
                             this.modal.visible = false;
@@ -393,7 +397,7 @@
                     port: data.port,
                     db_name: data.db_name,
                     username: data.username,
-                    password: '',
+                    password: data.password,
                     status: data.status
                 }
 

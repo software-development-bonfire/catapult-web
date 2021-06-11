@@ -41,6 +41,7 @@ class RemoteSetupTransformer extends TransformerAbstract
             'host' => (string) $model->host,
             'port' => (string) $model->port,
             'username' => (string) $model->username,
+            'password' => (string) $model->password,
             'status' => (string) $model->status == 1 ? 'Active' : 'Inactive',
             'created_by' => $model->created_by,
             'updated_by' => $model->updated_by,

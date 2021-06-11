@@ -17,18 +17,18 @@ class ApiSetupService
     public function store($data)
     {
         try {
-            $catapult_db_setup = ApiSetup::create([
-                'name' => $data['name'],
-                'end_point' => $data['end_point'],
-                'status' => $data['status'] == 'Active' ? 1: 0,
-                'created_by' => Auth::user()->bid,
-            ]);
+            $data['status'] = $data['status'] == 'Active' ? 1: 0;
+            $data['created_by'] = Auth::user()->bid;
+            $api_setup = ApiSetup::create($data);
             
-            if ($catapult_db_setup) {
-                return ['message' => Lang::get('success.api_setup_created')];
+            if ($api_setup) {
+                return [
+                    'data' => $api_setup,
+                    'message' => Lang::get('success.api_setup_created')
+                ];
             }
         } catch (\Throwable $th) {
-            return ['message' => $th->getMessage()];
+            return response()->json(['message' => 'error.api_setup_failed_create'], 500);
         }
     }
 
@@ -42,6 +42,7 @@ class ApiSetupService
     public function update($data, $id)
     {
         try {
+            $data['status'] = $data['status'] == 'Active' ? 1: 0;
             $update = ApiSetup::findOrFail($id)->update($data);
 
             if ($update) {

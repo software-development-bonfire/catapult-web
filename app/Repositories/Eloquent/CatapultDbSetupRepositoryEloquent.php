@@ -51,6 +51,7 @@ class CatapultDbSetupRepositoryEloquent extends BaseRepository implements Catapu
                 'port',
                 'db_name',
                 'username',
+                'password',
                 'status',
             ])
             ->orderBy('id', 'ASC');

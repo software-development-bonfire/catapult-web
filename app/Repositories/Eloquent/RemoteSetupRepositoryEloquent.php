@@ -48,7 +48,8 @@ class RemoteSetupRepositoryEloquent extends BaseRepository implements RemoteSetu
                 'host',
                 'port',
                 'username',
-                'status',
+                'password',
+                'status'
             ])
             ->orderBy('id', 'ASC');
 

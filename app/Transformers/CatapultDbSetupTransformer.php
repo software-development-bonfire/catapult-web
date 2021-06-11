@@ -40,6 +40,7 @@ class CatapultDbSetupTransformer extends TransformerAbstract
             'port' => (string) $model->port,
             'db_name' => (string) $model->db_name,
             'username' => (string) $model->username,
+            'password' => (string) $model->password,
             'status' => (string) $model->status == 1 ? 'Active' : 'Inactive',
             'created_by' => $model->created_by,
             'updated_by' => $model->updated_by,

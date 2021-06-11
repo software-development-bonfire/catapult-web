@@ -356,18 +356,19 @@
                     axios.post('remote-setup', this.form.values)
                     .then(response => {
                         this.table.values.data.push({
+                            id: response.data.data.id,
                             name: this.form.values.name,
                             path: this.form.values.path,
                             server: this.form.values.server,
                             host: this.form.values.host,
                             port: this.form.values.port,
                             username: this.form.values.username,
+                            password: this.form.values.password,
                             status: this.form.values.status
                         });
-
                         this.dialog.visible = true;
                         this.dialog.status = 'success';
-                        this.dialog.message = 'Successfully added a new Remote Setup!';
+                        this.dialog.message = response.data.message;
                         this.dialog.ok.function = () => {
                             this.dialog.visible = false;
                             this.modal.visible = false;
@@ -383,12 +384,14 @@
                     axios.put(`remote-setup/${this.form.values.id}`, this.form.values)
                     .then(response => {
                         this.table.values.data[index] = {
+                            id: this.form.values.id,
                             name: this.form.values.name,
                             path: this.form.values.path,
                             server: this.form.values.server,
                             host: this.form.values.host,
                             port: this.form.values.port,
                             username: this.form.values.username,
+                            password: this.form.values.password,
                             status: this.form.values.status
                         }
 
@@ -419,7 +422,7 @@
                     host: data.host,
                     port: data.port,
                     username: data.username,
-                    password: '',
+                    password: data.password,
                     status: data.status
                 }
 

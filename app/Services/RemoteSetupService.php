@@ -17,20 +17,15 @@ class RemoteSetupService
     public function store($data)
     {
         try {
-            $remote_setup = RemoteSetup::create([
-                'name' => $data['name'],
-                'path' => $data['path'],
-                'server' => $data['server'],
-                'host' => $data['host'],
-                'port' => $data['port'],
-                'username' => $data['username'],
-                'password' => $data['password'],
-                'status' => $data['status'] == 'Active' ? 1: 0,
-                'created_by' => Auth::user()->bid,
-            ]);
+            $data['status'] = $data['status'] == 'Active' ? 1: 0;
+            $data['created_by'] = Auth::user()->bid;
+            $remote_setup = RemoteSetup::create($data);
     
             if ($remote_setup) {
-                return ['message' => Lang::get('success.remote_setup_created')];
+                return [
+                    'data' => $remote_setup,
+                    'message' => Lang::get('success.remote_setup_created')
+                ];
             }
         } catch (\Throwable $th) {
             return ['message' => Lang::get('error.remote_setup_failed_create')];
@@ -47,6 +42,7 @@ class RemoteSetupService
     public function update($data, $id)
     {
         try {
+            $data['status'] = $data['status'] == 'Active' ? 1: 0;
             if ($data['password'] === null) {
                 unset($data['password']);
             }
