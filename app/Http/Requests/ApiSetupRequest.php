@@ -25,7 +25,11 @@ class ApiSetupRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => ['required', 'max:45', Rule::unique('api_setups')->ignore($this->id)],
+            'name' => ['required', 'max:45', Rule::unique('api_setups')->ignore($this->id)->where(
+                function ($query) {
+                    $query->where('deleted_at', null);
+                }
+            )],
             'end_point' => 'required|max:128',
             'status' => 'required',
         ];

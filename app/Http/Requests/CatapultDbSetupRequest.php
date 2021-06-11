@@ -25,7 +25,11 @@ class CatapultDbSetupRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => ['required', 'max:45', Rule::unique('catapult_db_setups')->ignore($this->id)],
+            'name' => ['required', 'max:45', Rule::unique('catapult_db_setups')->ignore($this->id)->where(
+                function ($query) {
+                    $query->where('deleted_at', null);
+                }
+            )],
             'host' => 'required|max:45',
             'port' => 'required|max:45',
             'db_name' => 'required|max:45',

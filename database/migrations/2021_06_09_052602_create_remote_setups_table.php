@@ -18,7 +18,7 @@ class CreateRemoteSetupsTable extends Migration
 		Schema::create('remote_setups', function(Blueprint $table) {
             $table->bigIncrements('id');
 			$table->unsignedBigInteger('bid');
-			$table->string('name', 45)->unique();
+			$table->string('name', 45);
 			$table->string('path', 45);
 			$table->string('server', 45);
 			$table->string('host', 45);

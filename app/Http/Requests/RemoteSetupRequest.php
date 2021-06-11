@@ -25,7 +25,11 @@ class RemoteSetupRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => ['required', 'max:45', Rule::unique('remote_setups')->ignore($this->id)],
+            'name' => ['required', 'max:45', Rule::unique('remote_setups')->ignore($this->id)->where(
+                function ($query) {
+                    $query->where('deleted_at', null);
+                }
+            )],
             'path' => 'required|max:45',
             'server' => 'required|max:45',
             'host' => 'required|max:45',
