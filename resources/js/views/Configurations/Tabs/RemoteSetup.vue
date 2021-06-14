@@ -358,17 +358,7 @@
                     
                     axios.post('remote-setup', this.form.values)
                     .then(response => {
-                        this.table.values.data.push({
-                            bid: response.data.data.bid,
-                            name: this.form.values.name,
-                            path: this.form.values.path,
-                            server: this.form.values.server,
-                            host: this.form.values.host,
-                            port: this.form.values.port,
-                            username: this.form.values.username,
-                            password: this.form.values.password,
-                            status: this.form.values.status
-                        });
+                        this.paginate()
                         this.dialog.visible = true;
                         this.dialog.status = 'success';
                         this.dialog.message = response.data.message;

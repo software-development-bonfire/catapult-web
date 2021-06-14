@@ -257,13 +257,7 @@
                     
                     axios.post('api-setup', this.form.values)
                     .then(response => {
-                        this.table.values.data.push({
-                            bid: response.data.data.bid,
-                            name: this.form.values.name,
-                            end_point: this.form.values.end_point,
-                            status: this.form.values.status
-                        });
-
+                        this.paginate()
                         this.dialog.visible = true;
                         this.dialog.status = 'success';
                         this.dialog.message = response.data.message;

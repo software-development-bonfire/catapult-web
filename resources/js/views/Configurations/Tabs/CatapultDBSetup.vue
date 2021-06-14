@@ -336,17 +336,7 @@
                     
                     axios.post('catapult-db-setup', this.form.values)
                     .then(response => {
-                        this.table.values.data.push({
-                            bid: response.data.data.bid,
-                            name: this.form.values.name,
-                            host: this.form.values.host,
-                            port: this.form.values.port,
-                            db_name: this.form.values.db_name,
-                            username: this.form.values.username,
-                            status: this.form.values.status,
-                            password: this.form.values.password
-                        });
-
+                        this.paginate()
                         this.dialog.visible = true;
                         this.dialog.status = 'success';
                         this.dialog.message = response.data.message;
