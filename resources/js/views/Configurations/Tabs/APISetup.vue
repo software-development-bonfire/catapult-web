@@ -23,7 +23,8 @@
                         <span v-text="tableData.end_point"></span>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <span v-text="tableData.status"></span>
+                        <span v-if="tableData.status == 1">Active</span>
+                        <span v-if="tableData.status == 0">Inactive</span>
                     </td>
                     <td class="datatable-cell" align="center">
                         <i class="fa fa-times-circle fa-lg row-delete" @click.stop="deleteRow(tableDataIndex, tableData)"></i>
@@ -58,8 +59,8 @@
                 <div class="form-group">
                     <label>Setup Status</label>
                     <select class="form-control" v-model="form.values.status">
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
+                        <option :value="1">Active</option>
+                        <option :value="0">Inactive</option>
                     </select>
                 </div>
             </template>
@@ -128,7 +129,7 @@
                         id: '',
                         name: '',
                         end_point: '',
-                        status: 'Active',
+                        status: 1,
                     }
                 },
                 table: {
@@ -227,7 +228,7 @@
                 this.form.values = {
                     name: '',
                     end_point: '',
-                    status: 'Active',
+                    status: 1,
                 }
             },
 
@@ -236,13 +237,15 @@
                 this.dialog.status = 'confirm';
                 this.dialog.message = 'Do you want to remove this data?';
                 this.dialog.ok.function = () => {
-                    axios.delete(`api-setup/${data.id}`)
-                    this.table.values.data.splice(index, 1);
-                    this.dialog.status = 'success';
-                    this.dialog.message = 'Successfully removed the data!';
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                    };
+                    axios.delete(`api-setup/${data.bid}`)
+                    .then(response => {
+                        this.table.values.data.splice(index, 1);
+                        this.dialog.status = 'success';
+                        this.dialog.message = response.data.message;
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                        };
+                    })
                 };
                 this.dialog.cancel.function = () => {
                     this.dialog.visible = false;
@@ -255,7 +258,7 @@
                     axios.post('api-setup', this.form.values)
                     .then(response => {
                         this.table.values.data.push({
-                            id: response.data.data.id,
+                            bid: response.data.data.bid,
                             name: this.form.values.name,
                             end_point: this.form.values.end_point,
                             status: this.form.values.status
@@ -275,12 +278,11 @@
                 } else {
                     let index = this.form.values.index;
 
-
-                    axios.put(`api-setup/${this.form.values.id}`, this.form.values)
+                    axios.put(`api-setup/${this.form.values.bid}`, this.form.values)
                     .then(response => {
                         
                         this.table.values.data[index] = {
-                            id: this.form.values.id,
+                            bid: this.form.values.bid,
                             name: this.form.values.name,
                             end_point: this.form.values.end_point,
                             status: this.form.values.status
@@ -301,12 +303,13 @@
             },
 
             openDetail(data, index) {
+                console.log(data)
                 this.errors = {}
                 this.form.mode = 'update';
 
                 this.form.values = {
-                    id: data.id,
                     index: index,
+                    bid: data.bid,
                     name: data.name,
                     end_point: data.end_point,
                     status: data.status

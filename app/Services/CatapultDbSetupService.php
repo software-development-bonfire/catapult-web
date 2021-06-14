@@ -17,7 +17,6 @@ class CatapultDbSetupService
     public function store($data)
     {
         try {
-            $data['status'] = $data['status'] == 'Active' ? 1: 0;
             $data['created_by'] = Auth::user()->bid;
             $catapult_db_setup = CatapultDbSetup::create($data);
     
@@ -39,15 +38,15 @@ class CatapultDbSetupService
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update($data, $id)
+    public function update($data, $bid)
     {
         try {
-            $data['status'] = $data['status'] == 'Active' ? 1: 0;
             if ($data['password'] === null) {
                 unset($data['password']);
             }
+            $data['updated_by'] = Auth::user()->bid;
 
-            $update = CatapultDbSetup::findOrFail($id)->update($data);
+            $update = CatapultDbSetup::where('bid' ,$bid)->update($data);
 
             if ($update) {
                 return ['message' => Lang::get('success.catapult_db_setup_updated')];
@@ -60,8 +59,7 @@ class CatapultDbSetupService
 
     public function destroy($id)
     {
-        CatapultDbSetup::findOrFail($id)->delete();
-        return ['message' => Lang::get('success.catapult_db_setup_deleted')];
+        CatapultDbSetup::where('bid', $id)->delete();
     }
 }
 

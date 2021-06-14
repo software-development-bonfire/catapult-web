@@ -17,7 +17,6 @@ class RemoteSetupService
     public function store($data)
     {
         try {
-            $data['status'] = $data['status'] == 'Active' ? 1: 0;
             $data['created_by'] = Auth::user()->bid;
             $remote_setup = RemoteSetup::create($data);
     
@@ -39,15 +38,15 @@ class RemoteSetupService
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update($data, $id)
+    public function update($data, $bid)
     {
         try {
-            $data['status'] = $data['status'] == 'Active' ? 1: 0;
             if ($data['password'] === null) {
                 unset($data['password']);
             }
+            $data['updated_by'] = Auth::user()->bid;
 
-            $update = RemoteSetup::findOrFail($id)->update($data);
+            $update = RemoteSetup::where('bid', $bid)->update($data);
 
             if ($update) {
                 return ['message' => Lang::get('success.remote_setup_updated')];
@@ -58,10 +57,9 @@ class RemoteSetupService
         }
     }
 
-    public function destroy($id)
+    public function destroy($bid)
     {
-        RemoteSetup::findOrFail($id)->delete();
-        return ['message' => Lang::get('success.remote_setup_deleted')];
+        RemoteSetup::where('bid', $bid)->delete();
     }
 }
 

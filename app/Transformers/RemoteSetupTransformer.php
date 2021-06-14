@@ -33,7 +33,6 @@ class RemoteSetupTransformer extends TransformerAbstract
     public function transform(RemoteSetup $model)
     {
         return [
-            'id' => (int) $model->id,
             'bid' => (int) $model->bid,
             'name' => (string) $model->name,
             'path' => (string) $model->path,
@@ -42,7 +41,7 @@ class RemoteSetupTransformer extends TransformerAbstract
             'port' => (string) $model->port,
             'username' => (string) $model->username,
             'password' => (string) $model->password,
-            'status' => (string) $model->status == 1 ? 'Active' : 'Inactive',
+            'status' => (int) $model->status,
             'created_by' => $model->created_by,
             'updated_by' => $model->updated_by,
             'created_at' => $model->created_at,

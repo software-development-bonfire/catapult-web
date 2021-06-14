@@ -17,7 +17,6 @@ class ApiSetupService
     public function store($data)
     {
         try {
-            $data['status'] = $data['status'] == 'Active' ? 1: 0;
             $data['created_by'] = Auth::user()->bid;
             $api_setup = ApiSetup::create($data);
             
@@ -39,25 +38,24 @@ class ApiSetupService
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update($data, $id)
+    public function update($data, $bid)
     {
+        // dd($data, $bid);
         try {
-            $data['status'] = $data['status'] == 'Active' ? 1: 0;
-            $update = ApiSetup::findOrFail($id)->update($data);
+            $data['updated_by'] = Auth::user()->bid;
+            $update = ApiSetup::where('bid', $bid)->update($data);
 
             if ($update) {
                 return ['message' => Lang::get('success.api_setup_updated')];
             }
         } catch (\Throwable $th) {
             return ['message' => Lang::get('error.api_setup_failed_update')];
-
         }
     }
 
-    public function destroy($id)
+    public function destroy($bid)
     {
-        ApiSetup::findOrFail($id)->delete();
-        return ['message' => Lang::get('success.api_setup_deleted')];
+        ApiSetup::where('bid', $bid)->delete();
     }
 }
 

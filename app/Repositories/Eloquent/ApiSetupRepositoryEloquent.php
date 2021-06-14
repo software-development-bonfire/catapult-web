@@ -44,7 +44,6 @@ class ApiSetupRepositoryEloquent extends BaseRepository implements ApiSetupRepos
     {
         $this->model = $this->model
             ->select([
-                'id',
                 'bid',
                 'name',
                 'end_point',

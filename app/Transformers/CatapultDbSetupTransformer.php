@@ -33,7 +33,6 @@ class CatapultDbSetupTransformer extends TransformerAbstract
     public function transform(CatapultDbSetup $model)
     {
         return [
-            'id' => (int) $model->id,
             'bid' => (int) $model->bid,
             'name' => (string) $model->name,
             'host' => (string) $model->host,
@@ -41,7 +40,7 @@ class CatapultDbSetupTransformer extends TransformerAbstract
             'db_name' => (string) $model->db_name,
             'username' => (string) $model->username,
             'password' => (string) $model->password,
-            'status' => (string) $model->status == 1 ? 'Active' : 'Inactive',
+            'status' => (int) $model->status,
             'created_by' => $model->created_by,
             'updated_by' => $model->updated_by,
             'created_at' => $model->created_at,

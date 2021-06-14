@@ -44,7 +44,6 @@ class CatapultDbSetupRepositoryEloquent extends BaseRepository implements Catapu
     {
         $this->model = $this->model
             ->select([
-                'id',
                 'bid',
                 'name',
                 'host',

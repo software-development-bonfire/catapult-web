@@ -7,6 +7,7 @@ use App\Repositories\Contracts\CatapultDbSetupRepository;
 use Illuminate\Http\Request;
 use App\Services\CatapultDBSetupService;
 use App\Transformers\CatapultDbSetupTransformer;
+use Illuminate\Support\Facades\Lang;
 
 class CatapultDbSetupController extends Controller
 {
@@ -76,12 +77,23 @@ class CatapultDbSetupController extends Controller
 
     /**
      * Remove the specified resource from storage.
-     *
+    *
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($bid)
     {
-        return $this->catapultDbSetupService->destroy($id);
+        try {
+            $this->catapultDbSetupService->destroy($bid);
+        } catch (\Throwable $th) {
+            return $this->errorResponse(
+                [],
+                Lang::get('catapult_db_setup_failed_deleted')
+            );
+        }
+        return $this->successfulResponse(
+            [],
+            Lang::get('success.catapult_db_setup_deleted')
+        );
     }
 }

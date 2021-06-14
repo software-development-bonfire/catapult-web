@@ -7,6 +7,7 @@ use App\Repositories\Contracts\ApiSetupRepository;
 use App\Services\ApiSetupService;
 use App\Transformers\ApiSetupTransformer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Lang;
 
 class ApiSetupController extends Controller
 {
@@ -67,9 +68,9 @@ class ApiSetupController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(ApiSetupRequest $request, $id)
+    public function update(ApiSetupRequest $request, $bid)
     {
-        return $this->apiSetupService->update($request->validated(), $id);
+        return $this->apiSetupService->update($request->validated(), $bid);
     }
 
     /**
@@ -78,8 +79,19 @@ class ApiSetupController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($bid)
     {
-        return $this->apiSetupService->destroy($id);
+        try {
+            $this->apiSetupService->destroy($bid);
+        } catch (\Throwable $th) {
+            return $this->errorResponse(
+                [],
+                Lang::get('api_setup_failed_deleted')
+            );
+        }
+        return $this->successfulResponse(
+            [],
+            Lang::get('success.api_setup_deleted')
+        );
     }
 }

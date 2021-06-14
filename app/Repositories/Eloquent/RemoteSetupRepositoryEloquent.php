@@ -40,7 +40,6 @@ class RemoteSetupRepositoryEloquent extends BaseRepository implements RemoteSetu
     {
         $this->model = $this->model
             ->select([
-                'id',
                 'bid',
                 'name',
                 'path',

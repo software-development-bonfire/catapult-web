@@ -8,6 +8,7 @@ use App\Repositories\Contracts\RemoteSetupRepository;
 use App\Services\RemoteSetupService;
 use App\Transformers\RemoteSetupTransformer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Lang;
 
 class RemoteSetupController extends Controller
 {
@@ -78,8 +79,19 @@ class RemoteSetupController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($bid)
     {
-        return $this->remoteSetupService->destroy($id);
+        try {
+            $this->remoteSetupService->destroy($bid);
+        } catch (\Throwable $th) {
+            return $this->errorResponse(
+                [],
+                Lang::get('remote_setup_failed_deleted')
+            );
+        }
+        return $this->successfulResponse(
+            [],
+            Lang::get('success.remote_setup_deleted')
+        );
     }
 }
