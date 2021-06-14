@@ -21,7 +21,7 @@
                         type="text"
                         v-model="form.login.username"
                         class="form-control"
-                        placeholder="Username"
+                        :placeholder="$t('label.username')"
                         :class="{ 'is-invalid': errors.hasOwnProperty('username') }">
                 </div>
                 <div class="form-group">
@@ -29,7 +29,7 @@
                         type="password"
                         v-model="form.login.password"
                         class="form-control"
-                        placeholder="Password"
+                        :placeholder="$t('label.password')"
                         :class="{ 'is-invalid': errors.hasOwnProperty('username') }">
                 </div>
                 <div>

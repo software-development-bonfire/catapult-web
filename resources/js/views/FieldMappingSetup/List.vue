@@ -1,0 +1,200 @@
+<template>
+    <div class="module-container">
+        <div class="box-row box-row--white p-1" align="right">
+            <button class="button button--light module-action-button" @click="create">{{ $t('label.add_new') }}</button>
+        </div>
+        <div class="container-fluid">
+            <div class="row mt-2">
+                <div class="col-xl-3">
+                    <div class="form-group">
+                        <b>{{ $t('label.mapping_type') }}</b>
+                        <select class="form-control" v-model="filters.mapping_type">
+                            <option value="">{{ $t('label.all') }}</option>
+                            <option :value="1">{{ $t('label.cdis_to_pos') }}</option>
+                            <option :value="2">{{ $t('label.pos_to_cdis') }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-xl-3">
+                    <div class="form-group">
+                        <b>{{ $t('label.status') }}</b>
+                        <select class="form-control" v-model="filters.status">
+                            <option value="">{{ $t('label.all') }}</option>
+                            <option :value="1">{{ $t('label.active') }}</option>
+                            <option :value="0">{{ $t('label.inactive') }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-xl-3">
+                    <br>
+                    <button class="button button--light" @click="paginate">{{ $t('label.search') }}</button>
+                </div>
+            </div>
+        </div>
+        <datatable
+            class="
+                datatable--full-width
+                datatable--hoverable"
+            :header-fields="table.header"
+            :settings="table.settings"
+            :table="table.values">
+            <template slot="content">
+                <table-row
+                    v-for="(tableData, tableDataIndex) in table.values.data" :key="tableDataIndex"
+                    :values="tableData"
+                    :settings="table.settings"
+                    :rowIndex="tableDataIndex"
+                    v-on:row-click="openDetail(tableData, tableDataIndex)">
+                    <td class="datatable-cell" align="center">
+                        <span v-text="tableData.mapping_type"></span>
+                    </td>
+                    <td class="datatable-cell">
+                        <span v-text="tableData.api_endpoint"></span>
+                    </td>
+                    <td class="datatable-cell">
+                        <span v-text="tableData.api_version_name"></span>
+                    </td>
+                    <td class="datatable-cell">
+                        <span v-text="tableData.total_field_entries"></span>
+                    </td>
+                    <td class="datatable-cell" align="center">
+                        <span v-text="tableData.status ? $t('label.active') : $t('label.inactive')"></span>
+                    </td>
+                    <td class="datatable-cell">
+                        <span v-text="tableData.last_modified"></span>
+                    </td>
+                </table-row>
+            </template>
+        </datatable>
+        <dialog-box
+            :status="dialog.status"
+            :type="dialog.type"
+            :visible.sync="dialog.visible"
+            @ok="dialog.ok.function"
+            @cancel="dialog.cancel.function">
+            <template slot="message">
+                <span v-text="dialog.message"></span>
+            </template>
+        </dialog-box>
+    </div>
+</template>
+
+<script>
+    import DialogBox from '../../components/Message/DialogBox.vue';
+    import Datatable from '../../components/Datatable2/Datatable.vue';
+    import TableRow from '../../components/Datatable2/TableRow.vue';
+
+    export default {
+        components: {
+            DialogBox,
+            Datatable,
+            TableRow
+        },
+        data() {
+            return {
+                dialog: {
+                    visible: false,
+                    type: '',
+                    message: '',
+                    ok: {
+                        function: () => {},
+                        function: () => {}
+                    },
+                    cancel: {
+                        function: () => {
+                            this.dialog.visible = false;
+                        },
+                        function: () => {}
+                    },
+                },
+                filters: {
+                    mapping_type: '',
+                    status: ''
+                },
+                table: {
+                    header: [
+                        {
+                            name: "mapping_type",
+                            label: this.$t('label.mapping_type'),
+                            width: '180'
+                        },
+                        {
+                            name: "api_endpoint",
+                            label: this.$t('label.api_endpoint'),
+                            width: '250'
+                        },
+                        {
+                            name: "api_version_name",
+                            label: this.$t('label.api_version_name'),
+                            width: '150'
+                        },
+                        {
+                            name: "total_field_entries",
+                            label: this.$t('label.total_field_entries'),
+                            width: '150'
+                        },
+                        {
+                            name: "status",
+                            label: this.$t('label.status'),
+                            width: '90'
+                        },
+                        {
+                            name: "last_modified",
+                            label: this.$t('label.last_modified'),
+                            width: '150'
+                        },
+                        {
+                            name: "actions",
+                            label: '',
+                            width: '50'
+                        }
+                    ],
+                    values: {
+                        data: [],
+                        meta: {
+                            pagination: {
+                                count: 1,
+                                current_page: 1,
+                                links: {},
+                                per_page: 10,
+                                total: 1,
+                                total_pages: 1
+                            }
+                        }
+                    },
+                    settings: {
+                        itemsPerPage: 10,
+                        withRowNumbers: true
+                    }
+                }
+            }
+        },
+        methods: {
+            paginate() {},
+
+            create() {
+                
+            },
+
+            deleteRow(index) {
+                this.dialog.visible = true;
+                this.dialog.status = 'confirm';
+                this.dialog.message = this.$t('message.do_you_want_to_remove_this_data');
+                this.dialog.ok.function = () => {
+                    this.table.values.data.splice(index, 1);
+                    this.dialog.status = 'success';
+                    this.dialog.message = this.$t('success.successfully_removed_the_data');
+                    this.dialog.ok.function = () => {
+                        this.dialog.visible = false;
+                    };
+                };
+                this.dialog.cancel.function = () => {
+                    this.dialog.visible = false;
+                };
+            }
+        }
+    }
+</script>
+
+<style lang="scss" scoped>
+</style>

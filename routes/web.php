@@ -29,7 +29,11 @@ Route::group(['middleware' => 'auth'], function () {
         'api-setup' => 'ApiSetupController',
         'syncing' => 'SyncingSetupController',
     ]);
-
 });
+
+Route::get('/configurations', 'ConfigurationsController@index');
+Route::get('/syncing-setup', 'SyncingSetupController@index');
+Route::get('/field-mapping-setup', 'FieldMappingSetupController@index');
+Route::get('/field-mapping-setup/detail', 'FieldMappingSetupController@detail');
 
 Route::get('/{any_path?}', [HomeController::class, 'index'])->where('any_path', '(.*)');

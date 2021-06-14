@@ -6,15 +6,16 @@
 
         <title>
             @if (View::hasSection('title'))
-                @yield('title')
+                Catapult - @yield('title')
             @else
                 Catapult - Bonfire Technologies and Solutions Corp.
             @endif
         </title>
-        <!-- Scripts -->
         <script src="{{ asset('js/app.js') }}" defer></script>
-        <!-- Styles -->
         <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+        <script>
+            document.getElementsByTagName("html")[0].style.visibility = "hidden";
+        </script>
     </head>
     <body>
         <div id="app">
@@ -34,5 +35,8 @@
                 </div>
             </core>
         </div>
+        <script>
+            document.getElementsByTagName("html")[0].style.visibility = "visible";
+        </script>
     </body>
 </html>

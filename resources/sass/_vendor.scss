@@ -1,1 +1,31 @@
 @import '~font-awesome';
+
+// Vue Loading
+.vld-overlay {
+    z-index: 15000 !important;
+}
+.vld-header-title {
+    position: relative;
+    z-index: 10001;
+    font-size: 20px;
+    color: #333;
+    text-align: center;
+    cursor: default;
+    padding: 8px 12px;
+    background-color: #fff;
+    border: 1px #ccc solid;
+    border-bottom: 3px #2b4d83 solid;
+    margin-bottom: 15px;
+    font-family: 'Arimo-Bold';
+}
+.vld-loading-title {
+    font-size: 16px;
+    color: lighten(#333, 30%);
+}
+
+.vld-loading-dots:after {
+    display: inline-block;
+    width: 20px;
+    animation: dotty steps(1, end) 1s infinite;
+    content: '';
+}
