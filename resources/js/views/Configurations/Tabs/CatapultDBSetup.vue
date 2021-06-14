@@ -9,7 +9,8 @@
                 datatable--hoverable"
             :header-fields="table.header"
             :settings="table.settings"
-            :table="table.values">
+            :table="table.values"
+            v-on:paginate="paginate">
             <template slot="content">
                 <table-row
                     v-for="(tableData, tableDataIndex) in table.values.data" :key="tableDataIndex"
@@ -18,10 +19,10 @@
                     :rowIndex="tableDataIndex"
                     v-on:row-click="openDetail(tableData, tableDataIndex)">
                     <td class="datatable-cell">
-                        <span v-text="tableData.catapult_db_setup_name"></span>
+                        <span v-text="tableData.name"></span>
                     </td>
                     <td class="datatable-cell">
-                        <span v-text="tableData.ip_address"></span>
+                        <span v-text="tableData.host"></span>
                     </td>
                     <td class="datatable-cell" align="center">
                         <span v-text="tableData.port"></span>
@@ -30,13 +31,14 @@
                         <span v-text="tableData.db_name"></span>
                     </td>
                     <td class="datatable-cell">
-                        <span v-text="tableData.db_user"></span>
+                        <span v-text="tableData.username"></span>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <span v-text="tableData.status"></span>
+                        <span v-if="tableData.status == 1">Active</span>
+                        <span v-if="tableData.status == 0">Inactive</span>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <i class="fa fa-times-circle fa-lg row-delete" @click.stop="deleteRow(tableDataIndex)"></i>
+                        <i class="fa fa-times-circle fa-lg row-delete" @click.stop="deleteRow(tableDataIndex, tableData)"></i>
                     </td>
                 </table-row>
             </template>
@@ -52,51 +54,57 @@
             <template slot="content">
                 <div class="form-group">
                     <label>Catapult DB Setup Name <span class="required">*</span></label>
-                    <input type="text" class="form-control" v-model="form.values.catapult_db_setup_name">
-                    <label class="text-danger error-message m-0">
-                        Catapult DB Setup is required.
+                    <input type="text" class="form-control" v-model="form.values.name"
+                    :class="{ 'is-invalid': errors.hasOwnProperty('name') }">
+                    <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('name')">
+                        {{errors.name[0]}}
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>IP Address <span class="required">*</span></label>
-                    <input type="text" class="form-control" v-model="form.values.ip_address">
-                    <label class="text-danger error-message m-0">
-                        IP Address is required.
+                    <label>Host <span class="required">*</span></label>
+                    <input type="text" class="form-control" v-model="form.values.host"
+                    :class="{ 'is-invalid': errors.hasOwnProperty('host') }">
+                    <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('host')">
+                        {{errors.host[0]}}
                     </label>
                 </div>
                 <div class="form-group">
                     <label>Port <span class="required">*</span></label>
-                    <input type="text" class="form-control" v-model="form.values.port">
-                    <label class="text-danger error-message m-0">
-                        Port is required.
+                    <input type="text" class="form-control" v-model="form.values.port"
+                    :class="{ 'is-invalid': errors.hasOwnProperty('port') }">
+                    <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('port')">
+                        {{errors.port[0]}}
                     </label>
                 </div>
                 <div class="form-group">
                     <label>DB Name <span class="required">*</span></label>
-                    <input type="text" class="form-control" v-model="form.values.db_name">
-                    <label class="text-danger error-message m-0">
-                        DB Name is required.
+                    <input type="text" class="form-control" v-model="form.values.db_name"
+                    :class="{ 'is-invalid': errors.hasOwnProperty('db_name') }">
+                    <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('db_name')">
+                        {{errors.db_name[0]}}
                     </label>
                 </div>
                 <div class="form-group">
                     <label>DB User <span class="required">*</span></label>
-                    <input type="text" class="form-control" v-model="form.values.db_user">
-                    <label class="text-danger error-message m-0">
-                        DB User is required.
+                    <input type="text" class="form-control" v-model="form.values.username"
+                    :class="{ 'is-invalid': errors.hasOwnProperty('username') }">
+                    <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('username')">
+                        {{errors.username[0]}}
                     </label>
                 </div>
                 <div class="form-group">
                     <label>DB Password <span class="required">*</span></label>
-                    <input type="password" class="form-control" v-model="form.values.db_password">
-                    <label class="text-danger error-message m-0">
-                        DB Password is required.
+                    <input type="password" class="form-control" v-model="form.values.password"
+                    :class="{ 'is-invalid': errors.hasOwnProperty('password') }">
+                    <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('password')">
+                        {{errors.password[0]}}
                     </label>
                 </div>
                 <div class="form-group">
                     <label>Setup Status</label>
                     <select class="form-control" v-model="form.values.status">
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
+                        <option :value="1">Active</option>
+                        <option :value="0">Inactive</option>
                     </select>
                 </div>
             </template>
@@ -133,9 +141,13 @@
             Modal,
             DialogBox
         },
+        mounted() {
+            this.paginate()
+        },
         mixins: [ Util ],
         data() {
             return {
+                errors: {},
                 dialog: {
                     visible: false,
                     type: '',
@@ -157,25 +169,26 @@
                 form: {
                     mode: 'create',
                     values: {
-                        catapult_db_setup_name: '',
-                        ip_address: '',
+                        id: '',
+                        name: '',
+                        host: '',
                         port: '',
                         db_name: '',
-                        db_user: '',
-                        db_password: '',
-                        status: 'Active',
+                        username: '',
+                        password: '',
+                        status: 1,
                     }
                 },
                 table: {
                     header: [
                         {
-                            name: "catapult_db_setup_name",
+                            name: "name",
                             label: "Catapult DB Setup Name",
                             width: '250'
                         },
                         {
-                            name: "ip_address",
-                            label: 'IP Address',
+                            name: "host",
+                            label: 'Host',
                             width: '160'
                         },
                         {
@@ -189,7 +202,7 @@
                             width: '150'
                         },
                         {
-                            name: "db_user",
+                            name: "username",
                             label: 'DB User',
                             width: '150'
                         },
@@ -207,43 +220,43 @@
                     values: {
                         data: [
                             {
-                                catapult_db_setup_name: 'Catapult DB',
-                                ip_address: '192.168.5.334',
+                                name: 'Catapult DB',
+                                host: '192.168.5.334',
                                 port: '80',
                                 db_name: 'db_catapult',
-                                db_user: 'Catapult Admin',
+                                username: 'Catapult Admin',
                                 status: 'Active',
                             },
                             {
-                                catapult_db_setup_name: 'Catapult DB',
-                                ip_address: '192.168.5.334',
+                                name: 'Catapult DB',
+                                host: '192.168.5.334',
                                 port: '80',
                                 db_name: 'db_catapult',
-                                db_user: 'Catapult Admin',
+                                username: 'Catapult Admin',
                                 status: 'Active',
                             },
                             {
-                                catapult_db_setup_name: 'Catapult DB',
-                                ip_address: '192.168.5.334',
+                                name: 'Catapult DB',
+                                host: '192.168.5.334',
                                 port: '80',
                                 db_name: 'db_catapult',
-                                db_user: 'Catapult Admin',
+                                username: 'Catapult Admin',
                                 status: 'Active',
                             },
                             {
-                                catapult_db_setup_name: 'Catapult DB',
-                                ip_address: '192.168.5.334',
+                                name: 'Catapult DB',
+                                host: '192.168.5.334',
                                 port: '80',
                                 db_name: 'db_catapult',
-                                db_user: 'Catapult Admin',
+                                username: 'Catapult Admin',
                                 status: 'Active',
                             },
                             {
-                                catapult_db_setup_name: 'Catapult DB',
-                                ip_address: '192.168.5.334',
+                                name: 'Catapult DB',
+                                host: '192.168.5.334',
                                 port: '80',
                                 db_name: 'db_catapult',
-                                db_user: 'Catapult Admin',
+                                username: 'Catapult Admin',
                                 status: 'Active',
                             }
                         ],
@@ -266,36 +279,52 @@
             }
         },
         methods: {
+            paginate(page = 1) {
+                axios.get('catapult-db-setup'+'?page='+page, {
+                    params: {
+                        itemsPerPage: this.table.settings.itemsPerPage,
+                    }
+                })
+                .then(response => {
+                   this.table.values.data = response.data.data.data
+                   this.table.values.meta  = response.data.data.meta
+                })
+            },
+
             create() {
                 this.clearForm();
                 this.modal.visible = true;
             },
 
             clearForm() {
+                this.errors = {}
                 this.form.mode = 'create';
 
                 this.form.values = {
-                    catapult_db_setup_name: '',
-                    ip_address: '',
+                    name: '',
+                    host: '',
                     port: '',
                     db_name: '',
-                    db_user: '',
-                    db_password: '',
-                    status: 'Active',
+                    username: '',
+                    password: '',
+                    status: 1,
                 }
             },
 
-            deleteRow(index) {
+            deleteRow(index, data) {
                 this.dialog.visible = true;
                 this.dialog.status = 'confirm';
                 this.dialog.message = 'Do you want to remove this data?';
                 this.dialog.ok.function = () => {
-                    this.table.values.data.splice(index, 1);
-                    this.dialog.status = 'success';
-                    this.dialog.message = 'Successfully removed the data!';
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                    };
+                    axios.delete(`catapult-db-setup/${data.bid}`)
+                    .then(response => {
+                        this.table.values.data.splice(index, 1);
+                        this.dialog.status = 'success';
+                        this.dialog.message = response.data.message;
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                        };
+                    })
                 };
                 this.dialog.cancel.function = () => {
                     this.dialog.visible = false;
@@ -304,55 +333,64 @@
 
             save() {
                 if (this.form.mode === 'create') {
-                    this.table.values.data.push({
-                        catapult_db_setup_name: this.form.values.catapult_db_setup_name,
-                        ip_address: this.form.values.ip_address,
-                        port: this.form.values.port,
-                        db_name: this.form.values.db_name,
-                        db_user: this.form.values.db_user,
-                        status: this.form.values.status
-                    });
+                    
+                    axios.post('catapult-db-setup', this.form.values)
+                    .then(response => {
+                        this.paginate();
+                        this.dialog.visible = true;
+                        this.dialog.status = 'success';
+                        this.dialog.message = response.data.message;
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                            this.modal.visible = false;
+                        };
+                        this.errors = {}
+                    }).catch(error => {
+                        this.errors = error.response.data.errors
+                    })
 
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = 'Successfully added a new Catapult DB Setup!';
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                        this.modal.visible = false;
-                    };
                 } else {
                     let index = this.form.values.index;
 
-                    this.table.values.data[index] = {
-                        catapult_db_setup_name: this.form.values.catapult_db_setup_name,
-                        ip_address: this.form.values.ip_address,
-                        port: this.form.values.port,
-                        db_name: this.form.values.db_name,
-                        db_user: this.form.values.db_user,
-                        status: this.form.values.status
-                    }
-
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = 'Successfully updated the Catapult DB Setup!';
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                        this.modal.visible = false;
-                    };
+                    axios.put(`catapult-db-setup/${this.form.values.bid}`, this.form.values)
+                    .then(response => {
+                        this.table.values.data[index] = {
+                            bid: this.form.values.bid,
+                            name: this.form.values.name,
+                            host: this.form.values.host,
+                            port: this.form.values.port,
+                            db_name: this.form.values.db_name,
+                            username: this.form.values.username,
+                            password: this.form.values.password,
+                            status: this.form.values.status
+                        }
+                        this.dialog.visible = true;
+                        this.dialog.status = 'success';
+                        this.dialog.message = response.data.message;
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                            this.modal.visible = false;
+                        };
+                        this.errors = {}
+                    }).catch(error => {
+                        this.errors = error.response.data.errors
+                    })
                 }
             },
 
             openDetail(data, index) {
+                this.errors = {}
                 this.form.mode = 'update';
 
                 this.form.values = {
+                    bid: data.bid,
                     index: index,
-                    catapult_db_setup_name: data.catapult_db_setup_name,
-                    ip_address: data.ip_address,
+                    name: data.name,
+                    host: data.host,
                     port: data.port,
                     db_name: data.db_name,
-                    db_user: data.db_user,
-                    db_password: '',
+                    username: data.username,
+                    password: data.password,
                     status: data.status
                 }
 

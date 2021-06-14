@@ -15,7 +15,8 @@
         "laravel/framework": "5.8.*",
         "laravel/tinker": "^1.0",
         "martinlindhe/laravel-vue-i18n-generator": "^0.1.46",
-        "prettus/l5-repository": "^2.6"
+        "prettus/l5-repository": "^2.6",
+        "spatie/laravel-fractal": "^5.8"
     },
     "require-dev": {
         "beyondcode/laravel-dump-server": "^1.0",
