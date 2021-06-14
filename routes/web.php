@@ -20,13 +20,14 @@ Route::post('/logout', 'LoginController@logout')->name('logout');
 
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/dashboard', 'DashboardController@index');
-    Route::get('/configurations', 'ConfigurationsController@index');
+    Route::get('/configurations', 'ConfigurationsController@view');
     Route::get('/syncing-setup', 'SyncingSetupController@index');
 
     Route::apiResources([
         'remote-setup' => 'RemoteSetupController',
         'catapult-db-setup' => 'CatapultDbSetupController',
-        'api-setup' => 'ApiSetupController'
+        'api-setup' => 'ApiSetupController',
+        'configuration' => 'ConfigurationsController',
     ]);
 
 });

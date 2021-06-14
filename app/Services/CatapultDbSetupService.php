@@ -27,7 +27,7 @@ class CatapultDbSetupService
                 ];
             }
         } catch (\Throwable $th) {
-            return response()->json(['message' => $th->getMessage()], 500);
+            return response()->json(['message' => Lang::get('success.catapult_db_setup_failed_create')], 500);
         }
     }
 

@@ -20,5 +20,5 @@ return [
     'remote_setup_created' => 'Remote Setup successfully created!',
     'remote_setup_deleted' => 'Remote Setup successfully deleted!',
     'remote_setup_updated' => 'Remote Setup successfully updated!',
-
+    'syncing_setup_updated' => 'Syncing Setup successfully updated!'
 ];

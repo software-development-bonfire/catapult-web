@@ -14,6 +14,7 @@
                 <input
                     type="text"
                     class="form-control w-25 text-left"
+                    :class="{ 'is-invalid': errors.hasOwnProperty('pos_to_cdis_entry_limit') }"
                     v-model.number="form.values.pos_to_cdis_entry_limit"
                     v-mask="{
                         alias: 'integer',
@@ -24,12 +25,16 @@
                         min: 60,
                         max: 1000
                     }">
+                <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('pos_to_cdis_entry_limit')">
+                {{errors.pos_to_cdis_entry_limit[0]}}
+                </label>
             </div>
             <div class="form-group">
                 <label>Set the entry limit per batch syncing (CDIS TO POS PROCESS)</label>
                 <input
                     type="text"
                     class="form-control w-25 text-left"
+                    :class="{ 'is-invalid': errors.hasOwnProperty('cdis_to_pos_entry_limit') }"
                     v-model.number="form.values.cdis_to_pos_entry_limit"
                     v-mask="{
                         alias: 'integer',
@@ -40,6 +45,9 @@
                         min: 60,
                         max: 1000
                     }">
+                <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('cdis_to_pos_entry_limit')">
+                    {{errors.cdis_to_pos_entry_limit[0]}}
+                </label>
             </div>
             <h3 class="mt-4">Syncing Prioritization</h3>
             <div class="w-50" align="center">
@@ -84,6 +92,9 @@
             Draggable,
             DialogBox
         },
+        mounted() {
+            this.getData();
+        },
         computed: {
             dragOptions() {
                 return {
@@ -125,16 +136,45 @@
                     { name: "Cash Drawer" },
                     { name: "Audit Trail" },
                 ],
+                errors: {}
             }
         },
         methods: {
+            getData() {
+                axios.get('configuration')
+                .then(response => {
+                    response.data.find(config => {
+                        if (config.attribute === 'syncing_file') {
+                            this.ranking = eval(response.data[0].value);
+                        }
+                        if (config.attribute === 'pos_to_cdis_entry_limit') {
+                            this.form.values.pos_to_cdis_entry_limit = response.data[1].value;
+                        }
+                        if (config.attribute === 'cdis_to_pos_entry_limit') {
+                            this.form.values.cdis_to_pos_entry_limit = response.data[2].value;
+                        }
+                    })
+                })
+            },
             save() {
-                this.dialog.visible = true;
-                this.dialog.status = 'success';
-                this.dialog.message = 'Syncing Setup saved successfully!';
-                this.dialog.ok.function = () => {
-                    this.dialog.visible = false;
-                };
+                console.log(this.form.values.pos_to_cdis_entry_limit)
+                var config = {
+                    syncing_order: JSON.stringify(this.ranking),
+                    pos_to_cdis_entry_limit: parseInt(this.form.values.pos_to_cdis_entry_limit),
+                    cdis_to_pos_entry_limit: parseInt(this.form.values.cdis_to_pos_entry_limit)
+                }
+                axios.post('configuration', config)
+                .then(response => {
+                    this.dialog.visible = true;
+                    this.dialog.status = 'success';
+                    this.dialog.message = response.data.message;
+                    this.dialog.ok.function = () => {
+                        this.dialog.visible = false;
+                    };
+                    this.errors = {};
+                }).catch(error => {
+                    this.errors = error.response.data.errors;
+                })
             }
         }
     }
