@@ -43,7 +43,7 @@ class ApiSetupService
         // dd($data, $bid);
         try {
             $data['updated_by'] = Auth::user()->bid;
-            $update = ApiSetup::where('bid', $bid)->update($data);
+            $update = ApiSetup::find($bid)->update($data);
 
             if ($update) {
                 return ['message' => Lang::get('success.api_setup_updated')];
@@ -53,9 +53,15 @@ class ApiSetupService
         }
     }
 
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $bid
+     * 
+     */
     public function destroy($bid)
     {
-        ApiSetup::where('bid', $bid)->delete();
+        ApiSetup::find($bid)->delete();
     }
 }
 

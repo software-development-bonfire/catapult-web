@@ -46,7 +46,7 @@ class CatapultDbSetupService
             }
             $data['updated_by'] = Auth::user()->bid;
 
-            $update = CatapultDbSetup::where('bid' ,$bid)->update($data);
+            $update = CatapultDbSetup::find($bid)->update($data);
 
             if ($update) {
                 return ['message' => Lang::get('success.catapult_db_setup_updated')];
@@ -57,9 +57,15 @@ class CatapultDbSetupService
         }
     }
 
-    public function destroy($id)
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $bid
+     * 
+     */
+    public function destroy($bid)
     {
-        CatapultDbSetup::where('bid', $id)->delete();
+        CatapultDbSetup::find($bid)->delete();
     }
 }
 

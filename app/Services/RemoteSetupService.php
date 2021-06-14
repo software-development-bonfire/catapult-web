@@ -46,7 +46,7 @@ class RemoteSetupService
             }
             $data['updated_by'] = Auth::user()->bid;
 
-            $update = RemoteSetup::where('bid', $bid)->update($data);
+            $update = RemoteSetup::find( $bid)->update($data);
 
             if ($update) {
                 return ['message' => Lang::get('success.remote_setup_updated')];
@@ -57,9 +57,15 @@ class RemoteSetupService
         }
     }
 
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $bid
+     *
+     */
     public function destroy($bid)
     {
-        RemoteSetup::where('bid', $bid)->delete();
+        RemoteSetup::find($bid)->delete();
     }
 }
 
