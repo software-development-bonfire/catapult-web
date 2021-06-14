@@ -257,7 +257,7 @@
                     
                     axios.post('api-setup', this.form.values)
                     .then(response => {
-                        this.paginate()
+                        this.paginate();
                         this.dialog.visible = true;
                         this.dialog.status = 'success';
                         this.dialog.message = response.data.message;

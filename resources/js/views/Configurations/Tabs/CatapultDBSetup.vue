@@ -336,7 +336,7 @@
                     
                     axios.post('catapult-db-setup', this.form.values)
                     .then(response => {
-                        this.paginate()
+                        this.paginate();
                         this.dialog.visible = true;
                         this.dialog.status = 'success';
                         this.dialog.message = response.data.message;
