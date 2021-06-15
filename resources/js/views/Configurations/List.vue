@@ -3,22 +3,22 @@
         <ul class="nav nav-tabs nav-tabs--black" id="myTab" role="tablist">
             <li class="nav-item">
                 <a class="nav-link active" id="licensing-tab" data-toggle="tab" href="#licensing" role="tab" aria-controls="licensing" aria-selected="true">
-                    Licensing
+                    {{ $t('label.licencing') }}
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="remote-setup-tab" data-toggle="tab" href="#remote-setup" role="tab" aria-controls="remote-setup" aria-selected="false">
-                    Remote Setup
+                    {{ $t('label.remote_setup') }}
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="contact-tab" data-toggle="tab" href="#catapult-db-setup" role="tab" aria-controls="catapult-db-setup" aria-selected="false">
-                    Catapult DB Setup
+                    {{ $t('label.catapult_db_setup') }}
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="contact-tab" data-toggle="tab" href="#api-setup" role="tab" aria-controls="api-setup" aria-selected="false">
-                    API Setup
+                    {{ $t('label.api_setup') }}
                 </a>
             </li>
         </ul>
