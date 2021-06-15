@@ -150,11 +150,9 @@
                             this.form.values.cdis_to_pos_entry_limit = response.data[2].value;
                         }
                     })
-                    console.log(this.ranking)
                 })
             },
             save() {
-                console.log(this.form.values.pos_to_cdis_entry_limit)
                 var config = {
                     syncing_order: JSON.stringify(this.ranking),
                     pos_to_cdis_entry_limit: parseInt(this.form.values.pos_to_cdis_entry_limit),
