@@ -224,33 +224,74 @@
                     }
                 },
                 table: {
-                    header: [
-                        {
-                            name: "required",
-                            label: this.$t('label.set_as_required'),
-                            width: '100'
-                        },
-                        {
-                            name: "field",
-                            label: this.$t('label.cdis_field'),
-                            width: '180'
-                        },
-                        {
-                            name: "description",
-                            label: this.$t('label.add_tooltip_description'),
-                            width: '200'
-                        },
-                        {
-                            name: "data_type",
-                            label: this.$t('label.data_type'),
-                            width: '100'
-                        },
-                        {
-                            name: "status",
-                            label: this.$t('label.csv_column_name'),
-                            width: '90'
-                        }
-                    ],
+                    cdis_to_pos: {
+                        header: [
+                            {
+                                name: "required",
+                                label: this.$t('label.set_as_required'),
+                                width: '100'
+                            },
+                            {
+                                name: "field",
+                                label: this.$t('label.cdis_fields'),
+                                width: '90'
+                            },
+                            {
+                                name: "description",
+                                label: this.$t('label.add_tooltip_description'),
+                                width: '200'
+                            },
+                            {
+                                name: "data_type",
+                                label: this.$t('label.data_type'),
+                                width: '100'
+                            },
+                            {
+                                name: "csv_column_name",
+                                label: this.$t('label.csv_column_name'),
+                                width: '90'
+                            }
+                        ],
+                    },
+                    pos_to_cdis: {
+                        header: [
+                            {
+                                name: "required",
+                                label: this.$t('label.set_as_required'),
+                                width: '100'
+                            },
+                            {
+                                name: "field",
+                                label: this.$t('label.cdis_fields'),
+                                width: '70'
+                            },
+                            {
+                                name: "description",
+                                label: this.$t('label.add_tooltip_description'),
+                                width: '200'
+                            },
+                            {
+                                name: "data_type",
+                                label: this.$t('label.data_type'),
+                                width: '100'
+                            },
+                            {
+                                name: "csv_file_name_identifier",
+                                label: this.$t('label.csv_file_name_identifier'),
+                                width: '100'
+                            },
+                            {
+                                name: "default_field_values",
+                                label: this.$t('label.default_field_values'),
+                                width: '100'
+                            },
+                            {
+                                name: "csv_column_name",
+                                label: this.$t('label.csv_column_name'),
+                                width: '90'
+                            }
+                        ],
+                    },
                     values: {
                         data: [],
                         meta: {
