@@ -1,7 +1,7 @@
 <template>
     <div class="tab-pane fade" id="catapult-db-setup" role="tabpanel" aria-labelledby="catapult-db-setup-tab">
         <div class="m-1">
-            <button class="button button--dark" @click="create">{{ $t('label.add_new') }}</button>
+            <button class="button button--dark" @click="create">Add new</button>
         </div>
         <datatable
             class="
@@ -34,8 +34,8 @@
                         <span v-text="tableData.username"></span>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <span v-if="tableData.status == 1">{{ $t('label.active') }}</span>
-                        <span v-if="tableData.status == 0">{{ $t('label.inactive') }}</span>
+                        <span v-if="tableData.status == 1">Active</span>
+                        <span v-if="tableData.status == 0">Inactive</span>
                     </td>
                     <td class="datatable-cell" align="center">
                         <i class="fa fa-times-circle fa-lg row-delete" @click.stop="deleteRow(tableDataIndex, tableData)"></i>
@@ -49,11 +49,11 @@
             v-if="modal.visible"
             @close="modal.visible = false">
             <template slot="header">
-                {{ $t('label.catapult_db_setup_detail') }}
+                Catapult DB Setup Detail
             </template>
             <template slot="content">
                 <div class="form-group">
-                    <label>{{ $t('label.catapult_db_setup_name') }}<span class="required">*</span></label>
+                    <label>Catapult DB Setup Name<span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.name"
                     :class="{ 'is-invalid': errors.hasOwnProperty('name') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('name')">
@@ -61,7 +61,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.host') }} <span class="required">*</span></label>
+                    <label>Host <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.host"
                     :class="{ 'is-invalid': errors.hasOwnProperty('host') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('host')">
@@ -69,7 +69,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.port') }} <span class="required">*</span></label>
+                    <label>Port <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.port"
                     :class="{ 'is-invalid': errors.hasOwnProperty('port') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('port')">
@@ -77,7 +77,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.db_name') }} <span class="required">*</span></label>
+                    <label>DB Name <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.db_name"
                     :class="{ 'is-invalid': errors.hasOwnProperty('db_name') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('db_name')">
@@ -85,7 +85,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.db_username') }} <span class="required">*</span></label>
+                    <label>DB User <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.username"
                     :class="{ 'is-invalid': errors.hasOwnProperty('username') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('username')">
@@ -93,7 +93,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.db_password') }} <span class="required">*</span></label>
+                    <label>DB Password <span class="required">*</span></label>
                     <input type="password" class="form-control" v-model="form.values.password"
                     :class="{ 'is-invalid': errors.hasOwnProperty('password') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('password')">
@@ -101,16 +101,16 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.status') }}</label>
+                    <label>Status</label>
                     <select class="form-control" v-model="form.values.status">
-                        <option :value="1">{{ $t('label.active') }}</option>
-                        <option :value="0">{{ $t('label.inactive') }}</option>
+                        <option :value="1">Active</option>
+                        <option :value="0">Inactive</option>
                     </select>
                 </div>
             </template>
             <template slot="footer">
                 <div align="center">
-                    <button class="button button--light" @click="save">{{ $t('label.save') }}</button>
+                    <button class="button button--light" @click="save">Save</button>
                 </div>
             </template>
         </modal>
@@ -183,32 +183,32 @@
                     header: [
                         {
                             name: "name",
-                            label: this.$t('label.catapult_db_setup_name'),
+                            label: 'Catapult DB Setup Name',
                             width: '250'
                         },
                         {
                             name: "host",
-                            label: this.$t('label.host'),
+                            label: 'Host',
                             width: '160'
                         },
                         {
                             name: "port",
-                            label: this.$t('label.port'),
+                            label: 'Port',
                             width: '90'
                         },
                         {
                             name: "db_name",
-                            label: this.$t('label.db_name'),
+                            label: 'DB Name',
                             width: '150'
                         },
                         {
                             name: "username",
-                            label: this.$t('label.db_username'),
+                            label: 'DB User',
                             width: '150'
                         },
                         {
                             name: "status",
-                            label: this.$t('label.status'),
+                            label: 'Status',
                             width: '90'
                         },
                         {

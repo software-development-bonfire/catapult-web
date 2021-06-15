@@ -1,7 +1,7 @@
 <template>
     <div class="tab-pane fade" id="remote-setup" role="tabpanel" aria-labelledby="remote-setup-tab">
         <div class="m-1">
-            <button class="button button--dark" @click="create">{{ $t('label.add_new') }}</button>
+            <button class="button button--dark" @click="create">Add new</button>
         </div>
         <datatable
             class="
@@ -37,8 +37,8 @@
                         <span v-text="tableData.username"></span>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <span v-if="tableData.status == 1">{{ $t('label.active') }}</span>
-                        <span v-if="tableData.status == 0">{{ $t('label.inactive') }}</span>
+                        <span v-if="tableData.status == 1">Active</span>
+                        <span v-if="tableData.status == 0">Inactive</span>
                     </td>
                     <td class="datatable-cell" align="center">
                         <i class="fa fa-times-circle fa-lg row-delete" @click.stop="deleteRow(tableDataIndex, tableData)"></i>
@@ -56,7 +56,7 @@
             </template>
             <template slot="content">
                 <div class="form-group">
-                    <label>{{ $t('label.remote_setup_name') }} <span class="required">*</span></label>
+                    <label>Remote Setup Name <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.name"
                     :class="{ 'is-invalid': errors.hasOwnProperty('name') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('name')">
@@ -64,7 +64,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.remote_path') }}<span class="required">*</span></label>
+                    <label>Remote Path<span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.path"
                     :class="{ 'is-invalid': errors.hasOwnProperty('path') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('path')">
@@ -72,7 +72,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.remote_server') }} <span class="required">*</span></label>
+                    <label>Remote Server <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.server"
                     :class="{ 'is-invalid': errors.hasOwnProperty('server') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('server')">
@@ -80,7 +80,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.remote_host') }}<span class="required">*</span></label>
+                    <label>Remote Host <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.host"
                     :class="{ 'is-invalid': errors.hasOwnProperty('host') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('host')">
@@ -88,7 +88,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.remote_port') }}<span class="required">*</span></label>
+                    <label>Remote Port <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.port"
                     :class="{ 'is-invalid': errors.hasOwnProperty('port') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('port')">
@@ -96,7 +96,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.remote_username') }}<span class="required">*</span></label>
+                    <label>Remote User <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.username"
                     :class="{ 'is-invalid': errors.hasOwnProperty('username') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('username')">
@@ -104,7 +104,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.remote_password') }}<span class="required">*</span></label>
+                    <label>Remote Password<span class="required">*</span></label>
                     <input type="password" class="form-control" v-model="form.values.password"
                     :class="{ 'is-invalid': errors.hasOwnProperty('password') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('password')">
@@ -112,16 +112,16 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.status') }}</label>
+                    <label>Status</label>
                     <select class="form-control" v-model="form.values.status">
-                        <option :value="1">{{ $t('label.active') }}</option>
-                        <option :value="0">{{ $t('label.inactive') }}</option>
+                        <option :value="1">Active</option>
+                        <option :value="0">Inactive</option>
                     </select>
                 </div>
             </template>
             <template slot="footer">
                 <div align="center">
-                    <button class="button button--light" @click="save">{{ $t('label.save') }}</button>
+                    <button class="button button--light" @click="save">Save</button>
                 </div>
             </template>
         </modal>
@@ -195,37 +195,37 @@
                     header: [
                         {
                             name: "name",
-                            label: this.$t('label.remote_setup_name'),
+                            label: 'Remote Setup Name',
                             width: '200'
                         },
                         {
                             name: "path",
-                            label: this.$t('label.remote_path'),
+                            label: 'Remote Path',
                             width: '250'
                         },
                         {
                             name: "server",
-                            label: this.$t('label.remote_server'),
+                            label: 'Remote Server',
                             width: '150'
                         },
                         {
                             name: "host",
-                            label: this.$t('label.remote_host'),
+                            label: 'Host',
                             width: '150'
                         },
                         {
                             name: "port",
-                            label: this.$t('label.remote_port'),
+                            label: 'Port',
                             width: '150'
                         },
                         {
                             name: "username",
-                            label: this.$t('label.remote_username'),
+                            label: 'Username',
                             width: '150'
                         },
                         {
                             name: "status",
-                            label: this.$t('label.status'),
+                            label: 'Status',
                             width: '90'
                         },
                         {

@@ -1,7 +1,7 @@
 <template>
     <div class="tab-pane fade" id="api-setup" role="tabpanel" aria-labelledby="api-setup-tab">
         <div class="m-1">
-            <button class="button button--dark" @click="create">{{ $t('label.add_new') }}</button>
+            <button class="button button--dark" @click="create">Add new</button>
         </div>
         <datatable
             class="datatable--hoverable"
@@ -23,8 +23,8 @@
                         <span v-text="tableData.end_point"></span>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <span v-if="tableData.status == 1">{{ $t('label.active') }}</span>
-                        <span v-if="tableData.status == 0">{{ $t('label.inactive') }}</span>
+                        <span v-if="tableData.status == 1">Active</span>
+                        <span v-if="tableData.status == 0">Inactive</span>
                     </td>
                     <td class="datatable-cell" align="center">
                         <i class="fa fa-times-circle fa-lg row-delete" @click.stop="deleteRow(tableDataIndex, tableData)"></i>
@@ -37,11 +37,11 @@
             v-if="modal.visible"
             @close="modal.visible = false">
             <template slot="header">
-                {{ $t('label.api_setup_detail') }}
+                API Setup Detail
             </template>
             <template slot="content">
                 <div class="form-group">
-                    <label>{{ $t('label.api_setup_name') }} <span class="required">*</span></label>
+                    <label>API Setup Name <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.name"
                     :class="{ 'is-invalid': errors.hasOwnProperty('name') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('name')">
@@ -49,7 +49,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.end_point') }} <span class="required">*</span></label>
+                    <label>End Point <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.end_point"
                     :class="{ 'is-invalid': errors.hasOwnProperty('end_point') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('end_point')">
@@ -57,16 +57,16 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.status') }}</label>
+                    <label>Status</label>
                     <select class="form-control" v-model="form.values.status">
-                        <option :value="1">{{ $t('label.active') }}</option>
-                        <option :value="0">{{ $t('label.inactive') }}</option>
+                        <option :value="1">Active</option>
+                        <option :value="0">Inactive</option>
                     </select>
                 </div>
             </template>
             <template slot="footer">
                 <div align="center">
-                    <button class="button button--light" @click="save">{{ $t('label.save') }}</button>
+                    <button class="button button--light" @click="save">Save</button>
                 </div>
             </template>
         </modal>
@@ -136,17 +136,17 @@
                     header: [
                         {
                             name: "name",
-                            label: this.$t('label.api_setup_name'),
+                            label: 'API Setup Name',
                             width: '200'
                         },
                         {
                             name: "end_point",
-                            label: this.$t('label.end_point'),
+                            label: 'End Point',
                             width: '200'
                         },
                         {
                             name: "status",
-                            label: this.$t('label.status'),
+                            label: 'Status',
                             width: '90'
                         },
                         {

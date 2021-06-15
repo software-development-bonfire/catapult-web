@@ -8,6 +8,9 @@ return [
     'api_setup_name' => 'API Setup Name',
     'api_name' => 'API name',
     'authenticate' => 'Authenticate',
+    'batch_syncing' => 'Batch Syncing',
+    'batch_syncing_note' => 'NOTE: The entered value will apply on the 5 mins Interval setting ONLY. Limit for the other intervals will be automatically determined by the system multiplier',
+    'batch_syncing_example' => '(Ex. 5mins interval = 60 limit, 10mins interval = 120 limit and so on.)',
     'catapult_db_setup' => 'Catapult DB Setup',
     'catapult_db_setup_detail' => 'Catapult DB Setup Detail',
     'catapult_db_setup_name' => 'Catapult DB Setup Name',
@@ -27,6 +30,8 @@ return [
     'username' => 'Username',
     'password' => 'Password',
     'product_key' => 'Product Key',
+    'pos_to_cdis_process' => 'Set the entry limit per batch syncing (POS TO CDIS PROCESS)',
+    'cdis_to_pos_process' => 'Set the entry limit per batch syncing (CDIS TO POS PROCESS)',
     'remote_name' => 'Remote Name',
     'remote_path' => 'Remote Path',
     'remote_server' => 'Remote Server',
@@ -39,5 +44,7 @@ return [
     'remote_password' => 'Remote Password',
     'save' => 'Save',
     'status' => 'Status',
+    'syncing_prioritization' => 'Syncing Prioritization',
+    'syncing_prioritization_note' => 'NOTE: Set the Syncing priority ranking of data entries from POS',
     'values' => 'Values'
 ];

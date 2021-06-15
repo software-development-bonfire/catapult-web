@@ -2,27 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\ConfigurationService;
-use App\Entities\Configuration;
-use App\Http\Requests\SyncingSetupRequest;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Lang;
 
 class ConfigurationsController extends Controller
 {
-    private $configurationService;
-
-    /**
-     * import ConfigurationService.
-     *
-     * @param  ConfigurationService  $configurationService
-     *
-     */
-    public function __construct(ConfigurationService $configurationService)
-    {
-        $this->configurationService = $configurationService;
-    }
-
     /**
      * Display a listing of the resource.
      *
@@ -35,7 +18,7 @@ class ConfigurationsController extends Controller
 
     public function index()
     {
-        return Configuration::all();
+        //
     }
 
     /**
@@ -54,20 +37,9 @@ class ConfigurationsController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(SyncingSetupRequest $request)
+    public function store(Request $request)
     {
-        try {
-            $this->configurationService->store($request->validated());
-        } catch (\Throwable $th) {
-            return $this->errorResponse(
-                [],
-                Lang::get('error.syncing_setup_failed_update')
-            );
-        }
-        return $this->successfulResponse(
-            [],
-            Lang::get('success.syncing_setup_updated')
-        );
+        //
     }
 
     /**
