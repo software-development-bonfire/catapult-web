@@ -178,7 +178,19 @@
         components: {
             DialogBox,
             Datatable,
-            TableRow
+            TableRow,
+            TableData
+        },
+        mounted() {
+            let urlData = QueryString.parse(window.location.search.substr(1));
+
+            if (urlData.data) {
+                this.form.mode = 'update';
+                this.form.values.mapping_type = Number(urlData.data.mapping_type);
+                this.form.values.api_endpoint = urlData.data.api_endpoint;
+                this.form.values.api_version_name = urlData.data.api_version_name;
+                this.form.values.version_status = Number(urlData.data.status);
+            }
         },
         data() {
             return {
@@ -272,7 +284,21 @@
         },
         methods: {
             save() {
-                
+                if (this.form.mode === 'create') {
+                    this.dialog.visible = true;
+                    this.dialog.status = 'success';
+                    this.dialog.message = this.$t('success.successfully_created', { value: this.$t('label.field_mapping_setup') });
+                    this.dialog.ok.function = () => {
+                        this.dialog.visible = false;
+                    };
+                } else {
+                    this.dialog.visible = true;
+                    this.dialog.status = 'success';
+                    this.dialog.message = this.$t('success.successfully_updated', { value: this.$t('label.field_mapping_setup') });
+                    this.dialog.ok.function = () => {
+                        this.dialog.visible = false;
+                    };
+                }
             },
 
             clearFields() {
