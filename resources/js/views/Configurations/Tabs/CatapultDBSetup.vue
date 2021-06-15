@@ -1,7 +1,7 @@
 <template>
     <div class="tab-pane fade" id="catapult-db-setup" role="tabpanel" aria-labelledby="catapult-db-setup-tab">
         <div class="m-1">
-            <button class="button button--dark" @click="create">Add new</button>
+            <button class="button button--dark" @click="create">Add New</button>
         </div>
         <datatable
             class="
@@ -53,7 +53,7 @@
             </template>
             <template slot="content">
                 <div class="form-group">
-                    <label>Catapult DB Setup Name<span class="required">*</span></label>
+                    <label>Catapult DB Setup Name <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.name"
                     :class="{ 'is-invalid': errors.hasOwnProperty('name') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('name')">
@@ -101,7 +101,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>Status</label>
+                    <label>Setup Status</label>
                     <select class="form-control" v-model="form.values.status">
                         <option :value="1">Active</option>
                         <option :value="0">Inactive</option>
@@ -183,7 +183,7 @@
                     header: [
                         {
                             name: "name",
-                            label: 'Catapult DB Setup Name',
+                            label: "Catapult DB Setup Name",
                             width: '250'
                         },
                         {

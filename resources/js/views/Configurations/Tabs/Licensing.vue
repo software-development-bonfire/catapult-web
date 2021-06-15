@@ -9,7 +9,7 @@
                         table-design--default">
                     <thead>
                         <tr>
-                            <td align="center" width="100px">Fields</td>
+                            <td align="center" width="100px">Field</td>
                             <td align="center" width="300px">Values</td>
                         </tr>
                     </thead>

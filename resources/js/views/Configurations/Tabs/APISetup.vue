@@ -1,7 +1,7 @@
 <template>
     <div class="tab-pane fade" id="api-setup" role="tabpanel" aria-labelledby="api-setup-tab">
         <div class="m-1">
-            <button class="button button--dark" @click="create">Add new</button>
+            <button class="button button--dark" @click="create">Add New</button>
         </div>
         <datatable
             class="datatable--hoverable"
@@ -57,7 +57,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>Status</label>
+                    <label>Setup Status</label>
                     <select class="form-control" v-model="form.values.status">
                         <option :value="1">Active</option>
                         <option :value="0">Inactive</option>
@@ -136,17 +136,17 @@
                     header: [
                         {
                             name: "name",
-                            label: 'API Setup Name',
+                            label: "API Setup Name",
                             width: '200'
                         },
                         {
                             name: "end_point",
-                            label: 'End Point',
+                            label: "End Point",
                             width: '200'
                         },
                         {
                             name: "status",
-                            label: 'Status',
+                            label: "Status",
                             width: '90'
                         },
                         {

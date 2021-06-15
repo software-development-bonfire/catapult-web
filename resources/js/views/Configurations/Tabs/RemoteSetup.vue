@@ -1,7 +1,7 @@
 <template>
     <div class="tab-pane fade" id="remote-setup" role="tabpanel" aria-labelledby="remote-setup-tab">
         <div class="m-1">
-            <button class="button button--dark" @click="create">Add new</button>
+            <button class="button button--dark" @click="create">Add New</button>
         </div>
         <datatable
             class="
@@ -52,7 +52,7 @@
             v-if="modal.visible"
             @close="modal.visible = false">
             <template slot="header">
-                {{ $t('label.remote_setup_detail') }}
+                Remote Setup Detail
             </template>
             <template slot="content">
                 <div class="form-group">
@@ -64,7 +64,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>Remote Path<span class="required">*</span></label>
+                    <label>Remote Path <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.path"
                     :class="{ 'is-invalid': errors.hasOwnProperty('path') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('path')">
@@ -104,7 +104,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>Remote Password<span class="required">*</span></label>
+                    <label>Remote Password <span class="required">*</span></label>
                     <input type="password" class="form-control" v-model="form.values.password"
                     :class="{ 'is-invalid': errors.hasOwnProperty('password') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('password')">
@@ -112,7 +112,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>Status</label>
+                    <label>Setup Status</label>
                     <select class="form-control" v-model="form.values.status">
                         <option :value="1">Active</option>
                         <option :value="0">Inactive</option>
@@ -195,32 +195,32 @@
                     header: [
                         {
                             name: "name",
-                            label: 'Remote Setup Name',
+                            label: "Remote Setup Name",
                             width: '200'
                         },
                         {
                             name: "path",
-                            label: 'Remote Path',
+                            label: "Remote Path",
                             width: '250'
                         },
                         {
                             name: "server",
-                            label: 'Remote Server',
+                            label: "Remote Server",
                             width: '150'
                         },
                         {
                             name: "host",
-                            label: 'Host',
+                            label: 'Remote Host',
                             width: '150'
                         },
                         {
                             name: "port",
-                            label: 'Port',
+                            label: 'Remote Port',
                             width: '150'
                         },
                         {
                             name: "username",
-                            label: 'Username',
+                            label: 'Remote User',
                             width: '150'
                         },
                         {

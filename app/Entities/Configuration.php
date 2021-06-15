@@ -14,7 +14,6 @@ use Prettus\Repository\Traits\TransformableTrait;
 class Configuration extends Model implements Transformable
 {
     use TransformableTrait;
-
     protected  $primaryKey = 'attribute';
     public $incrementing = false;
     public $keyType = 'string';

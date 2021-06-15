@@ -4,7 +4,7 @@ use App\Entities\Configuration;
 use Eighty8\LaravelSeeder\Migration\MigratableSeeder;
 use Eighty8\LaravelSeeder\Repository\DisableForeignKeysTrait;
 
-class CreateInitialConfigurations extends MigratableSeeder
+class CreateInitialConfiguration extends MigratableSeeder
 {
     use DisableForeignKeysTrait;
 
