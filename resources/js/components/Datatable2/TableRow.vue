@@ -303,8 +303,8 @@
         }
 
         &--action {
-            min-width: 80px;
-            width: 80px;
+            min-width: 40px;
+            width: 40px;
             text-align: center;
         }
 

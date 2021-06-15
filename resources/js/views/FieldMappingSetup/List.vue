@@ -37,19 +37,47 @@
                 datatable--hoverable"
             :header-fields="table.header"
             :settings="table.settings"
-            :table="table.values">
+            :table="table.values"
+            v-on:delete-row="deleteRow">
             <template slot="content">
                 <table-row
+                    type="view"
                     v-for="(tableData, tableDataIndex) in table.values.data" :key="tableDataIndex"
                     :values="tableData"
                     :settings="table.settings"
                     :rowIndex="tableDataIndex"
-                    v-on:row-click="openDetail(tableData, tableDataIndex)">
+                    v-on:row-click="openDetail(tableData)">
                     <td class="datatable-cell" align="center">
-                        <span v-text="tableData.mapping_type"></span>
+                        <span
+                            v-text="
+                                tableData.mapping_type === 1 ? $t('label.cdis_to_pos')
+                                : tableData.mapping_type === 2 ? $t('label.pos_to_cdis')
+                                : ''">
+                        </span>
                     </td>
                     <td class="datatable-cell">
-                        <span v-text="tableData.api_endpoint"></span>
+                        <template v-if="tableData.mapping_type === 1">
+                            <span
+                                v-text="
+                                tableData.api_endpoint === 1 ? $t('label.product')
+                                : tableData.api_endpoint === 2 ? $t('label.brand')
+                                : tableData.api_endpoint === 3 ? $t('label.category')
+                                : tableData.api_endpoint === 4 ? $t('label.vendor')
+                                : tableData.api_endpoint === 5 ? $t('label.uom')
+                                : ''">
+                            </span>
+                        </template>
+                        <template v-else>
+                            <span
+                                v-text="
+                                tableData.api_endpoint === 1 ? $t('label.transaction')
+                                : tableData.api_endpoint === 2 ? $t('label.zread')
+                                : tableData.api_endpoint === 3 ? $t('label.audit_trail')
+                                : tableData.api_endpoint === 4 ? $t('label.cash_breakdown')
+                                : tableData.api_endpoint === 5 ? $t('label.cash_drawer')
+                                : ''">
+                            </span>
+                        </template>
                     </td>
                     <td class="datatable-cell">
                         <span v-text="tableData.api_version_name"></span>
@@ -57,7 +85,7 @@
                     <td class="datatable-cell">
                         <span v-text="tableData.total_field_entries"></span>
                     </td>
-                    <td class="datatable-cell" align="center">
+                    <td class="datatable-cell">
                         <span v-text="tableData.status ? $t('label.active') : $t('label.inactive')"></span>
                     </td>
                     <td class="datatable-cell">
@@ -121,12 +149,12 @@
                         {
                             name: "api_endpoint",
                             label: this.$t('label.api_endpoint'),
-                            width: '250'
+                            width: '180'
                         },
                         {
                             name: "api_version_name",
                             label: this.$t('label.api_version_name'),
-                            width: '150'
+                            width: '250'
                         },
                         {
                             name: "total_field_entries",
@@ -142,15 +170,35 @@
                             name: "last_modified",
                             label: this.$t('label.last_modified'),
                             width: '150'
-                        },
-                        {
-                            name: "actions",
-                            label: '',
-                            width: '50'
                         }
                     ],
                     values: {
-                        data: [],
+                        data: [
+                            {
+                                mapping_type: 1,
+                                api_endpoint: 1,
+                                api_version_name: 'Transaction API Field v 2.0',
+                                total_field_entries: '70',
+                                status: 1,
+                                last_modified: '2021/5/20',
+                            },
+                            {
+                                mapping_type: 1,
+                                api_endpoint: 4,
+                                api_version_name: 'Transaction API Field v 1.0',
+                                total_field_entries: '70',
+                                status: 1,
+                                last_modified: '2021/5/20',
+                            },
+                            {
+                                mapping_type: 2,
+                                api_endpoint: 2,
+                                api_version_name: 'POS API Field v 2.0',
+                                total_field_entries: '30',
+                                status: 0,
+                                last_modified: '2021/5/20',
+                            }
+                        ],
                         meta: {
                             pagination: {
                                 count: 1,
@@ -164,7 +212,8 @@
                     },
                     settings: {
                         itemsPerPage: 10,
-                        withRowNumbers: true
+                        withRowNumbers: true,
+                        hasDelete: true
                     }
                 }
             }
@@ -173,7 +222,13 @@
             paginate() {},
 
             create() {
-                
+                window.open('/field-mapping-setup/detail', '_self');
+            },
+
+            openDetail(data) {
+                window.open('/field-mapping-setup/detail?' + QueryString.stringify({
+                    data: data
+                }), '_self');
             },
 
             deleteRow(index) {

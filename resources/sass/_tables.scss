@@ -76,3 +76,14 @@
         padding: 4px;
     }
 }
+
+.datatable-row {
+    &--sm {
+        input[type="text"],
+        select {
+            border-radius: 0px;
+            padding: 4px 8px;
+            height: 30px;
+        }
+    }
+}

@@ -1,0 +1,26 @@
+window.STATUS = {
+    ACTIVE: 1,
+    INACTIVE: 0
+}
+
+window.MAPPING_TYPE = {
+    CDIS_TO_POS: 1,
+    POS_TO_CDIS: 2
+}
+
+window.API_ENDPOINT = {
+    CDIS: {
+        PRODUCT: 1,
+        BRAND: 2,
+        CATEGORY: 3,
+        VENDOR: 4,
+        UOM: 5,
+    },
+    POS: {
+        TRANSACTION: 1,
+        ZREAD: 2,
+        AUDIT_TRAIL: 3,
+        CASH_BREAKDOWN: 4,
+        CASH_DRAWER: 5,
+    }
+}
