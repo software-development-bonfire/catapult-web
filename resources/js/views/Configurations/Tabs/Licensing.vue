@@ -9,13 +9,13 @@
                         table-design--default">
                     <thead>
                         <tr>
-                            <td align="center" width="100px">Field</td>
-                            <td align="center" width="300px">Values</td>
+                            <td align="center" width="100px">{{ $t('label.field') }}</td>
+                            <td align="center" width="300px">{{ $t('label.values') }}</td>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Host <span class="required">*</span></td>
+                            <td>{{ $t('label.host') }} <span class="required">*</span></td>
                             <td>
                                 <input type="text" class="form-control" v-model="form.values.host">
                                 <label class="text-danger error-message m-0">
@@ -24,7 +24,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>Client ID <span class="required">*</span></td>
+                            <td>{{ $t('label.client_id') }} <span class="required">*</span></td>
                             <td>
                                 <input type="text" class="form-control" v-model="form.values.client_id">
                                 <label class="text-danger error-message m-0">
@@ -33,7 +33,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>Product Key <span class="required">*</span></td>
+                            <td>{{ $t('label.product_key') }} <span class="required">*</span></td>
                             <td>
                                 <input type="text" class="form-control" v-model="form.values.product_key">
                                 <label class="text-danger error-message m-0">
@@ -44,7 +44,7 @@
                     </tbody>
                 </table>
                 <div class="form-group mt-3" align="right">
-                    <button class="button button--dark" @click="authenticate">Authenticate</button>
+                    <button class="button button--dark" @click="authenticate">{{ $t('label.authenticate') }}</button>
                 </div>
             </div>
         </div>
