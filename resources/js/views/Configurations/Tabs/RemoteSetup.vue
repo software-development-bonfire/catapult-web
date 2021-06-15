@@ -200,12 +200,12 @@
                         },
                         {
                             name: "path",
-                            label: 'Remote Path',
+                            label: "Remote Path",
                             width: '250'
                         },
                         {
                             name: "server",
-                            label: 'Remote Server',
+                            label: "Remote Server",
                             width: '150'
                         },
                         {

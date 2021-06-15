@@ -11,9 +11,14 @@ class ConfigurationsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function view()
     {
         return view('configurations.list');
+    }
+
+    public function index()
+    {
+        //
     }
 
     /**

@@ -1,19 +1,20 @@
 <template>
     <div class="module-container">
         <div class="box-row box-row--white p-1" align="right">
-            <button class="button button--light module-action-button" @click="save">Save</button>
+            <button class="button button--light module-action-button" @click="save">{{ $t('label.save') }}</button>
         </div>
         <div class="overflow-auto p-4">
-            <h3>Batch Syncing</h3>
+            <h3>{{ $t('label.batch_syncing') }}</h3>
             <label>
-                NOTE: The entered value will apply on the 5 mins Interval setting ONLY. Limit for the other intervals will be automatically determined by the system multiplier<br>
-                <span class="text-indent">(Ex. 5mins interval = 60 limit, 10mins interval = 120 limit and so on.)</span>
+                {{ $t('label.batch_syncing_note') }}<br>
+                <span class="text-indent">{{ $t('label.batch_syncing_example') }}</span>
             </label>
             <div class="form-group">
-                <label>Set the entry limit per batch syncing (POS TO CDIS PROCESS)</label>
+                <label>{{ $t('label.pos_to_cdis_process') }}</label>
                 <input
                     type="text"
                     class="form-control w-25 text-left"
+                    :class="{ 'is-invalid': errors.hasOwnProperty('pos_to_cdis_entry_limit') }"
                     v-model.number="form.values.pos_to_cdis_entry_limit"
                     v-mask="{
                         alias: 'integer',
@@ -21,15 +22,17 @@
                         digitsOptional: false,
                         showMaskOnHover: false,
                         showMaskOnFocus : false,
-                        min: 60,
-                        max: 1000
                     }">
+                <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('pos_to_cdis_entry_limit')">
+                {{errors.pos_to_cdis_entry_limit[0]}}
+                </label>
             </div>
             <div class="form-group">
-                <label>Set the entry limit per batch syncing (CDIS TO POS PROCESS)</label>
+                <label>{{ $t('label.cdis_to_pos_process') }}</label>
                 <input
                     type="text"
                     class="form-control w-25 text-left"
+                    :class="{ 'is-invalid': errors.hasOwnProperty('cdis_to_pos_entry_limit') }"
                     v-model.number="form.values.cdis_to_pos_entry_limit"
                     v-mask="{
                         alias: 'integer',
@@ -37,13 +40,14 @@
                         digitsOptional: false,
                         showMaskOnHover: false,
                         showMaskOnFocus : false,
-                        min: 60,
-                        max: 1000
                     }">
+                <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('cdis_to_pos_entry_limit')">
+                    {{errors.cdis_to_pos_entry_limit[0]}}
+                </label>
             </div>
-            <h3 class="mt-4">Syncing Prioritization</h3>
+            <h3 class="mt-4">{{ $t('label.syncing_prioritization') }}</h3>
             <div class="w-50" align="center">
-                <label>NOTE: Set the Syncing priority ranking of data entries from POS</label>
+                <label>{{ $t('label.syncing_prioritization_note') }}</label>
             </div>
             <div class="rankings">
                 <draggable
@@ -83,6 +87,9 @@
         components: {
             Draggable,
             DialogBox
+        },
+        mounted() {
+            this.getData();
         },
         computed: {
             dragOptions() {
@@ -125,16 +132,44 @@
                     { name: "Cash Drawer" },
                     { name: "Audit Trail" },
                 ],
+                errors: {}
             }
         },
         methods: {
+            getData() {
+                axios.get('syncing')
+                .then(response => {
+                    response.data.find(config => {
+                        if (config.attribute === 'syncing_order') {
+                            this.ranking = eval(response.data[0].value);
+                        }
+                        if (config.attribute === 'pos_to_cdis_entry_limit') {
+                            this.form.values.pos_to_cdis_entry_limit = response.data[1].value;
+                        }
+                        if (config.attribute === 'cdis_to_pos_entry_limit') {
+                            this.form.values.cdis_to_pos_entry_limit = response.data[2].value;
+                        }
+                    })
+                })
+            },
             save() {
-                this.dialog.visible = true;
-                this.dialog.status = 'success';
-                this.dialog.message = 'Syncing Setup saved successfully!';
-                this.dialog.ok.function = () => {
-                    this.dialog.visible = false;
-                };
+                var config = {
+                    syncing_order: JSON.stringify(this.ranking),
+                    pos_to_cdis_entry_limit: parseInt(this.form.values.pos_to_cdis_entry_limit),
+                    cdis_to_pos_entry_limit: parseInt(this.form.values.cdis_to_pos_entry_limit)
+                }
+                axios.post('syncing', config)
+                .then(response => {
+                    this.dialog.visible = true;
+                    this.dialog.status = 'success';
+                    this.dialog.message = response.data.message;
+                    this.dialog.ok.function = () => {
+                        this.dialog.visible = false;
+                    };
+                    this.errors = {};
+                }).catch(error => {
+                    this.errors = error.response.data.errors;
+                })
             }
         }
     }

@@ -141,12 +141,12 @@
                         },
                         {
                             name: "end_point",
-                            label: 'End Point',
+                            label: "End Point",
                             width: '200'
                         },
                         {
                             name: "status",
-                            label: 'Status',
+                            label: "Status",
                             width: '90'
                         },
                         {
