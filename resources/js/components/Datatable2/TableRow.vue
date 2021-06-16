@@ -37,10 +37,6 @@
             settings: {
                 type: Object
             },
-            rowEnabling: {
-                type: Boolean,
-                default: false
-            },
             type: {
                 type: String
             },
@@ -101,20 +97,9 @@
                 if (this.rowType === 'view') {
                     this.rowType = 'edit';
 
-                    if (! this.rowEnabling) {
-                        row.querySelectorAll('input, button, select, checkbox, radio').forEach(function(element) {
-                            element.disabled = false;
-                        });
-
-                        // vm-select component
-                        row.querySelectorAll('.vm-input').forEach(function(element) {
-                            element.classList.remove('disabled');
-                        });
-                    } else {
-                        this.$emit('enable-row', {
-                            state: true
-                        });
-                    }
+                    this.$emit('enable-row', {
+                        state: true
+                    });
                 } else if (this.rowType === 'edit') {
                     this.$parent.$emit('update-row', {
                         values: this.rowValues,
@@ -125,20 +110,9 @@
                             this.rowType = 'view';
                             this.updateObjectChild(this.defaults.rowValues, this.rowValues);
 
-                            if (!this.rowEnabling) {
-                                row.querySelectorAll('input, button, select, checkbox, radio').forEach(function(element) {
-                                    element.disabled = true;
-                                });
-
-                                // vm-select component
-                                row.querySelectorAll('.vm-input').forEach(function(element) {
-                                    element.classList.add('disabled');
-                                });
-                            } else {
-                                this.$emit('enable-row', {
-                                    state: false
-                                });
-                            }
+                            this.$emit('enable-row', {
+                                state: false
+                            });
                         }
                     });
                 }
@@ -174,22 +148,11 @@
                 if (this.rowType === 'edit') {
                     this.rowType = 'view';
                     this.isActive = false;
-
-                    if (! this.rowEnabling) {
-                        row.querySelectorAll('input, button, select, checkbox, radio').forEach(function(element) {
-                            element.disabled = true;
-                        });
-
-                        // vm-select component
-                        row.querySelectorAll('.vm-input').forEach(function(element) {
-                            element.classList.add('disabled');
-                        });
-                    } else {
-                        this.$emit('enable-row', {
-                            state: false
-                        });
-                    }
                 }
+
+                this.$emit('enable-row', {
+                    state: false
+                });
             },
 
             updateObjectChild(subject, object, reactive = true) {
@@ -316,6 +279,16 @@
                 }
             }
         }
+
+        &--sm {
+            input[type="text"],
+            select {
+                padding: 4px;
+                font-size: 14px;
+                height: auto;
+                border-radius: 0px;
+            }
+        }
     }
 
     .datatable-cell {
@@ -330,8 +303,8 @@
         }
 
         &--action {
-            min-width: 80px;
-            width: 80px;
+            min-width: 40px;
+            width: 40px;
             text-align: center;
         }
 

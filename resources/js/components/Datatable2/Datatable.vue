@@ -522,9 +522,14 @@
 
         &--font-sm {
             table.main-table {
+                thead {
+                    th, td {
+                        font-size: 12px !important;
+                    }
+                }
                 tbody {
                     td {
-                        font-size: 12px;
+                        font-size: 12px !important;
                     }
                 }
             }

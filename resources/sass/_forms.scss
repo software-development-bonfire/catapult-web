@@ -38,3 +38,19 @@ ul.nav-tabs {
         border-bottom: 1px #ced6e0 solid;
     }
 }
+
+.back-to-list {
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    span {
+        margin-left: 10px;
+    }
+    &:hover {
+        span {
+            text-decoration: underline;
+        }
+    }
+}

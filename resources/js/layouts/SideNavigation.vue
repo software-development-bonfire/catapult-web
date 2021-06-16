@@ -6,60 +6,60 @@
                 class="list-group-item"
                 :class="page === 'dashboard' ? 'active' : ''">
                 <i class="side-link-icon fa fa-home fa-lg"></i>
-                <span class="side-link-label">Dashboard</span>
+                <span class="side-link-label">{{ $t('label.dashboard') }}</span>
             </a>
             <a
                 href="/configurations"
                 class="list-group-item"
                 :class="page === 'configurations' ? 'active' : ''">
                 <i class="side-link-icon fa fa-gear fa-lg"></i>
-                <span class="side-link-label">Configurations</span>
+                <span class="side-link-label">{{ $t('label.configurations') }}</span>
             </a>
             <a
                 href="#"
                 class="list-group-item"
                 :class="page === 'field-mapping' ? 'active' : ''">
                 <i class="side-link-icon fa fa-dot-circle-o fa-lg"></i>
-                <span class="side-link-label">Field Mapping</span>
+                <span class="side-link-label">{{ $t('label.field_mapping') }}</span>
             </a>
             <a
                 href="#"
                 class="list-group-item"
                 :class="page === 'syncing' ? 'active' : ''">
                 <i class="side-link-icon fa fa-refresh fa-lg"></i>
-                <span class="side-link-label">Syncing</span>
+                <span class="side-link-label">{{ $t('label.syncing') }}</span>
             </a>
             <a
                 href="#"
                 class="list-group-item"
                 :class="page === 'logs' ? 'active' : ''">
                 <i class="side-link-icon fa fa-list-alt fa-lg"></i>
-                <span class="side-link-label">Logs</span>
+                <span class="side-link-label">{{ $t('label.logs') }}</span>
             </a>
             <a
                 href="#"
                 class="list-group-item"
                 :class="page === 'user-account' ? 'active' : ''">
                 <i class="side-link-icon fa fa-user fa-lg"></i>
-                <span class="side-link-label">User Account</span>
+                <span class="side-link-label">{{ $t('label.user_account') }}</span>
             </a>
             <a
                 href="#admin-settings" class="list-group-item collapsed" aria-expanded="true" data-toggle="collapse">
                 <i class="side-link-icon fa fa-shield fa-lg"></i>
-                <span class="side-link-label">Admin Settings</span>
+                <span class="side-link-label">{{ $t('label.admin_settings') }}</span>
             </a>
             <div class="list-group collapse show" aria-expanded="true" id="admin-settings">
                 <a
                     href="/syncing-setup"
                     class="list-group-item"
                     :class="page === 'syncing-setup' ? 'active' : ''">
-                    Syncing Setup
+                    {{ $t('label.syncing_setup') }}
                 </a>
                 <a
-                    href="#"
+                    href="/field-mapping-setup"
                     class="list-group-item"
                     :class="page === 'field-mapping-setup' ? 'active' : ''">
-                    Field Mapping Setup
+                    {{ $t('label.field_mapping_setup') }}
                 </a>
             </div>
         </div>
