@@ -23,11 +23,11 @@
                 <span class="side-link-label">{{ $t('label.field_mapping') }}</span>
             </a>
             <a
-                href="#"
+                href="/sync-interval-setting"
                 class="list-group-item"
-                :class="page === 'syncing' ? 'active' : ''">
+                :class="page === 'sync-interval-setting' ? 'active' : ''">
                 <i class="side-link-icon fa fa-refresh fa-lg"></i>
-                <span class="side-link-label">{{ $t('label.syncing') }}</span>
+                <span class="side-link-label">{{ $t('label.sync_interval_setting') }}</span>
             </a>
             <a
                 href="#"
