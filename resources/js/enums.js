@@ -8,6 +8,11 @@ window.MAPPING_TYPE = {
     POS_TO_CDIS: 2
 }
 
+window.SYNCING_TYPE = {
+    CATAPULT_TO_CDIS: 1,
+    CDIS_TO_CATAPULT: 2
+}
+
 window.API_ENDPOINT = {
     CDIS: {
         PRODUCT: 1,

@@ -44,3 +44,6 @@ import './enums';
 
 import QueryString from 'qs';
 window.QueryString = QueryString;
+
+import moment from 'moment-timezone';
+window.moment = moment;
