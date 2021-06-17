@@ -11,6 +11,13 @@ export default {
             "catapult_db_setup_failed_create": "Catapult DB Setup failed to create",
             "catapult_db_setup_failed_deleted": "Catapult DB Setup failed to deleted",
             "catapult_db_setup_failed_update": "Catapult DB Setup failed to update",
+            "field_is_required": "The CDIS Fields is required.",
+            "field_mapping_setup_failed_create": "Field Mapping Setup failed to create.",
+            "field_mapping_setup_failed_delete": "Field Mapping Setup failed to delete.",
+            "field_mapping_setup_failed_update": "Field Mapping Setup failed to update.",
+            "field_mapping_detail_failed_create": "Field Mapping detail failed to create.",
+            "field_mapping_detail_failed_delete": "Field Mapping detail failed to delete.",
+            "field_mapping_detail_failed_update": "Field Mapping detail failed to update.",
             "remote_setup_failed_create": "Remote Setup failed to create",
             "remote_setup_failed_deleted": "Remote Setup failed to deleted",
             "remote_setup_failed_update": "Remote Setup failed to update",
@@ -60,7 +67,7 @@ export default {
             "csv_column_name": "CSV Column Name",
             "csv_file_name_identifier": "CSV File Name Identifier",
             "dashboard": "Dashboard",
-            "data_type": "Data Type",
+            "mapping_type": "Mapping Type",
             "db_name": "DB Name",
             "db_password": "DB Password",
             "db_username": "DB Usename",
@@ -80,7 +87,6 @@ export default {
             "login": "Login",
             "logout": "Logout",
             "logs": "Logs",
-            "mapping_type": "Mapping Type",
             "password": "Password",
             "path": "Path",
             "port": "Port",
@@ -145,6 +151,12 @@ export default {
             "catapult_db_setup_created": "Catapult DB Setup successfully created!",
             "catapult_db_setup_deleted": "Catapult DB Setup successfully deleted!",
             "catapult_db_setup_updated": "Catapult DB Setup successfully updated!",
+            "field_mapping_setup_created": "Field Mapping Setup successfully created!",
+            "field_mapping_setup_deleted": "Field Mapping Setup successfully deleted!",
+            "field_mapping_setup_updated": "Field Mapping Setup successfully updated!",
+            "field_mapping_detail_created": "Field Mapping detail successfully create!",
+            "field_mapping_detail_deleted": "Field Mapping detail successfully deleted!",
+            "field_mapping_detail_updated": "Field Mapping detail successfully updated!",
             "remote_setup_created": "Remote Setup successfully created!",
             "remote_setup_deleted": "Remote Setup successfully deleted!",
             "remote_setup_updated": "Remote Setup successfully updated!",
@@ -266,7 +278,9 @@ export default {
                     "rule-name": "custom-message"
                 }
             },
-            "attributes": []
+            "attributes": [],
+            "field_mapping_cdis_required": "Please input atleast one CDIS Field",
+            "this_field_is_required": "This field is required"
         }
     }
 }

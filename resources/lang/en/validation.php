@@ -147,4 +147,7 @@ return [
 
     'attributes' => [],
 
+    'field_mapping_cdis_required' => 'Please input atleast one CDIS Field',
+    'this_field_is_required' => 'This field is required',
+
 ];

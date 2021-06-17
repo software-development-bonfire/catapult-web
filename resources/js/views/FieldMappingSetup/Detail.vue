@@ -47,12 +47,12 @@
                         <input
                             type="text"
                             class="form-control"
-                            :class="{ 'is-invalid': form.values.api_version_name == '' }"
+                            :class="{ 'is-invalid': errors.error.hasOwnProperty('api_version_name') }"
                             v-model="form.values.api_version_name">
                         <label
                             class="text-danger error-message mb-0"
-                            v-if="form.values.api_version_name == ''">
-                            API Version Name is required.
+                            v-if="errors.error.hasOwnProperty('api_version_name')">
+                            {{errors.error.api_version_name[0]}}
                         </label>
                     </td>
                 </tr>
@@ -81,6 +81,11 @@
                 </tr>
             </table>
         </div>
+        <label
+            class="text-danger error-message mb-0"
+            v-if="errors.error.hasOwnProperty('details')">
+            {{errors.error.details[0]}}
+        </label>
         <datatable
             class="
                 datatable--full-width
@@ -106,7 +111,8 @@
                         <input type="checkbox" v-model="tableData.required" :disabled="! tableData.edit">
                     </table-data>
                     <table-data
-                        valign="center">
+                        valign="center"
+                        :error="tableData.error">
                         <template v-if="tableData.edit">
                             <input type="text" class="form-control" v-model="tableData.field">
                         </template>
@@ -126,7 +132,7 @@
                     <table-data
                         valign="center">
                         <template v-if="tableData.edit">
-                            <select class="form-control" v-model="tableData.data_type">
+                            <select class="form-control" v-model="tableData.mapping_type">
                                 <option value="DECIMAL">DECIMAL</option>
                                 <option value="BIGINT">BIGINT</option>
                                 <option value="TINYINT">TINYINT</option>
@@ -139,7 +145,7 @@
                             </select>
                         </template>
                         <template v-else>
-                            <span v-text="tableData.data_type"></span>
+                            <span v-text="tableData.mapping_type"></span>
                         </template>
                     </table-data>
                     <table-data
@@ -151,10 +157,10 @@
                         v-if="form.values.mapping_type === 2"
                         valign="center">
                         <template v-if="tableData.edit">
-                            <input type="text" class="form-control" v-model="tableData.default_field_values">
+                            <input type="text" class="form-control" v-model="tableData.default_value">
                         </template>
                         <template v-else>
-                            <span v-text="tableData.default_field_values"></span>
+                            <span v-text="tableData.default_value"></span>
                         </template>
                     </table-data>
                     <table-data
@@ -190,7 +196,7 @@
                     <table-data>
                         <select
                             class="form-control"
-                            v-model="table.add.data_type">
+                            v-model="table.add.mapping_type">
                             <option value="DECIMAL">DECIMAL</option>
                             <option value="BIGINT">BIGINT</option>
                             <option value="TINYINT">TINYINT</option>
@@ -215,7 +221,7 @@
                         <input
                             type="text"
                             class="form-control"
-                            v-model="table.add.default_field_values">
+                            v-model="table.add.default_value">
                     </table-data>
                     <table-data>
                         <input
@@ -255,13 +261,30 @@
         },
         mounted() {
             let urlData = QueryString.parse(window.location.search.substr(1));
-
             if (urlData.data) {
                 this.form.mode = 'update';
+                this.form.values.bid = Number(urlData.data.bid);
                 this.form.values.mapping_type = Number(urlData.data.mapping_type);
                 this.form.values.api_endpoint = urlData.data.api_endpoint;
                 this.form.values.api_version_name = urlData.data.api_version_name;
                 this.form.values.version_status = Number(urlData.data.status);
+                if (urlData.data.details !== undefined) {
+                    this.table.values.data = urlData.data.details.map(element => {
+                        return {
+                            edit: false,
+                            id: element.id,
+                            bid: element.bid,
+                            column_name: element.column_name,
+                            default_value: element.default_value,
+                            description: element.description,
+                            field: element.field,
+                            field_mapping_bid: element.field_mapping_bid,
+                            file_name: element.file_name,
+                            required: element.required,
+                            mapping_type: element.mapping_type
+                        }
+                    });
+                }
             }
         },
         data() {
@@ -293,8 +316,9 @@
                 },
                 errors: {
                     add: {
-                        field: 'Field is required.'
-                    }
+                        field: ''
+                    },
+                    error: {}
                 },
                 table: {
                     cdis_to_pos: {
@@ -315,8 +339,8 @@
                                 width: '200'
                             },
                             {
-                                name: "data_type",
-                                label: this.$t('label.data_type'),
+                                name: "mapping_type",
+                                label: this.$t('label.mapping_type'),
                                 width: '100'
                             },
                             {
@@ -344,8 +368,8 @@
                                 width: '170'
                             },
                             {
-                                name: "data_type",
-                                label: this.$t('label.data_type'),
+                                name: "mapping_type",
+                                label: this.$t('label.mapping_type'),
                                 width: '80'
                             },
                             {
@@ -354,8 +378,8 @@
                                 width: '100'
                             },
                             {
-                                name: "default_field_values",
-                                label: this.$t('label.default_field_values'),
+                                name: "default_value",
+                                label: this.$t('label.default_value'),
                                 width: '100'
                             },
                             {
@@ -383,9 +407,9 @@
                         required: false,
                         field: '',
                         description: '',
-                        data_type: 'DECIMAL',
+                        mapping_type: 'DECIMAL',
                         csv_file_name_identifier: '',
-                        default_field_values: '',
+                        default_value: '',
                         csv_column_name: '',
                     },
                     settings: {
@@ -401,19 +425,50 @@
         methods: {
             save() {
                 if (this.form.mode === 'create') {
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_created', { value: this.$t('label.field_mapping_setup') });
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                    };
+                    var config = {
+                        type: this.form.values.mapping_type,
+                        api_endpoint: this.form.values.api_endpoint,
+                        api_version_name: this.form.values.api_version_name,
+                        status: this.form.values.version_status,
+                        details: this.table.values.data
+                    }
+                    axios.post('/field-mapping-setup/detail', config)
+                    .then(response => {
+                        this.dialog.visible = true;
+                        this.dialog.status = 'success';
+                        this.dialog.message = this.$t('success.successfully_created', { value: this.$t('label.field_mapping_setup') });
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                            window.open('/field-mapping-setup', '_self');
+                        };
+                        this.errors.add.field = '';
+                    }).catch(error => {
+                        this.errors.error = error.response.data.errors;
+                        this.errors.add.field = '';
+                    })
+
                 } else {
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_updated', { value: this.$t('label.field_mapping_setup') });
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                    };
+                    var config = {
+                        bid: this.form.values.bid,
+                        type: this.form.values.mapping_type,
+                        api_endpoint: this.form.values.api_endpoint,
+                        api_version_name: this.form.values.api_version_name,
+                        status: this.form.values.version_status,
+                    }
+                    axios.put(`/field-mapping-setup/detail/${this.form.values.bid}`, config)
+                    .then(response => {
+                        this.dialog.visible = true;
+                        this.dialog.status = 'success';
+                        this.dialog.message = this.$t('success.successfully_updated', { value: this.$t('label.field_mapping_setup') });
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                            window.open('/field-mapping-setup', '_self');
+                        };
+                        this.errors.add.field = '';
+                    }).catch(error => {
+                        this.errors.error = error.response.data.errors;
+                        this.errors.add.field = '';
+                    })
                 }
             },
 
@@ -423,41 +478,96 @@
                     required: false,
                     field: '',
                     description: '',
-                    data_type: 'INT',
+                    mapping_type: 'INT',
                     csv_file_name_identifier: '',
-                    default_field_values: '',
+                    default_value: '',
                     csv_column_name: '',
                 };
+                this.errors.add.field = '';
             },
 
             addRow() {
-                this.table.values.data.push({
-                    edit: false,
-                    required: this.table.add.required,
-                    field: this.table.add.field,
-                    description: this.table.add.description,
-                    data_type: this.table.add.data_type,
-                    csv_file_name_identifier: this.table.add.csv_file_name_identifier,
-                    default_field_values: this.table.add.default_field_values === "" ? '\"\"' : this.table.add.default_field_values,
-                    csv_column_name: this.table.add.csv_column_name,
-                });
-                
-                this.dialog.status = 'success';
-                this.dialog.message = this.$t('success.successfully_added_the_data');
-                this.dialog.ok.function = () => {
-                    this.dialog.visible = false;
-                };
-
-                this.clearFields();
+                if (this.form.mode === 'create') {
+                    if (this.table.add.field) {
+                        this.table.values.data.push({
+                            edit: false,
+                            required: this.table.add.required ? 1 : 0,
+                            field: this.table.add.field,
+                            description: this.table.add.description,
+                            mapping_type: this.table.add.mapping_type,
+                            csv_file_name_identifier: this.table.add.csv_file_name_identifier,
+                            default_value: this.table.add.default_value === "" ? '\"\"' : this.table.add.default_value,
+                            csv_column_name: this.table.add.csv_column_name,
+                        });
+                        
+                        this.dialog.status = 'success';
+                        this.dialog.message = this.$t('success.successfully_added_the_data');
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                        };
+        
+                        this.clearFields();
+                        this.errors.error = {}
+                    } else {
+                        this.errors.error = {};
+                        this.errors.add.field = this.$t('error.field_is_required');
+                    }
+                } else {
+                    var data = {
+                        field_mapping_bid: this.form.values.bid,
+                        required: this.table.add.required ? 1 : 0,
+                        field: this.table.add.field,
+                        description: this.table.add.description,
+                        mapping_type: this.table.add.mapping_type,
+                        file_name: this.table.add.csv_file_name_identifier,
+                        default_value: this.table.add.default_value === "" ? '\"\"' : this.table.add.default_value,
+                        column_name: this.table.add.csv_column_name,
+                    }
+                    axios.post('/field-mapping-setup/detail-create', data)
+                    .then(response => {
+                        this.table.values.data.push({
+                            edit: false,
+                            field_mapping_bid: this.form.values.bid,
+                            required: this.table.add.required ? 1 : 0,
+                            field: this.table.add.field,
+                            description: this.table.add.description,
+                            mapping_type: this.table.add.mapping_type,
+                            csv_file_name_identifier: this.table.add.csv_file_name_identifier,
+                            default_value: this.table.add.default_value === "" ? '\"\"' : this.table.add.default_value,
+                            csv_column_name: this.table.add.csv_column_name,
+                        });
+                        this.clearFields();
+                        
+                    }).catch(error => {
+                        this.errors.add.field = error.response.data.errors.field[0];
+                    })
+                }
             },
 
             updateRow(data) {
-                data.done();
-                this.dialog.status = 'success';
-                this.dialog.message = this.$t('success.successfully_updated_the_data');
-                this.dialog.ok.function = () => {
-                    this.dialog.visible = false;
-                };
+                if (this.form.mode === 'create') {
+                    if (data.values.field) {
+                        data.done();
+                        this.dialog.status = 'success';
+                        this.dialog.message = this.$t('success.successfully_updated_the_data');
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                        };
+                        this.errors.add.edit = null
+                        this.table.values.data[data.rowIndex].error = ''
+                    } else {
+                        this.table.values.data[data.rowIndex].error = this.$t('validation.this_field_is_required')
+                        this.errors.error = {};
+                    }
+                } else {
+                    axios.put(`/field-mapping-setup/detail-update/${data.values.bid}`, data.values)
+                    .then(response => {
+                        data.done();
+                    }).catch(error => {
+                        this.errors.error = {};
+                        this.table.values.data[data.rowIndex].error = error.response.data.errors.field[0];
+                    })
+                }
             },
 
             deleteRow(data) {
@@ -469,17 +579,21 @@
                 this.dialog.status = 'confirm';
                 this.dialog.message = this.$t('message.do_you_want_to_remove_this_data');
                 this.dialog.ok.function = () => {
-                    this.table.values.data.splice(data.rowIndex, 1);
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_removed_the_data');
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                    };
+                    axios.delete(`/field-mapping-setup/detail_delete/${data.values.bid}`)
+                    .then(response => {
+                        this.table.values.data.splice(data.rowIndex, 1);
+                        this.dialog.status = 'success';
+                        this.dialog.message = this.$t('success.successfully_removed_the_data');
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                        };
+                    })
                 };
                 this.dialog.cancel.function = () => {
                     this.dialog.visible = false;
                 };
-            }
+            },
+
         }
     }
 </script>
