@@ -54,3 +54,15 @@ ul.nav-tabs {
         }
     }
 }
+
+.radio-checkbox {
+    cursor: pointer;
+    input {
+        position: relative;
+        top: 2px;
+    }
+    span {
+        margin-left: 3px;
+        font-weight: normal;
+    }
+}

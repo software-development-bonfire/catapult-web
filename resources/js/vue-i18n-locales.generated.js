@@ -18,6 +18,12 @@ export default {
         },
         "label": {
             "active": "Active",
+            "id": "ID",
+            "module_permission": "Module Permission",
+            "retype_password": "Re-type Password",
+            "name": "Name",
+            "user_account_list": "User Account List",
+            "user_account_detail": "User Account Detail",
             "add_new": "Add New",
             "add_tooltip_description": "Add Tooltip Description",
             "admin_settings": "Admin Settings",
