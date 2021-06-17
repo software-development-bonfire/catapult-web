@@ -61,8 +61,16 @@
             </template>
             <template slot="content">
                 <div class="form-group">
-                    <label>{{ $t('label.sync_interval_name') }}</label>
-                    <input type="text" class="form-control" v-model="form.values.name">
+                    <form-field
+                        :error="form.errors.name">
+                        <label>{{ $t('label.sync_interval_name') }}</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            :class="{ 'is-invalid': form.errors.name !== '' }"
+                            @keypress="form.errors.name = ''"
+                            v-model="form.values.name">
+                    </form-field>
                 </div>
                 <div class="form-group">
                     <label>{{ $t('label.syncing_type') }}</label>
@@ -120,6 +128,7 @@
     import Modal from '../../components/Modal/Modal.vue';
     import DatePicker from 'vue2-datepicker';
     import 'vue2-datepicker/index.css';
+    import FormField from '../../components/Containers/FormField.vue';
 
     export default {
         components: {
@@ -127,7 +136,8 @@
             Datatable,
             TableRow,
             Modal,
-            DatePicker
+            DatePicker,
+            FormField
         },
         data() {
             return {
@@ -163,6 +173,9 @@
                         checking_interval: '5 mins',
                         start_time: '',
                         status: 1,
+                    },
+                    errors: {
+                        name: 'Sync Interval Name is required.'
                     }
                 },
                 table: {
