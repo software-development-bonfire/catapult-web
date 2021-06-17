@@ -341,6 +341,12 @@
         watch: {
             'form.values.start_time': function(time) {
                 this.form.values.start_time_format = moment(time, ["h:mm A"]).format("HH:mm") + ':00';
+            },
+            'form.values.checking_interval': function(value) {
+                if (value !== 'End of Day') {
+                    this.form.values.start_time = '';
+                    this.form.values.start_time_format = '';
+                }
             }
         }
     }
