@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Entities\FieldMapping;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 

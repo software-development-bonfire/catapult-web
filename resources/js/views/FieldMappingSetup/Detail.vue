@@ -560,7 +560,12 @@
 
             addRow() {
                 if (this.form.mode === 'create') {
-                    // if (this.table.add.field) {
+                    var exist = this.table.values.data.some(element => element.field == this.table.add.field)
+                    if (exist) {
+                        this.errors.error = {};
+                        this.errors.add.field = this.$t('error.cdis_field_unique');
+                    }
+                    if (this.table.add.field && !exist) {
                         this.table.values.data.push({
                             edit: false,
                             required: this.table.add.required ? 1 : 0,
@@ -580,10 +585,10 @@
         
                         this.clearFields();
                         this.errors.error = {}
-                    // } else {
-                        // this.errors.error = {};
-                        // this.errors.add.field = this.$t('error.field_is_required');
-                    // }
+                    } else {
+                        this.errors.error = {};
+                        this.errors.add.field = this.$t('error.field_is_required');
+                    }
                 } else {
                     var data = {
                         field_mapping_bid: this.form.values.bid,
