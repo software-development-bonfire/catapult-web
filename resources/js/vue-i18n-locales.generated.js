@@ -73,6 +73,7 @@ export default {
             "db_username": "DB Usename",
             "default_field_values": "Default Field Values",
             "end_of_day": "End of Day",
+            "default_value": "Default Field Values",
             "end_point": "End point",
             "field": "Field",
             "field_mapping": "Field Mapping",
@@ -131,7 +132,8 @@ export default {
             "zread": "Zread"
         },
         "message": {
-            "do_you_want_to_remove_this_data": "Do you want to remove this data?"
+            "do_you_want_to_remove_this_data": "Do you want to remove this data?",
+            "are_you_sure_you_want_to_load_this_preset": "Are you sure you want to load this preset?"
         },
         "pagination": {
             "previous": "&laquo; Previous",

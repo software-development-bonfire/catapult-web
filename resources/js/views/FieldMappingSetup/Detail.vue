@@ -12,7 +12,7 @@
                 <tr>
                     <td valign="top" align="right">{{ $t('label.mapping_type') }}</td>
                     <td width="200px">
-                        <select class="form-control" v-model="form.values.mapping_type">
+                        <select class="form-control" v-model="form.values.mapping_type" @change="getPreset()">
                             <option :value="1">{{ $t('label.cdis_to_pos') }}</option>
                             <option :value="2">{{ $t('label.pos_to_cdis') }}</option>
                         </select>
@@ -56,16 +56,16 @@
                         </label>
                     </td>
                 </tr>
-                <tr>
+                <tr v-if="this.form.mode === 'create'">
                     <td valign="top" align="right">{{ $t('label.copy_preset_from') }}</td>
                     <td>
                         <select class="form-control" v-model="form.values.copy_preset_from">
                             <option value=""></option>
-                            <option value="transactions">Transaction API field v 1.0</option>
+                            <option :value="preset.bid" v-for="(preset, index) in presets" :key="index">{{preset.api_version_name}}</option>
                         </select>
                     </td>
                     <td>
-                        <button class="button button--light">{{ $t('label.load') }}</button>
+                        <button class="button button--light" @click="copyPreset()">{{ $t('label.load') }}</button>
                     </td>
                 </tr>
             </table>
@@ -286,6 +286,7 @@
                     });
                 }
             }
+            this.getPreset();
         },
         data() {
             return {
@@ -419,10 +420,53 @@
                         hasDelete: true,
                         withPagination: false
                     }
-                }
+                },
+                presets: []
             }
         },
         methods: {
+            getPreset() {
+                axios.get('/field-mapping-setup/index'+'?page='+1, {
+                    params: {
+                        mapping_type: this.form.values.mapping_type,
+                        status: 1,
+                        itemsPerPage: 100
+                    }
+                })
+                .then(response => {
+                    this.presets = response.data.data.data
+                })
+            },
+            copyPreset() {
+                var bid = this.form.values.copy_preset_from;
+                var preset = this.presets.find(element => element.bid === bid);
+                if (this.form.values.copy_preset_from) {
+                    var presets = preset.details;
+                    this.dialog.visible = true;
+                    this.dialog.status = 'confirm';
+                    this.dialog.message = this.$t('message.are_you_sure_you_want_to_load_this_preset');
+                    this.dialog.ok.function = () => {
+                        presets.forEach(element => {
+                            this.table.values.data.push({
+                                edit: false,
+                                required: element.required,
+                                field: element.field,
+                                description: element.description,
+                                mapping_type: element.mapping_type,
+                                csv_file_name_identifier: element.file_name,
+                                default_value: element.default_value,
+                                csv_column_name: element.csv_column_name,
+                            });
+                        })
+                        this.dialog.visible = false;
+                    };
+
+                    this.dialog.cancel.function = () => {
+                        this.dialog.visible = false;
+                    };
+                }
+
+            },
             save() {
                 if (this.form.mode === 'create') {
                     var config = {

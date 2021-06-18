@@ -30,6 +30,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/', 'FieldMappingSetupController@view');
         Route::get('/index', 'FieldMappingSetupController@index');
         Route::get('/detail', 'FieldMappingSetupController@detail');
+        Route::get('/detail/preset', 'FieldMappingSetupController@index');
         Route::post('/detail', 'FieldMappingSetupController@store');
         Route::put('/detail/{bid}', 'FieldMappingSetupController@update');
         Route::post('/detail-create', 'FieldMappingSetupController@detail_create');
