@@ -331,7 +331,7 @@
 
                     this.dialog.visible = true;
                     this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_created', { value: this.$t('label.sync_interval_setting') });
+                    this.dialog.message = this.$t('success.successfully_created', { value: this.$t('label.user_account') });
                     this.dialog.ok.function = () => {
                         this.dialog.visible = false;
                         this.modal.detail.visible = false;
@@ -348,7 +348,7 @@
 
                     this.dialog.visible = true;
                     this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_updated', { value: this.$t('label.sync_interval_setting') });
+                    this.dialog.message = this.$t('success.successfully_updated', { value: this.$t('label.user_account') });
                     this.dialog.ok.function = () => {
                         this.dialog.visible = false;
                         this.modal.detail.visible = false;
