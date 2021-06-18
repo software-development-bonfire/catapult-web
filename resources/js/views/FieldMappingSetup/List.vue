@@ -59,24 +59,12 @@
                     <td class="datatable-cell">
                         <template v-if="tableData.mapping_type === 1">
                             <span
-                                v-text="
-                                tableData.api_endpoint === 1 ? $t('label.product')
-                                : tableData.api_endpoint === 2 ? $t('label.brand')
-                                : tableData.api_endpoint === 3 ? $t('label.category')
-                                : tableData.api_endpoint === 4 ? $t('label.vendor')
-                                : tableData.api_endpoint === 5 ? $t('label.uom')
-                                : ''">
+                                v-text=" tableData.api_endpoint">
                             </span>
                         </template>
                         <template v-else>
                             <span
-                                v-text="
-                                tableData.api_endpoint === 1 ? $t('label.transaction')
-                                : tableData.api_endpoint === 2 ? $t('label.zread')
-                                : tableData.api_endpoint === 3 ? $t('label.audit_trail')
-                                : tableData.api_endpoint === 4 ? $t('label.cash_breakdown')
-                                : tableData.api_endpoint === 5 ? $t('label.cash_drawer')
-                                : ''">
+                                v-text="tableData.api_endpoint">
                             </span>
                         </template>
                     </td>
@@ -194,6 +182,18 @@
                         withRowNumbers: true,
                         hasDelete: true
                     }
+                },
+                label: {
+                    product: this.$t('label.product'),
+                    brand: this.$t('label.brand'),
+                    category: this.$t('label.category'),
+                    vendor: this.$t('label.vendor'),
+                    oum: this.$t('label.oum'),
+                    transactions: this.$t('label.transactions'),
+                    zread: this.$t('label.zread'),
+                    audit_trail: this.$t('label.audit_trail'),
+                    cash_breakdown: this.$t('label.cash_breakdown'),
+                    cash_drawer: this.$t('label.cash_drawer'),
                 }
             }
         },

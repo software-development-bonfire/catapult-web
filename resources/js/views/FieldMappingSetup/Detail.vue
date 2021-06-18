@@ -23,20 +23,25 @@
                     <td>
                         <select class="form-control" v-model="form.values.api_endpoint">
                             <template v-if="form.values.mapping_type === 1">
-                                <option :value="1">{{ $t('label.product') }}</option>
-                                <option :value="2">{{ $t('label.brand') }}</option>
-                                <option :value="3">{{ $t('label.category') }}</option>
-                                <option :value="4">{{ $t('label.vendor') }}</option>
-                                <option :value="5">{{ $t('label.uom') }}</option>
+                                <option :value="label.product">{{ $t('label.product') }}</option>
+                                <option :value="label.brand">{{ $t('label.brand') }}</option>
+                                <option :value="label.category">{{ $t('label.category') }}</option>
+                                <option :value="label.vendor">{{ $t('label.vendor') }}</option>
+                                <option :value="label.oum">{{ $t('label.uom') }}</option>
                             </template>
                             <template v-else>
-                                <option :value="1">{{ $t('label.transactions') }}</option>
-                                <option :value="2">{{ $t('label.zread') }}</option>
-                                <option :value="3">{{ $t('label.audit_trail') }}</option>
-                                <option :value="4">{{ $t('label.cash_breakdown') }}</option>
-                                <option :value="5">{{ $t('label.cash_drawer') }}</option>
+                                <option :value="label.transactions">{{ $t('label.transactions') }}</option>
+                                <option :value="label.zread">{{ $t('label.zread') }}</option>
+                                <option :value="label.audit_trail">{{ $t('label.audit_trail') }}</option>
+                                <option :value="label.cash_breakdown">{{ $t('label.cash_breakdown') }}</option>
+                                <option :value="label.cash_drawer">{{ $t('label.cash_drawer') }}</option>
                             </template>
                         </select>
+                        <label
+                            class="text-danger error-message mb-0"
+                            v-if="errors.add.hasOwnProperty('api_endpoint')">
+                            {{errors.add.api_endpoint[0]}}
+                        </label>
                     </td>
                 </tr>
             </table>
@@ -51,8 +56,8 @@
                             v-model="form.values.api_version_name">
                         <label
                             class="text-danger error-message mb-0"
-                            v-if="errors.error.hasOwnProperty('api_version_name')">
-                            {{errors.error.api_version_name[0]}}
+                            v-if="errors.add.hasOwnProperty('api_version_name')">
+                            {{errors.add.api_version_name[0]}}
                         </label>
                     </td>
                 </tr>
@@ -83,8 +88,8 @@
         </div>
         <label
             class="text-danger error-message mb-0"
-            v-if="errors.error.hasOwnProperty('details')">
-            {{errors.error.details[0]}}
+            v-if="errors.add.hasOwnProperty('details')">
+            {{errors.add.details[0]}}
         </label>
         <datatable
             class="
@@ -110,11 +115,22 @@
                         valign="center">
                         <input type="checkbox" v-model="tableData.required" :disabled="! tableData.edit">
                     </table-data>
-                    <table-data
+                    <!-- <table-data
                         valign="center"
                         :error="tableData.error">
                         <template v-if="tableData.edit">
                             <input type="text" class="form-control" v-model="tableData.field">
+                        </template>
+                        <template v-else>
+                            <span v-text="tableData.field"></span>
+                        </template>
+                    </table-data> -->
+                    <table-data
+                        valign="center"
+                        :error="getError(errors.add, `details.${tableDataIndex}.field`) == false ? tableData.error : getError(errors.add, `details.${tableDataIndex}.field`)">
+                        <template v-if="tableData.edit">
+                            <input type="text" class="form-control" v-model="tableData.field"
+                            v-on:input="removeError(errors.add, `fetailes.${tableDataIndex}.field`)">
                         </template>
                         <template v-else>
                             <span v-text="tableData.field"></span>
@@ -309,7 +325,7 @@
                     mode: 'create',
                     values: {
                         mapping_type: 1,
-                        api_endpoint: 1,
+                        api_endpoint: '',
                         api_version_name: '',
                         copy_preset_from: '',
                         version_status: 1
@@ -421,7 +437,19 @@
                         withPagination: false
                     }
                 },
-                presets: []
+                presets: [],
+                label: {
+                    product: this.$t('label.product'),
+                    brand: this.$t('label.brand'),
+                    category: this.$t('label.category'),
+                    vendor: this.$t('label.vendor'),
+                    oum: this.$t('label.oum'),
+                    transactions: this.$t('label.transactions'),
+                    zread: this.$t('label.zread'),
+                    audit_trail: this.$t('label.audit_trail'),
+                    cash_breakdown: this.$t('label.cash_breakdown'),
+                    cash_drawer: this.$t('label.cash_drawer'),
+                }
             }
         },
         methods: {
@@ -470,6 +498,7 @@
             save() {
                 if (this.form.mode === 'create') {
                     var config = {
+                        method: 'create',
                         type: this.form.values.mapping_type,
                         api_endpoint: this.form.values.api_endpoint,
                         api_version_name: this.form.values.api_version_name,
@@ -485,14 +514,14 @@
                             this.dialog.visible = false;
                             window.open('/field-mapping-setup', '_self');
                         };
-                        this.errors.add.field = '';
+                        this.errors.add = {};
                     }).catch(error => {
-                        this.errors.error = error.response.data.errors;
-                        this.errors.add.field = '';
+                        this.errors.add = error.response.data.errors;
                     })
 
                 } else {
                     var config = {
+                        method: 'update',
                         bid: this.form.values.bid,
                         type: this.form.values.mapping_type,
                         api_endpoint: this.form.values.api_endpoint,
@@ -510,8 +539,7 @@
                         };
                         this.errors.add.field = '';
                     }).catch(error => {
-                        this.errors.error = error.response.data.errors;
-                        this.errors.add.field = '';
+                        this.errors.add = error.response.data.errors;
                     })
                 }
             },
@@ -532,7 +560,7 @@
 
             addRow() {
                 if (this.form.mode === 'create') {
-                    if (this.table.add.field) {
+                    // if (this.table.add.field) {
                         this.table.values.data.push({
                             edit: false,
                             required: this.table.add.required ? 1 : 0,
@@ -552,10 +580,10 @@
         
                         this.clearFields();
                         this.errors.error = {}
-                    } else {
-                        this.errors.error = {};
-                        this.errors.add.field = this.$t('error.field_is_required');
-                    }
+                    // } else {
+                        // this.errors.error = {};
+                        // this.errors.add.field = this.$t('error.field_is_required');
+                    // }
                 } else {
                     var data = {
                         field_mapping_bid: this.form.values.bid,
@@ -600,7 +628,7 @@
                         this.errors.add.edit = null
                         this.table.values.data[data.rowIndex].error = ''
                     } else {
-                        this.table.values.data[data.rowIndex].error = this.$t('validation.this_field_is_required')
+                        this.table.values.data[data.rowIndex].error = this.$t('validation.the_cdis_field_is_required')
                         this.errors.error = {};
                     }
                 } else {
@@ -608,36 +636,52 @@
                     .then(response => {
                         data.done();
                     }).catch(error => {
-                        this.errors.error = {};
                         this.table.values.data[data.rowIndex].error = error.response.data.errors.field[0];
+                        this.errors.error = {};
                     })
                 }
             },
 
             deleteRow(data) {
-                if (data.type === 'clear') {
-                    return;
+                if (this.form.mode === 'create') {
+                    this.table.values.data.splice(data.rowIndex, 1);
+                    this.dialog.status = 'success';
+                    this.dialog.message = this.$t('success.successfully_removed_the_data');
+                    this.dialog.ok.function = () => {
+                        this.dialog.visible = false;
+                    };
+                } else {
+                    if (data.type === 'clear') {
+                        return;
+                    }
+
+                    this.dialog.visible = true;
+                    this.dialog.status = 'confirm';
+                    this.dialog.message = this.$t('message.do_you_want_to_remove_this_data');
+                    this.dialog.ok.function = () => {
+                        axios.delete(`/field-mapping-setup/detail_delete/${data.values.bid}`)
+                        .then(response => {
+                            this.table.values.data.splice(data.rowIndex, 1);
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_removed_the_data');
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                            };
+                        })
+                    };
+                    this.dialog.cancel.function = () => {
+                        this.dialog.visible = false;
+                    };
                 }
-
-                this.dialog.visible = true;
-                this.dialog.status = 'confirm';
-                this.dialog.message = this.$t('message.do_you_want_to_remove_this_data');
-                this.dialog.ok.function = () => {
-                    axios.delete(`/field-mapping-setup/detail_delete/${data.values.bid}`)
-                    .then(response => {
-                        this.table.values.data.splice(data.rowIndex, 1);
-                        this.dialog.status = 'success';
-                        this.dialog.message = this.$t('success.successfully_removed_the_data');
-                        this.dialog.ok.function = () => {
-                            this.dialog.visible = false;
-                        };
-                    })
-                };
-                this.dialog.cancel.function = () => {
-                    this.dialog.visible = false;
-                };
             },
-
+            getError(object, name) {
+                let error = object[name];
+                return error ? error[0] : '';
+                
+            },
+            removeError(object, name) {
+                delete object[name];
+            }
         }
     }
 </script>

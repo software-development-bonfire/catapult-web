@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class FieldMappingSetupRequest extends FormRequest
 {
@@ -27,9 +28,24 @@ class FieldMappingSetupRequest extends FormRequest
             'bid' => 'sometimes',
             'type' => 'required',
             'api_endpoint' => 'required|max:45',
-            'api_version_name' => 'required|max:128',
+            'api_version_name' => ['required', 'max:128', Rule::unique('field_mappings')->ignore($this->bid)->where(
+                function ($query) {
+                    $query->where('deleted_at', null);
+                }
+            )],
             'status' => 'required',
-            'details' => 'required_if:bid, null'
+            'details' => 'required_if:method,create', 'array',
+            'details.*.required' => 'required',
+            'details.*.field' => ['required', Rule::unique('field_mapping_details')->ignore($this->bid)->where(
+                function ($query) {
+                    $query->where('field_mapping_bid', $this->bid);
+                }
+            )],
+            'details.*.mapping_type' => 'required',
+            'details.*.description' => 'sometimes',
+            'details.*.file_name' => 'sometimes',
+            'details.*.default_value' => 'sometimes',
+            'details.*.column_name' => 'sometimes',
         ];
     }
 
@@ -37,7 +53,10 @@ class FieldMappingSetupRequest extends FormRequest
     {
         return [
             'api_version_name.required' => __('validation.required', [ 'attribute' => __('label.api_version_name') ]),
-            'details.required' =>  __('validation.field_mapping_cdis_required'),
+            'details.required' =>  __('field_mapping_cdis_required'),
+            'details.required_if' =>  __('validation.field_mapping_cdis_required'),
+            'details.*.field.required' => __('validation.required', [ 'attribute' => __('label.cdis_field') ]),
+            'details.*.field.unique' => __('validation.unique', [ 'attribute' => __('label.cdis_field') ]),
         ];
     }
 }

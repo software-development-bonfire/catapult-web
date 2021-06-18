@@ -56,6 +56,7 @@ class FieldMappingSetupService
      */
     public function update($data, $bid)
     {
+        $data['updated_by'] = Auth::user()->bid;
         FieldMapping::find($bid)->update($data);
     }
 
