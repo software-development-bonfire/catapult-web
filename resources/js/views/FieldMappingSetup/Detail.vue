@@ -468,8 +468,16 @@
             copyPreset() {
                 var bid = this.form.values.copy_preset_from;
                 var preset = this.presets.find(element => element.bid === bid);
+                var presets = preset.details;
+
+                var ids = [];
+                presets.forEach((element, index) => {
+                    if(this.table.values.data.some(data => data.field == element.field)) {
+                        presets.splice(index, 1)
+                      }
+                    }
+                )
                 if (this.form.values.copy_preset_from) {
-                    var presets = preset.details;
                     this.dialog.visible = true;
                     this.dialog.status = 'confirm';
                     this.dialog.message = this.$t('message.are_you_sure_you_want_to_load_this_preset');
