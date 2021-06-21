@@ -54,7 +54,7 @@ class FieldMappingSetupRequest extends FormRequest
     {
         return [
             'api_version_name.required' => __('validation.required', [ 'attribute' => __('label.api_version_name') ]),
-            'details.required' =>  __('field_mapping_cdis_required'),
+            'details.required' =>  __('validation.field_mapping_cdis_required'),
             'details.required_if' =>  __('validation.field_mapping_cdis_required'),
             'details.*.field.required' => __('validation.required', [ 'attribute' => __('label.cdis_field') ]),
             'details.*.field.unique' => __('validation.unique', [ 'attribute' => __('label.cdis_field') ]),

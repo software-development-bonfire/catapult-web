@@ -86,11 +86,6 @@
                 </tr>
             </table>
         </div>
-        <label
-            class="text-danger error-message mb-0"
-            v-if="errors.add.hasOwnProperty('details')">
-            {{errors.add.details[0]}}
-        </label>
         <datatable
             class="
                 datatable--full-width
@@ -525,6 +520,14 @@
                         this.errors.add = {};
                     }).catch(error => {
                         this.errors.add = error.response.data.errors;
+                        if (this.errors.add.hasOwnProperty('details')) {
+                            this.dialog.visible = true;
+                            this.dialog.status = 'error';
+                            this.dialog.message = this.$t('validation.field_mapping_cdis_required');
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                            };
+                        }
                     })
 
                 } else {
