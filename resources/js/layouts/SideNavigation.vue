@@ -37,7 +37,7 @@
                 <span class="side-link-label">{{ $t('label.logs') }}</span>
             </a>
             <a
-                href="#"
+                href="/user-account"
                 class="list-group-item"
                 :class="page === 'user-account' ? 'active' : ''">
                 <i class="side-link-icon fa fa-user fa-lg"></i>

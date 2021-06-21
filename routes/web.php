@@ -23,6 +23,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/configurations', 'ConfigurationsController@view');
     Route::get('/syncing-setup', 'SyncingSetupController@view');
     Route::get('/sync-interval-setting', 'SyncIntervalSettingController@view');
+    Route::get('/user-account', 'UserAccountController@view');
 
     Route::apiResources([
         'remote-setup' => 'RemoteSetupController',

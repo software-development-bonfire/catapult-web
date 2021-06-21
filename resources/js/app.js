@@ -44,6 +44,8 @@ Vue.component('syncing-setup', require('./views/SyncingSetup/List.vue').default)
 Vue.component('field-mapping-setup-list', require('./views/FieldMappingSetup/List.vue').default);
 Vue.component('field-mapping-setup-detail', require('./views/FieldMappingSetup/Detail.vue').default);
 Vue.component('sync-interval-setting', require('./views/SyncIntervalSetting/List.vue').default);
+Vue.component('user-account', require('./views/UserAccount/List.vue').default);
+
 /**
  * Next, we will create a fresh Vue application instance and attach it to
  * the page. Then, you may begin adding components to this application
