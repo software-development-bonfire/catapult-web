@@ -27,7 +27,7 @@
                                 <option :value="label.brand">{{ $t('label.brand') }}</option>
                                 <option :value="label.category">{{ $t('label.category') }}</option>
                                 <option :value="label.vendor">{{ $t('label.vendor') }}</option>
-                                <option :value="label.oum">{{ $t('label.uom') }}</option>
+                                <option :value="label.uom">{{ $t('label.uom') }}</option>
                             </template>
                             <template v-else>
                                 <option :value="label.transactions">{{ $t('label.transactions') }}</option>
@@ -443,7 +443,7 @@
                     brand: this.$t('label.brand'),
                     category: this.$t('label.category'),
                     vendor: this.$t('label.vendor'),
-                    oum: this.$t('label.oum'),
+                    uom: this.$t('label.uom'),
                     transactions: this.$t('label.transactions'),
                     zread: this.$t('label.zread'),
                     audit_trail: this.$t('label.audit_trail'),
@@ -561,10 +561,7 @@
             addRow() {
                 if (this.form.mode === 'create') {
                     var exist = this.table.values.data.some(element => element.field == this.table.add.field)
-                    if (exist) {
-                        this.errors.error = {};
-                        this.errors.add.field = this.$t('error.cdis_field_unique');
-                    }
+                    
                     if (this.table.add.field && !exist) {
                         this.table.values.data.push({
                             edit: false,
@@ -586,8 +583,13 @@
                         this.clearFields();
                         this.errors.error = {}
                     } else {
-                        this.errors.error = {};
-                        this.errors.add.field = this.$t('error.field_is_required');
+                        if (exist) {
+                            this.errors.error = {};
+                            this.errors.add.field = this.$t('error.cdis_field_unique');
+                        } else {
+                            this.errors.error = {};
+                            this.errors.add.field = this.$t('error.field_is_required');
+                        }
                     }
                 } else {
                     var data = {
@@ -622,8 +624,12 @@
             },
 
             updateRow(data) {
+                console.log(data)
+                console.log(this.table.values.data)
                 if (this.form.mode === 'create') {
-                    if (data.values.field) {
+                    var exist = this.table.values.data.some((element, index) => element.field == data.values.field && data.rowIndex !== index)
+
+                    if (data.values.field && !exist) {
                         data.done();
                         this.dialog.status = 'success';
                         this.dialog.message = this.$t('success.successfully_updated_the_data');
@@ -633,8 +639,13 @@
                         this.errors.add.edit = null
                         this.table.values.data[data.rowIndex].error = ''
                     } else {
-                        this.table.values.data[data.rowIndex].error = this.$t('validation.the_cdis_field_is_required')
-                        this.errors.error = {};
+                        if (exist) {
+                            this.errors.error = {};
+                            this.table.values.data[data.rowIndex].error = this.$t('error.cdis_field_unique');
+                        } else {
+                            this.table.values.data[data.rowIndex].error = this.$t('validation.the_cdis_field_is_required')
+                            this.errors.error = {};
+                        }
                     }
                 } else {
                     axios.put(`/field-mapping-setup/detail-update/${data.values.bid}`, data.values)

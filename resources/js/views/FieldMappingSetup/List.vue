@@ -183,18 +183,6 @@
                         hasDelete: true
                     }
                 },
-                label: {
-                    product: this.$t('label.product'),
-                    brand: this.$t('label.brand'),
-                    category: this.$t('label.category'),
-                    vendor: this.$t('label.vendor'),
-                    oum: this.$t('label.oum'),
-                    transactions: this.$t('label.transactions'),
-                    zread: this.$t('label.zread'),
-                    audit_trail: this.$t('label.audit_trail'),
-                    cash_breakdown: this.$t('label.cash_breakdown'),
-                    cash_drawer: this.$t('label.cash_drawer'),
-                }
             }
         },
         methods: {

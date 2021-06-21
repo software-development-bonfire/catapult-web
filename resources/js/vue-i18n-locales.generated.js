@@ -21,7 +21,8 @@ export default {
             "remote_setup_failed_create": "Remote Setup failed to create",
             "remote_setup_failed_deleted": "Remote Setup failed to deleted",
             "remote_setup_failed_update": "Remote Setup failed to update",
-            "syncing_setup_failed_update": "Syncing Setup failed to update"
+            "syncing_setup_failed_update": "Syncing Setup failed to update",
+            "cdis_field_unique": "The CDIS Field has already been taken."
         },
         "label": {
             "active": "Active",
