@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Entities\FieldMapping;
 use App\Http\Requests\FieldMappingDetailRequest;
 use App\Http\Requests\FieldMappingSetupRequest;
+use App\Http\Requests\MappingDetailsCreateRequest;
 use App\Repositories\Contracts\FieldMappingRepository;
 use App\Services\FieldMappingSetupService;
 use App\Transformers\FieldMappingSetupTransformer;
@@ -79,7 +80,7 @@ class FieldMappingSetupController extends Controller
     public function store(FieldMappingSetupRequest $request)
     {
         try {
-            $this->fieldMappingSetupService->store($request->validated());
+            $data = $this->fieldMappingSetupService->store($request->validated());
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],
@@ -87,8 +88,30 @@ class FieldMappingSetupController extends Controller
             );
         }
         return $this->successfulResponse(
-            [],
+            $data,
             Lang::get('success.field_mapping_setup_created')
+        );
+    }
+    
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  MappingDetailsCreateRequest  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store_details(MappingDetailsCreateRequest $request)
+    {
+        try {
+            $data = $this->fieldMappingSetupService->store_details($request->validated());
+        } catch (\Throwable $th) {
+            return $this->errorResponse(
+                [],
+                Lang::get('error.field_mapping_detail_failed_create')
+            );
+        }
+        return $this->successfulResponse(
+            $data,
+            Lang::get('success.field_mapping_detail_created')
         );
     }
 

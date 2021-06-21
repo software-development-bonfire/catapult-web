@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Entities\FieldMapping;
+use App\Rules\Lowercase;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -35,18 +36,6 @@ class FieldMappingSetupRequest extends FormRequest
                 }
             )],
             'status' => 'required',
-            'details' => 'required_if:method,create', 'array',
-            'details.*.required' => 'required',
-            'details.*.field' => ['required', Rule::unique('field_mapping_details')->ignore($this->bid)->where(
-                function ($query) {
-                    $query->where('field_mapping_bid', $this->bid);
-                }
-            )],
-            'details.*.mapping_type' => 'required',
-            'details.*.description' => 'sometimes',
-            'details.*.file_name' => 'sometimes',
-            'details.*.default_value' => 'sometimes',
-            'details.*.column_name' => 'sometimes',
         ];
     }
 
@@ -54,10 +43,6 @@ class FieldMappingSetupRequest extends FormRequest
     {
         return [
             'api_version_name.required' => __('validation.required', [ 'attribute' => __('label.api_version_name') ]),
-            'details.required' =>  __('validation.field_mapping_cdis_required'),
-            'details.required_if' =>  __('validation.field_mapping_cdis_required'),
-            'details.*.field.required' => __('validation.required', [ 'attribute' => __('label.cdis_field') ]),
-            'details.*.field.unique' => __('validation.unique', [ 'attribute' => __('label.cdis_field') ]),
         ];
     }
 }

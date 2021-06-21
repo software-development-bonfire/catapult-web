@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 class FieldMappingSetupService
 {
     /**
-     * Update the specified resource in storage.
+     * Create the specified resource in storage.
      *
      * @param Array  $data
      * @return \Illuminate\Http\Response
@@ -18,13 +18,41 @@ class FieldMappingSetupService
     public function store($data)
     {
         $data['created_by'] = Auth::user()->bid;
-        $details = $data['details'];
-        unset($data['details']);
-        DB::transaction(function () use ($data, $details){
-            $field_mapping = FieldMapping::Create($data);
-            foreach ($details as $detail) {
+        $field_mapping = FieldMapping::Create($data);
+        // ['created_by'] = Auth::user()->bid;
+        // $details = $data['details'];
+        // if ($details) {
+        //     DB::transaction(function () use ($data, $details){
+        //         $field_mapping = FieldMapping::Create($data);
+        //         foreach ($details as $detail) {
+        //             FieldMappingDetail::create([
+        //                 'field_mapping_bid' => $field_mapping->bid,
+        //                 'required' => $detail['required'],
+        //                 'field' => $detail['field'],
+        //                 'description' => $detail['description'],
+        //                 'mapping_type' => $detail['mapping_type'],
+        //                 'file_name' => $detail['csv_file_name_identifier'],
+        //                 'default_value' => $detail['default_value'],
+        //             ]);
+        //         }
+                return $field_mapping;
+        //     });
+        // }
+    }
+
+    /**
+     * Create the specified resource in storage.
+     *
+     * @param Array  $data
+     * @return \Illuminate\Http\Response
+     */
+    public function store_details($data)
+    {
+        DB::transaction(function () use ($data){
+            FieldMapping::find($data['bid'])->update($data);
+            foreach ($data['details'] as $detail) {
                 FieldMappingDetail::create([
-                    'field_mapping_bid' => $field_mapping->bid,
+                    'field_mapping_bid' => $data['bid'],
                     'required' => $detail['required'],
                     'field' => $detail['field'],
                     'description' => $detail['description'],

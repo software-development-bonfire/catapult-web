@@ -5,14 +5,17 @@
                 <i class="fa fa-arrow-circle-left fa-lg"></i>
                 <span>{{ $t('label.back_to_list') }}</span>
             </a>
-            <button class="button button--light module-action-button" @click="save">{{ $t('label.save') }}</button>
+            <div>
+                <button class="button button--light module-action-button" v-if="mode === 'create' && form.mode !== 'update'" @click="setMapping">{{ $t('label.set_mapping') }}</button>
+                <button class="button button--light module-action-button" :disabled="table.values.data.length === 0" @click="save">{{ $t('label.save') }}</button>
+            </div>
         </div>
         <div class="container-fluid">
             <table class="table-layout pull-left col-xl-4">
                 <tr>
                     <td valign="top" align="right">{{ $t('label.mapping_type') }}</td>
                     <td width="200px">
-                        <select class="form-control" v-model="form.values.mapping_type" @change="getPreset()">
+                        <select :disabled="mode === 'update'" class="form-control" v-model="form.values.mapping_type" @change="getPreset()">
                             <option :value="1">{{ $t('label.cdis_to_pos') }}</option>
                             <option :value="2">{{ $t('label.pos_to_cdis') }}</option>
                         </select>
@@ -61,7 +64,7 @@
                         </label>
                     </td>
                 </tr>
-                <tr v-if="this.form.mode === 'create'">
+                <tr v-if="form.mode === 'create' && bid">
                     <td valign="top" align="right">{{ $t('label.copy_preset_from') }}</td>
                     <td>
                         <select class="form-control" v-model="form.values.copy_preset_from">
@@ -86,7 +89,13 @@
                 </tr>
             </table>
         </div>
+        <label
+            class="text-danger error-message mb-0"
+            v-if="errors.add.hasOwnProperty('details')">
+            {{errors.add.details[0]}}
+        </label>
         <datatable
+            v-if="bid || form.mode === 'update'"
             class="
                 datatable--full-width
                 datatable--font-sm"
@@ -110,16 +119,6 @@
                         valign="center">
                         <input type="checkbox" v-model="tableData.required" :disabled="! tableData.edit">
                     </table-data>
-                    <!-- <table-data
-                        valign="center"
-                        :error="tableData.error">
-                        <template v-if="tableData.edit">
-                            <input type="text" class="form-control" v-model="tableData.field">
-                        </template>
-                        <template v-else>
-                            <span v-text="tableData.field"></span>
-                        </template>
-                    </table-data> -->
                     <table-data
                         valign="center"
                         :error="getError(errors.add, `details.${tableDataIndex}.field`) == false ? tableData.error : getError(errors.add, `details.${tableDataIndex}.field`)">
@@ -168,7 +167,7 @@
                         v-if="form.values.mapping_type === 2"
                         valign="center">
                         <template v-if="tableData.edit">
-                            <input type="text" class="form-control" v-model="tableData.default_value">
+                            <input :type="defaultTypeUpdate(tableData.mapping_type)" class="form-control" v-model="tableData.default_value">
                         </template>
                         <template v-else>
                             <span v-text="tableData.default_value"></span>
@@ -230,7 +229,7 @@
                     <table-data
                         v-if="form.values.mapping_type === 2">
                         <input
-                            type="text"
+                            :type="defaultType()"
                             class="form-control"
                             v-model="table.add.default_value">
                     </table-data>
@@ -301,6 +300,8 @@
         },
         data() {
             return {
+                mode: 'create',
+                bid: null,
                 dialog: {
                     visible: false,
                     type: '',
@@ -464,8 +465,7 @@
                 var bid = this.form.values.copy_preset_from;
                 var preset = this.presets.find(element => element.bid === bid);
                 var presets = preset.details;
-
-                var ids = [];
+                console.log(presets)
                 presets.forEach((element, index) => {
                     if(this.table.values.data.some(data => data.field == element.field)) {
                         presets.splice(index, 1)
@@ -480,6 +480,7 @@
                         presets.forEach(element => {
                             this.table.values.data.push({
                                 edit: false,
+                                field_mapping_bid: this.bid,
                                 required: element.required,
                                 field: element.field,
                                 description: element.description,
@@ -498,9 +499,35 @@
                 }
 
             },
+            setMapping() {
+                var config = {
+                    method: 'create',
+                    type: this.form.values.mapping_type,
+                    api_endpoint: this.form.values.api_endpoint,
+                    api_version_name: this.form.values.api_version_name,
+                    status: this.form.values.version_status,
+                }
+                axios.post('/field-mapping-setup/detail', config)
+                .then(response => {
+                    this.bid = response.data.data.bid;
+                    // this.dialog.visible = true;
+                    // this.dialog.status = 'success';
+                    // this.dialog.message = this.$t('success.successfully_created', { value: this.$t('label.field_mapping_setup') });
+                    // this.dialog.ok.function = () => {
+                    //     this.dialog.visible = false;
+                    // };
+                    this.errors.add = {};
+                    this.errors.add.field = '';
+                    this.mode = "update";
+                }).catch(error => {
+                    this.errors.add = error.response.data.errors;
+                    this.errors.add.field = '';
+                })
+            },
             save() {
                 if (this.form.mode === 'create') {
                     var config = {
+                        bid: this.bid,
                         method: 'create',
                         type: this.form.values.mapping_type,
                         api_endpoint: this.form.values.api_endpoint,
@@ -508,7 +535,7 @@
                         status: this.form.values.version_status,
                         details: this.table.values.data
                     }
-                    axios.post('/field-mapping-setup/detail', config)
+                    axios.post('/field-mapping-setup/details', config)
                     .then(response => {
                         this.dialog.visible = true;
                         this.dialog.status = 'success';
@@ -518,6 +545,7 @@
                             window.open('/field-mapping-setup', '_self');
                         };
                         this.errors.add = {};
+                        this.errors.add.field = '';
                     }).catch(error => {
                         this.errors.add = error.response.data.errors;
                         if (this.errors.add.hasOwnProperty('details')) {
@@ -528,6 +556,7 @@
                                 this.dialog.visible = false;
                             };
                         }
+                        this.errors.add.field = '';
                     })
 
                 } else {
@@ -571,13 +600,14 @@
 
             addRow() {
                 if (this.form.mode === 'create') {
-                    var exist = this.table.values.data.some(element => element.field == this.table.add.field)
+                    var exist = this.table.values.data.some(element => element.field == this.table.add.field.toLowerCase())
                     
                     if (this.table.add.field && !exist) {
                         this.table.values.data.push({
                             edit: false,
+                            field_mapping_bid: this.bid,
                             required: this.table.add.required ? 1 : 0,
-                            field: this.table.add.field,
+                            field: this.table.add.field.toLowerCase(),
                             description: this.table.add.description,
                             mapping_type: this.table.add.mapping_type,
                             csv_file_name_identifier: this.table.add.csv_file_name_identifier,
@@ -635,10 +665,8 @@
             },
 
             updateRow(data) {
-                console.log(data)
-                console.log(this.table.values.data)
                 if (this.form.mode === 'create') {
-                    var exist = this.table.values.data.some((element, index) => element.field == data.values.field && data.rowIndex !== index)
+                    var exist = this.table.values.data.some((element, index) => element.field == data.values.field.toLowerCase() && data.rowIndex !== index)
 
                     if (data.values.field && !exist) {
                         data.done();
@@ -651,7 +679,9 @@
                         this.table.values.data[data.rowIndex].error = ''
                     } else {
                         if (exist) {
+                            this.errors.add = {};
                             this.errors.error = {};
+                            this.errors.add.field = '';
                             this.table.values.data[data.rowIndex].error = this.$t('error.cdis_field_unique');
                         } else {
                             this.table.values.data[data.rowIndex].error = this.$t('validation.the_cdis_field_is_required')
@@ -662,6 +692,7 @@
                     axios.put(`/field-mapping-setup/detail-update/${data.values.bid}`, data.values)
                     .then(response => {
                         data.done();
+                        this.table.values.data[data.rowIndex].error = '';
                     }).catch(error => {
                         this.table.values.data[data.rowIndex].error = error.response.data.errors.field[0];
                         this.errors.error = {};
@@ -671,6 +702,9 @@
 
             deleteRow(data) {
                 if (this.form.mode === 'create') {
+                    if (data.type === 'clear') {
+                        return;
+                    }
                     this.table.values.data.splice(data.rowIndex, 1);
                     this.dialog.status = 'success';
                     this.dialog.message = this.$t('success.successfully_removed_the_data');
@@ -708,6 +742,32 @@
             },
             removeError(object, name) {
                 delete object[name];
+            },
+            defaultTypeUpdate(type) {
+                if (type === "VARCHAR" || type === "TEXT") {
+                    return 'text';
+                } else if (type === "DATETIME") {
+                    return 'datetime-local';
+                } else if (type === "DATE") {
+                    return 'date';
+                } else if (type === "TIME") {
+                    return 'time';
+                } else {
+                    return 'number';
+                }
+            },
+            defaultType() {
+                if (this.table.add.mapping_type === "VARCHAR" || this.table.add.mapping_type === "TEXT") {
+                    return 'text';
+                } else if (this.table.add.mapping_type === "DATETIME") {
+                    return 'datetime-local';
+                } else if (this.table.add.mapping_type === "DATE") {
+                    return 'date';
+                } else if (this.table.add.mapping_type === "TIME") {
+                    return 'time';
+                } else {
+                    return 'number';
+                }
             }
         }
     }
