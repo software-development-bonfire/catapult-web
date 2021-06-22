@@ -39,8 +39,9 @@ class FieldMappingSetupService
                     'field' => $detail['field'],
                     'description' => $detail['description'],
                     'mapping_type' => $detail['mapping_type'],
-                    'file_name' => $detail['csv_file_name_identifier'],
+                    'file_name' => $detail['file_name'],
                     'default_value' => $detail['default_value'],
+                    'column_name' => $detail['column_name'],
                 ]);
             }
         });
@@ -77,6 +78,7 @@ class FieldMappingSetupService
                     'mapping_type' => $preset['mapping_type'],
                     'file_name' => $preset['file_name'],
                     'default_value' => $preset['default_value'],
+                    'column_name' => $preset['column_name'],
                 ]);
                 array_push($presets, $array);
             }
@@ -87,20 +89,6 @@ class FieldMappingSetupService
             DB::rollBack();
             return $th->getMessage();
         }
-        // DB::transaction(function () use ($data, $presets){
-        //     foreach ($data['details'] as $preset) {
-        //         $data = FieldMappingDetail::create([
-        //             'field_mapping_bid' => $data['bid'],
-        //             'required' => $preset['required'],
-        //             'field' => $preset['field'],
-        //             'description' => $preset['description'],
-        //             'mapping_type' => $preset['mapping_type'],
-        //             'file_name' => $preset['file_name'],
-        //             'default_value' => $preset['default_value'],
-        //         ]);
-        //         array_push($presets, $data);
-        //     }
-        // });
     }
 
     /**

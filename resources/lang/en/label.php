@@ -39,6 +39,7 @@ return [
     'csv_file_name_identifier' => 'CSV File Name Identifier',
     'dashboard' => 'Dashboard',
     'mapping_type' => 'Mapping Type',
+    'data_type' => 'Data Type',
     'db_name' => 'DB Name',
     'db_password' => 'DB Password',
     'db_username' => 'DB Usename',

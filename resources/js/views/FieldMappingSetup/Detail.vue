@@ -15,7 +15,7 @@
                 <tr>
                     <td valign="top" align="right">{{ $t('label.mapping_type') }}</td>
                     <td width="200px">
-                        <select :disabled="mode === 'update'" class="form-control" v-model="form.values.mapping_type" @change="getPreset()">
+                        <select :disabled="mode === 'update' || form.mode === 'update'" class="form-control" v-model="form.values.mapping_type" @change="getPreset()">
                             <option :value="1">{{ $t('label.cdis_to_pos') }}</option>
                             <option :value="2">{{ $t('label.pos_to_cdis') }}</option>
                         </select>
@@ -142,7 +142,7 @@
                     <table-data
                         valign="center">
                         <template v-if="tableData.edit">
-                            <select class="form-control" v-model="tableData.mapping_type" disabled>
+                            <select class="form-control" v-model="tableData.mapping_type">
                                 <option value="DECIMAL">DECIMAL</option>
                                 <option value="BIGINT">BIGINT</option>
                                 <option value="TINYINT">TINYINT</option>
@@ -161,7 +161,7 @@
                     <table-data
                         v-if="form.values.mapping_type === 2"
                         valign="center">
-                        <input type="text" class="form-control" v-model="tableData.csv_file_name_identifier" disabled>
+                        <input type="text" class="form-control" v-model="tableData.file_name" disabled>
                     </table-data>
                     <table-data
                         v-if="form.values.mapping_type === 2"
@@ -175,7 +175,7 @@
                     </table-data>
                     <table-data
                         valign="center">
-                        <input type="text" class="form-control" v-model="tableData.csv_column_name" disabled>
+                        <input type="text" class="form-control" v-model="tableData.column_name" disabled>
                     </table-data>
                 </table-row>
                 <table-row
@@ -223,7 +223,7 @@
                         <input
                             type="text"
                             class="form-control"
-                            v-model="table.add.csv_file_name_identifier"
+                            v-model="table.add.file_name"
                             disabled>
                     </table-data>
                     <table-data
@@ -255,7 +255,7 @@
                         <input
                             type="text"
                             class="form-control"
-                            v-model="table.add.csv_column_name"
+                            v-model="table.add.column_name"
                             disabled>
                     </table-data>
                 </table-row>
@@ -370,8 +370,8 @@
                                 width: '200'
                             },
                             {
-                                name: "mapping_type",
-                                label: this.$t('label.mapping_type'),
+                                name: "data_type",
+                                label: this.$t('label.data_type'),
                                 width: '100'
                             },
                             {
@@ -399,8 +399,8 @@
                                 width: '170'
                             },
                             {
-                                name: "mapping_type",
-                                label: this.$t('label.mapping_type'),
+                                name: "data_type",
+                                label: this.$t('label.data_type'),
                                 width: '80'
                             },
                             {
@@ -439,9 +439,9 @@
                         field: '',
                         description: '',
                         mapping_type: 'DECIMAL',
-                        csv_file_name_identifier: '',
+                        file_name: '',
                         default_value: '',
-                        csv_column_name: '',
+                        column_name: '',
                     },
                     settings: {
                         itemsPerPage: 10,
@@ -508,9 +508,9 @@
                                     field: element.field,
                                     description: element.description,
                                     mapping_type: element.mapping_type,
-                                    csv_file_name_identifier: element.file_name,
+                                    file_name: element.file_name,
                                     default_value: element.default_value,
-                                    csv_column_name: element.csv_column_name,
+                                    column_name: element.column_name,
                                 });
                             })
                         }
@@ -531,9 +531,9 @@
                                         field: element.field,
                                         description: element.description,
                                         mapping_type: element.mapping_type,
-                                        csv_file_name_identifier: element.file_name,
+                                        file_name: element.file_name,
                                         default_value: element.default_value,
-                                        csv_column_name: element.csv_column_name,
+                                        column_name: element.column_name,
                                     })
                                 })
 
@@ -633,9 +633,9 @@
                     field: '',
                     description: '',
                     mapping_type: 'INT',
-                    csv_file_name_identifier: '',
+                    file_name: '',
                     default_value: '',
-                    csv_column_name: '',
+                    column_name: '',
                 };
                 this.errors.add.field = '';
             },
@@ -652,9 +652,9 @@
                             field: this.table.add.field.toLowerCase(),
                             description: this.table.add.description,
                             mapping_type: this.table.add.mapping_type,
-                            csv_file_name_identifier: this.table.add.csv_file_name_identifier,
+                            file_name: this.table.add.file_name,
                             default_value: this.table.add.default_value === "" ? '\"\"' : this.defaultValue(this.table.add.default_value, this.table.add.mapping_type),
-                            csv_column_name: this.table.add.csv_column_name,
+                            column_name: this.table.add.column_name,
                         });
                         
                         this.dialog.status = 'success';
@@ -681,9 +681,9 @@
                         field: this.table.add.field,
                         description: this.table.add.description,
                         mapping_type: this.table.add.mapping_type,
-                        file_name: this.table.add.csv_file_name_identifier,
+                        file_name: this.table.add.file_name,
                         default_value: this.table.add.default_value === "" ? '\"\"' : this.defaultValue(this.table.add.default_value, this.table.add.mapping_type),
-                        column_name: this.table.add.csv_column_name,
+                        column_name: this.table.add.column_name,
                     }
                     axios.post('/field-mapping-setup/detail-create', data)
                     .then(response => {
@@ -694,9 +694,9 @@
                             field: this.table.add.field,
                             description: this.table.add.description,
                             mapping_type: this.table.add.mapping_type,
-                            csv_file_name_identifier: this.table.add.csv_file_name_identifier,
+                            file_name: this.table.add.file_name,
                             default_value: this.table.add.default_value === "" ? '\"\"' : this.defaultValue(this.table.add.default_value, this.table.add.mapping_type),
-                            csv_column_name: this.table.add.csv_column_name,
+                            column_name: this.table.add.column_name,
                         });
                         this.clearFields();
                         
@@ -724,9 +724,9 @@
                         this.table.values.data[data.rowIndex].field = data.values.field,
                         this.table.values.data[data.rowIndex].description = data.values.description,
                         this.table.values.data[data.rowIndex].mapping_type = data.values.mapping_type,
-                        this.table.values.data[data.rowIndex].csv_file_name_identifier = data.values.file_name,
+                        this.table.values.data[data.rowIndex].file_name = data.values.file_name,
                         this.table.values.data[data.rowIndex].default_value = data.values.default_value === "" ? '\"\"' : this.defaultValue(data.values.default_value, data.values.mapping_type),
-                        this.table.values.data[data.rowIndex].csv_column_name = data.values.column_name,
+                        this.table.values.data[data.rowIndex].column_name = data.values.column_name,
                         this.table.values.data[data.rowIndex].error = ''
                     } else {
                         if (exist) {
@@ -761,9 +761,9 @@
                         this.table.values.data[data.rowIndex].field = data.values.field,
                         this.table.values.data[data.rowIndex].description = data.values.description,
                         this.table.values.data[data.rowIndex].mapping_type = data.values.mapping_type,
-                        this.table.values.data[data.rowIndex].csv_file_name_identifier = data.values.file_name,
+                        this.table.values.data[data.rowIndex].file_name = data.values.file_name,
                         this.table.values.data[data.rowIndex].default_value = data.values.default_value === "" ? '\"\"' : this.defaultValue(data.values.default_value, data.values.mapping_type),
-                        this.table.values.data[data.rowIndex].csv_column_name = data.values.column_name,
+                        this.table.values.data[data.rowIndex].column_name = data.values.column_name,
                         this.table.values.data[data.rowIndex].error = '';
                     }).catch(error => {
                         this.table.values.data[data.rowIndex].error = error.response.data.errors.field[0];
