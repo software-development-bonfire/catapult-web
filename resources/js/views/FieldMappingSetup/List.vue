@@ -216,14 +216,14 @@
                 this.dialog.message = this.$t('message.do_you_want_to_remove_this_data');
                 this.dialog.ok.function = () => {
                     axios.delete(`field-mapping-setup/${index.values.bid}`)
-                    .then(response => {
-                        this.table.values.data.splice(index, 1);
-                        this.dialog.status = 'success';
-                        this.dialog.message = this.$t('success.successfully_removed_the_data');
-                        this.dialog.ok.function = () => {
-                            this.dialog.visible = false;
-                        };
-                    })
+                        .then(response => {
+                            this.table.values.data.splice(index, 1);
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_removed_the_data');
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                            };
+                        })
                 };
                 this.dialog.cancel.function = () => {
                     this.dialog.visible = false;

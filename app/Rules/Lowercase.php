@@ -3,6 +3,7 @@
 namespace App\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Support\Facades\Lang;
 
 class Lowercase implements Rule
 {
@@ -35,6 +36,6 @@ class Lowercase implements Rule
      */
     public function message()
     {
-        return 'The CDIS field must be lowercase.';
+        return  Lang::get('message.the_cdis_field_must_be_lowercase');
     }
 }

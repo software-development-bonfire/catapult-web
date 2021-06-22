@@ -40,8 +40,8 @@ class FieldMappingRepositoryEloquent extends BaseRepository implements FieldMapp
         $this->model = $this->model
             ->with('details')
             ->withCount('details')
-            ->where('type', 'like', '%' .$filters['mapping_type']. '%')
-            ->where('status', 'like', '%' .$filters['status']. '%')
+            ->where('type', 'like', '%'.$filters['mapping_type'].'%')
+            ->where('status', 'like', '%'.$filters['status'].'%')
             ->orderBy('bid', 'ASC');
 
         return $this->paginate($filters['itemsPerPage']);

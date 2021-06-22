@@ -35,7 +35,7 @@ class FieldMappingDetail extends Model implements Transformable
         'column_name'
     ];
 
-    public function field_mapping()
+    public function fieldMapping()
     {
         return $this->belongsTo(FieldMapping::class, 'bid', 'field_mapping_bid');
     }

@@ -28,7 +28,7 @@ class FieldMappingSetupService
      * @param Array  $data
      * @return \Illuminate\Http\Response
      */
-    public function store_details($data)
+    public function storeDetails($data)
     {
         DB::transaction(function () use ($data){
             FieldMapping::find($data['bid'])->update($data);
@@ -53,7 +53,7 @@ class FieldMappingSetupService
      * @param Array  $data
      * @return \Illuminate\Http\Response
      */
-    public function detail_create($data)
+    public function detailCreate($data)
     {
         FieldMappingDetail::create($data);
     }
@@ -64,7 +64,7 @@ class FieldMappingSetupService
      * @param Array  $data
      * @return \Illuminate\Http\Response
      */
-    public function store_preset($data)
+    public function storePreset($data)
     {
         $presets = [];
         DB::beginTransaction();
@@ -112,7 +112,7 @@ class FieldMappingSetupService
      * @param int  $bid
      * @return \Illuminate\Http\Response
      */
-    public function detail_update($data, $bid)
+    public function detailUpdate($data, $bid)
     {
         FieldMappingDetail::find($bid)->update($data);
     }
@@ -137,7 +137,7 @@ class FieldMappingSetupService
      * @param  int  $bid
      * @return \Illuminate\Http\Response
      */
-    public function detail_destroy($bid)
+    public function detailDestroy($bid)
     {
         FieldMappingDetail::find($bid)->delete();
     }

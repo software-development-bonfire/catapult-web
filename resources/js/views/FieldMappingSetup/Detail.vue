@@ -468,6 +468,7 @@
         },
         methods: {
             getPreset() {
+
                 axios.get('/field-mapping-setup/index'+'?page='+1, {
                     params: {
                         mapping_type: this.form.values.mapping_type,
@@ -509,6 +510,7 @@
                                 bid: this.form.values.bid,
                                 details: presets
                             }
+
                             axios.post('/field-mapping-setup/detail/preset', config)
                             .then(response => {
                                 this.table.values.data= [];
@@ -545,6 +547,7 @@
                     api_version_name: this.form.values.api_version_name,
                     status: this.form.values.version_status,
                 }
+
                 axios.post('/field-mapping-setup/detail', config)
                 .then(response => {
                     this.bid = response.data.data.bid;
@@ -567,6 +570,7 @@
                         status: this.form.values.version_status,
                         details: this.table.values.data
                     }
+
                     axios.post('/field-mapping-setup/details', config)
                     .then(response => {
                         this.dialog.visible = true;
@@ -600,6 +604,7 @@
                         api_version_name: this.form.values.api_version_name,
                         status: this.form.values.version_status,
                     }
+                    
                     axios.put(`/field-mapping-setup/detail/${this.form.values.bid}`, config)
                     .then(response => {
                         this.dialog.visible = true;
@@ -643,7 +648,7 @@
                             description: this.table.add.description,
                             mapping_type: this.table.add.mapping_type,
                             file_name: this.table.add.file_name,
-                            default_value: this.table.add.default_value === "" ? '\"\"' : this.defaultValue(this.table.add.default_value, this.table.add.mapping_type),
+                            default_value: this.table.add.default_value === "" ? '""' : this.defaultValue(this.table.add.default_value, this.table.add.mapping_type),
                             column_name: this.table.add.column_name,
                         });
                         
@@ -672,9 +677,10 @@
                         description: this.table.add.description,
                         mapping_type: this.table.add.mapping_type,
                         file_name: this.table.add.file_name,
-                        default_value: this.table.add.default_value === "" ? '\"\"' : this.defaultValue(this.table.add.default_value, this.table.add.mapping_type),
+                        default_value: this.table.add.default_value === "" ? '""' : this.defaultValue(this.table.add.default_value, this.table.add.mapping_type),
                         column_name: this.table.add.column_name,
                     }
+
                     axios.post('/field-mapping-setup/detail-create', data)
                     .then(response => {
                         this.table.values.data.push({
@@ -685,7 +691,7 @@
                             description: this.table.add.description,
                             mapping_type: this.table.add.mapping_type,
                             file_name: this.table.add.file_name,
-                            default_value: this.table.add.default_value === "" ? '\"\"' : this.defaultValue(this.table.add.default_value, this.table.add.mapping_type),
+                            default_value: this.table.add.default_value === "" ? '""' : this.defaultValue(this.table.add.default_value, this.table.add.mapping_type),
                             column_name: this.table.add.column_name,
                         });
                         this.clearFields();
@@ -711,11 +717,11 @@
                         this.table.values.data[data.rowIndex].edit = false,
                         this.table.values.data[data.rowIndex].bid = data.values.bid,
                         this.table.values.data[data.rowIndex].required = data.values.required,
-                        this.table.values.data[data.rowIndex].field = data.values.field,
+                        this.table.values.data[data.rowIndex].field = data.values.field.toLowerCase(),
                         this.table.values.data[data.rowIndex].description = data.values.description,
                         this.table.values.data[data.rowIndex].mapping_type = data.values.mapping_type,
                         this.table.values.data[data.rowIndex].file_name = data.values.file_name,
-                        this.table.values.data[data.rowIndex].default_value = data.values.default_value === "" ? '\"\"' : this.defaultValue(data.values.default_value, data.values.mapping_type),
+                        this.table.values.data[data.rowIndex].default_value = data.values.default_value === "" ? '""' : this.defaultValue(data.values.default_value, data.values.mapping_type),
                         this.table.values.data[data.rowIndex].column_name = data.values.column_name,
                         this.table.values.data[data.rowIndex].error = ''
                     } else {
@@ -739,9 +745,10 @@
                         description: data.values.description,
                         mapping_type: data.values.mapping_type,
                         file_name: data.values.file_name,
-                        default_value: data.values.default_value === "" ? '\"\"' : this.defaultValue(data.values.default_value, data.values.mapping_type),
+                        default_value: data.values.default_value === "" ? '""' : this.defaultValue(data.values.default_value, data.values.mapping_type),
                         column_name: data.values.column_name,
                     }
+
                     axios.put(`/field-mapping-setup/detail-update/${data.values.bid}`, config)
                     .then(response => {
                         data.done();
@@ -752,7 +759,7 @@
                         this.table.values.data[data.rowIndex].description = data.values.description,
                         this.table.values.data[data.rowIndex].mapping_type = data.values.mapping_type,
                         this.table.values.data[data.rowIndex].file_name = data.values.file_name,
-                        this.table.values.data[data.rowIndex].default_value = data.values.default_value === "" ? '\"\"' : this.defaultValue(data.values.default_value, data.values.mapping_type),
+                        this.table.values.data[data.rowIndex].default_value = data.values.default_value === "" ? '""' : this.defaultValue(data.values.default_value, data.values.mapping_type),
                         this.table.values.data[data.rowIndex].column_name = data.values.column_name,
                         this.table.values.data[data.rowIndex].error = '';
                     }).catch(error => {
@@ -782,7 +789,8 @@
                     this.dialog.status = 'confirm';
                     this.dialog.message = this.$t('message.do_you_want_to_remove_this_data');
                     this.dialog.ok.function = () => {
-                        axios.delete(`/field-mapping-setup/detail_delete/${data.values.bid}`)
+
+                    axios.delete(`/field-mapping-setup/detail_delete/${data.values.bid}`)
                         .then(response => {
                             this.table.values.data.splice(data.rowIndex, 1);
                             this.dialog.status = 'success';

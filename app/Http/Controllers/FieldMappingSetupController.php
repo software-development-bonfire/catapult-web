@@ -14,11 +14,7 @@ use Illuminate\Support\Facades\Lang;
 
 class FieldMappingSetupController extends Controller
 {
-    private $fieldMappingSetupService;
-
     /**
-     * import ApiSetupService.
-     *
      * @param  FieldMappingSetupService  $fieldMappingSetupService
      *
      */
@@ -99,10 +95,10 @@ class FieldMappingSetupController extends Controller
      * @param  MappingDetailsCreateRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store_details(MappingDetailsCreateRequest $request)
+    public function storeDetails(MappingDetailsCreateRequest $request)
     {
         try {
-            $data = $this->fieldMappingSetupService->store_details($request->validated());
+            $data = $this->fieldMappingSetupService->storeDetails($request->validated());
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],
@@ -121,15 +117,14 @@ class FieldMappingSetupController extends Controller
      * @param  MappingDetailsCreateRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store_preset(Request $request)
+    public function storePreset(Request $request)
     {
         try {
-            $data = $this->fieldMappingSetupService->store_preset($request->all());
+            $data = $this->fieldMappingSetupService->storePreset($request->all());
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],
                 $th->getMessage()
-                // Lang::get('error.field_mapping_detail_failed_create')
             );
         }
         return $this->successfulResponse(
@@ -142,7 +137,7 @@ class FieldMappingSetupController extends Controller
      * Update the specified resource in storage.
      *
      * @param  FieldMappingSetupRequest  $request
-     * @param  int  $bid
+     * @param  string  $bid
      * @return \Illuminate\Http\Response
      */
     public function update(FieldMappingSetupRequest $request, $bid)
@@ -167,10 +162,10 @@ class FieldMappingSetupController extends Controller
      * @param  FieldMappingDetailRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function detail_create(FieldMappingDetailRequest $request)
+    public function detailCreate(FieldMappingDetailRequest $request)
     {
         try {
-            $this->fieldMappingSetupService->detail_create($request->validated());
+            $this->fieldMappingSetupService->detailCreate($request->validated());
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],
@@ -187,13 +182,13 @@ class FieldMappingSetupController extends Controller
      * Update the specified resource in storage.
      *
      * @param  FieldMappingDetailRequest  $request
-     * @param  int  $bid
+     * @param  string  $bid
      * @return \Illuminate\Http\Response
      */
-    public function detail_update(FieldMappingDetailRequest $request, $bid)
+    public function detailUpdate(FieldMappingDetailRequest $request, $bid)
     {
         try {
-            $data = $this->fieldMappingSetupService->detail_update($request->validated(), $bid);
+            $data = $this->fieldMappingSetupService->detailUpdate($request->validated(), $bid);
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],
@@ -209,7 +204,7 @@ class FieldMappingSetupController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $bid
+     * @param  string  $bid
      * @return \Illuminate\Http\Response
      */
     public function destroy($bid)
@@ -231,13 +226,13 @@ class FieldMappingSetupController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $bid
+     * @param  string  $bid
      * @return \Illuminate\Http\Response
      */
-    public function detail_destroy($bid)
+    public function detailDestroy($bid)
     {
         try {
-            $this->fieldMappingSetupService->detail_destroy($bid);
+            $this->fieldMappingSetupService->detailDestroy($bid);
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],

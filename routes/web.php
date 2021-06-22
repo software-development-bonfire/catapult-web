@@ -31,17 +31,15 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/index', 'FieldMappingSetupController@index');
         Route::get('/detail', 'FieldMappingSetupController@detail');
         Route::get('/detail/preset', 'FieldMappingSetupController@index');
-        Route::post('/detail/preset', 'FieldMappingSetupController@store_preset');
+        Route::post('/detail/preset', 'FieldMappingSetupController@storePreset');
         Route::post('/detail', 'FieldMappingSetupController@store');
-        Route::post('/details', 'FieldMappingSetupController@store_details');
+        Route::post('/details', 'FieldMappingSetupController@storeDetails');
         Route::put('/detail/{bid}', 'FieldMappingSetupController@update');
-        Route::post('/detail-create', 'FieldMappingSetupController@detail_create');
-        Route::put('/detail-update/{bid}', 'FieldMappingSetupController@detail_update');
+        Route::post('/detail-create', 'FieldMappingSetupController@detailCreate');
+        Route::put('/detail-update/{bid}', 'FieldMappingSetupController@detailUpdate');
         Route::delete('/{bid}', 'FieldMappingSetupController@destroy');
-        Route::delete('/detail_delete/{bid}', 'FieldMappingSetupController@detail_destroy');
-
+        Route::delete('/detail_delete/{bid}', 'FieldMappingSetupController@detailDestroy');
     });
-
 
     Route::apiResources([
         'remote-setup' => 'RemoteSetupController',
@@ -50,6 +48,5 @@ Route::group(['middleware' => 'auth'], function () {
         'syncing' => 'SyncingSetupController',
     ]);
 });
-
 
 Route::get('/{any_path?}', [HomeController::class, 'index'])->where('any_path', '(.*)');
