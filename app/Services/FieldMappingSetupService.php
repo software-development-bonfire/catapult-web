@@ -69,6 +69,7 @@ class FieldMappingSetupService
         $presets = [];
         DB::beginTransaction();
         try {
+            FieldMappingDetail::where('field_mapping_bid', $data['bid'])->delete();
             foreach ($data['details'] as $preset) {
                 $array = FieldMappingDetail::create([
                     'field_mapping_bid' => $data['bid'],

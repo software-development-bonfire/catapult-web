@@ -483,23 +483,13 @@
                 var bid = this.form.values.copy_preset_from;
                 var preset = this.presets.find(element => element.bid === bid);
                 var presets = preset.details;
-                var ids = [];
-                presets.forEach((element, index) => {
-                    if(this.table.values.data.some(data => data.field == element.field)) {
-                        ids.push(index)
-                    }
-                  }
-                )
-                var revID = ids.reverse();
-                revID.forEach(element => {
-                    presets.splice(element, 1);
-                })
                 if (this.form.values.copy_preset_from) {
                     this.dialog.visible = true;
-                    this.dialog.status = 'confirm';
-                    this.dialog.message = this.$t('message.are_you_sure_you_want_to_load_this_preset');
+                    this.dialog.status = 'confirm-yes-no';
+                    this.dialog.message = this.$t('message.are_you_sure_you_want_to_overwrite_the_table_with_the_selected_preset');
                     this.dialog.ok.function = () => {
                         if (this.form.mode === 'create') {
+                            this.table.values.data = [];
                             presets.forEach(element => {
                                 this.table.values.data.push({
                                     edit: false,
@@ -521,7 +511,7 @@
                             }
                             axios.post('/field-mapping-setup/detail/preset', config)
                             .then(response => {
-                                console.log(response.data.data)
+                                this.table.values.data= [];
                                 response.data.data.forEach(element => {
                                     this.table.values.data.push({
                                         edit: false,
