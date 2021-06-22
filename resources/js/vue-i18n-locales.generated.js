@@ -62,7 +62,7 @@ export default {
             "csv_column_name": "CSV Column Name",
             "csv_file_name_identifier": "CSV File Name Identifier",
             "dashboard": "Dashboard",
-            "mapping_type": "Data Type",
+            "mapping_type": "Mapping Type",
             "db_name": "DB Name",
             "db_password": "DB Password",
             "db_username": "DB Usename",

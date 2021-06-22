@@ -116,6 +116,29 @@ class FieldMappingSetupController extends Controller
     }
 
     /**
+     * Store a newly created resource in storage.
+     *
+     * @param  MappingDetailsCreateRequest  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store_preset(Request $request)
+    {
+        try {
+            $data = $this->fieldMappingSetupService->store_preset($request->all());
+        } catch (\Throwable $th) {
+            return $this->errorResponse(
+                [],
+                $th->getMessage()
+                // Lang::get('error.field_mapping_detail_failed_create')
+            );
+        }
+        return $this->successfulResponse(
+            $data,
+            Lang::get('success.field_mapping_detail_created')
+        );
+    }
+
+    /**
      * Update the specified resource in storage.
      *
      * @param  FieldMappingSetupRequest  $request
@@ -170,7 +193,7 @@ class FieldMappingSetupController extends Controller
     public function detail_update(FieldMappingDetailRequest $request, $bid)
     {
         try {
-            $this->fieldMappingSetupService->detail_update($request->validated(), $bid);
+            $data = $this->fieldMappingSetupService->detail_update($request->validated(), $bid);
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],
@@ -178,7 +201,7 @@ class FieldMappingSetupController extends Controller
             );
         }
         return $this->successfulResponse(
-            [],
+            $data,
             Lang::get('success.field_mapping_detail_updated')
         );
     }

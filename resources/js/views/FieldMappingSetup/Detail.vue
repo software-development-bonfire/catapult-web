@@ -64,7 +64,7 @@
                         </label>
                     </td>
                 </tr>
-                <tr v-if="form.mode === 'create' && bid">
+                <tr v-if="this.form.values.bid || bid">
                     <td valign="top" align="right">{{ $t('label.copy_preset_from') }}</td>
                     <td>
                         <select class="form-control" v-model="form.values.copy_preset_from">
@@ -142,7 +142,7 @@
                     <table-data
                         valign="center">
                         <template v-if="tableData.edit">
-                            <select class="form-control" v-model="tableData.mapping_type">
+                            <select class="form-control" v-model="tableData.mapping_type" disabled>
                                 <option value="DECIMAL">DECIMAL</option>
                                 <option value="BIGINT">BIGINT</option>
                                 <option value="TINYINT">TINYINT</option>
@@ -229,6 +229,24 @@
                     <table-data
                         v-if="form.values.mapping_type === 2">
                         <input
+                            v-if="table.add.mapping_type == 'INT' || table.add.mapping_type == 'TINYINT' ||
+                            table.add.mapping_type == 'BIGINT'"
+                            step="1"
+                            :type="defaultType()"
+                            class="form-control"
+                            v-model="table.add.default_value">
+                        <input
+                            v-if="table.add.mapping_type == 'DECIMAL'"
+                            pattern="^\d*(\.\d{0,2})?$"
+                            step="0.01"
+                            :type="defaultType()"
+                            class="form-control"
+                            v-model="table.add.default_value">
+                        <input
+                            v-if="table.add.mapping_type == 'VARCHAR' || table.add.mapping_type == 'DATETIME' ||
+                            table.add.mapping_type == 'DATE' || table.add.mapping_type == 'TIME' || table.add.mapping_type == 'TEXT'"
+                            pattern="^\d*(\.\d{0,2})?$"
+                            step="0.01"
                             :type="defaultType()"
                             class="form-control"
                             v-model="table.add.default_value">
@@ -275,7 +293,7 @@
                 this.form.mode = 'update';
                 this.form.values.bid = Number(urlData.data.bid);
                 this.form.values.mapping_type = Number(urlData.data.mapping_type);
-                this.form.values.api_endpoint = urlData.data.api_endpoint;
+                this.form.values.api_endpoint = String(urlData.data.api_endpoint);
                 this.form.values.api_version_name = urlData.data.api_version_name;
                 this.form.values.version_status = Number(urlData.data.status);
                 if (urlData.data.details !== undefined) {
@@ -290,7 +308,7 @@
                             field: element.field,
                             field_mapping_bid: element.field_mapping_bid,
                             file_name: element.file_name,
-                            required: element.required,
+                            required: element.required === "true" ? true : false,
                             mapping_type: element.mapping_type
                         }
                     });
@@ -465,31 +483,62 @@
                 var bid = this.form.values.copy_preset_from;
                 var preset = this.presets.find(element => element.bid === bid);
                 var presets = preset.details;
-                console.log(presets)
+                var ids = [];
                 presets.forEach((element, index) => {
                     if(this.table.values.data.some(data => data.field == element.field)) {
-                        presets.splice(index, 1)
-                      }
+                        ids.push(index)
                     }
+                  }
                 )
+                var revID = ids.reverse();
+                revID.forEach(element => {
+                    presets.splice(element, 1);
+                })
                 if (this.form.values.copy_preset_from) {
                     this.dialog.visible = true;
                     this.dialog.status = 'confirm';
                     this.dialog.message = this.$t('message.are_you_sure_you_want_to_load_this_preset');
                     this.dialog.ok.function = () => {
-                        presets.forEach(element => {
-                            this.table.values.data.push({
-                                edit: false,
-                                field_mapping_bid: this.bid,
-                                required: element.required,
-                                field: element.field,
-                                description: element.description,
-                                mapping_type: element.mapping_type,
-                                csv_file_name_identifier: element.file_name,
-                                default_value: element.default_value,
-                                csv_column_name: element.csv_column_name,
-                            });
-                        })
+                        if (this.form.mode === 'create') {
+                            presets.forEach(element => {
+                                this.table.values.data.push({
+                                    edit: false,
+                                    field_mapping_bid: this.form.mode === 'create' ? this.bid : this.form.values.bid,
+                                    required: element.required,
+                                    field: element.field,
+                                    description: element.description,
+                                    mapping_type: element.mapping_type,
+                                    csv_file_name_identifier: element.file_name,
+                                    default_value: element.default_value,
+                                    csv_column_name: element.csv_column_name,
+                                });
+                            })
+                        }
+                        if (this.form.mode === 'update') {
+                            var config = {
+                                bid: this.form.values.bid,
+                                details: presets
+                            }
+                            axios.post('/field-mapping-setup/detail/preset', config)
+                            .then(response => {
+                                console.log(response.data.data)
+                                response.data.data.forEach(element => {
+                                    this.table.values.data.push({
+                                        edit: false,
+                                        bid: element.bid,
+                                        field_mapping_bid: element.field_mapping_bid,
+                                        required: element.required,
+                                        field: element.field,
+                                        description: element.description,
+                                        mapping_type: element.mapping_type,
+                                        csv_file_name_identifier: element.file_name,
+                                        default_value: element.default_value,
+                                        csv_column_name: element.csv_column_name,
+                                    })
+                                })
+
+                            })
+                        }
                         this.dialog.visible = false;
                     };
 
@@ -497,7 +546,6 @@
                         this.dialog.visible = false;
                     };
                 }
-
             },
             setMapping() {
                 var config = {
@@ -510,12 +558,6 @@
                 axios.post('/field-mapping-setup/detail', config)
                 .then(response => {
                     this.bid = response.data.data.bid;
-                    // this.dialog.visible = true;
-                    // this.dialog.status = 'success';
-                    // this.dialog.message = this.$t('success.successfully_created', { value: this.$t('label.field_mapping_setup') });
-                    // this.dialog.ok.function = () => {
-                    //     this.dialog.visible = false;
-                    // };
                     this.errors.add = {};
                     this.errors.add.field = '';
                     this.mode = "update";
@@ -611,7 +653,7 @@
                             description: this.table.add.description,
                             mapping_type: this.table.add.mapping_type,
                             csv_file_name_identifier: this.table.add.csv_file_name_identifier,
-                            default_value: this.table.add.default_value === "" ? '\"\"' : this.table.add.default_value,
+                            default_value: this.table.add.default_value === "" ? '\"\"' : this.defaultValue(this.table.add.default_value, this.table.add.mapping_type),
                             csv_column_name: this.table.add.csv_column_name,
                         });
                         
@@ -640,7 +682,7 @@
                         description: this.table.add.description,
                         mapping_type: this.table.add.mapping_type,
                         file_name: this.table.add.csv_file_name_identifier,
-                        default_value: this.table.add.default_value === "" ? '\"\"' : this.table.add.default_value,
+                        default_value: this.table.add.default_value === "" ? '\"\"' : this.defaultValue(this.table.add.default_value, this.table.add.mapping_type),
                         column_name: this.table.add.csv_column_name,
                     }
                     axios.post('/field-mapping-setup/detail-create', data)
@@ -653,7 +695,7 @@
                             description: this.table.add.description,
                             mapping_type: this.table.add.mapping_type,
                             csv_file_name_identifier: this.table.add.csv_file_name_identifier,
-                            default_value: this.table.add.default_value === "" ? '\"\"' : this.table.add.default_value,
+                            default_value: this.table.add.default_value === "" ? '\"\"' : this.defaultValue(this.table.add.default_value, this.table.add.mapping_type),
                             csv_column_name: this.table.add.csv_column_name,
                         });
                         this.clearFields();
@@ -667,8 +709,8 @@
             updateRow(data) {
                 if (this.form.mode === 'create') {
                     var exist = this.table.values.data.some((element, index) => element.field == data.values.field.toLowerCase() && data.rowIndex !== index)
-
                     if (data.values.field && !exist) {
+
                         data.done();
                         this.dialog.status = 'success';
                         this.dialog.message = this.$t('success.successfully_updated_the_data');
@@ -676,6 +718,15 @@
                             this.dialog.visible = false;
                         };
                         this.errors.add.edit = null
+                        this.table.values.data[data.rowIndex].edit = false,
+                        this.table.values.data[data.rowIndex].bid = data.values.bid,
+                        this.table.values.data[data.rowIndex].required = data.values.required,
+                        this.table.values.data[data.rowIndex].field = data.values.field,
+                        this.table.values.data[data.rowIndex].description = data.values.description,
+                        this.table.values.data[data.rowIndex].mapping_type = data.values.mapping_type,
+                        this.table.values.data[data.rowIndex].csv_file_name_identifier = data.values.file_name,
+                        this.table.values.data[data.rowIndex].default_value = data.values.default_value === "" ? '\"\"' : this.defaultValue(data.values.default_value, data.values.mapping_type),
+                        this.table.values.data[data.rowIndex].csv_column_name = data.values.column_name,
                         this.table.values.data[data.rowIndex].error = ''
                     } else {
                         if (exist) {
@@ -689,9 +740,30 @@
                         }
                     }
                 } else {
-                    axios.put(`/field-mapping-setup/detail-update/${data.values.bid}`, data.values)
+                    var config = {
+                        bid: data.values.bid,
+                        field_mapping_bid: data.values.field_mapping_bid,
+                        field_mapping_bid: data.values.field_mapping_bid,
+                        required: data.values.required ? 1 : 0,
+                        field: data.values.field,
+                        description: data.values.description,
+                        mapping_type: data.values.mapping_type,
+                        file_name: data.values.file_name,
+                        default_value: data.values.default_value === "" ? '\"\"' : this.defaultValue(data.values.default_value, data.values.mapping_type),
+                        column_name: data.values.column_name,
+                    }
+                    axios.put(`/field-mapping-setup/detail-update/${data.values.bid}`, config)
                     .then(response => {
                         data.done();
+                        this.table.values.data[data.rowIndex].edit = false,
+                        this.table.values.data[data.rowIndex].field_mapping_bid = data.values.field_mapping_bid,
+                        this.table.values.data[data.rowIndex].required = data.values.required,
+                        this.table.values.data[data.rowIndex].field = data.values.field,
+                        this.table.values.data[data.rowIndex].description = data.values.description,
+                        this.table.values.data[data.rowIndex].mapping_type = data.values.mapping_type,
+                        this.table.values.data[data.rowIndex].csv_file_name_identifier = data.values.file_name,
+                        this.table.values.data[data.rowIndex].default_value = data.values.default_value === "" ? '\"\"' : this.defaultValue(data.values.default_value, data.values.mapping_type),
+                        this.table.values.data[data.rowIndex].csv_column_name = data.values.column_name,
                         this.table.values.data[data.rowIndex].error = '';
                     }).catch(error => {
                         this.table.values.data[data.rowIndex].error = error.response.data.errors.field[0];
@@ -767,6 +839,16 @@
                     return 'time';
                 } else {
                     return 'number';
+                }
+            },
+            defaultValue(value, type) {
+                if (type === "INT" || type === "BIGINT" || type === "TINYINT") {
+                    return Math.floor(value);
+                } else if (type === "DECIMAL") {
+                    let val = (value/1).toFixed(2).replace('.', '.');
+                    return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "")
+                } else {
+                    return value;
                 }
             }
         }

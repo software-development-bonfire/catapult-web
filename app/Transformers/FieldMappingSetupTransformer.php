@@ -32,15 +32,29 @@ class FieldMappingSetupTransformer extends TransformerAbstract
      */
     public function transform(FieldMapping $model)
     {
-        return [
-            'bid' => (int) $model->bid,
-            'mapping_type' => (int) $model->type,
-            'api_endpoint' => (string) $model->api_endpoint,
-            'api_version_name' => (string) $model->api_version_name,
-            'total_field_entries' => (int) $model->details_count,
-            'status' => (int) $model->status,
-            'last_modified' => $model->updated_at,
-            'details' => $model->details
-        ];
+        $details = [];
+        $details = collect($model['details'])->map(function($data){
+            return [
+            'bid' => $data->bid,
+            'field_mapping_bid' => $data->field_mapping_bid,
+            'required' => $data->required === 1 ? true : false,
+            'field' => $data->field,
+            'description' => $data->description,
+            'mapping_type' => $data->mapping_type,
+            'file_name' => $data->file_name,
+            'default_value' => $data->default_value,
+            'column_name' => $data->column_name,
+            ];
+        });
+        $data = array();
+            $data['bid'] = (int) $model->bid;
+            $data['mapping_type'] = (int) $model->type;
+            $data['api_endpoint'] = (string) $model->api_endpoint;
+            $data['api_version_name'] = (string) $model->api_version_name;
+            $data['total_field_entries'] = (int) $model->details_count;
+            $data['status'] = (int) $model->status;
+            $data['last_modified'] = $model->updated_at;
+            $data['details'] = $details;
+        return $data;
     }
 }

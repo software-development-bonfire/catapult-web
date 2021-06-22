@@ -19,25 +19,7 @@ class FieldMappingSetupService
     {
         $data['created_by'] = Auth::user()->bid;
         $field_mapping = FieldMapping::Create($data);
-        // ['created_by'] = Auth::user()->bid;
-        // $details = $data['details'];
-        // if ($details) {
-        //     DB::transaction(function () use ($data, $details){
-        //         $field_mapping = FieldMapping::Create($data);
-        //         foreach ($details as $detail) {
-        //             FieldMappingDetail::create([
-        //                 'field_mapping_bid' => $field_mapping->bid,
-        //                 'required' => $detail['required'],
-        //                 'field' => $detail['field'],
-        //                 'description' => $detail['description'],
-        //                 'mapping_type' => $detail['mapping_type'],
-        //                 'file_name' => $detail['csv_file_name_identifier'],
-        //                 'default_value' => $detail['default_value'],
-        //             ]);
-        //         }
-                return $field_mapping;
-        //     });
-        // }
+        return $field_mapping;
     }
 
     /**
@@ -73,6 +55,52 @@ class FieldMappingSetupService
     public function detail_create($data)
     {
         FieldMappingDetail::create($data);
+    }
+
+    /**
+     * Create the specified resource in storage.
+     *
+     * @param Array  $data
+     * @return \Illuminate\Http\Response
+     */
+    public function store_preset($data)
+    {
+        $presets = [];
+        DB::beginTransaction();
+        try {
+            foreach ($data['details'] as $preset) {
+                $array = FieldMappingDetail::create([
+                    'field_mapping_bid' => $data['bid'],
+                    'required' => $preset['required'],
+                    'field' => $preset['field'],
+                    'description' => $preset['description'],
+                    'mapping_type' => $preset['mapping_type'],
+                    'file_name' => $preset['file_name'],
+                    'default_value' => $preset['default_value'],
+                ]);
+                array_push($presets, $array);
+            }
+
+            DB::commit();
+            return $presets;
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return $th->getMessage();
+        }
+        // DB::transaction(function () use ($data, $presets){
+        //     foreach ($data['details'] as $preset) {
+        //         $data = FieldMappingDetail::create([
+        //             'field_mapping_bid' => $data['bid'],
+        //             'required' => $preset['required'],
+        //             'field' => $preset['field'],
+        //             'description' => $preset['description'],
+        //             'mapping_type' => $preset['mapping_type'],
+        //             'file_name' => $preset['file_name'],
+        //             'default_value' => $preset['default_value'],
+        //         ]);
+        //         array_push($presets, $data);
+        //     }
+        // });
     }
 
     /**

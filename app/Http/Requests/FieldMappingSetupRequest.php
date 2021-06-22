@@ -32,7 +32,7 @@ class FieldMappingSetupRequest extends FormRequest
             'api_endpoint' => 'required|max:45',
             'api_version_name' => ['required', 'max:128', Rule::unique('field_mappings')->ignore($this->bid)->where(
                 function ($query) {
-                    $query->where('deleted_at', null);
+                    $query->where('deleted_at', null)->where('type', $this->type);
                 }
             )],
             'status' => 'required',
