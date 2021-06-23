@@ -55,7 +55,7 @@ class FieldMappingSetupService
      */
     public function detailCreate($data)
     {
-        FieldMappingDetail::create($data);
+        return FieldMappingDetail::create($data);
     }
 
     /**

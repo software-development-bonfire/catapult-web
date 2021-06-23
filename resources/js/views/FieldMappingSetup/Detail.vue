@@ -494,6 +494,7 @@
                             presets.forEach(element => {
                                 this.table.values.data.push({
                                     edit: false,
+                                    bid: element.bid,
                                     field_mapping_bid: this.form.mode === 'create' ? this.bid : this.form.values.bid,
                                     required: element.required,
                                     field: element.field,
@@ -685,14 +686,15 @@
                     .then(response => {
                         this.table.values.data.push({
                             edit: false,
-                            field_mapping_bid: this.form.values.bid,
-                            required: this.table.add.required ? 1 : 0,
-                            field: this.table.add.field,
-                            description: this.table.add.description,
-                            mapping_type: this.table.add.mapping_type,
-                            file_name: this.table.add.file_name,
-                            default_value: this.table.add.default_value === "" ? '""' : this.defaultValue(this.table.add.default_value, this.table.add.mapping_type),
-                            column_name: this.table.add.column_name,
+                            bid: response.data.data.bid,
+                            field_mapping_bid: response.data.data.field_mapping_bid,
+                            required: response.data.data.required === 1 ? true : false,
+                            field: response.data.data.field,
+                            description: response.data.data.description,
+                            mapping_type: response.data.data.mapping_type,
+                            file_name: response.data.data.file_name,
+                            default_value: response.data.data.default_value,
+                            column_name: response.data.data.column_name,
                         });
                         this.clearFields();
                         
@@ -845,6 +847,17 @@
                 } else if (type === "DECIMAL") {
                     let val = (value/1).toFixed(2).replace('.', '.');
                     return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "")
+                } else if (type === "TIME") {
+                    var n = value.length
+                    if (n > 8) {
+                        return value.substr(0, 8)
+                    } else if ( n === 4){
+                        return value+":00";
+                    } else {
+                        return value;
+                    }
+                } else if (type === "DATETIME") {
+                    return moment(value).format('YYYY-MM-DD hh:mm:ss');
                 } else {
                     return value;
                 }

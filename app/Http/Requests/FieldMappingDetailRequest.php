@@ -29,7 +29,8 @@ class FieldMappingDetailRequest extends FormRequest
             'bid' => 'sometimes',
             'field_mapping_bid' => 'sometimes',
             'required' => 'required',
-            'field' => ['required', 'max:45', new Lowercase, Rule::unique('field_mapping_details')->ignore($this->bid)->where(
+            'field' => ['required', 'max:45', new Lowercase, Rule::unique('field_mapping_details')->ignore($this->bid)
+            ->where(
                 function ($query) {
                     $query->where('field_mapping_bid', $this->field_mapping_bid);
                 }

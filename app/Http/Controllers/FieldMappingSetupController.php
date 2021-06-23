@@ -165,7 +165,7 @@ class FieldMappingSetupController extends Controller
     public function detailCreate(FieldMappingDetailRequest $request)
     {
         try {
-            $this->fieldMappingSetupService->detailCreate($request->validated());
+            $data = $this->fieldMappingSetupService->detailCreate($request->validated());
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],
@@ -173,7 +173,7 @@ class FieldMappingSetupController extends Controller
             );
         }
         return $this->successfulResponse(
-            [],
+            $data,
             Lang::get('success.field_mapping_detail_created')
         );
     }
