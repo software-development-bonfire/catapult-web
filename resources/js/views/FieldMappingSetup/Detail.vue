@@ -229,8 +229,9 @@
                     <table-data
                         v-if="form.values.mapping_type === 2">
                         <input
-                            v-if="table.add.mapping_type == 'INT' || table.add.mapping_type == 'TINYINT' ||
-                            table.add.mapping_type == 'BIGINT'"
+                            v-if="table.add.mapping_type == 'INT'
+                            || table.add.mapping_type == 'TINYINT'
+                            || table.add.mapping_type == 'BIGINT'"
                             step="1"
                             :type="defaultType()"
                             class="form-control"
@@ -243,8 +244,11 @@
                             class="form-control"
                             v-model="table.add.default_value">
                         <input
-                            v-if="table.add.mapping_type == 'VARCHAR' || table.add.mapping_type == 'DATETIME' ||
-                            table.add.mapping_type == 'DATE' || table.add.mapping_type == 'TIME' || table.add.mapping_type == 'TEXT'"
+                            v-if="table.add.mapping_type == 'VARCHAR'
+                            || table.add.mapping_type == 'DATETIME'
+                            || table.add.mapping_type == 'DATE'
+                            || table.add.mapping_type == 'TIME'
+                            || table.add.mapping_type == 'TEXT'"
                             pattern="^\d*(\.\d{0,2})?$"
                             step="0.01"
                             :type="defaultType()"
@@ -741,7 +745,6 @@
                     var config = {
                         bid: data.values.bid,
                         field_mapping_bid: data.values.field_mapping_bid,
-                        field_mapping_bid: data.values.field_mapping_bid,
                         required: data.values.required ? 1 : 0,
                         field: data.values.field,
                         description: data.values.description,
@@ -755,6 +758,7 @@
                     .then(response => {
                         data.done();
                         this.table.values.data[data.rowIndex].edit = false,
+                        this.table.values.data[data.rowIndex].bid = data.values.bid,
                         this.table.values.data[data.rowIndex].field_mapping_bid = data.values.field_mapping_bid,
                         this.table.values.data[data.rowIndex].required = data.values.required,
                         this.table.values.data[data.rowIndex].field = data.values.field,
@@ -842,22 +846,28 @@
                 }
             },
             defaultValue(value, type) {
+                var n = value.length
                 if (type === "INT" || type === "BIGINT" || type === "TINYINT") {
                     return Math.floor(value);
                 } else if (type === "DECIMAL") {
                     let val = (value/1).toFixed(2).replace('.', '.');
                     return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "")
                 } else if (type === "TIME") {
-                    var n = value.length
                     if (n > 8) {
                         return value.substr(0, 8)
-                    } else if ( n === 4){
+                    } else if ( n === 5){
                         return value+":00";
                     } else {
                         return value;
                     }
                 } else if (type === "DATETIME") {
-                    return moment(value).format('YYYY-MM-DD hh:mm:ss');
+                    if (n === 19) {
+                        return value;
+                    } else if (n === 16) {
+                        return moment(value).format('YYYY-MM-DD')+" "+value.substr(value.indexOf("T")+1, 5)+":00"
+                    } else {
+                        return moment(value).format('YYYY-MM-DD')+" "+value.substr(value.indexOf("T")+1, 8)
+                    }
                 } else {
                     return value;
                 }
