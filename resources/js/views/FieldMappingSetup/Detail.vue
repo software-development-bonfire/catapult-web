@@ -533,7 +533,6 @@
                                         column_name: element.column_name,
                                     })
                                 })
-
                             })
                         }
                         this.dialog.visible = false;
@@ -644,7 +643,7 @@
                 if (this.form.mode === 'create') {
                     var exist = this.table.values.data.some(element => element.field == this.table.add.field.toLowerCase())
                     
-                    if (this.table.add.field && !exist) {
+                    if (this.table.add.field && ! exist) {
                         this.table.values.data.push({
                             edit: false,
                             field_mapping_bid: this.bid,
@@ -656,13 +655,11 @@
                             default_value: this.table.add.default_value === "" ? '""' : this.defaultValue(this.table.add.default_value, this.table.add.mapping_type),
                             column_name: this.table.add.column_name,
                         });
-                        
                         this.dialog.status = 'success';
                         this.dialog.message = this.$t('success.successfully_added_the_data');
                         this.dialog.ok.function = () => {
                             this.dialog.visible = false;
                         };
-        
                         this.clearFields();
                         this.errors.error = {}
                     } else {
@@ -711,7 +708,7 @@
             updateRow(data) {
                 if (this.form.mode === 'create') {
                     var exist = this.table.values.data.some((element, index) => element.field == data.values.field.toLowerCase() && data.rowIndex !== index)
-                    if (data.values.field && !exist) {
+                    if (data.values.field && ! exist) {
 
                         data.done();
                         this.dialog.status = 'success';
@@ -731,14 +728,13 @@
                         this.table.values.data[data.rowIndex].column_name = data.values.column_name,
                         this.table.values.data[data.rowIndex].error = ''
                     } else {
+                        this.errors.error = {};
                         if (exist) {
                             this.errors.add = {};
-                            this.errors.error = {};
                             this.errors.add.field = '';
                             this.table.values.data[data.rowIndex].error = this.$t('error.cdis_field_unique');
                         } else {
                             this.table.values.data[data.rowIndex].error = this.$t('validation.the_cdis_field_is_required')
-                            this.errors.error = {};
                         }
                     }
                 } else {
