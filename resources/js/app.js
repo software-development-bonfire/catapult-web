@@ -10,6 +10,7 @@ import Vue from 'vue';
 import VueInternationalization from 'vue-i18n';
 import Locale from './vue-i18n-locales.generated';
 import VueInputMask from "vue-inputmask";
+import moment from 'moment';
 
 Vue.use(VueInternationalization);
 
@@ -21,6 +22,13 @@ const i18n = new VueInternationalization({
 });
 
 Vue.use(VueInputMask.default);
+
+Vue.filter('formatDate', function(value) {
+    if (value) {
+        return moment(String(value)).format('MM/DD/YYYY')
+    }
+});
+
 
 /**
  * The following block of code may be used to automatically register your

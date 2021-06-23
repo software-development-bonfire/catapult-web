@@ -16,6 +16,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(\App\Repositories\Contracts\ApiSetupRepository::class, \App\Repositories\Eloquent\ApiSetupRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\CatapultDbSetupRepository::class, \App\Repositories\Eloquent\CatapultDbSetupRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\RemoteSetupRepository::class, \App\Repositories\Eloquent\RemoteSetupRepositoryEloquent::class);
+        $this->app->bind(\App\Repositories\Contracts\FieldMappingRepository::class, \App\Repositories\Eloquent\FieldMappingRepositoryEloquent::class);
     }
 
     /**

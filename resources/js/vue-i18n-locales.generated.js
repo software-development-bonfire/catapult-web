@@ -11,19 +11,21 @@ export default {
             "catapult_db_setup_failed_create": "Catapult DB Setup failed to create",
             "catapult_db_setup_failed_deleted": "Catapult DB Setup failed to deleted",
             "catapult_db_setup_failed_update": "Catapult DB Setup failed to update",
+            "field_is_required": "The CDIS Fields is required.",
+            "field_mapping_setup_failed_create": "Field Mapping Setup failed to create.",
+            "field_mapping_setup_failed_delete": "Field Mapping Setup failed to delete.",
+            "field_mapping_setup_failed_update": "Field Mapping Setup failed to update.",
+            "field_mapping_detail_failed_create": "Field Mapping detail failed to create.",
+            "field_mapping_detail_failed_delete": "Field Mapping detail failed to delete.",
+            "field_mapping_detail_failed_update": "Field Mapping detail failed to update.",
             "remote_setup_failed_create": "Remote Setup failed to create",
             "remote_setup_failed_deleted": "Remote Setup failed to deleted",
             "remote_setup_failed_update": "Remote Setup failed to update",
-            "syncing_setup_failed_update": "Syncing Setup failed to update"
+            "syncing_setup_failed_update": "Syncing Setup failed to update",
+            "cdis_field_unique": "The CDIS Field has already been taken."
         },
         "label": {
             "active": "Active",
-            "id": "ID",
-            "module_permission": "Module Permission",
-            "retype_password": "Re-type Password",
-            "name": "Name",
-            "user_account_list": "User Account List",
-            "user_account_detail": "User Account Detail",
             "add_new": "Add New",
             "add_tooltip_description": "Add Tooltip Description",
             "admin_settings": "Admin Settings",
@@ -60,12 +62,14 @@ export default {
             "csv_column_name": "CSV Column Name",
             "csv_file_name_identifier": "CSV File Name Identifier",
             "dashboard": "Dashboard",
+            "mapping_type": "Mapping Type",
             "data_type": "Data Type",
             "db_name": "DB Name",
             "db_password": "DB Password",
             "db_username": "DB Usename",
             "default_field_values": "Default Field Values",
             "end_of_day": "End of Day",
+            "default_value": "Default Field Values",
             "end_point": "End point",
             "field": "Field",
             "field_mapping": "Field Mapping",
@@ -73,6 +77,7 @@ export default {
             "field_mapping_setup_detail": "Field Mapping Setup Detail",
             "field_mapping_setup_list": "Field Mapping Setup List",
             "host": "Host",
+            "id": "ID",
             "inactive": "Inactive",
             "last_modified": "Last Modified",
             "licencing": "Licensing",
@@ -80,7 +85,8 @@ export default {
             "login": "Login",
             "logout": "Logout",
             "logs": "Logs",
-            "mapping_type": "Mapping Type",
+            "module_permission": "Module Permission",
+            "name": "Name",
             "password": "Password",
             "path": "Path",
             "port": "Port",
@@ -98,11 +104,13 @@ export default {
             "remote_setup_detail": "Remote Setup Detail",
             "remote_setup_name": "Remote Setup Name",
             "remote_username": "Remote Username",
+            "retype_password": "Re-type Password",
             "save": "Save",
             "search": "Search",
             "select_api_endpoint_to_map": "Select API Endpoint to map",
             "server": "Server",
             "set_as_required": "Set as required",
+            "set_mapping": "Set Mapping",
             "start_time": "Start Time",
             "status": "Status",
             "sync_interval_name": "Sync Interval Name",
@@ -118,6 +126,8 @@ export default {
             "transactions": "Transactions",
             "uom": "UOM",
             "user_account": "User Account",
+            "user_account_detail": "User Account Detail",
+            "user_account_list": "User Account List",
             "username": "Username",
             "values": "Values",
             "vendor": "Vendor",
@@ -125,7 +135,9 @@ export default {
             "zread": "Zread"
         },
         "message": {
-            "do_you_want_to_remove_this_data": "Do you want to remove this data?"
+            "do_you_want_to_remove_this_data": "Do you want to remove this data?",
+            "are_you_sure_you_want_to_overwrite_the_table_with_the_selected_preset": "Are you sure you want to overwrite the table with the selected preset?",
+            "the_cdis_field_must_be_lowercase": "The CDIS field must be lowercase."
         },
         "pagination": {
             "previous": "&laquo; Previous",
@@ -145,6 +157,12 @@ export default {
             "catapult_db_setup_created": "Catapult DB Setup successfully created!",
             "catapult_db_setup_deleted": "Catapult DB Setup successfully deleted!",
             "catapult_db_setup_updated": "Catapult DB Setup successfully updated!",
+            "field_mapping_setup_created": "Field Mapping Setup successfully created!",
+            "field_mapping_setup_deleted": "Field Mapping Setup successfully deleted!",
+            "field_mapping_setup_updated": "Field Mapping Setup successfully updated!",
+            "field_mapping_detail_created": "Field Mapping detail successfully create!",
+            "field_mapping_detail_deleted": "Field Mapping detail successfully deleted!",
+            "field_mapping_detail_updated": "Field Mapping detail successfully updated!",
             "remote_setup_created": "Remote Setup successfully created!",
             "remote_setup_deleted": "Remote Setup successfully deleted!",
             "remote_setup_updated": "Remote Setup successfully updated!",
@@ -266,7 +284,9 @@ export default {
                     "rule-name": "custom-message"
                 }
             },
-            "attributes": []
+            "attributes": [],
+            "field_mapping_cdis_required": "Please input atleast one CDIS Field",
+            "the_cdis_field_is_required": "The CDIS Field is required"
         }
     }
 }

@@ -38,7 +38,8 @@
             :header-fields="table.header"
             :settings="table.settings"
             :table="table.values"
-            v-on:delete-row="deleteRow">
+            v-on:delete-row="deleteRow"
+            v-on:paginate="paginate">
             <template slot="content">
                 <table-row
                     type="view"
@@ -58,24 +59,12 @@
                     <td class="datatable-cell">
                         <template v-if="tableData.mapping_type === 1">
                             <span
-                                v-text="
-                                tableData.api_endpoint === 1 ? $t('label.product')
-                                : tableData.api_endpoint === 2 ? $t('label.brand')
-                                : tableData.api_endpoint === 3 ? $t('label.category')
-                                : tableData.api_endpoint === 4 ? $t('label.vendor')
-                                : tableData.api_endpoint === 5 ? $t('label.uom')
-                                : ''">
+                                v-text=" tableData.api_endpoint">
                             </span>
                         </template>
                         <template v-else>
                             <span
-                                v-text="
-                                tableData.api_endpoint === 1 ? $t('label.transaction')
-                                : tableData.api_endpoint === 2 ? $t('label.zread')
-                                : tableData.api_endpoint === 3 ? $t('label.audit_trail')
-                                : tableData.api_endpoint === 4 ? $t('label.cash_breakdown')
-                                : tableData.api_endpoint === 5 ? $t('label.cash_drawer')
-                                : ''">
+                                v-text="tableData.api_endpoint">
                             </span>
                         </template>
                     </td>
@@ -89,7 +78,7 @@
                         <span v-text="tableData.status ? $t('label.active') : $t('label.inactive')"></span>
                     </td>
                     <td class="datatable-cell">
-                        <span v-text="tableData.last_modified"></span>
+                        <span>{{ tableData.last_modified|formatDate }}</span>
                     </td>
                 </table-row>
             </template>
@@ -117,6 +106,9 @@
             DialogBox,
             Datatable,
             TableRow
+        },
+        mounted() {
+            this.paginate();
         },
         data() {
             return {
@@ -173,32 +165,7 @@
                         }
                     ],
                     values: {
-                        data: [
-                            {
-                                mapping_type: 1,
-                                api_endpoint: 1,
-                                api_version_name: 'Transaction API Field v 2.0',
-                                total_field_entries: '70',
-                                status: 1,
-                                last_modified: '2021/5/20',
-                            },
-                            {
-                                mapping_type: 1,
-                                api_endpoint: 4,
-                                api_version_name: 'Transaction API Field v 1.0',
-                                total_field_entries: '70',
-                                status: 1,
-                                last_modified: '2021/5/20',
-                            },
-                            {
-                                mapping_type: 2,
-                                api_endpoint: 2,
-                                api_version_name: 'POS API Field v 2.0',
-                                total_field_entries: '30',
-                                status: 0,
-                                last_modified: '2021/5/20',
-                            }
-                        ],
+                        data: [],
                         meta: {
                             pagination: {
                                 count: 1,
@@ -215,11 +182,23 @@
                         withRowNumbers: true,
                         hasDelete: true
                     }
-                }
+                },
             }
         },
         methods: {
-            paginate() {},
+            paginate(page = 1) {
+                axios.get('/field-mapping-setup/index'+'?page='+page, {
+                    params: {
+                        mapping_type: this.filters.mapping_type,
+                        status: this.filters.status,
+                        itemsPerPage: this.table.settings.itemsPerPage
+                    }
+                })
+                .then(response => {
+                    this.table.values.data = response.data.data.data
+                    this.table.values.meta  = response.data.data.meta
+                })
+            },
 
             create() {
                 window.open('/field-mapping-setup/detail', '_self');
@@ -236,12 +215,15 @@
                 this.dialog.status = 'confirm';
                 this.dialog.message = this.$t('message.do_you_want_to_remove_this_data');
                 this.dialog.ok.function = () => {
-                    this.table.values.data.splice(index, 1);
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_removed_the_data');
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                    };
+                    axios.delete(`field-mapping-setup/${index.values.bid}`)
+                        .then(response => {
+                            this.table.values.data.splice(index, 1);
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_removed_the_data');
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                            };
+                        })
                 };
                 this.dialog.cancel.function = () => {
                     this.dialog.visible = false;

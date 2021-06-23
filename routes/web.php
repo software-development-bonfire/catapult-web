@@ -25,6 +25,22 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/sync-interval-setting', 'SyncIntervalSettingController@view');
     Route::get('/user-account', 'UserAccountController@view');
 
+    // Field Mapping
+    Route::group(['prefix' => 'field-mapping-setup'], function () {
+        Route::get('/', 'FieldMappingSetupController@view');
+        Route::get('/index', 'FieldMappingSetupController@index');
+        Route::get('/detail', 'FieldMappingSetupController@detail');
+        Route::get('/detail/preset', 'FieldMappingSetupController@index');
+        Route::post('/detail/preset', 'FieldMappingSetupController@storePreset');
+        Route::post('/detail', 'FieldMappingSetupController@store');
+        Route::post('/details', 'FieldMappingSetupController@storeDetails');
+        Route::put('/detail/{bid}', 'FieldMappingSetupController@update');
+        Route::post('/detail-create', 'FieldMappingSetupController@detailCreate');
+        Route::put('/detail-update/{bid}', 'FieldMappingSetupController@detailUpdate');
+        Route::delete('/{bid}', 'FieldMappingSetupController@destroy');
+        Route::delete('/detail_delete/{bid}', 'FieldMappingSetupController@detailDestroy');
+    });
+
     Route::apiResources([
         'remote-setup' => 'RemoteSetupController',
         'catapult-db-setup' => 'CatapultDbSetupController',
@@ -32,10 +48,5 @@ Route::group(['middleware' => 'auth'], function () {
         'syncing' => 'SyncingSetupController',
     ]);
 });
-
-Route::get('/configurations', 'ConfigurationsController@index');
-Route::get('/syncing-setup', 'SyncingSetupController@index');
-Route::get('/field-mapping-setup', 'FieldMappingSetupController@index');
-Route::get('/field-mapping-setup/detail', 'FieldMappingSetupController@detail');
 
 Route::get('/{any_path?}', [HomeController::class, 'index'])->where('any_path', '(.*)');
