@@ -33,6 +33,7 @@ class FieldMappingSetupTransformer extends TransformerAbstract
     public function transform(FieldMapping $model)
     {
         $details = [];
+        
         $details = collect($model['details'])->map(function($data){
             return [
             'bid' => $data->bid,
@@ -46,6 +47,7 @@ class FieldMappingSetupTransformer extends TransformerAbstract
             'column_name' => $data->column_name,
             ];
         });
+
         $data = array();
             $data['bid'] = (int) $model->bid;
             $data['mapping_type'] = (int) $model->type;
