@@ -2,6 +2,7 @@
     <div class="sidebar-navigation">
         <div class="list-group list-group-root list-group-flush well">
             <a
+                v-if="this.$hasPermissionTo('view.dashboard')"
                 href="/dashboard"
                 class="list-group-item"
                 :class="page === 'dashboard' ? 'active' : ''">
@@ -30,6 +31,7 @@
                 <span class="side-link-label">{{ $t('label.sync_interval_setting') }}</span>
             </a>
             <a
+                v-if="this.$hasPermissionTo('view.logs')"
                 href="#"
                 class="list-group-item"
                 :class="page === 'logs' ? 'active' : ''">
@@ -37,6 +39,7 @@
                 <span class="side-link-label">{{ $t('label.logs') }}</span>
             </a>
             <a
+                v-if="this.$hasPermissionTo('view.user_account')"
                 href="/user-account"
                 class="list-group-item"
                 :class="page === 'user-account' ? 'active' : ''">

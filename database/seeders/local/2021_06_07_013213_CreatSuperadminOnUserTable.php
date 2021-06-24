@@ -14,9 +14,11 @@ class CreatSuperadminOnUserTable extends MigratableSeeder
     public function run(): void
     {
         User::create([
+            'name' => 'bonfire-administrator',
             'username' => 'superadmin',
             'password' => bcrypt('superadmin031819'),
-            'full_name' => 'bonfire-administrator',
+            'status' => 1,
+            'type' => -1
         ]);
     }
 

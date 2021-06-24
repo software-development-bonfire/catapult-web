@@ -149,5 +149,6 @@ return [
 
     'field_mapping_cdis_required' => 'Please input atleast one CDIS Field',
     'the_cdis_field_is_required' => 'The CDIS Field is required',
+    'password_doesnt_match' => 'Password doesn\'t match',
 
 ];

@@ -6,13 +6,16 @@
 
 require('./bootstrap');
 import axios from 'axios'
+import HasPermission from '../js/mixins/HasPermission';
 import Vue from 'vue';
+import Vuex from 'vuex';
 import VueInternationalization from 'vue-i18n';
 import Locale from './vue-i18n-locales.generated';
 import VueInputMask from "vue-inputmask";
 import moment from 'moment';
 
 Vue.use(VueInternationalization);
+Vue.use(Vuex);
 
 const lang = document.documentElement.lang.substr(0, 2);
 
@@ -29,6 +32,32 @@ Vue.filter('formatDate', function(value) {
     }
 });
 
+const store = new Vuex.Store({
+    state: {
+        count: 0,
+        userPermissions: Array,
+        permissionList: Array,
+        decimalPlaces: Array,
+        subscription: Array
+    },
+    mutations: {
+        SET_USER_PERMISSIONS: (state, value) => {
+            state.userPermissions = value;
+        },
+
+        SET_PERMISSION_LIST: (state, value) => {
+            state.permissionList = value;
+        },
+    },
+    getters: {
+        userPermissions: (state) => {
+            return state.userPermissions
+        },
+        permissionList: (state) => {
+            return state.permissionList
+        },
+    }
+});
 
 /**
  * The following block of code may be used to automatically register your
@@ -54,6 +83,7 @@ Vue.component('field-mapping-setup-detail', require('./views/FieldMappingSetup/D
 Vue.component('sync-interval-setting', require('./views/SyncIntervalSetting/List.vue').default);
 Vue.component('user-account', require('./views/UserAccount/List.vue').default);
 
+Vue.mixin(HasPermission);
 /**
  * Next, we will create a fresh Vue application instance and attach it to
  * the page. Then, you may begin adding components to this application
@@ -62,5 +92,6 @@ Vue.component('user-account', require('./views/UserAccount/List.vue').default);
 
 const app = new Vue({
     el: '#app',
+    store,
     i18n
 });

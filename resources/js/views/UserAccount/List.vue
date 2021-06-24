@@ -8,6 +8,7 @@
             :header-fields="table.header"
             :settings="table.settings"
             :table="table.values"
+            v-on:paginate="paginate"
             v-on:delete-row="deleteRow">
             <template slot="content">
                 <table-row
@@ -76,56 +77,64 @@
                     <div class="row">
                         <div class="col-xl-6">
                             <form-field
-                                class="form-group"
-                                :error="form.errors.username">
+                                class="form-group">
                                 <label>{{ $t('label.username') }}</label>
                                 <input
                                     type="text"
                                     class="form-control"
-                                    :class="{ 'is-invalid': form.errors.username !== '' }"
+                                    :class="{ 'is-invalid': form.errors.hasOwnProperty('username') && form.errors.username !== '' }"
                                     @keypress="form.errors.username = ''"
                                     v-model="form.values.username">
+                                <label class="text-danger error-message m-0" v-if="form.errors.hasOwnProperty('username')">
+                                    {{form.errors.username[0]}}
+                                </label>
                             </form-field>
                         </div>
                         <div class="col-xl-6">
                             <form-field
-                                class="form-group"
-                                :error="form.errors.password">
+                                class="form-group">
                                 <label>{{ $t('label.password') }}</label>
                                 <input
                                     type="password"
                                     class="form-control"
-                                    :class="{ 'is-invalid': form.errors.password !== '' }"
+                                    :class="{ 'is-invalid': form.errors.hasOwnProperty('password') && form.errors.password !== '' }"
                                     @keypress="form.errors.password = ''"
                                     v-model="form.values.password">
+                                <label class="text-danger error-message m-0" v-if="form.errors.hasOwnProperty('password')">
+                                    {{form.errors.password[0]}}
+                                </label>
                             </form-field>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-xl-6">
                             <form-field
-                                class="form-group"
-                                :error="form.errors.name">
+                                class="form-group">
                                 <label>{{ $t('label.name') }}</label>
                                 <input
                                     type="text"
                                     class="form-control"
-                                    :class="{ 'is-invalid': form.errors.name !== '' }"
+                                    :class="{ 'is-invalid': form.errors.hasOwnProperty('name') && form.errors.name !== '' }"
                                     @keypress="form.errors.name = ''"
                                     v-model="form.values.name">
+                                <label class="text-danger error-message m-0" v-if="form.errors.hasOwnProperty('name')">
+                                    {{form.errors.name[0]}}
+                                </label>
                             </form-field>
                         </div>
                         <div class="col-xl-6">
                             <form-field
-                                class="form-group"
-                                :error="form.errors.retype_password">
+                                class="form-group">
                                     <label>{{ $t('label.retype_password') }}</label>
                                     <input
                                         type="password"
                                         class="form-control"
-                                        :class="{ 'is-invalid': form.errors.retype_password !== '' }"
+                                        :class="{ 'is-invalid': form.errors.hasOwnProperty('retype_password') && form.errors.retype_password !== '' }"
                                         @keypress="form.errors.retype_password = ''"
                                         v-model="form.values.retype_password">
+                                    <label class="text-danger error-message m-0" v-if="form.errors.hasOwnProperty('retype_password')">
+                                        {{form.errors.retype_password[0]}}
+                                    </label>
                             </form-field>
                         </div>
                     </div>
@@ -134,22 +143,10 @@
                 <div class="form-group">
                     <h5>{{ $t('label.module_permission') }}</h5>
                     <div class="ml-4">
-                        <div>
+                        <div v-for="(data, index) in permission" :key="index">
                             <label class="radio-checkbox">
-                                <input type="checkbox">
-                                <span>{{ $t('label.dashboard') }}</span>
-                            </label>
-                        </div>
-                        <div>
-                            <label class="radio-checkbox">
-                                <input type="checkbox">
-                                <span>{{ $t('label.logs') }}</span>
-                            </label>
-                        </div>
-                        <div>
-                            <label class="radio-checkbox">
-                                <input type="checkbox">
-                                <span>{{ $t('label.user_account') }}</span>
+                                <input type="checkbox" :value="getPermissionCode(data.code_name)" v-model="data.value">
+                                <span>{{data.name }}</span>
                             </label>
                         </div>
                     </div>
@@ -180,8 +177,30 @@
             DatePicker,
             FormField
         },
+        mounted() {
+            this.paginate();
+            this.permissionCodes()
+        },
         data() {
             return {
+                permission: [],
+                permissions: [
+                    {
+                        name: this.$t('label.dashboard'),
+                        code_name: 'view.dashboard',
+                        value: null
+                    },
+                    {
+                        name: this.$t('label.logs'),
+                        code_name: 'view.logs',
+                        value: null,
+                    },
+                    {
+                        name: this.$t('label.user_account'),
+                        code_name: 'view.user_account',
+                        value: null,
+                    }
+                ],
                 dialog: {
                     visible: false,
                     type: '',
@@ -217,10 +236,10 @@
                         retype_password: ''
                     },
                     errors: {
-                        username: 'Username is required.',
-                        name: 'Name is required.',
-                        password: 'Password is required.',
-                        retype_password: 'Password does not match.'
+                        username: '',
+                        name: '',
+                        password: '',
+                        retype_password: ''
                     }
                 },
                 table: {
@@ -247,26 +266,7 @@
                         }
                     ],
                     values: {
-                        data: [
-                            {
-                                id: '101',
-                                username: 'jdelacruz',
-                                name: 'Juan Dela Cruz',
-                                status: 1,
-                            },
-                            {
-                                id: '102',
-                                username: 'cdalisay',
-                                name: 'Cardo Dalisay',
-                                status: 1,
-                            },
-                            {
-                                id: '103',
-                                username: 'janedoe',
-                                name: 'Jane Doe',
-                                status: 0,
-                            }
-                        ],
+                        data: [],
                         meta: {
                             pagination: {
                                 count: 1,
@@ -287,14 +287,36 @@
             }
         },
         methods: {
-            paginate() {},
+            permissionCodes() {
+                this.permissions = this.permissions.map(element => {
+                    return {
+                        name: element.name,
+                        value: element.value,
+                        code_name: element.code_name,
+                        code: this.getPermissionCode(element.code_name)
+                    }
+                })
+            },
+            paginate(page = 1) {
+                axios.get('user'+'?page='+page, {
+                    params: {
+                        itemsPerPage: this.table.settings.itemsPerPage
+                    }
+                })
+                .then(response => {
+                    this.table.values.data = response.data.data.data
+                    this.table.values.meta  = response.data.data.meta
+                })
+            },
 
             create() {
+                this.permission = this.permissions
                 this.clearFields();
                 this.modal.detail.visible = true;
             },
 
             clearFields() {
+                this.form.errors = {}
                 this.form.mode = 'create';
                 this.form.values = {
                     id: '',
@@ -308,13 +330,39 @@
 
             openDetail(data, index) {
                 this.form.mode = 'update';
+                this.form.errors = {}
+                var permission = [];
+                this.permissions.forEach(element => {
+                    if (data.permission.some(e => (element.code === e.code))) {
+                        permission.push({
+                            value: true,
+                            code: element.code,
+                            code_name: element.code_name,
+                            name: element.name,
+                        });
+                    } else {
+                        permission.push({
+                            value: false,
+                            code: element.code,
+                            code_name: element.code_name,
+                            name: element.name,
+                        });
+                    }
 
+                });
+                
+                this.permission = permission
                 this.form.values = {
+                    mode: 'update',
                     index: index,
                     id: data.id,
+                    bid: data.bid,
                     name: data.name,
                     username: data.username,
-                    status: data.status
+                    status: data.status,
+                    password: data.password,
+                    retype_password: data.retype_password,
+                    permission: this.permission
                 };
 
                 this.modal.detail.visible = true;
@@ -322,51 +370,95 @@
 
             save() {
                 if (this.form.mode === 'create') {
-                    this.table.values.data.push({
-                        id: this.form.values.id,
+                    var permission = [];
+                    this.permissions.forEach(element => {
+                        if (element.value === true) {
+                            permission.push({
+                                code: element.code
+                            })
+                        }
+                    })
+                    var config = {
+                        mode: this.form.mode,
+                        bid: this.form.values.bid,
                         name: this.form.values.name,
                         username: this.form.values.username,
+                        password: this.form.values.password,
                         status: this.form.values.status,
-                    });
+                        password: this.form.values.password,
+                        retype_password: this.form.values.retype_password,
+                        permission: permission
+                    }
 
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_created', { value: this.$t('label.user_account') });
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                        this.modal.detail.visible = false;
-                    };
+                    axios.post('user', config)
+                        .then(response => {
+                            this.paginate();
+                            this.form.errors = {};
+                            this.dialog.visible = true;
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_created', { value: this.$t('label.user_account') });
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                                this.modal.detail.visible = false;
+                            };
+                        }).catch(error => {
+                            this.form.errors = error.response.data.errors;
+                        })
                 } else {
-                    let index = this.form.values.index;
-
-                    this.table.values.data[index] = {
-                        id: this.form.values.id,
+                    var permission = [];
+                    this.permission.forEach(element => {
+                        if (element.value === true) {
+                            permission.push({
+                                code: element.code
+                            })
+                        }
+                    })
+                    var config = {
+                        mode: this.form.mode,
+                        bid: this.form.values.bid,
                         name: this.form.values.name,
                         username: this.form.values.username,
-                        status: this.form.values.status
-                    };
+                        password: this.form.values.password,
+                        status: this.form.values.status,
+                        password: this.form.values.password,
+                        retype_password: this.form.values.retype_password,
+                        permission: permission
+                    }
+                    
+                    axios.put('user/'+this.form.values.bid, config)
+                        .then(response => {
+                            this.paginate()
+                            this.dialog.visible = true;
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_updated', { value: this.$t('label.user_account') });
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                                this.modal.detail.visible = false;
+                            };
 
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_updated', { value: this.$t('label.user_account') });
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                        this.modal.detail.visible = false;
-                    };
+                        }).catch(error => {
+                            this.form.errors = error.response.data.errors;
+                        })
                 }
             },
 
             deleteRow(data) {
+                
                 this.dialog.visible = true;
                 this.dialog.status = 'confirm';
                 this.dialog.message = this.$t('message.do_you_want_to_remove_this_data');
                 this.dialog.ok.function = () => {
-                    this.table.values.data.splice(data.rowIndex, 1);
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_removed_the_data');
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                    };
+
+                axios.delete(`user/${data.values.bid}`)
+                    .then(response => {
+                        this.table.values.data.splice(data.rowIndex, 1);
+                        this.dialog.status = 'success';
+                        this.dialog.message = this.$t('success.successfully_removed_the_data');
+                        this.dialog.ok.function = () => {
+                            
+                            this.dialog.visible = false;
+                        };
+                    })
                 };
                 this.dialog.cancel.function = () => {
                     this.dialog.visible = false;

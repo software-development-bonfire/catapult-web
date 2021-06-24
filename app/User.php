@@ -2,17 +2,22 @@
 
 namespace App;
 
+use App\Entities\UserPermission;
+use App\Enums\Permissions;
+use App\Enums\UserType;
 use App\Traits\BidObserverTrait;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Arr;
 
 class User extends Authenticatable
 {
-    use Notifiable;
-    use SoftDeletes;
-    use BidObserverTrait;
+    use Notifiable,
+        SoftDeletes,
+        BidObserverTrait;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -21,7 +26,12 @@ class User extends Authenticatable
     protected $primaryKey = 'bid';
     
     protected $fillable = [
-        'name', 'username', 'password', 'full_name'
+        'name',
+        'username',
+        'password',
+        'status',
+        'created_by',
+        'updated_by',
     ];
 
     /**
@@ -41,4 +51,37 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function isSuperadmin()
+    {
+        return $this->type === UserType::SUPERADMIN;
+    }
+
+    public function getPermissions()
+    {
+        $permissions = array();
+
+        if ($this->isSuperadmin()) {
+            foreach ($this->getPermissionList() as $permission) {
+                array_push($permissions, $permission);
+            }
+        } else {
+            $permissions = UserPermission::where([
+                ['user_bid', '=', $this->bid]
+            ])
+            ->pluck('code')
+            ->toArray();
+        }
+        return $permissions;
+    }
+
+    public function getPermissionList()
+    {
+        return Arr::dot(Permissions::LIST);
+    }
+
+    public function permissions()
+    {
+        return $this->hasMany(UserPermission::class, 'user_bid', 'bid');
+    }
 }

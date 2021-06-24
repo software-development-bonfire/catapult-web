@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Traits\HasPermission;
 use App\User;
+use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
+    use AuthenticatesUsers, HasPermission;
+
     /**
      * Display a listing of the resource.
      *
@@ -32,6 +36,8 @@ class LoginController extends Controller
     {
         $credentials = $request->only('username', 'password');
         if (Auth::attempt($credentials)) {
+            $request->session()->put('permissions', $this->guard()->user()->getPermissions());
+
             return response()->json(Auth::user(), 200); 
         }
         throw ValidationException::withMessages([
@@ -124,6 +130,7 @@ class LoginController extends Controller
      */
     public function __construct()
     {
+        $this->middleware('has-permission:delete.data.user')->only('destroy');
         $this->middleware('guest')->except('logout');
     }
 }

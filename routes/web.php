@@ -46,6 +46,7 @@ Route::group(['middleware' => 'auth'], function () {
         'catapult-db-setup' => 'CatapultDbSetupController',
         'api-setup' => 'ApiSetupController',
         'syncing' => 'SyncingSetupController',
+        'user' => 'UserAccountController',
     ]);
 });
 

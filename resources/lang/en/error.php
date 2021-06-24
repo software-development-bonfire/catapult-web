@@ -28,5 +28,8 @@ return [
     'remote_setup_failed_deleted' => 'Remote Setup failed to deleted',
     'remote_setup_failed_update' => 'Remote Setup failed to update',
     'syncing_setup_failed_update' => 'Syncing Setup failed to update',
-    'cdis_field_unique' => 'The CDIS Field has already been taken.'
+    'cdis_field_unique' => 'The CDIS Field has already been taken.',
+    'user_failed_create' => 'User failed to create.',
+    'user_failed_deleted' => 'User failed to deleted.',
+    'user_failed_update' => 'User failed to update.',
 ];
