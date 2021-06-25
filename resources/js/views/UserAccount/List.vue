@@ -151,6 +151,9 @@
                         </div>
                     </div>
                 </div>
+                <label class="text-danger error-message m-0" v-if="form.errors.hasOwnProperty('permission')">
+                    {{form.errors.permission[0]}}
+                </label>
                 <div align="center">
                     <button class="button button--light" @click="save">{{ $t('label.save') }}</button>
                 </div>

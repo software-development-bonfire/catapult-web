@@ -296,7 +296,8 @@ export default {
             "the_cdis_field_is_required": "The CDIS Field is required",
             "password_doesnt_match": "Password doesn't match",
             "the_provided_credentials_are_incorrect": "The provided credentials are incorrect.",
-            "user_inactive": "User is inactive."
+            "user_inactive": "User is inactive.",
+            "user_should_have_atleast_one_permission": "User should have atleast one permission."
         }
     }
 }

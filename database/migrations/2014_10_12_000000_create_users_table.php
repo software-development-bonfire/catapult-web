@@ -18,7 +18,7 @@ class CreateUsersTable extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('bid')->index()->unique();
             $table->string('name', 45);
-            $table->string('username', 45)->unique();
+            $table->string('username', 45);
             $table->string('password', 128);
             $table->tinyInteger('status')->default(1);
             $table->rememberToken();
