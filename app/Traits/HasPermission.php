@@ -17,9 +17,6 @@ trait HasPermission
         }
 
         $isSuperadmin = auth()->user()->isSuperadmin();
-        // $isMaster = auth()->user()->isMasterAccount();
-
-        // if ($isMaster) return true;
 
         if (
             ($isSuperadmin && in_array('superadmin', $permissions))
@@ -37,7 +34,6 @@ trait HasPermission
     private function getPermissionCode($permission)
     {
         $permissionList = $this->getPermissionList();
-
 
         if (array_key_exists($permission, $permissionList)) {
             return $permissionList[$permission];
