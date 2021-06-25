@@ -38,7 +38,7 @@ class UserAccountRequest extends FormRequest
             unset($rules['retype_password']);
             unset($rules['username']);
             
-            $rules['username'] = 'required|unique:users,username,' . $this->bid . ',bid,deleted_at,NULL';
+            $rules['username'] = 'required|unique:users,username,' . $this->bid . ',bid,deleted_at,NULL|max:15';
             if ($this->password) {
                 $rules['password'] = 'sometimes|same:retype_password|min:8|regex:/[0-9]/|regex:/[@$!%*#?&]/|regex:/[A-Z]/';
                 $rules['retype_password'] = 'sometimes|same:password|min:8|regex:/[0-9]/|regex:/[@$!%*#?&]/|regex:/[A-Z]/';

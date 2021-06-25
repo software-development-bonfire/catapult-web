@@ -15,7 +15,14 @@ class HomeController extends Controller
     public function index()
     {
         if (Auth::user()) {
-            return redirect('dashboard');
+            $permissions = Auth::user()->getPermissions();
+            if (in_array(110101, $permissions)) {
+                return redirect('dashboard');
+            } else if (in_array(110301, $permissions)) {
+                return redirect('user-account');
+            } else {
+                return redirect('logs');
+            }
         }
         return redirect('/');
     }

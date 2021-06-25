@@ -2,11 +2,13 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Enums\UserType;
 use Prettus\Repository\Eloquent\BaseRepository;
 use Prettus\Repository\Criteria\RequestCriteria;
 use App\Repositories\Contracts\UserAccountRepository;
 use App\User;
 use App\Validators\UserAccountValidator;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Class UserAccountRepositoryEloquent.
@@ -37,8 +39,9 @@ class UserAccountRepositoryEloquent extends BaseRepository implements UserAccoun
     
     public function list($filters)
     {
-        $this->model = $this->model
-        ->with('permissions')
+        if (UserType::SUPERADMIN === Auth::user()->type) {
+            $this->model = $this->model
+            ->with('permissions')
             ->select([
                 'id',
                 'bid',
@@ -47,6 +50,19 @@ class UserAccountRepositoryEloquent extends BaseRepository implements UserAccoun
                 'status'
             ])
             ->orderBy('bid', 'ASC');
+        } else {
+            $this->model = $this->model
+            ->where('type', '!=', '-1')
+            ->select([
+                'id',
+                'bid',
+                'name',
+                'username',
+                'status'
+            ])
+            ->with('permissions')
+            ->orderBy('bid', 'ASC');
+        }
 
         return $this->paginate($filters['itemsPerPage']);
     }

@@ -18,7 +18,15 @@ class RedirectIfAuthenticated
     public function handle($request, Closure $next, $guard = null)
     {
         if (Auth::guard($guard)->check()) {
-            return redirect('/dashboard');
+            $permissions = Auth::user()->getPermissions();
+            
+            if (in_array(110101, $permissions)) {
+                return redirect('dashboard');
+            } else if (in_array(110301, $permissions)) {
+                return redirect('user-account');
+            } else {
+                return redirect('logs');
+            }
         }
 
         return $next($request);

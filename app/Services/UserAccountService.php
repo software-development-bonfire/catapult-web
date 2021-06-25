@@ -64,6 +64,10 @@ class UserAccountService
         
         $user = User::find($bid);
 
+        if (array_key_exists('password', $data)) {
+            $data['password'] = bcrypt($data['password']);
+        }
+
         $user->update($data);
 
         $this->attachPermissions($user, $data['permission']);

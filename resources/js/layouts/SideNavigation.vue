@@ -10,6 +10,7 @@
                 <span class="side-link-label">{{ $t('label.dashboard') }}</span>
             </a>
             <a
+                v-if="this.$hasPermissionTo('view.configurations')"
                 href="/configurations"
                 class="list-group-item"
                 :class="page === 'configurations' ? 'active' : ''">
@@ -17,6 +18,7 @@
                 <span class="side-link-label">{{ $t('label.configurations') }}</span>
             </a>
             <a
+                v-if="this.$hasPermissionTo('view.field-mapping')"
                 href="#"
                 class="list-group-item"
                 :class="page === 'field-mapping' ? 'active' : ''">
@@ -24,6 +26,7 @@
                 <span class="side-link-label">{{ $t('label.field_mapping') }}</span>
             </a>
             <a
+                v-if="this.$hasPermissionTo('view.sync_interval_setting')"
                 href="/sync-interval-setting"
                 class="list-group-item"
                 :class="page === 'sync-interval-setting' ? 'active' : ''">
@@ -47,18 +50,21 @@
                 <span class="side-link-label">{{ $t('label.user_account') }}</span>
             </a>
             <a
+                v-if="this.$hasPermissionTo('view.admin_settings')"
                 href="#admin-settings" class="list-group-item collapsed" aria-expanded="true" data-toggle="collapse">
                 <i class="side-link-icon fa fa-shield fa-lg"></i>
                 <span class="side-link-label">{{ $t('label.admin_settings') }}</span>
             </a>
             <div class="list-group collapse show" aria-expanded="true" id="admin-settings">
                 <a
+                v-if="this.$hasPermissionTo('view.syncing_setup')"
                     href="/syncing-setup"
                     class="list-group-item"
                     :class="page === 'syncing-setup' ? 'active' : ''">
                     {{ $t('label.syncing_setup') }}
                 </a>
                 <a
+                v-if="this.$hasPermissionTo('view.field_mapping_setup')"
                     href="/field-mapping-setup"
                     class="list-group-item"
                     :class="page === 'field-mapping-setup' ? 'active' : ''">

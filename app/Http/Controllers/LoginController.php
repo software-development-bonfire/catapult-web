@@ -7,6 +7,7 @@ use App\User;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
@@ -35,13 +36,21 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->only('username', 'password');
-        if (Auth::attempt($credentials)) {
-            $request->session()->put('permissions', $this->guard()->user()->getPermissions());
 
-            return response()->json(Auth::user(), 200); 
+        if (Auth::attempt($credentials)) {
+            if ($this->guard()->user()->status === 1) {
+                $request->session()->put('permissions', $this->guard()->user()->getPermissions());
+    
+                return response()->json(Auth::user()->getPermissions(), 200); 
+            } else {
+                Auth::logout();
+                throw ValidationException::withMessages([
+                    'username' => Lang::get('validation.user_inactive')
+                ]);
+            }
         }
         throw ValidationException::withMessages([
-            'username' => ['The provided credentials are incorrect.']
+            'username' => Lang::get('validation.the_provided_credentials_are_incorrect')
         ]);
     }
 
@@ -130,7 +139,6 @@ class LoginController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('has-permission:delete.data.user')->only('destroy');
         $this->middleware('guest')->except('logout');
     }
 }
