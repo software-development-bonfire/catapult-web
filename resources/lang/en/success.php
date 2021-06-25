@@ -36,4 +36,7 @@ return [
     'successfully_updated_the_data' => 'Successfully updated the data!',
     'successfully_updated_the_data' => 'Successfully updated the data.',
     'syncing_setup_updated' => 'Syncing Setup successfully updated!',
+    'user_created' => 'User successfully created!',
+    'user_deleted' => 'User successfully deleted!',
+    'user_updated' => 'User successfully updated!',
 ];

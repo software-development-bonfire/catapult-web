@@ -22,7 +22,10 @@ export default {
             "remote_setup_failed_deleted": "Remote Setup failed to deleted",
             "remote_setup_failed_update": "Remote Setup failed to update",
             "syncing_setup_failed_update": "Syncing Setup failed to update",
-            "cdis_field_unique": "The CDIS Field has already been taken."
+            "cdis_field_unique": "The CDIS Field has already been taken.",
+            "user_failed_create": "User failed to create.",
+            "user_failed_deleted": "User failed to deleted.",
+            "user_failed_update": "User failed to update."
         },
         "label": {
             "active": "Active",
@@ -137,7 +140,8 @@ export default {
         "message": {
             "do_you_want_to_remove_this_data": "Do you want to remove this data?",
             "are_you_sure_you_want_to_overwrite_the_table_with_the_selected_preset": "Are you sure you want to overwrite the table with the selected preset?",
-            "the_cdis_field_must_be_lowercase": "The CDIS field must be lowercase."
+            "the_cdis_field_must_be_lowercase": "The CDIS field must be lowercase.",
+            "unauthorized": "Unauthorized"
         },
         "pagination": {
             "previous": "&laquo; Previous",
@@ -173,7 +177,10 @@ export default {
             "successfully_removed_the_data": "Successfully removed the data.",
             "successfully_updated": "{value} successfully updated.",
             "successfully_updated_the_data": "Successfully updated the data.",
-            "syncing_setup_updated": "Syncing Setup successfully updated!"
+            "syncing_setup_updated": "Syncing Setup successfully updated!",
+            "user_created": "User successfully created!",
+            "user_deleted": "User successfully deleted!",
+            "user_updated": "User successfully updated!"
         },
         "validation": {
             "accepted": "The {attribute} must be accepted.",
@@ -286,7 +293,11 @@ export default {
             },
             "attributes": [],
             "field_mapping_cdis_required": "Please input atleast one CDIS Field",
-            "the_cdis_field_is_required": "The CDIS Field is required"
+            "the_cdis_field_is_required": "The CDIS Field is required",
+            "password_doesnt_match": "Password doesn't match",
+            "the_provided_credentials_are_incorrect": "The provided credentials are incorrect.",
+            "user_inactive": "User is inactive.",
+            "user_should_have_atleast_one_permission": "User should have atleast one permission."
         }
     }
 }

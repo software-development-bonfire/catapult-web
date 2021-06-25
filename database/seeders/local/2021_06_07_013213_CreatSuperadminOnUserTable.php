@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\Status;
+use App\Enums\UserType;
 use App\User;
 use Eighty8\LaravelSeeder\Migration\MigratableSeeder;
 use Eighty8\LaravelSeeder\Repository\DisableForeignKeysTrait;
@@ -14,9 +16,11 @@ class CreatSuperadminOnUserTable extends MigratableSeeder
     public function run(): void
     {
         User::create([
+            'name' => 'bonfire-administrator',
             'username' => 'superadmin',
             'password' => bcrypt('superadmin031819'),
-            'full_name' => 'bonfire-administrator',
+            'status' => Status::ACTIVE,
+            'type' => UserType::SUPERADMIN
         ]);
     }
 

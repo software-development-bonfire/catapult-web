@@ -13,5 +13,19 @@
 </style>
 
 <script>
-    export default {}
+    export default {
+        props: {
+            userPermissions: {
+                type: Array,
+            },
+            permissionList: {
+                type: Object,
+            },
+        },
+        
+        created() {
+            this.$store.commit('SET_USER_PERMISSIONS', this.userPermissions);
+            this.$store.commit('SET_PERMISSION_LIST', this.permissionList);
+        }
+    }
 </script>

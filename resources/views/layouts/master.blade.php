@@ -19,7 +19,11 @@
     </head>
     <body>
         <div id="app">
-            <core>
+            <core
+                :user-permissions='{!! json_encode(Auth::user()->getPermissions()) !!}'
+                :permission-list='{!! json_encode(Auth::user()->getPermissionList()) !!}'
+                :superadmin='{!! json_encode(Auth::user()->isSuperadmin()) !!}'
+            >
                 <top-navigation></top-navigation>
                 <div class="page">
                     <side-navigation

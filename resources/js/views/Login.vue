@@ -60,10 +60,8 @@
             login() {
                 axios.post('/login', this.form.login)
                 .then(response => {
-                    if (response.data.username == this.form.login.username) {
-                        this.errors = {}
-                        window.location.href = 'dashboard';
-                    }
+                    window.location.href = response.data.redirectTo;
+                    this.errors = {}
                 }).catch(error => {
                     this.errors = error.response.data.errors
                 })

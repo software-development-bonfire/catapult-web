@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Status;
+use App\Traits\HasPermission;
 use App\User;
+use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
+    use AuthenticatesUsers, HasPermission;
+
     /**
      * Display a listing of the resource.
      *
@@ -31,12 +37,39 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->only('username', 'password');
+
         if (Auth::attempt($credentials)) {
-            return response()->json(Auth::user(), 200); 
+            if ($this->guard()->user()->status === Status::ACTIVE) {
+                $request->session()->put('permissions', $this->guard()->user()->getPermissions());
+    
+                $link = $this->redirectUserTo();
+                
+                return response()->json(['redirectTo' => $link], 200); 
+            } else {
+                Auth::logout();
+                throw ValidationException::withMessages([
+                    'username' => Lang::get('validation.user_inactive')
+                ]);
+            }
         }
         throw ValidationException::withMessages([
-            'username' => ['The provided credentials are incorrect.']
+            'username' => Lang::get('validation.the_provided_credentials_are_incorrect')
         ]);
+    }
+
+    public function redirectUserTo()
+    {
+        $permissions = Auth::user()->getPermissions();
+
+        if (in_array($this->getPermissionCode('view.dashboard'), $permissions)) {
+            $link = 'dashboard';
+        } else if (in_array($this->getPermissionCode('view.user_account'), $permissions)) {
+            $link = 'user-account';
+        } else {
+            $link = 'logs';
+        }
+
+        return $link;
     }
 
     /**
