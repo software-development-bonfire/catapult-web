@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Status;
 use App\Traits\HasPermission;
 use App\User;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
@@ -38,10 +39,12 @@ class LoginController extends Controller
         $credentials = $request->only('username', 'password');
 
         if (Auth::attempt($credentials)) {
-            if ($this->guard()->user()->status === 1) {
+            if ($this->guard()->user()->status === Status::ACTIVE) {
                 $request->session()->put('permissions', $this->guard()->user()->getPermissions());
     
-                return response()->json(Auth::user()->getPermissions(), 200); 
+                $link = $this->redirectUserTo();
+                
+                return response()->json(['redirectTo' => $link], 200); 
             } else {
                 Auth::logout();
                 throw ValidationException::withMessages([
@@ -52,6 +55,21 @@ class LoginController extends Controller
         throw ValidationException::withMessages([
             'username' => Lang::get('validation.the_provided_credentials_are_incorrect')
         ]);
+    }
+
+    public function redirectUserTo()
+    {
+        $permissions = Auth::user()->getPermissions();
+
+        if (in_array($this->getPermissionCode('view.dashboard'), $permissions)) {
+            $link = 'dashboard';
+        } else if (in_array($this->getPermissionCode('view.user_account'), $permissions)) {
+            $link = 'user-account';
+        } else {
+            $link = 'logs';
+        }
+
+        return $link;
     }
 
     /**
