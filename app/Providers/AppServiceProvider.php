@@ -20,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(\App\Repositories\Contracts\RoleRepository::class, \App\Repositories\Eloquent\RoleRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\PermissionRepository::class, \App\Repositories\Eloquent\PermissionRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\UserAccountRepository::class, \App\Repositories\Eloquent\UserAccountRepositoryEloquent::class);
+        $this->app->bind(\App\Repositories\Contracts\SyncIntervalSettingRepository::class, \App\Repositories\Eloquent\SyncIntervalSettingRepositoryEloquent::class);
     }
 
     /**
