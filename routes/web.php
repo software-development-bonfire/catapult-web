@@ -47,6 +47,7 @@ Route::group(['middleware' => 'auth'], function () {
         'api-setup' => 'ApiSetupController',
         'syncing' => 'SyncingSetupController',
         'user' => 'UserAccountController',
+        'sync-interval-settings' => 'SyncIntervalSettingController'
     ]);
 });
 

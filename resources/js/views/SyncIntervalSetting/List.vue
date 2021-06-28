@@ -10,6 +10,7 @@
             :header-fields="table.header"
             :settings="table.settings"
             :table="table.values"
+            v-on:paginate="paginate"
             v-on:delete-row="deleteRow">
             <template slot="content">
                 <table-row
@@ -105,6 +106,9 @@
                             placeholder="hh:mm a"
                         ></date-picker>
                     </div>
+                    <label class="text-danger error-message m-0" v-if="form.errors.hasOwnProperty('start_time')">
+                        {{form.errors.start_time}}
+                    </label>
                 </div>
                 <div class="form-group">
                     <label>{{ $t('label.status') }}</label>
@@ -138,6 +142,9 @@
             Modal,
             DatePicker,
             FormField
+        },
+        mounted() {
+            this.paginate();
         },
         data() {
             return {
@@ -175,7 +182,7 @@
                         status: 1,
                     },
                     errors: {
-                        name: 'Sync Interval Name is required.'
+                        name: ''
                     }
                 },
                 table: {
@@ -207,29 +214,7 @@
                         }
                     ],
                     values: {
-                        data: [
-                            {
-                                name: 'Interval_1',
-                                checking_interval: '10 mins',
-                                syncing_type: 1,
-                                start_time: '',
-                                status: 1,
-                            },
-                            {
-                                name: 'Interval_2',
-                                checking_interval: 'End of Day',
-                                syncing_type: 1,
-                                start_time: '10:00 pm',
-                                status: 1,
-                            },
-                            {
-                                name: 'Interval_3',
-                                checking_interval: '1 hr',
-                                syncing_type: 2,
-                                start_time: '',
-                                status: 0,
-                            }
-                        ],
+                        data: [],
                         meta: {
                             pagination: {
                                 count: 1,
@@ -250,7 +235,17 @@
             }
         },
         methods: {
-            paginate() {},
+            paginate(page = 1) {
+                axios.get('sync-interval-settings'+'?page='+page, {
+                    params: {
+                        itemsPerPage: this.table.settings.itemsPerPage
+                    }
+                })
+                .then(response => {
+                    this.table.values.data = response.data.data.data
+                    this.table.values.meta  = response.data.data.meta
+                })
+            },
 
             create() {
                 this.clearFields();
@@ -266,6 +261,8 @@
                     start_time: '',
                     status: 1,
                 };
+                this.form.errors.name = '';
+                this.form.errors.start_time = '';
             },
 
             openDetail(data, index) {
@@ -280,30 +277,66 @@
                     status: data.status
                 };
 
+                this.form.errors.name = '';
+                this.form.errors.start_time = '';
                 this.modal.detail.visible = true;
+            },
+
+            createData(config) {
+                axios.post('sync-interval-settings', config)
+                    .then(response => {
+                        this.paginate();
+
+                        this.dialog.visible = false;
+                        this.modal.detail.visible = false;
+                        this.dialog.visible = true;
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_created', { value: this.$t('label.sync_interval_setting') });
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                                this.modal.detail.visible = false;
+                            };
+                    }).catch(error => {
+                        this.dialog.visible = false;
+                        if (error.response.data.errors.hasOwnProperty('name')) {
+                            this.form.errors.name = error.response.data.errors.name[0];
+                        }
+                        if (error.response.data.errors.hasOwnProperty('start_time')) {
+                            this.form.errors.start_time = error.response.data.errors.start_time[0];
+                        }
+                    })
             },
 
             save() {
                 if (this.form.mode === 'create') {
-                    this.table.values.data.push({
+                    var config = {
                         name: this.form.values.name,
                         syncing_type: this.form.values.syncing_type,
                         checking_interval: this.form.values.checking_interval,
                         start_time: this.form.values.start_time,
                         status: this.form.values.status
-                    });
-
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_created', { value: this.$t('label.sync_interval_setting') });
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                        this.modal.detail.visible = false;
-                    };
+                    }
+                    if (config.status === 1) {
+                        this.dialog.visible = true;
+                        this.dialog.status = 'confirm-yes-no';
+                        this.dialog.message = 'Do you want to use it as default?' , 'Set as Default';
+                        this.dialog.ok.function = () => {
+                            this.createData(config);
+                        };
+                        this.dialog.cancel.function = () => {
+                            config.status = 0;
+                            this.createData(config);
+                        };
+                    } else {
+                        this.createData(config)
+                    }
+                    this.form.errors.name = ''; 
+                    this.form.errors.start_time = ''; 
                 } else {
                     let index = this.form.values.index;
-
-                    this.table.values.data[index] = {
+                    
+                    var config = {
+                        bid: this.table.values.data[index].bid,
                         name: this.form.values.name,
                         syncing_type: this.form.values.syncing_type,
                         checking_interval: this.form.values.checking_interval,
@@ -311,27 +344,44 @@
                         status: this.form.values.status
                     };
 
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_updated', { value: this.$t('label.sync_interval_setting') });
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                        this.modal.detail.visible = false;
-                    };
+                    axios.put(`sync-interval-settings/${config.bid}`, config)
+                        .then(response => {
+                            this.paginate();
+
+                            this.dialog.visible = true;
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_updated', { value: this.$t('label.sync_interval_setting') });
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                                this.modal.detail.visible = false;
+                            };
+                        }).catch(error => {
+                            if (error.response.data.errors.hasOwnProperty('name')) {
+                                this.form.errors.name = error.response.data.errors.name[0];
+                            }
+                            if (error.response.data.errors.hasOwnProperty('start_time')) {
+                                this.form.errors.start_time = error.response.data.errors.start_time[0];
+                            }
+                        })
                 }
             },
 
             deleteRow(index) {
                 this.dialog.visible = true;
-                this.dialog.status = 'confirm';
+                this.dialog.status = 'confirm-yes-no';
                 this.dialog.message = this.$t('message.do_you_want_to_remove_this_data');
                 this.dialog.ok.function = () => {
-                    this.table.values.data.splice(index, 1);
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_removed_the_data');
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                    };
+
+                    axios.delete(`sync-interval-settings/${index.values.bid}`)
+                        .then(response => {
+                            this.paginate();
+
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_removed_the_data');
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                            };
+                        })
                 };
                 this.dialog.cancel.function = () => {
                     this.dialog.visible = false;
