@@ -289,6 +289,13 @@
 
                         this.dialog.visible = false;
                         this.modal.detail.visible = false;
+                        this.dialog.visible = true;
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_created', { value: this.$t('label.sync_interval_setting') });
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                                this.modal.detail.visible = false;
+                            };
                     }).catch(error => {
                         this.dialog.visible = false;
                         if (error.response.data.errors.hasOwnProperty('name')) {
@@ -319,24 +326,9 @@
                         this.dialog.cancel.function = () => {
                             config.status = 0;
                             this.createData(config);
-
-                            this.dialog.visible = true;
-                            this.dialog.status = 'success';
-                            this.dialog.message = this.$t('success.successfully_created', { value: this.$t('label.sync_interval_setting') });
-                            this.dialog.ok.function = () => {
-                                this.dialog.visible = false;
-                                this.modal.detail.visible = false;
-                            };
                         };
                     } else {
                         this.createData(config)
-                        this.dialog.visible = true;
-                        this.dialog.status = 'success';
-                        this.dialog.message = this.$t('success.successfully_created', { value: this.$t('label.sync_interval_setting') });
-                        this.dialog.ok.function = () => {
-                            this.dialog.visible = false;
-                            this.modal.detail.visible = false;
-                        };
                     }
                     this.form.errors.name = ''; 
                     this.form.errors.start_time = ''; 
