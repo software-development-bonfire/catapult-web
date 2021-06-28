@@ -27,7 +27,11 @@ class SyncIntervalSettingRequest extends FormRequest
         return [
             'bid' => 'sometimes',
             'type' => 'sometimes',
-            'name' => ['required', 'max:45', Rule::unique('sync_interval_settings')->ignore($this->bid)],
+            'name' => ['required', 'max:45', Rule::unique('sync_interval_settings')->ignore($this->bid)
+                ->where(function ($query) {
+                    $query->where('deleted_at', null);
+                }
+            )],
             'checking_interval' => 'required',
             'syncing_type' => 'required',
             'start_time' => ['required_if:checking_interval,"End of Day"', 'max:45'],

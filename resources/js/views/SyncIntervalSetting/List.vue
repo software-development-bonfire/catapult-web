@@ -282,6 +282,24 @@
                 this.modal.detail.visible = true;
             },
 
+            createData(config) {
+                axios.post('sync-interval-settings', config)
+                    .then(response => {
+                        this.paginate();
+
+                        this.dialog.visible = false;
+                        this.modal.detail.visible = false;
+                    }).catch(error => {
+                        this.dialog.visible = false;
+                        if (error.response.data.errors.hasOwnProperty('name')) {
+                            this.form.errors.name = error.response.data.errors.name[0];
+                        }
+                        if (error.response.data.errors.hasOwnProperty('start_time')) {
+                            this.form.errors.start_time = error.response.data.errors.start_time[0];
+                        }
+                    })
+            },
+
             save() {
                 if (this.form.mode === 'create') {
                     var config = {
@@ -291,10 +309,16 @@
                         start_time: this.form.values.start_time,
                         status: this.form.values.status
                     }
-
-                    axios.post('sync-interval-settings', config)
-                        .then(response => {
-                            this.paginate();
+                    if (config.status === 1) {
+                        this.dialog.visible = true;
+                        this.dialog.status = 'confirm-yes-no';
+                        this.dialog.message = 'Do you want to use it as default?' , 'Set as Default';
+                        this.dialog.ok.function = () => {
+                            this.createData(config);
+                        };
+                        this.dialog.cancel.function = () => {
+                            this.config.status = 0;
+                            this.createData(config);
 
                             this.dialog.visible = true;
                             this.dialog.status = 'success';
@@ -303,16 +327,19 @@
                                 this.dialog.visible = false;
                                 this.modal.detail.visible = false;
                             };
-                            this.form.errors.name = ''; 
-                            this.form.errors.start_time = ''; 
-                        }).catch(error => {
-                            if (error.response.data.errors.hasOwnProperty('name')) {
-                                this.form.errors.name = error.response.data.errors.name[0];
-                            }
-                            if (error.response.data.errors.hasOwnProperty('start_time')) {
-                                this.form.errors.start_time = error.response.data.errors.start_time[0];
-                            }
-                        })
+                        };
+                    } else {
+                        this.createData(config)
+                        this.dialog.visible = true;
+                        this.dialog.status = 'success';
+                        this.dialog.message = this.$t('success.successfully_created', { value: this.$t('label.sync_interval_setting') });
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                            this.modal.detail.visible = false;
+                        };
+                    }
+                    this.form.errors.name = ''; 
+                    this.form.errors.start_time = ''; 
                 } else {
                     let index = this.form.values.index;
                     
@@ -355,7 +382,8 @@
 
                     axios.delete(`sync-interval-settings/${index.values.bid}`)
                         .then(response => {
-                            this.table.values.data.splice(index, 1);
+                            this.paginate();
+
                             this.dialog.status = 'success';
                             this.dialog.message = this.$t('success.successfully_removed_the_data');
                             this.dialog.ok.function = () => {
