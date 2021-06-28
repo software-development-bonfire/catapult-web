@@ -317,7 +317,7 @@
                             this.createData(config);
                         };
                         this.dialog.cancel.function = () => {
-                            this.config.status = 0;
+                            config.status = 0;
                             this.createData(config);
 
                             this.dialog.visible = true;
