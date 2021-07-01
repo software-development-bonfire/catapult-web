@@ -68,6 +68,11 @@
         components: {
             DialogBox
         },
+        props: {
+            activeTab: {
+                type: Boolean
+            }
+        },
         data() {
             return {
                 form: {

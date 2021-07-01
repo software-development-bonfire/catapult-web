@@ -1,5 +1,5 @@
 <template>
-    <div class="tab-pane fade" id="catapult-db-setup" role="tabpanel" aria-labelledby="catapult-db-setup-tab">
+    <div class="tab-pane fade show active" id="catapult-db-setup" role="tabpanel" aria-labelledby="catapult-db-setup-tab">
         <div class="m-1">
             <button class="button button--dark" @click="create">{{ $t('label.add_new') }}</button>
         </div>
@@ -141,10 +141,10 @@
             Modal,
             DialogBox
         },
-        mounted() {
-            this.paginate()
-        },
         mixins: [ Util ],
+        mounted() {
+            this.paginate();
+        },
         data() {
             return {
                 errors: {},

@@ -12,7 +12,7 @@ import Vuex from 'vuex';
 import VueInternationalization from 'vue-i18n';
 import Locale from './vue-i18n-locales.generated';
 import VueInputMask from "vue-inputmask";
-import moment from 'moment';
+import moment from 'moment'; 
 
 Vue.use(VueInternationalization);
 Vue.use(Vuex);
@@ -82,6 +82,8 @@ Vue.component('field-mapping-setup-list', require('./views/FieldMappingSetup/Lis
 Vue.component('field-mapping-setup-detail', require('./views/FieldMappingSetup/Detail.vue').default);
 Vue.component('sync-interval-setting', require('./views/SyncIntervalSetting/List.vue').default);
 Vue.component('user-account', require('./views/UserAccount/List.vue').default);
+Vue.component('field-mapping-list', require('./views/FieldMapping/List.vue').default);
+Vue.component('field-mapping-detail', require('./views/FieldMapping/Detail.vue').default);
 
 Vue.mixin(HasPermission);
 /**

@@ -1,5 +1,5 @@
 <template>
-    <div class="tab-pane fade" id="remote-setup" role="tabpanel" aria-labelledby="remote-setup-tab">
+    <div class="tab-pane fade show active" id="remote-setup" role="tabpanel" aria-labelledby="remote-setup-tab">
         <div class="m-1">
             <button class="button button--dark" @click="create">{{ $t('label.add_new') }}</button>
         </div>
@@ -50,7 +50,7 @@
             :height="600"
             centered-display
             v-if="modal.visible"
-            @close="modal.visible = false">
+            @close="closeDetail">
             <template slot="header">
                 {{ $t('label.remote_setup_detail') }}
             </template>
@@ -152,10 +152,10 @@
             Modal,
             DialogBox
         },
-        mounted() {
-            this.paginate()
-        },
         mixins: [ Util ],
+        mounted() {
+            this.paginate();
+        },
         data() {
             return {
                 errors: {},
@@ -312,6 +312,7 @@
                    this.table.values.meta  = response.data.data.meta
                 })
             },
+
             create() {
                 this.clearForm();
                 this.modal.visible = true;
@@ -355,7 +356,7 @@
 
             save() {
                 if (this.form.mode === 'create') {
-                    
+
                     axios.post('remote-setup', this.form.values)
                     .then(response => {
                         this.paginate();
@@ -373,7 +374,7 @@
 
                 } else {
                     let index = this.form.values.index;
-                    
+
                     axios.put(`remote-setup/${this.form.values.bid}`, this.form.values)
                     .then(response => {
                         this.table.values.data[index] = {
@@ -420,6 +421,11 @@
                 }
 
                 this.modal.visible = true;
+            },
+
+            closeDetail() {
+                this.modal.visible = false;
+
             }
         }
     }

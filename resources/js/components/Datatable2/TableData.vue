@@ -1,5 +1,5 @@
 <template>
-    <td class="datatable-cell" :align="alignment">
+    <td class="datatable-cell" :align="alignment" :valign="valign">
         <div class="datatable-cell-content">
             <slot></slot>
             <div class="error-message" v-show="validate">{{ error }}</div>
@@ -11,7 +11,6 @@
     .datatable-cell {
         padding: 4px;
         border-color: #ccc;
-        vertical-align: top;
 
         &--row-number {
             min-width: 25px;
@@ -56,6 +55,10 @@
             alignment: {
                 type: String,
                 default: 'left'
+            },
+            valign: {
+                type: String,
+                default: 'top'
             },
             error: {
                 type: String,
