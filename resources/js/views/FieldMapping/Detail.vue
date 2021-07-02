@@ -131,10 +131,13 @@
                         <tr>
                             <td valign="top" align="right">{{ $t('label.api_version') }}</td>
                             <td>
-                                <input
+                                <select
                                     type="text"
                                     class="form-control"
                                     v-model="form.data_mapping.api_version">
+                                    <option>Transaction API Field v1.0</option>
+                                    <option>POS API Field v2.0</option>
+                                </select>
                                 <label
                                     class="text-danger error-message mb-0">
                                     API Version is required.
