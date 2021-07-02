@@ -17,7 +17,7 @@
                 <template v-else-if="status === 'info'">
                     <i class="fa fa-exclamation-circle fa-4x dialog-box-type--info"></i>
                 </template>
-                <template v-else-if="status === 'confirm'">
+                <template v-else-if="status === 'confirm' || status === 'confirm-yes-no'">
                     <i class="fa fa-question-circle fa-4x dialog-box-type--confirm"></i>
                 </template>
                 <template v-else>

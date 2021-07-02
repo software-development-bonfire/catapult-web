@@ -19,7 +19,7 @@
             </a>
             <a
                 v-if="this.$hasPermissionTo('view.field-mapping')"
-                href="#"
+                href="/field-mapping"
                 class="list-group-item"
                 :class="page === 'field-mapping' ? 'active' : ''">
                 <i class="side-link-icon fa fa-dot-circle-o fa-lg"></i>

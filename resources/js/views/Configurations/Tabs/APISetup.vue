@@ -1,5 +1,5 @@
 <template>
-    <div class="tab-pane fade" id="api-setup" role="tabpanel" aria-labelledby="api-setup-tab">
+    <div class="tab-pane fade show active" id="api-setup" role="tabpanel" aria-labelledby="api-setup-tab">
         <div class="m-1">
             <button class="button button--dark" @click="create">{{ $t('label.add_new') }}</button>
         </div>
@@ -97,10 +97,15 @@
             Modal,
             DialogBox
         },
-        mounted() {
-            this.paginate()
-        },
         mixins: [ Util ],
+        props: {
+            activeTab: {
+                type: Boolean
+            }
+        },
+        mounted() {
+            this.paginate();
+        },
         data() {
             return {
                 errors: {},

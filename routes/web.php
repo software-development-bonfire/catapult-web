@@ -24,8 +24,10 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/syncing-setup', 'SyncingSetupController@view');
     Route::get('/sync-interval-setting', 'SyncIntervalSettingController@view');
     Route::get('/user-account', 'UserAccountController@view');
+    Route::get('/field-mapping', 'FieldMappingController@view');
+    Route::get('/field-mapping/detail', 'FieldMappingController@detail');
 
-    // Field Mapping
+    // Field Mapping Setup
     Route::group(['prefix' => 'field-mapping-setup'], function () {
         Route::get('/', 'FieldMappingSetupController@view');
         Route::get('/index', 'FieldMappingSetupController@index');

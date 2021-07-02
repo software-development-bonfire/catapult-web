@@ -2,31 +2,31 @@
     <div class="module-container">
         <ul class="nav nav-tabs nav-tabs--black" id="myTab" role="tablist">
             <li class="nav-item">
-                <a class="nav-link active" id="licensing-tab" data-toggle="tab" href="#licensing" role="tab" aria-controls="licensing" aria-selected="true">
-                    Licensing
+                <a class="nav-link" :class="activePane === 'licensing' ? 'active' : ''" @click="activePane = 'licensing'" id="licensing-tab" href="#licensing" role="tab" aria-controls="licensing" aria-selected="true">
+                    {{ $t('label.licensing') }}
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" id="remote-setup-tab" data-toggle="tab" href="#remote-setup" role="tab" aria-controls="remote-setup" aria-selected="false">
-                    Remote Setup
+                <a class="nav-link" :class="activePane === 'remote' ? 'active' : ''" @click="activePane = 'remote'" id="remote-setup-tab" href="#remote-setup" role="tab" aria-controls="remote-setup" aria-selected="false">
+                    {{ $t('label.remote_setup') }}
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" id="contact-tab" data-toggle="tab" href="#catapult-db-setup" role="tab" aria-controls="catapult-db-setup" aria-selected="false">
-                    Catapult DB Setup
+                <a class="nav-link" :class="activePane === 'catapult' ? 'active' : ''" @click="activePane = 'catapult'" id="contact-tab" href="#catapult-db-setup" role="tab" aria-controls="catapult-db-setup" aria-selected="false">
+                    {{ $t('label.catapult_db_setup') }}
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" id="contact-tab" data-toggle="tab" href="#api-setup" role="tab" aria-controls="api-setup" aria-selected="false">
-                    API Setup
+                <a class="nav-link" :class="activePane === 'api' ? 'active' : ''" @click="activePane = 'api'" id="contact-tab" href="#api-setup" role="tab" aria-controls="api-setup" aria-selected="false">
+                    {{ $t('label.api_setup') }}
                 </a>
             </li>
         </ul>
         <div class="tab-content">
-            <licensing></licensing>
-            <remote-setup></remote-setup>
-            <catapult-db-setup></catapult-db-setup>
-            <api-setup></api-setup>
+            <licensing v-show="activePane === 'licensing'"></licensing>
+            <remote-setup v-show="activePane === 'remote'"></remote-setup>
+            <catapult-db-setup v-show="activePane === 'catapult'"></catapult-db-setup>
+            <api-setup v-show="activePane === 'api'"></api-setup>
         </div>
     </div>
 </template>
@@ -44,8 +44,17 @@
             'catapult-db-setup': CatapultDBSetup,
             'api-setup': APISetup,
         },
+        mounted() {
+            let urlData = QueryString.parse(window.location.search.substr(1));
+
+            if (urlData.redirect) {
+                this.activePane = urlData.redirect;
+            }
+        },
         data() {
-            return {}
+            return {
+                activePane: 'licensing'
+            }
         }
     }
 </script>

@@ -66,3 +66,87 @@ ul.nav-tabs {
         font-weight: normal;
     }
 }
+
+.unindented-list {
+    padding-left: 0px !important;
+    list-style: none;
+}
+
+.popper {
+    &.popover--modified {
+        -moz-box-shadow: #ccc 0 0 3px 0;
+        -webkit-box-shadow: #ccc 0 0 3px 0;
+        box-shadow: #ccc 0 0 3px 0;
+        font-family: Arial;
+        font-size: 12px;
+        padding: 5px;
+
+        td {
+            font-family: Arial;
+            font-size: 12px;
+            padding: 0px;
+        }
+
+        &-default {
+            background-color: #fff;
+            &[x-placement^="top"] {
+                .popper__arrow {
+                    border-color: #fff transparent transparent transparent;
+                }
+            }
+            &[x-placement^="right"] {
+                .popper__arrow {
+                    border-color: transparent #fff transparent transparent;
+                }
+            }
+            &[x-placement^="bottom"] {
+                .popper__arrow {
+                    border-color: transparent transparent #fff transparent;
+                }
+            }
+            &[x-placement^="left"] {
+                .popper__arrow {
+                    border-color: transparent transparent transparent #fff;
+                }
+            }
+        }
+
+        &-dark {
+            background-color: #333;
+            color: #fff;
+            &[x-placement^="top"] {
+                .popper__arrow {
+                    border-color: #333 transparent transparent transparent;
+                }
+            }
+            &[x-placement^="right"] {
+                .popper__arrow {
+                    border-color: transparent #333 transparent transparent;
+                }
+            }
+            &[x-placement^="bottom"] {
+                .popper__arrow {
+                    border-color: transparent transparent #333 transparent;
+                }
+            }
+            &[x-placement^="left"] {
+                .popper__arrow {
+                    border-color: transparent transparent transparent #333;
+                }
+            }
+        }
+    }
+
+    .popover-list {
+        padding-left: 25px;
+        margin-bottom: 0px;
+
+        &--no-bullets {
+            list-style: none;
+        }
+
+        li {
+            text-align: left;
+        }
+    }
+}
