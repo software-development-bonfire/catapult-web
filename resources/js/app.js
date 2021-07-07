@@ -84,6 +84,7 @@ Vue.component('sync-interval-setting', require('./views/SyncIntervalSetting/List
 Vue.component('user-account', require('./views/UserAccount/List.vue').default);
 Vue.component('field-mapping-list', require('./views/FieldMapping/List.vue').default);
 Vue.component('field-mapping-detail', require('./views/FieldMapping/Detail.vue').default);
+Vue.component('logs', require('./views/Logs/List.vue').default);
 
 Vue.mixin(HasPermission);
 /**

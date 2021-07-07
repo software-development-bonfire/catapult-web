@@ -35,7 +35,7 @@
             </a>
             <a
                 v-if="this.$hasPermissionTo('view.logs')"
-                href="#"
+                href="/logs"
                 class="list-group-item"
                 :class="page === 'logs' ? 'active' : ''">
                 <i class="side-link-icon fa fa-list-alt fa-lg"></i>
