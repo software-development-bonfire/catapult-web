@@ -13,9 +13,12 @@ import VueInternationalization from 'vue-i18n';
 import Locale from './vue-i18n-locales.generated';
 import VueInputMask from "vue-inputmask";
 import moment from 'moment'; 
+import vSelect from 'vue-select';
+import 'vue-select/dist/vue-select.css';
 
 Vue.use(VueInternationalization);
 Vue.use(Vuex);
+Vue.component('v-select', vSelect);
 
 const lang = document.documentElement.lang.substr(0, 2);
 
