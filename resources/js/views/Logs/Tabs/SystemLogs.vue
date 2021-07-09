@@ -5,7 +5,7 @@
                 <div class="row mt-3">
                     <div class="col-xl-3">
                         <div class="form-group">
-                            <label>{{ $t('label.users') }}</label>
+                            <label>{{ $t('label.users') }}:</label>
                             <v-select
                                 v-model="filters.users"
                                 multiple
