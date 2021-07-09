@@ -7,6 +7,7 @@
                         <div class="form-group">
                             <label>{{ $t('label.users') }}:</label>
                             <v-select
+                                class="v-select--hide-selected"
                                 v-model="filters.users"
                                 multiple
                                 :options="selections.user.options">
@@ -22,7 +23,7 @@
                             <date-picker
                                 v-model="filters.date_from"
                                 format="MMMM DD, YYYY"
-                                value-type="format"
+                                :default-value="new Date()"
                             ></date-picker>
                         </div>
                         <div class="form-group">
@@ -30,17 +31,18 @@
                             <date-picker
                                 v-model="filters.date_to"
                                 format="MMMM DD, YYYY"
-                                value-type="format"
+                                :default-value="new Date()"
                             ></date-picker>
                         </div>
                     </div>
-                    <div class="col-xl-3">
+                    <div class="col-xl-5">
                         <div class="form-group">
                             <label>{{ $t('label.module') }}:</label>
                             <v-select
+                                class="v-select--hide-selected"
                                 v-model="filters.modules"
                                 multiple
-                                :options="selections.module.options">
+                                :options="isSuperadmin ? selections.module.superadmin.options : selections.module.client.options">
                             </v-select>
                         </div>
                     </div>
@@ -114,6 +116,11 @@
         mounted() {
             this.paginate();
         },
+        computed: {
+            isSuperadmin() {
+                return this.$root.$children[0].$attrs.superadmin;
+            }
+        },
         data() {
             return {
                 dialog: {
@@ -132,10 +139,20 @@
                     },
                 },
                 filters: {
-                    users: [],
-                    date_from: '',
-                    date_to: '',
-                    modules: []
+                    users: [
+                        {
+                            label: 'ALL',
+                            value: 'All',
+                        },
+                    ],
+                    date_from: new Date(),
+                    date_to: new Date(),
+                    modules: [
+                        {
+                            label: 'ALL',
+                            value: 'All',
+                        },
+                    ]
                 },
                 modal: {
                     file_errors: {
@@ -164,24 +181,94 @@
                         ]
                     },
                     module: {
-                        options: [
-                            {
-                                label: 'POS to CDIS',
-                                value: '10001',
-                            },
-                            {
-                                label: 'Error Logs',
-                                value: '10002',
-                            },
-                            {
-                                label: 'System Logs',
-                                value: '10003',
-                            },
-                            {
-                                label: 'CDIS to POS',
-                                value: '10004',
-                            }
-                        ]
+                        superadmin: {
+                            options: [
+                                {
+                                    label: this.$t('label.dashboard'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.licensing'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.remote_db_setup'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.catapult_db_setup'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.api_setup'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.field_mapping'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.syncing_interval'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.system_logs'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.error_logs'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.user_account'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.syncing_setup'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.field_mapping_setup'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.pos_to_cdis'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.cdis_to_pos'),
+                                    value: '',
+                                },
+                            ]
+                        },
+                        client: {
+                            options: [
+                                {
+                                    label: this.$t('label.dashboard'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.user_account'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.system_logs'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.error_logs'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.pos_to_cdis'),
+                                    value: '',
+                                },
+                                {
+                                    label: this.$t('label.cdis_to_pos'),
+                                    value: '',
+                                },
+                            ]
+                        }
                     }
                 },
                 table: {
@@ -355,7 +442,7 @@
                     settings: {
                         itemsPerPage: 10,
                         withRowNumbers: false,
-                        withPagination: false
+                        withPagination: true
                     }
                 }
             }

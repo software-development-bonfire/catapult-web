@@ -47,7 +47,7 @@
                         <date-picker
                             v-model="filters.date_from"
                             format="MMMM DD, YYYY"
-                            value-type="format"
+                            :default-value="new Date()"
                         ></date-picker>
                     </div>
                     <div class="form-group col-xl-3">
@@ -55,7 +55,7 @@
                         <date-picker
                             v-model="filters.date_to"
                             format="MMMM DD, YYYY"
-                            value-type="format"
+                            :default-value="new Date()"
                         ></date-picker>
                     </div>
                     <div class="form-group col-xl-3">
@@ -208,8 +208,8 @@
                     },
                 },
                 filters: {
-                    date_from: '',
-                    date_to: '',
+                    date_from: new Date(),
+                    date_to: new Date(),
                     status: 1,
                 },
                 form: {
@@ -322,7 +322,7 @@
                     settings: {
                         itemsPerPage: 10,
                         withRowNumbers: false,
-                        withPagination: false
+                        withPagination: true
                     }
                 }
             }
