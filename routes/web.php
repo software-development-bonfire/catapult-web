@@ -26,6 +26,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/user-account', 'UserAccountController@view');
     Route::get('/field-mapping', 'FieldMappingController@view');
     Route::get('/field-mapping/detail', 'FieldMappingController@detail');
+    Route::get('/logs', 'LogsController@view');
 
     // Field Mapping Setup
     Route::group(['prefix' => 'field-mapping-setup'], function () {
