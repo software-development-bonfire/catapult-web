@@ -37,3 +37,16 @@
 .mx-datepicker-popup {
     z-index: 30000 !important;
 }
+
+.v-select--hide-selected {
+    .vs__dropdown-option--selected {
+        display: none !important;
+    }
+}
+
+.v-select--no-highlight {
+    .vs__dropdown-option--highlight {
+        background-color: #fff !important;
+        color: #333 !important;
+    }
+}
