@@ -22,13 +22,13 @@
                             <label>{{ $t('label.field_mapping_name') }}</label>
                             <input type="text" class="form-control" v-model="form.connection_setup.field_mapping_name">
                             <label
-                                class="text-danger error-message mb-0">
-                                Mapping is required.
+                                class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('name')">
+                                {{ errors.name[0] }}
                             </label>
                         </div>
                         <div class="mb-1">
                             <label>{{ $t('label.mapping_type') }}</label>
-                            <select class="form-control" v-model="form.connection_setup.mapping_type">
+                            <select :disabled="form.mode === 'update'" class="form-control" v-model="form.connection_setup.mapping_type">
                                 <option :value="1">{{ $t('label.cdis_to_pos') }}</option>
                                 <option :value="2">{{ $t('label.pos_to_cdis') }}</option>
                             </select>
@@ -53,8 +53,8 @@
                                 </div>
                             </div>
                             <label
-                                class="text-danger error-message mb-0">
-                                Remote Setup Name is required.
+                                class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('remote_setup_bid')">
+                                {{ errors.remote_setup_bid[0] }}
                             </label>
                         </div>
                         <div class="mb-1">
@@ -68,8 +68,8 @@
                                 </div>
                             </div>
                             <label
-                                class="text-danger error-message mb-0">
-                                Catapult DB Setup Name is required.
+                                class="text-danger error-message mb-0"  v-if="errors.hasOwnProperty('catapult_db_setup_bid')">
+                                {{ errors.catapult_db_setup_bid[0] }}
                             </label>
                         </div>
                         <div class="mb-3">
@@ -83,8 +83,8 @@
                                 </div>
                             </div>
                             <label
-                                class="text-danger error-message mb-0">
-                                API Setup Name is required.
+                                class="text-danger error-message mb-0"  v-if="errors.hasOwnProperty('api_setup_bid')">
+                                {{ errors.api_setup_bid[0] }}
                             </label>
                         </div>
                     </div>
@@ -98,7 +98,7 @@
                         <h5 class="text-uppercase"><b>{{ $t('label.data_mapping') }}</b></h5>
                     </div>
                     <div class="col-xl-6" align="right">
-                        <button class="button button--light module-action-button" @click="saveMapping">{{ $t('label.save_mapping') }}</button>
+                        <button class="button button--light module-action-button" :disabled="this.form.mode === 'create'" @click="saveMapping">{{ $t('label.save_mapping') }}</button>
                     </div>
                 </div>
                 <div class="row">
@@ -106,7 +106,7 @@
                         <tr>
                             <td valign="top" align="right">{{ $t('label.select_api_endpoint_to_map') }}</td>
                             <td width="200px">
-                                <select class="form-control" v-model="form.data_mapping.api_endpoint">
+                                <select class="form-control" @change="getEndpoint()" v-model="form.data_mapping.api_endpoint">
                                     <template v-if="form.connection_setup.mapping_type === 1">
                                         <option :value="label.product">{{ $t('label.product') }}</option>
                                         <option :value="label.brand">{{ $t('label.brand') }}</option>
@@ -123,8 +123,8 @@
                                     </template>
                                 </select>
                                 <label
-                                    class="text-danger error-message mb-0">
-                                    API Endpoint is required.
+                                    class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('end_point')">
+                                    {{ errors.end_point[0] }}
                                 </label>
                             </td>
                         </tr>
@@ -132,15 +132,18 @@
                             <td valign="top" align="right">{{ $t('label.api_version') }}</td>
                             <td>
                                 <select
+                                    @change="getFields()"
                                     type="text"
                                     class="form-control"
-                                    v-model="form.data_mapping.api_version">
-                                    <option>Transaction API Field v1.0</option>
-                                    <option>POS API Field v2.0</option>
+                                    v-model="form.data_mapping.field_mapping_bid">
+                                    <option v-for="(api_version, index) in api_versions" :key="index"
+                                    :value="api_version.bid">
+                                        {{ api_version.api_version_name }}
+                                    </option>
                                 </select>
                                 <label
-                                    class="text-danger error-message mb-0">
-                                    API Version is required.
+                                    class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('api_version_name')">
+                                    {{ errors.api_version_name[0] }}
                                 </label>
                             </td>
                         </tr>
@@ -183,7 +186,7 @@
                         <table-data
                             align="center"
                             valign="center">
-                            <input type="text" class="form-control" v-model="tableData.field">
+                            <input disabled type="text" class="form-control" v-model="tableData.field">
                         </table-data>
                         <table-data
                             align="center"
@@ -200,24 +203,28 @@
                         <table-data
                             align="center"
                             valign="center">
-                            <input type="text" class="form-control" v-model="tableData.data_type">
+                            <input disabled type="text" class="form-control" v-model="tableData.mapping_type">
                         </table-data>
                         <table-data
+                            :error="getError(errors, `fields.${tableDataIndex}.file_name`)"
                             align="center"
                             valign="center"
                             v-if="form.connection_setup.mapping_type === 2">
-                            <input type="text" class="form-control" v-model="tableData.csv_file_name_identifier">
+                            <input type="text" class="form-control" v-model="tableData.file_name"
+                            v-on:input="removeError(errors, `fields.${tableDataIndex}.file_name`)">
                         </table-data>
                         <table-data
                             valign="center"
                             v-if="form.connection_setup.mapping_type === 2">
-                            <span v-text="tableData.default_field_values"></span>
+                            <span v-text="tableData.default_value"></span>
                         </table-data>
                         <table-data
+                            :error="getError(errors, `fields.${tableDataIndex}.column_name`)"
                             align="center"
                             valign="center">
                             <template v-if="tableData.required">
-                                <input type="text" class="form-control" v-model="tableData.csv_column_name">
+                                <input type="text" class="form-control" v-model="tableData.column_name"
+                                v-on:input="removeError(errors, `fields.${tableDataIndex}.column_name`)">
                             </template>
                             <template v-else>
                                 <span class="text-danger">{{ $t('message.default_values_will_be_used') }}</span>
@@ -281,6 +288,7 @@
 </template>
 
 <script>
+    var config = window.location.origin;
     import DialogBox from '../../components/Message/DialogBox.vue';
     import Datatable from '../../components/Datatable2/Datatable.vue';
     import TableRow from '../../components/Datatable2/TableRow.vue';
@@ -299,22 +307,49 @@
             Popper
         },
         mounted() {
+            // this.getData();
             let urlData = QueryString.parse(window.location.search.substr(1));
-            console.log(urlData.data.name)
-            if (urlData.data) {
+                if (urlData.data) {
                 this.form.mode = 'update';
+                this.form.mapping_mode = 'update';
+                this.field_mapping_list_bid = urlData.data.bid;
                 this.form.connection_setup.field_mapping_name = urlData.data.name;
-                this.form.connection_setup.mapping_type = Number(urlData.data.mapping_type);
                 this.form.connection_setup.remote_setup_name = urlData.data.remote_setup_name;
                 this.form.connection_setup.catapult_db_setup_name = urlData.data.catapult_db_setup_name;
                 this.form.connection_setup.api_setup_name = urlData.data.api_setup_name;
                 this.form.connection_setup.setup_status = Number(urlData.data.status);
-
+                this.form.connection_setup.api_setup_bid = urlData.data.api_setup_bid;
+                this.form.connection_setup.remote_setup_bid = urlData.data.remote_setup_bid;
+                this.form.connection_setup.catapult_db_setup_bid = urlData.data.catapult_db_setup_bid
+                this.form.connection_setup.mapping_type = Number(urlData.data.mapping_type);
                 this.form.data_mapping.api_endpoint = urlData.data.api_to_map;
+
+                this.getEndpoint();
+
+                this.form.data_mapping.field_mapping_bid = urlData.data.field_mapping_bid
+
+                if (urlData.data.dataMappings !== undefined) {
+                    this.table.values.data = urlData.data.dataMappings.map(element => {
+                        return {
+                            edit: false,
+                            bid: element.bid,
+                            column_name: element.column_name,
+                            default_value: element.default_value,
+                            description: element.description,
+                            field: element.field,
+                            field_mapping_list_bid: element.field_mapping_list_bid,
+                            file_name: element.file_name,
+                            mapping_type: element.mapping_type,
+                            required: element.required === "true" ? true : false
+                        }
+                    });
+                }
             }
         },
         data() {
             return {
+                field_mapping_list_bid: null,
+                api_versions: [],
                 modal: {
                     search: {
                         title: '',
@@ -339,17 +374,20 @@
                 },
                 form: {
                     mode: 'create',
+                    mapping_mode: 'create',
                     connection_setup: {
                         field_mapping_name: '',
                         mapping_type: 2,
                         setup_status: 1,
                         remote_setup_name: '',
+                        remote_setup_bid: '',
                         catapult_db_setup_name: '',
-                        api_setup_name: '',
+                        catapult_db_setup_bid: '',
+                        api_setup_bid: '',
                     },
                     data_mapping: {
                         api_endpoint: '',
-                        api_version: '',
+                        field_mapping_bid: '',
                     }
                 },
                 errors: {},
@@ -420,62 +458,7 @@
                         ],
                     },
                     values: {
-                        data: [
-                            {
-                                required: true,
-                                field: 'branch_code',
-                                description: 'Code of your branch.',
-                                data_type: 'VARCHAR',
-                                csv_file_name_identifier: 'TR',
-                                default_field_values: '0',
-                                csv_column_name: 'BranchCode',
-                            },
-                            {
-                                required: false,
-                                field: 'terminal_number',
-                                description: 'Your POS Terminal Number.',
-                                data_type: 'BIGINT',
-                                csv_file_name_identifier: 'TR',
-                                default_field_values: '0',
-                                csv_column_name: 'TerminalNumber',
-                            },
-                            {
-                                required: true,
-                                field: 'branch_code',
-                                description: 'Code of your branch.',
-                                data_type: 'INT',
-                                csv_file_name_identifier: 'TR',
-                                default_field_values: '0',
-                                csv_column_name: 'BranchCode',
-                            },
-                            {
-                                required: true,
-                                field: 'branch_code',
-                                description: 'Code of your branch.',
-                                data_type: 'VARCHAR',
-                                csv_file_name_identifier: 'TR',
-                                default_field_values: '0',
-                                csv_column_name: 'BranchCode',
-                            },
-                            {
-                                required: false,
-                                field: 'terminal_number',
-                                description: 'Your POS Terminal Number.',
-                                data_type: 'BIGINT',
-                                csv_file_name_identifier: 'TR',
-                                default_field_values: '0',
-                                csv_column_name: 'TerminalNumber',
-                            },
-                            {
-                                required: true,
-                                field: 'branch_code',
-                                description: 'Code of your branch.',
-                                data_type: 'INT',
-                                csv_file_name_identifier: 'TR',
-                                default_field_values: '0',
-                                csv_column_name: 'BranchCode',
-                            }
-                        ],
+                        data: [],
                         meta: {
                             pagination: {
                                 count: 1,
@@ -514,85 +497,174 @@
             }
         },
         methods: {
+            getEndpoint() {
+                this.form.data_mapping.field_mapping_bid = '';
+                this.table.values.data = [];
+                this.errors = {};
+
+                axios.get(`${config}/field-mapping/detail/get-endpoint`+'?page=1', {
+                    params: {
+                        api_endpoint: this.form.data_mapping.api_endpoint,
+                        mapping_type: this.form.connection_setup.mapping_type,
+                        itemsPerPage: 100
+                        }
+                    })
+                    .then(response => {
+                        this.api_versions = response.data.data.data
+                    })
+            },
+            getFields() {
+                this.errors = {};
+                var selected_api_version = this.api_versions.find(element => (element.bid === this.form.data_mapping.field_mapping_bid))
+                
+                if (selected_api_version.details.length > 0) {
+                    this.table.values.data = selected_api_version.details;
+                } else {
+                    this.table.values.data = [];
+                }
+            },
             saveConnection() {
                 if (this.form.mode === 'create') {
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_added', { value: this.$t('label.connection_setup')});
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
+                    var payload = {
+                        name: this.form.connection_setup.field_mapping_name,
+                        type: this.form.connection_setup.mapping_type,
+                        status: this.form.connection_setup.setup_status,
+                        remote_setup_bid: this.form.connection_setup.remote_setup_bid,
+                        catapult_db_setup_bid: this.form.connection_setup.catapult_db_setup_bid,
+                        api_setup_bid: this.form.connection_setup.api_setup_bid,
                     };
-                    this.dialog.cancel.function = () => {
-                        this.dialog.visible = false;
-                    };
+
+                    axios.post(`${config}/field-mapping/detail/list`, payload)
+                        .then(response => {
+                            this.dialog.visible = true;
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_added', { value: this.$t('label.connection_setup')});
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                            };
+                            this.dialog.cancel.function = () => {
+                                this.dialog.visible = false;
+                            };
+                            
+                            this.field_mapping_list_bid = response.data.data.bid
+                            this.form.mode = "update"
+                            this.errors = {}
+                        }).catch(error => {
+                            this.errors = error.response.data.errors;
+                        })
                 } else {
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_updated', { value: this.$t('label.connection_setup')});
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                    };
-                    this.dialog.cancel.function = () => {
-                        this.dialog.visible = false;
-                    };
+                    var payload = {
+                        bid: this.field_mapping_list_bid,
+                        name: this.form.connection_setup.field_mapping_name,
+                        type: this.form.connection_setup.mapping_type,
+                        status: this.form.connection_setup.setup_status,
+                        remote_setup_bid: this.form.connection_setup.remote_setup_bid,
+                        catapult_db_setup_bid: this.form.connection_setup.catapult_db_setup_bid,
+                        api_setup_bid: this.form.connection_setup.api_setup_bid,
+                        api_endpoint: this.form.data_mapping.api_endpoint
+                    }
+
+                    axios.put(`${config}/field-mapping/detail/list/${this.field_mapping_list_bid}`, payload)
+                        .then(response => {
+                            this.dialog.visible = true;
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_updated', { value: this.$t('label.connection_setup')});
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                            };
+                            this.dialog.cancel.function = () => {
+                                this.dialog.visible = false;
+                            };
+
+                            this.errors = [];
+                        }).catch(error => {
+                            this.errors = error.response.data.errors;
+                        })
                 }
             },
             saveMapping() {
-                if (this.form.mode === 'create') {
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_added', { value: this.$t('label.data_mapping')});
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
+                if (this.form.mapping_mode === 'create') {
+                    var api_version = this.api_versions.find(element => (element.bid === this.form.data_mapping.field_mapping_bid))
+                    
+                    var payload = {
+                        mapping_type: this.form.connection_setup.mapping_type,
+                        field_mapping_bid: this.form.data_mapping.field_mapping_bid,
+                        end_point: this.form.data_mapping.api_endpoint,
+                        api_version_name: api_version ? api_version.api_version_name : '',
+                        field_mapping_list_bid: this.field_mapping_list_bid,
+                        fields: this.table.values.data
                     };
-                    this.dialog.cancel.function = () => {
-                        this.dialog.visible = false;
-                    };
+
+                    axios.post(`${config}/field-mapping/detail/data-mapping`, payload)
+                        .then(response => {
+                            this.form.mapping_mode = 'update';
+                            this.dialog.visible = true;
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_added', { value: this.$t('label.data_mapping')});
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                                window.open('/field-mapping', '_self');
+                            };
+                            this.dialog.cancel.function = () => {
+                                this.dialog.visible = false;
+                            };
+                        }).catch(error => {
+                            this.errors = error.response.data.errors;
+                        })
                 } else {
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_updated', { value: this.$t('label.data_mapping')});
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
+                    var api_version = this.api_versions.find(element => (element.bid == this.form.data_mapping.field_mapping_bid))
+
+                    var payload = {
+                        mapping_type: this.form.connection_setup.mapping_type,
+                        field_mapping_bid: this.form.data_mapping.field_mapping_bid,
+                        end_point: this.form.data_mapping.api_endpoint,
+                        api_version_name: api_version ? api_version.api_version_name : '',
+                        field_mapping_list_bid: this.field_mapping_list_bid,
+                        fields: this.table.values.data
                     };
-                    this.dialog.cancel.function = () => {
-                        this.dialog.visible = false;
-                    };
+
+                    axios.put(`${config}/field-mapping/detail/data-mapping/${this.field_mapping_list_bid}`, payload)
+                        .then(response => {
+                            this.dialog.visible = true;
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_updated', { value: this.$t('label.data_mapping')});
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                                window.open('/field-mapping', '_self');
+                            };
+                            this.dialog.cancel.function = () => {
+                                this.dialog.visible = false;
+                            };
+                        }).catch(error => {
+                            this.errors = error.response.data.errors;
+                        })
                 }
             },
             openSearchModal(selection) {
                 this.selections.config.options = [];
                 this.selections.config.selected = '';
 
-                if (selection === 'remote') {
-                    this.modal.search.title = this.$t('label.remote_setup_detail');
-
-                    // Dummy options
-                    this.selections.config.options = [
-                        { label: 'Transaction', value: '1001' },
-                        { label: 'Z Read', value: '1002' },
-                        { label: 'Product', value: '1003' }
-                    ];
-                } else if (selection === 'catapult') {
-                    this.modal.search.title = this.$t('label.catapult_db_setup_detail');
-
-                    // Dummy options
-                    this.selections.config.options = [
-                        { label: 'Product', value: '1001' },
-                        { label: 'POS', value: '1002' },
-                        { label: 'Z Read', value: '1003' },
-                    ];
-                } else if (selection === 'api') {
-                    this.modal.search.title = this.$t('label.api_setup_detail');
-
-                    // Dummy options
-                    this.selections.config.options = [
-                        { label: 'API Transaction', value: '1001' },
-                        { label: 'API POS', value: '1002' },
-                        { label: 'API Z Read', value: '1003' },
-                    ];
-                }
-
+                axios.get(`${config}/field-mapping/detail/get-list`, { 
+                    params: {
+                        type: selection,
+                        itemsPerPage: 1000,
+                    } 
+                })
+                    .then(response => {
+                        if (selection === 'remote') {
+                            this.modal.search.title = this.$t('label.remote_setup_detail');
+                        } else if (selection === 'catapult') {
+                            this.modal.search.title = this.$t('label.catapult_db_setup_detail');
+                        } else if (selection === 'api') {
+                            this.modal.search.title = this.$t('label.api_setup_detail');
+                        }
+                        this.selections.config.options = response.data.data.data.map(element => {
+                            return {
+                                label: element.name,
+                                value: element.bid
+                            }
+                        })
+                    })
                 this.modal.search.selection = selection;
                 this.modal.search.visible = true;
             },
@@ -608,18 +680,21 @@
                     this.selections.config.options.forEach(function(item) {
                         if (item.value === that.selections.config.selected) {
                             that.form.connection_setup.remote_setup_name = item.label;
+                            that.form.connection_setup.remote_setup_bid = item.value;
                         }
                     });
                 } else if (this.modal.search.selection === 'catapult') {
                     this.selections.config.options.forEach(function(item) {
                         if (item.value === that.selections.config.selected) {
                             that.form.connection_setup.catapult_db_setup_name = item.label;
+                            that.form.connection_setup.catapult_db_setup_bid = item.value;
                         }
                     });
                 } else if (this.modal.search.selection === 'api') {
                     this.selections.config.options.forEach(function(item) {
                         if (item.value === that.selections.config.selected) {
                             that.form.connection_setup.api_setup_name = item.label;
+                            that.form.connection_setup.api_setup_bid = item.value;
                         }
                     });
                 }

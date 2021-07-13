@@ -11,8 +11,7 @@
 |
 */
 use App\Http\Controllers\HomeController;
-
-
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', 'LoginController@index');
 Route::post('/login', 'LoginController@login')->name('login');
@@ -44,13 +43,21 @@ Route::group(['middleware' => 'auth'], function () {
         Route::delete('/detail_delete/{bid}', 'FieldMappingSetupController@detailDestroy');
     });
 
+    Route::group(['prefix' => 'field-mapping/detail'], function () {
+        Route::get('/get-endpoint', 'FieldMappingController@getEndpoint');
+        Route::post('/data-mapping', 'FieldMappingController@storeDataMapping');
+        Route::put('/data-mapping/{field_mapping_list_bid}', 'FieldMappingController@updateDataMapping');
+        Route::get('/get-list', 'FieldMappingController@getList');
+        Route::resource('/list', 'FieldMappingController');
+    });
+
     Route::apiResources([
         'remote-setup' => 'RemoteSetupController',
         'catapult-db-setup' => 'CatapultDbSetupController',
         'api-setup' => 'ApiSetupController',
         'syncing' => 'SyncingSetupController',
         'user' => 'UserAccountController',
-        'sync-interval-settings' => 'SyncIntervalSettingController'
+        'field-mapping-list' => 'FieldMappingController',
     ]);
 });
 

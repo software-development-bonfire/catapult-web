@@ -3,6 +3,7 @@
 return [
     'are_you_sure_you_want_to_leave_the_page' => 'Are you sure you want to leave page without saving?',
     'are_you_sure_you_want_to_overwrite_the_table_with_the_selected_preset' => 'Are you sure you want to overwrite the table with the selected preset?',
+    'are_you_sure_you_want_to_make_this_the_active_mapping' => 'Are you sure you want to make this the active mapping?',
     'default_values_will_be_used' => 'NOTE: Default values will be used.',
     'do_you_want_to_remove_this_data' => 'Do you want to remove this data?',
     'email_address_for_notification_note' => 'If there\'s any existing and unresolved error logs on the list, Catapult will send notification on the registered e-mail address on the assigned time everyday.',
