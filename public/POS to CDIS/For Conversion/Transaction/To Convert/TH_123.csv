@@ -1,0 +1,3 @@
+branch_coded,terminal_numbers,transaction_ids,dated,amount,transaction_type,is_zread,status,type,gross,total_quantity,total_free_items_amount,total_local_tax_amount,total_tax_amount,total_discount_amount,total_vat_exempt_amount,total_vat_deduct_amount,total_vatable_sales,total_zero_rated_sales,log_date,order_number
+1003,1,929,02/11/2021 10:24,155,0,0,1,1,165,1,0,0,16.61,10,0,0,138.39,0,02/11/2021,12
+1004,1,929,02/11/2021 10:24,155,0,0,1,1,165,1,0,0,16.61,10,0,0,138.39,0,02/11/2021,12

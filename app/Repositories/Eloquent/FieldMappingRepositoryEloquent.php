@@ -46,5 +46,17 @@ class FieldMappingRepositoryEloquent extends BaseRepository implements FieldMapp
 
         return $this->paginate($filters['itemsPerPage']);
     }
+
+    public function getEndpoints($filters)
+    {
+        $this->model = $this->model
+            ->with('details')
+            ->withCount('details')
+            ->where('type', 'like', '%'.$filters['mapping_type'].'%')
+            ->where('api_endpoint', 'like', '%'.$filters['api_endpoint'].'%')
+            ->orderBy('bid', 'ASC');
+
+        return $this->paginate($filters['itemsPerPage']);
+    }
     
 }

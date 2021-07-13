@@ -1,8 +1,5 @@
 <template>
     <div class="module-container">
-        <div class="box-row box-row--white p-1" align="right">
-            <button class="button button--light module-action-button" @click="create">{{ $t('label.add_new') }}</button>
-        </div>
         <div class="m-2">
             <button class="button button--light" @click="create">{{ $t('label.add_new') }}</button>
             <button class="button button--light" @click="openCSVFileGeneratorModal">{{ $t('label.generate_sample_csv') }}</button>
@@ -66,7 +63,6 @@
                     <select
                         class="form-control"
                         v-model="form.values.transaction">
-                        <option value="" hidden selected>{{ $t('label.select_transaction') }}</option>
                         <option
                             v-for="(item, itemIndex) in selections.transaction.options"
                             :key="itemIndex"
@@ -147,6 +143,7 @@
 </template>
 
 <script>
+    var config = window.location.origin;
     import DialogBox from '../../components/Message/DialogBox.vue';
     import Datatable from '../../components/Datatable2/Datatable.vue';
     import TableRow from '../../components/Datatable2/TableRow.vue';
@@ -184,7 +181,7 @@
                 },
                 form: {
                     values: {
-                        transaction: '',
+                        transaction: 'Transaction',
                         transaction_head: false,
                         transaction_detail: false,
                         products: false,
@@ -234,33 +231,6 @@
                     ],
                     values: {
                         data: [
-                            {
-                                name: 'POS Transaction',
-                                mapping_type: 1,
-                                remote_setup_name: 'Transactions',
-                                catapult_db_setup_name: 'Catapult_DB',
-                                api_setup_name: 'Transactions',
-                                api_to_map: 'Transactions',
-                                status: 1,
-                            },
-                            {
-                                name: 'POS Z Read',
-                                mapping_type: 2,
-                                remote_setup_name: 'Z Read',
-                                catapult_db_setup_name: 'Catapult_DB',
-                                api_setup_name: 'Z Read',
-                                api_to_map: 'Transactions',
-                                status: 1,
-                            },
-                            {
-                                name: 'Product',
-                                mapping_type: 1,
-                                remote_setup_name: 'Transactions',
-                                catapult_db_setup_name: 'Catapult_DB',
-                                api_setup_name: 'Transactions',
-                                api_to_map: 'Transactions',
-                                status: 1,
-                            }
                         ],
                         meta: {
                             pagination: {
@@ -283,16 +253,24 @@
                     transaction: {
                         options: [
                             {
-                                label: 'Sales Transaction',
-                                value: 'Sales Transaction',
+                                label: 'Transaction',
+                                value: 'Transaction',
                             },
                             {
-                                label: 'Product Transaction',
-                                value: 'Product Transaction',
+                                label: 'Z Read',
+                                value: 'Z Read',
                             },
                             {
-                                label: 'POS Transaction',
-                                value: 'POS Transaction',
+                                label: 'Cash Breakdown',
+                                value: 'Cash Breakdown',
+                            },
+                            {
+                                label: 'Cash Drawer',
+                                value: 'Cash Drawer',
+                            },
+                            {
+                                label: 'Audit Trail',
+                                value: 'Audit Trail',
                             }
                         ]
                     }
@@ -300,7 +278,18 @@
             }
         },
         methods: {
-            paginate(page = 1) {},
+            paginate(page = 1) {
+
+                axios.get(`${config}/field-mapping/detail/list`+'?page='+page, {
+                    params: {
+                        itemsPerPage: this.table.settings.itemsPerPage
+                    }
+                })
+                .then(response => {
+                    this.table.values.data = response.data.data.data
+                    this.table.values.meta  = response.data.data.meta
+                })
+            },
 
             create() {
                 window.open('/field-mapping/detail', '_self');
@@ -313,7 +302,7 @@
 
             clearFields() {
                 this.form.values = {
-                    transaction: '',
+                    transaction: 'Transaction',
                     transaction_head: false,
                     transaction_detail: false,
                     products: false,
@@ -325,7 +314,43 @@
             },
 
             generateCSVFile() {
+                switch(this.form.values.transaction) {
+                    case 'Transaction':
+                        if (this.form.values.transaction_head) {
+                            var filename = 'TH_[branch_code]_[terminal_code]_[log_date]_[txn_no].csv';
+                            this.downloadCSV(filename);
+                        }
+                        if (this.form.values.transaction_detail) {
+                            var filename = 'TD_[branch_code]_[terminal_code]_[log_date]_[txn_no].csv';
+                            this.downloadCSV(filename);
+                        }
+                    break;
+                    case 'Z Read':
+                    break;
+                    case 'Cash Breakdown':
+                    break;
+                    case 'Cash Drawer':
+                    break;
+                    default:
+
+                }
                 this.modal.visible = false;
+            },
+
+            downloadCSV(filename) {
+                var url = config+'/files/sample csv/'+filename
+
+                axios({url: url, method: 'GET', responseType: 'blob',
+                    }).then((response) => {
+                        var fileURL = window.URL.createObjectURL(new Blob([response.data]));
+                        var fileLink = document.createElement('a');
+
+                        fileLink.href = fileURL;
+                        fileLink.setAttribute('download', filename);
+                        document.body.appendChild(fileLink);
+
+                        fileLink.click();
+                    });
             },
 
             openDetail(data) {
@@ -334,17 +359,22 @@
                 }), '_self');
             },
 
-            deleteRow(index) {
+            deleteRow(data) {
                 this.dialog.visible = true;
-                this.dialog.status = 'confirm';
+                this.dialog.status = 'confirm-yes-no';
                 this.dialog.message = this.$t('message.do_you_want_to_remove_this_data');
                 this.dialog.ok.function = () => {
-                    this.table.values.data.splice(index, 1);
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_removed_the_data');
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                    };
+
+                    axios.delete(`${config}/field-mapping/detail/list/${data.values.api_setup_bid}`)
+                        .then(response => {
+                            this.paginate();
+
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_removed_the_data');
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                            };
+                        })
                 };
                 this.dialog.cancel.function = () => {
                     this.dialog.visible = false;

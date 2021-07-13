@@ -1,5 +1,8 @@
 <?php
 
+use App\Enums\Directory;
+use App\Enums\Disk;
+
 return [
 
     /*
@@ -62,6 +65,21 @@ return [
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
             'url' => env('AWS_URL'),
+        ],
+
+        Disk::LOCAL_POS_TO_CDIS => [
+            'driver' => 'local',
+            'root' => public_path(Directory::POS_TO_CDIS)
+        ],
+
+        Disk::FTP_POST_TO_CDIS => [
+            'driver' => 'ftp',
+            'host' => '',
+            'username' => '',
+            'password' => '',
+            'port' => 21,
+            'root' => '/POS to CDIS',
+            'timeout' => 30,
         ],
 
     ],
