@@ -94,7 +94,7 @@ class SyncService
         ]);
 
         $options = [
-            'json' => ['sender_details' => $senderDetails, 'chunk' => 1],
+            'json' => ['sender_details' => $senderDetails, 'chunk' => 10],
             'headers' => [
 //                'Authorization' => 'Bearer '. $configuration->getAttributeValue('bearer_token'),
                 'Accept' => 'application/json',
