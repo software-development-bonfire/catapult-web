@@ -2,12 +2,12 @@
 
 namespace App\Entities;
 
-use App\Traits\BidObserverTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CDISProduct extends Model
 {
-    use BidObserverTrait;
+    use SoftDeletes;
 
     protected $table = 'cdis_product';
 

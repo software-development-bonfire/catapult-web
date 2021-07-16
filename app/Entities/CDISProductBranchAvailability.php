@@ -3,9 +3,12 @@
 namespace App\Entities;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CDISProductBranchAvailability extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'cdis_product_branch_availability';
 
     protected $fillable = [

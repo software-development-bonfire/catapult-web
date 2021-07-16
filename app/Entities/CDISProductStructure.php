@@ -4,9 +4,12 @@ namespace App\Entities;
 
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CDISProductStructure extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'cdis_product_structure';
 
     protected $fillable = [

@@ -62,10 +62,30 @@ class SyncService
                 }
 
                 $entityName = str_replace('_', '', Str::title($value->sync->table_name));
-                app("App\\Entities\\CDIS" . $entityName)::create((array) $value->detail);
+                $entity = "App\\Entities\\CDIS".$entityName;
+
+                $detail = app($entity)::where('bid', $value->sync->table_bid);
+
+                $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($entity));
+
+                if ($hasSoftDeleting) {
+                    $detail->withTrashed();
+                }
+
+                $isExists = $detail->count() > 0;
+
+                if ($isExists) {
+                    if ($value->sync->action == 'delete') {
+                        $detail->delete();
+                    } else if ($value->sync->action == 'update' || $value->sync->action == 'create'){
+                        $detail->update((array) $value->detail);
+                    }
+                } else {
+                    $detail->create((array) $value->detail);
+                }
             }
 
-            DeleteSynced::dispatch($bids)->onQueue('delete-synced');
+            DeleteSynced::dispatch($bids);
 
             return (object) [
                 'count' => $count,
