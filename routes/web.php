@@ -48,6 +48,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/data-mapping', 'FieldMappingController@storeDataMapping');
         Route::put('/data-mapping/{field_mapping_list_bid}', 'FieldMappingController@updateDataMapping');
         Route::get('/get-list', 'FieldMappingController@getList');
+        Route::get('/data-mapping-list', 'FieldMappingController@dataMappingList');
         Route::resource('/list', 'FieldMappingController');
     });
 

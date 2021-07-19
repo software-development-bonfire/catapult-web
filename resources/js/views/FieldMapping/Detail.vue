@@ -328,22 +328,27 @@
 
                 this.form.data_mapping.field_mapping_bid = urlData.data.field_mapping_bid
 
-                if (urlData.data.dataMappings !== undefined) {
-                    this.table.values.data = urlData.data.dataMappings.map(element => {
-                        return {
-                            edit: false,
-                            bid: element.bid,
-                            column_name: element.column_name,
-                            default_value: element.default_value,
-                            description: element.description,
-                            field: element.field,
-                            field_mapping_list_bid: element.field_mapping_list_bid,
-                            file_name: element.file_name,
-                            mapping_type: element.mapping_type,
-                            required: element.required === "true" ? true : false
-                        }
-                    });
-                }
+                axios.get(`${config}/field-mapping/detail/data-mapping-list`, {
+                    params: {
+                        field_mapping_list_bid : this.field_mapping_list_bid
+                    }
+                })
+                    .then(response => {
+                        this.table.values.data = response.data.map(element => {
+                            return {
+                                edit: false,
+                                bid: element.bid,
+                                column_name: element.column_name,
+                                default_value: element.default_value,
+                                description: element.description,
+                                field: element.field,
+                                field_mapping_list_bid: element.field_mapping_list_bid,
+                                file_name: element.file_name,
+                                mapping_type: element.mapping_type,
+                                required: element.required === 1 ? true : false
+                            }
+                        });
+                    })
             }
         },
         data() {

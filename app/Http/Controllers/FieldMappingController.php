@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Entities\DataMapping;
 use App\Http\Requests\DataMappingRequest;
 use App\Http\Requests\FieldMappingListRequest;
 use App\Repositories\Contracts\RemoteSetupRepository;
@@ -42,6 +43,17 @@ class FieldMappingController extends Controller
         $list = fractal($list, FieldMappingTransformer::class);
 
         return $this->successfulResponse($list);
+    }
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function dataMappingList(Request $request)
+    {
+        return DataMapping::where('field_mapping_list_bid', $request->field_mapping_list_bid)->get();
     }
 
     /**

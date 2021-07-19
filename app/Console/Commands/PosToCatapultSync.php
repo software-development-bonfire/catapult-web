@@ -67,15 +67,54 @@ class PosToCatapultSync extends Command implements ShouldQueue
                     'move_to' => Directory::FTP_TRANSACTION_FETCHED,
                     'local_path' => Directory::FOR_CONVERSION_TRANSACTION_TO_CONVERT
                 ],
+                [
+                    'name' => 'Zread',
+                    'root' => $remote_setup->path.Directory::FTP_ZREAD_TO_FETCH,
+                    'source_path' => Directory::FTP_ZREAD_TO_FETCH,
+                    'move_to' => Directory::FTP_ZREAD_FETCHED,
+                    'local_path' => Directory::FOR_CONVERSION_ZREAD_TO_CONVERT
+                ],
+                [
+                    'name' => 'Audit Trail',
+                    'root' => $remote_setup->path.Directory::FTP_AUDIT_TRAIL_TO_FETCH,
+                    'source_path' => Directory::FTP_AUDIT_TRAIL_TO_FETCH,
+                    'move_to' => Directory::FTP_AUDIT_TRAIL_FETCHED,
+                    'local_path' => Directory::FOR_CONVERSION_AUDIT_TRAIL_TO_CONVERT
+                ],
+                [
+                    'name' => 'Cash Breakdown',
+                    'root' => $remote_setup->path.Directory::FTP_CASH_BREAKDOWN_TO_FETCH,
+                    'source_path' => Directory::FTP_CASH_BREAKDOWN_TO_FETCH,
+                    'move_to' => Directory::FTP_CASH_BREAKDOWN_FETCHED,
+                    'local_path' => Directory::FOR_CONVERSION_CASH_BREAKDOWN_TO_CONVERT
+                ],
+                [
+                    'name' => 'Cash Drawer',
+                    'root' => $remote_setup->path.Directory::FTP_CASH_DRAWER_TO_FETCH,
+                    'source_path' => Directory::FTP_CASH_DRAWER_TO_FETCH,
+                    'move_to' => Directory::FTP_CASH_DRAWER_FETCHED,
+                    'local_path' => Directory::FOR_CONVERSION_CASH_DRAWER_TO_CONVERT
+                ],
             ];
             
             $disk = Storage::disk(Disk::FTP_POST_TO_CDIS);
 
             foreach ($endpoints as $endpoint) {
-                $files = $disk->allFiles($endpoint['source_path']);
+                $directories = $disk->allDirectories($endpoint['source_path']);
 
-                if($files) {
-                    $this->Collection($files, $disk, $endpoint, $remote_setup);
+                foreach ($directories as $directory) {
+                    $file_count = substr($directory, -1);
+
+                    $files = $disk->allFiles($directory);
+
+                    if (count($files) == $file_count) {
+                        $return = $this->Collection($files, $disk, $endpoint, $remote_setup);
+                    }
+
+                    $local = Storage::disk(Disk::LOCAL_POS_TO_CDIS)->allFiles($return);
+                    if (count($files) == count($local)) {
+                        $disk->move($endpoint['source_path'].'/'.$return, $endpoint['move_to'].'/'.$return);
+                    }
                 }
             }
 
@@ -108,40 +147,46 @@ class PosToCatapultSync extends Command implements ShouldQueue
 
                 if ($extension == 'csv' || $extension == 'xlsx' || $extension == 'xls') {
 
-                    $savedFileLocally = $this->saveToLocal($filename, $disk, $endpoint, $path);
+                    $savedFileLocally = $this->saveToLocal($filename, $disk, $endpoint, $path, $folder_name);
+                    $exists = SyncFileReference::where('filename', $filename)->first();
 
-                    if ($savedFileLocally == true && Storage::disk(Disk::LOCAL_POS_TO_CDIS)->exists($filename)) {
+                    if ($savedFileLocally && ! $exists) {
 
                         $dataReference = SyncFileReference::create([
                             'filename' => $filename,
                             'extension' => $extension,
                             'ftp_path' => $remote_setup->path.$endpoint['move_to'].'/'.$folder_name,
-                            'last_modified' => Carbon::parse($disk->lastModified($file))->format('Y-m-d h:m:s')
+                            'last_modified' => Carbon::parse($disk->lastModified($file))->format('Y-m-d h:m:s'),
                         ]);
-
-                        $movedFile = $this->moveFileToFetched($folder_name, $filename, $endpoint, $disk);
-
-                        if ($movedFile !== true) {
-                            resolve('filesystem')->forgetDisk(Disk::LOCAL_POS_TO_CDIS);
-                            app()['config']->set('filesystems.disks.'.Disk::LOCAL_POS_TO_CDIS.'.root', public_path($endpoint['local_path']));
-                            Storage::disk(Disk::LOCAL_POS_TO_CDIS)->delete($filename);
-
-                            SyncFileReference::where('id', $dataReference->bid)->delete();
-                        }
                     }
                 }
             }
+            return $folder_name;
         } catch (\Throwable $th) {
            return ['error1' => $th->getMessage()];
        }
     }
 
-    public function saveToLocal($filename, $disk, $endpoint, $path)
+    /**
+     * move FTP file from "To fetch" to "Fetch"
+     *
+     * @param  string  $filename
+     * @param  string  $path
+     * @param  string  $folder_name
+     * @param  array  $endpoint
+     * 
+     */
+    public function saveToLocal($filename, $disk, $endpoint, $path, $folder_name)
     {
         try {
             resolve('filesystem')->forgetDisk(Disk::LOCAL_POS_TO_CDIS);
             app()['config']->set('filesystems.disks.'.Disk::LOCAL_POS_TO_CDIS.'.root', public_path($endpoint['local_path']));
-            $copyToLocal = Storage::disk(Disk::LOCAL_POS_TO_CDIS)->put($filename, $disk->get($path.'/'.$filename));
+
+            if(Storage::disk(Disk::LOCAL_POS_TO_CDIS)->exists($filename)) {
+                $copyToLocal = false;
+            } else {
+                $copyToLocal = Storage::disk(Disk::LOCAL_POS_TO_CDIS)->put($folder_name.'/'.$filename, $disk->get($path.'/'.$filename));
+            }
 
             if ($copyToLocal) {
                 return true;
