@@ -81,11 +81,15 @@ class SyncService
                         $detail->update((array) $value->detail);
                     }
                 } else {
-                    $detail->create((array) $value->detail);
+                    if ($value->sync->action == 'create' || $value->sync->action == 'update') {
+                        $detail->create((array) $value->detail);
+                    }
                 }
             }
 
-            DeleteSynced::dispatch($bids);
+            if (count($bids) > 0) {
+                DeleteSynced::dispatch($bids);
+            }
 
             return (object) [
                 'count' => $count,

@@ -22,6 +22,7 @@ class CreateCdisProductTable extends Migration
             $table->tinyInteger('status')->default(\App\Enums\Status::ACTIVE);
             $table->tinyInteger('is_sell_item')->default(1);
             $table->tinyInteger('is_inventory_item')->default(1);
+            $table->tinyInteger('is_finished_good')->default(0);
             $table->tinyInteger('tax_code')->default(\App\Enums\CDIS\TaxCode::VATABLE);
             $table->tinyInteger('is_senior_item')->default(0);
             $table->tinyInteger('is_pwd_item')->default(0);
