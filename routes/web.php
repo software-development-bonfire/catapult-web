@@ -49,6 +49,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::put('/data-mapping/{field_mapping_list_bid}', 'FieldMappingController@updateDataMapping');
         Route::get('/get-list', 'FieldMappingController@getList');
         Route::get('/data-mapping-list', 'FieldMappingController@dataMappingList');
+        Route::get('/generate-csv', 'FieldMappingController@generateCsv');
         Route::resource('/list', 'FieldMappingController');
     });
 

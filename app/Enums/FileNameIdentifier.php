@@ -13,7 +13,7 @@ final class FileNameIdentifier extends Enum
     const AD = "Add on";
     const PD = "Product Discount";
     const ZCB = "Cash Breakdown";
-    const ZCS = "Cash Summary";
+    const ZCS = "Cashier Summary";
     const ZH = "Zread Head";
     const ZTD = "Tender Details";
     const ZRD = "Regular Discount";

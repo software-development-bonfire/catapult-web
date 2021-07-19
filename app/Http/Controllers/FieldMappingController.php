@@ -228,4 +228,26 @@ class FieldMappingController extends Controller
             Lang::get('success.data_mapping_deleted')
         );
     }
+
+    /**
+     * generate a listing of csv resource.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function generateCsv(Request $request)
+    {
+        try {
+            $data = $this->fieldMappingListService->generateCsv($request->all());
+        } catch (\Throwable $th) {
+            return $this->errorResponse(
+                [],
+                Lang::get('error.generate_csv_failed_create')
+            );
+        }
+        return $this->successfulResponse(
+            $data,
+            Lang::get('success.generate_csv_created')
+        );
+    }
 }
