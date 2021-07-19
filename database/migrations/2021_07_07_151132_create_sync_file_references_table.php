@@ -21,7 +21,6 @@ class CreateSyncFileReferencesTable extends Migration
 			$table->string('filename', 128);
 			$table->string('extension', 45);
 			$table->string('ftp_path', 512);
-			$table->tinyInteger('status')->default(0);
 			$table->dateTime('last_modified');
             $table->timestamps();
 		});

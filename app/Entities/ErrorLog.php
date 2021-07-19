@@ -4,25 +4,23 @@ namespace App\Entities;
 
 use App\Traits\BidObserverTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Prettus\Repository\Contracts\Transformable;
 use Prettus\Repository\Traits\TransformableTrait;
 
 /**
- * Class FieldMapping.
+ * Class ErrorLog.
  *
  * @package namespace App\Entities;
  */
-class FieldMapping extends Model implements Transformable
+class ErrorLog extends Model implements Transformable
 {
     use TransformableTrait,
-        SoftDeletes,
         BidObserverTrait;
 
     protected $primaryKey = 'bid';
 
     public $incrementing = false;
-
+    
     /**
      * The attributes that are mass assignable.
      *
@@ -30,18 +28,9 @@ class FieldMapping extends Model implements Transformable
      */
     protected $fillable = [
         'bid',
-        'type',
-        'api_endpoint',
-        'api_version_name',
-        'field_entry',
+        'pos_entry',
+        'filename',
         'status',
-        'created_by',
-        'updated_by'
     ];
-
-    public function details()
-    {
-        return $this->hasMany(FieldMappingDetail::class, 'field_mapping_bid', 'bid');
-    }
 
 }

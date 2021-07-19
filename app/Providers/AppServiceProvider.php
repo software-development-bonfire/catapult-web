@@ -25,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(\App\Repositories\Contracts\SyncIntervalSettingRepository::class, \App\Repositories\Eloquent\SyncIntervalSettingRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\FieldMappingListRepository::class, \App\Repositories\Eloquent\FieldMappingListRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\DataMappingRepository::class, \App\Repositories\Eloquent\DataMappingRepositoryEloquent::class);
+        $this->app->bind(\App\Repositories\Contracts\ErrorLogRepository::class, \App\Repositories\Eloquent\ErrorLogRepositoryEloquent::class);
+        $this->app->bind(\App\Repositories\Contracts\ErrorLogDetailRepository::class, \App\Repositories\Eloquent\ErrorLogDetailRepositoryEloquent::class);
     }
 
     /**
