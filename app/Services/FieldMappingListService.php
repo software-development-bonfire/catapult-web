@@ -3,11 +3,18 @@
 namespace App\Services;
 
 use App\Entities\DataMapping;
+use App\Entities\FieldMapping;
 use App\Entities\FieldMappingList;
+use App\Enums\Acronym;
+use App\Enums\Disk;
+use App\Enums\FileNameIdentifier;
 use App\Enums\Status;
+use App\Exports\GenerateDefaultCsv;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 
 class FieldMappingListService
 {
@@ -141,6 +148,127 @@ class FieldMappingListService
     {
         FieldMappingList::find($bid)->delete();
         DataMapping::where('field_mapping_list_bid', $bid)->delete();
+    }
+
+    /**
+     * generate a listing of csv resource.
+     *
+     * @param  array  $request
+     */
+    public function generateCsv($request)
+    {
+        $transaction = FieldMapping::where(['api_endpoint' => $request['transaction'], 'status' => Status::ACTIVE])
+            ->first();
+
+        $fieldMapping = FieldMappingList::with('dataMappings')
+            ->where(['field_mapping_bid' => $transaction['bid'], 'status' => Status::ACTIVE])
+            ->first();
+
+            $file_path = [];
+
+        switch($request['transaction']) {
+            case 'Transactions':
+                if ($request['transaction_head'] == "true") {
+                    $filename = $transaction['api_endpoint'].'-'.FileNameIdentifier::TH.'.csv';
+                    $th = $fieldMapping['dataMappings']->where('file_name', Acronym::TRANSACTION_HEAD);
+                    Excel::store(new GenerateDefaultCsv($th), $filename, Disk::DEFAULT_CSV);
+                    $file_path[] = 'Default csv/'.($filename);
+                }
+                if ($request['transaction_detail'] == "true") {
+                    $filename = $transaction['api_endpoint'].'-'.FileNameIdentifier::TD.'.csv';
+                    $th = $fieldMapping['dataMappings']->where('file_name', Acronym::TRANSACTION_DETAIL);
+                    Excel::store(new GenerateDefaultCsv($th), $filename, Disk::DEFAULT_CSV);
+                    $file_path[] = 'Default csv/'.($filename);
+                }
+                if ($request['products'] == "true") {
+                    $filename = $transaction['api_endpoint'].'-'.FileNameIdentifier::PR.'.csv';
+                    $th = $fieldMapping['dataMappings']->where('file_name', Acronym::PRODUCT);
+                    Excel::store(new GenerateDefaultCsv($th), $filename, Disk::DEFAULT_CSV);
+                    $file_path[] = 'Default csv/'.($filename);
+                }
+                if ($request['payment'] == "true") {
+                    $filename = $transaction['api_endpoint'].'-'.FileNameIdentifier::PM.'.csv';
+                    $th = $fieldMapping['dataMappings']->where('file_name', Acronym::PAYMENT_METHOD);
+                    Excel::store(new GenerateDefaultCsv($th), $filename, Disk::DEFAULT_CSV);
+                    $file_path[] = 'Default csv/'.($filename);
+                }
+                if ($request['discounts'] == "true") {
+                    $filename = $transaction['api_endpoint'].'-'.FileNameIdentifier::PD.'.csv';
+                    $th = $fieldMapping['dataMappings']->where('file_name', Acronym::PRODUCT_DISCOUNT);
+                    Excel::store(new GenerateDefaultCsv($th), $filename, Disk::DEFAULT_CSV);
+                    $file_path[] = 'Default csv/'.($filename);
+                }
+                if ($request['add_ons'] == "true") {
+                    $filename = $transaction['api_endpoint'].'-'.FileNameIdentifier::AD.'.csv';
+                    $th = $fieldMapping['dataMappings']->where('file_name', Acronym::ADDON);
+                    Excel::store(new GenerateDefaultCsv($th), $filename, Disk::DEFAULT_CSV);
+                    $file_path[] = 'Default csv/'.($filename);
+                }
+            break;
+            case 'Z Read':
+                if ($request['zread_head'] == "true") {
+                    $filename = $transaction['api_endpoint'].'-'.FileNameIdentifier::ZH.'.csv';
+                    $th = $fieldMapping['dataMappings']->where('file_name', Acronym::ZREAD_HEAD);
+                    Excel::store(new GenerateDefaultCsv($th), $filename, Disk::DEFAULT_CSV);
+                    $file_path[] = 'Default csv/'.($filename);
+                }
+                if ($request['cash_breakdown'] == "true") {
+                    $filename = $transaction['api_endpoint'].'-'.FileNameIdentifier::ZCB.'.csv';
+                    $th = $fieldMapping['dataMappings']->where('file_name', Acronym::CASH_BREAKDOWN);
+                    Excel::store(new GenerateDefaultCsv($th), $filename, Disk::DEFAULT_CSV);
+                    $file_path[] = 'Default csv/'.($filename);
+                }
+                if ($request['cashier_summary'] == "true") {
+                    $filename = $transaction['api_endpoint'].'-'.FileNameIdentifier::ZCS.'.csv';
+                    $th = $fieldMapping['dataMappings']->where('file_name', Acronym::CASHIER_SUMMARY);
+                    Excel::store(new GenerateDefaultCsv($th), $filename, Disk::DEFAULT_CSV);
+                    $file_path[] = 'Default csv/'.($filename);
+                }
+                if ($request['regular_discount'] == "true") {
+                    $filename = $transaction['api_endpoint'].'-'.FileNameIdentifier::ZRD.'.csv';
+                    $th = $fieldMapping['dataMappings']->where('file_name', Acronym::REGULAR_DISCOUNT);
+                    Excel::store(new GenerateDefaultCsv($th), $filename, Disk::DEFAULT_CSV);
+                    $file_path[] = 'Default csv/'.($filename);
+                }
+                if ($request['tender_details'] == "true") {
+                    $filename = $transaction['api_endpoint'].'-'.FileNameIdentifier::ZTD.'.csv';
+                    $th = $fieldMapping['dataMappings']->where('file_name', Acronym::TENDER_DETAILS);
+                    Excel::store(new GenerateDefaultCsv($th), $filename, Disk::DEFAULT_CSV);
+                    $file_path[] = 'Default csv/'.($filename);
+                }
+            break;
+            case 'Cash Breakdown':
+                if ($request['cash_breakdown_head'] == "true") {
+                    $filename = $transaction['api_endpoint'].'-'.FileNameIdentifier::CH.'.csv';
+                    $th = $fieldMapping['dataMappings']->where('file_name', Acronym::CASH_BREACKDOWN_HEAD);
+                    Excel::store(new GenerateDefaultCsv($th), $filename, Disk::DEFAULT_CSV);
+                    $file_path[] = 'Default csv/'.($filename);
+                }
+                if ($request['cash_breakdown_detail'] == "true") {
+                    $filename = $transaction['api_endpoint'].'-'.FileNameIdentifier::CD.'.csv';
+                    $th = $fieldMapping['dataMappings']->where('file_name', Acronym::CASH_BREACKDOWN_DETAIL);
+                    Excel::store(new GenerateDefaultCsv($th), $filename, Disk::DEFAULT_CSV);
+                    $file_path[] = 'Default csv/'.($filename);
+                }
+            break;
+            case 'Cash Drawer':
+                if ($request['cash_drawer'] == "true") {
+                    $filename = $transaction['api_endpoint'].'-'.FileNameIdentifier::DR.'.csv';
+                    $th = $fieldMapping['dataMappings']->where('file_name', Acronym::CASH_DRAWER);
+                    Excel::store(new GenerateDefaultCsv($th), $filename, Disk::DEFAULT_CSV);
+                    $file_path[] = 'Default csv/'.($filename);
+                }
+            break;
+            case 'Audit Trail':
+                if ($request['audit_trail'] == "true") {
+                    $filename = $transaction['api_endpoint'].'-'.FileNameIdentifier::AT.'.csv';
+                    $th = $fieldMapping['dataMappings']->where('file_name', Acronym::AUDIT_TRAIL);
+                    Excel::store(new GenerateDefaultCsv($th), $filename, Disk::DEFAULT_CSV);
+                    $file_path[] = 'Default csv/'.($filename);
+                }
+        }
+
+        return $file_path;
     }
 }
 

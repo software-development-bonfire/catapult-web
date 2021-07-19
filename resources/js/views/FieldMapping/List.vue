@@ -74,52 +74,126 @@
                 <div class="form-group">
                     <label>{{ $t('label.select_csv_file_to_generate') }}</label>
                     <div class="d-flex">
-                        <ul class="unindented-list">
-                            <li>
-                                <label class="radio-checkbox">
-                                    <input type="checkbox" v-model="form.values.transaction_head">
-                                    <span>{{ $t('label.transaction_head') }}</span>
-                                </label>
-                            </li>
-                            <li>
-                                <label class="radio-checkbox">
-                                    <input type="checkbox" v-model="form.values.transaction_detail">
-                                    <span>{{ $t('label.transaction_detail') }}</span>
-                                </label>
-                            </li>
-                            <li>
-                                <label class="radio-checkbox">
-                                    <input type="checkbox" v-model="form.values.products">
-                                    <span>{{ $t('label.products') }}</span>
-                                </label>
-                            </li>
-                            <li>
-                                <label class="radio-checkbox">
-                                    <input type="checkbox" v-model="form.values.payment">
-                                    <span>{{ $t('label.payment') }}</span>
-                                </label>
-                            </li>
-                        </ul>
-                        <ul class="unindented-list ml-4">
-                            <li>
-                                <label class="radio-checkbox">
-                                    <input type="checkbox" v-model="form.values.discounts">
-                                    <span>{{ $t('label.discounts') }}</span>
-                                </label>
-                            </li>
-                            <li>
-                                <label class="radio-checkbox">
-                                    <input type="checkbox" v-model="form.values.add_ons">
-                                    <span>{{ $t('label.add_ons') }}</span>
-                                </label>
-                            </li>
-                            <li>
-                                <label class="radio-checkbox">
-                                    <input type="checkbox" v-model="form.values.price_override">
-                                    <span>{{ $t('label.price_override') }}</span>
-                                </label>
-                            </li>
-                        </ul>
+                        <template v-if="form.values.transaction == 'Transactions'">
+                            <ul class="unindented-list">
+                                <li>
+                                    <label class="radio-checkbox">
+                                        <input type="checkbox" v-model="form.values.transaction_head">
+                                        <span>{{ $t('label.transaction_head') }}</span>
+                                    </label>
+                                </li>
+                                <li>
+                                    <label class="radio-checkbox">
+                                        <input type="checkbox" v-model="form.values.transaction_detail">
+                                        <span>{{ $t('label.transaction_detail') }}</span>
+                                    </label>
+                                </li>
+                                <li>
+                                    <label class="radio-checkbox">
+                                        <input type="checkbox" v-model="form.values.products">
+                                        <span>{{ $t('label.products') }}</span>
+                                    </label>
+                                </li>
+                                <li>
+                                    <label class="radio-checkbox">
+                                        <input type="checkbox" v-model="form.values.payment">
+                                        <span>{{ $t('label.payment') }}</span>
+                                    </label>
+                                </li>
+                            </ul>
+                            <ul class="unindented-list ml-4">
+                                <li>
+                                    <label class="radio-checkbox">
+                                        <input type="checkbox" v-model="form.values.discounts">
+                                        <span>{{ $t('label.discounts') }}</span>
+                                    </label>
+                                </li>
+                                <li>
+                                    <label class="radio-checkbox">
+                                        <input type="checkbox" v-model="form.values.add_ons">
+                                        <span>{{ $t('label.add_ons') }}</span>
+                                    </label>
+                                </li>
+                                <li>
+                                    <label class="radio-checkbox">
+                                        <input type="checkbox" v-model="form.values.price_override">
+                                        <span>{{ $t('label.price_override') }}</span>
+                                    </label>
+                                </li>
+                            </ul>
+                        </template>
+                        <template v-if="form.values.transaction == 'Z Read'">
+                            <ul class="unindented-list">
+                                <li>
+                                    <label class="radio-checkbox">
+                                        <input type="checkbox" v-model="form.values.zread_head">
+                                        <span>{{ $t('label.zread_head') }}</span>
+                                    </label>
+                                </li>
+                                <li>
+                                    <label class="radio-checkbox">
+                                        <input type="checkbox" v-model="form.values.cash_breakdown">
+                                        <span>{{ $t('label.cash_breakdown') }}</span>
+                                    </label>
+                                </li>
+                                <li>
+                                    <label class="radio-checkbox">
+                                        <input type="checkbox" v-model="form.values.cashier_summary">
+                                        <span>{{ $t('label.cashier_summary') }}</span>
+                                    </label>
+                                </li>
+                            </ul>
+                            <ul class="unindented-list ml-4">
+                                <li>
+                                    <label class="radio-checkbox">
+                                        <input type="checkbox" v-model="form.values.regular_discount">
+                                        <span>{{ $t('label.regular_discount') }}</span>
+                                    </label>
+                                </li>
+                                <li>
+                                    <label class="radio-checkbox">
+                                        <input type="checkbox" v-model="form.values.tender_details">
+                                        <span>{{ $t('label.tender_details') }}</span>
+                                    </label>
+                                </li>
+                            </ul>
+                        </template>
+                        <template v-if="form.values.transaction == 'Cash Breakdown'">
+                            <ul class="unindented-list">
+                                <li>
+                                    <label class="radio-checkbox">
+                                        <input type="checkbox" v-model="form.values.cash_breakdown_head">
+                                        <span>{{ $t('label.cash_breakdown_head') }}</span>
+                                    </label>
+                                </li>
+                                <li>
+                                    <label class="radio-checkbox">
+                                        <input type="checkbox" v-model="form.values.cash_breakdown_detail">
+                                        <span>{{ $t('label.cash_breakdown_detail') }}</span>
+                                    </label>
+                                </li>
+                            </ul>
+                        </template>
+                        <template v-if="form.values.transaction == 'Cash Drawer'">
+                            <ul class="unindented-list">
+                                <li>
+                                    <label class="radio-checkbox">
+                                        <input type="checkbox" v-model="form.values.cash_drawer">
+                                        <span>{{ $t('label.cash_drawer') }}</span>
+                                    </label>
+                                </li>
+                            </ul>
+                        </template>
+                        <template v-if="form.values.transaction == 'Audit Trail'">
+                            <ul class="unindented-list">
+                                <li>
+                                    <label class="radio-checkbox">
+                                        <input type="checkbox" v-model="form.values.audit_trail">
+                                        <span>{{ $t('label.audit_trail') }}</span>
+                                    </label>
+                                </li>
+                            </ul>
+                        </template>
                     </div>
                 </div>
             </template>
@@ -181,7 +255,7 @@
                 },
                 form: {
                     values: {
-                        transaction: 'Transaction',
+                        transaction: 'Transactions',
                         transaction_head: false,
                         transaction_detail: false,
                         products: false,
@@ -189,6 +263,15 @@
                         discounts: false,
                         add_ons: false,
                         price_override: false,
+                        zread_head: false,
+                        cash_breakdown: false,
+                        cashier_summary: false,
+                        regular_discount: false,
+                        tender_details: false,
+                        cash_breakdown_head: false,
+                        cash_breakdown_detail: false,
+                        cash_drawer: false,
+                        audit_trail: false,
                     }
                 },
                 table: {
@@ -254,7 +337,7 @@
                         options: [
                             {
                                 label: 'Transaction',
-                                value: 'Transaction',
+                                value: 'Transactions',
                             },
                             {
                                 label: 'Z Read',
@@ -302,7 +385,7 @@
 
             clearFields() {
                 this.form.values = {
-                    transaction: 'Transaction',
+                    transaction: 'Transactions',
                     transaction_head: false,
                     transaction_detail: false,
                     products: false,
@@ -310,43 +393,78 @@
                     discounts: false,
                     add_ons: false,
                     price_override: false,
+                    zread_head: false,
+                    cash_breakdown: false,
+                    cashier_summary: false,
+                    regular_discount: false,
+                    tender_details: false,
+                    cash_breakdown_head: false,
+                    cash_breakdown_detail: false,
+                    cash_drawer: false,
+                    audit_trail: false,
                 }
             },
 
             generateCSVFile() {
-                switch(this.form.values.transaction) {
-                    case 'Transaction':
-                        if (this.form.values.transaction_head) {
-                            var filename = 'TH_[branch_code]_[terminal_code]_[log_date]_[txn_no].csv';
-                            this.downloadCSV(filename);
-                        }
-                        if (this.form.values.transaction_detail) {
-                            var filename = 'TD_[branch_code]_[terminal_code]_[log_date]_[txn_no].csv';
-                            this.downloadCSV(filename);
-                        }
-                    break;
-                    case 'Z Read':
-                    break;
-                    case 'Cash Breakdown':
-                    break;
-                    case 'Cash Drawer':
-                    break;
-                    default:
-
+                if (this.form.values.transaction == 'Transactions') {
+                    var payload = {
+                        transaction: this.form.values.transaction,
+                        transaction_head: this.form.values.transaction_head,
+                        transaction_detail: this.form.values.transaction_detail,
+                        products: this.form.values.products,
+                        payment: this.form.values.payment,
+                        discounts: this.form.values.discounts,
+                        add_ons: this.form.values.add_ons,
+                        price_override: this.form.values.price_override,
+                    }
+                } else if (this.form.values.transaction == 'Z Read') {
+                    var payload = {
+                        transaction: this.form.values.transaction,
+                        zread_head: this.form.values.zread_head,
+                        cash_breakdown: this.form.values.cash_breakdown,
+                        cashier_summary: this.form.values.cashier_summary,
+                        regular_discount: this.form.values.regular_discount,
+                        tender_details: this.form.values.tender_details,
+                    }
+                } else if (this.form.values.transaction == 'Cash Breakdown') {
+                    var payload = {
+                        transaction: this.form.values.transaction,
+                        cash_breakdown_head: this.form.values.cash_breakdown_head,
+                        cash_breakdown_detail: this.form.values.cash_breakdown_detail,
+                    }
+                } else if (this.form.values.transaction == 'Cash Drawer') {
+                    var payload = {
+                        transaction: this.form.values.transaction,
+                        cash_drawer: this.form.values.cash_drawer,
+                    }
+                } else if (this.form.values.transaction == 'Audit Trail') {
+                    var payload = {
+                        transaction: this.form.values.transaction,
+                        audit_trail: this.form.values.audit_trail,
+                    }
                 }
-                this.modal.visible = false;
+
+                axios.get(`${config}/field-mapping/detail/generate-csv`, {
+                    params: payload
+                })
+                    .then(response => {
+                        var file_path = response.data.data;
+                        file_path.forEach(path => {
+                            this.downloadCSV(path);
+                        })
+                    })
             },
 
-            downloadCSV(filename) {
-                var url = config+'/files/sample csv/'+filename
-
+            downloadCSV(path) {
+                var url = config+'/'+path
+                        
                 axios({url: url, method: 'GET', responseType: 'blob',
                     }).then((response) => {
                         var fileURL = window.URL.createObjectURL(new Blob([response.data]));
                         var fileLink = document.createElement('a');
 
                         fileLink.href = fileURL;
-                        fileLink.setAttribute('download', filename);
+                        fileLink.setAttribute('download', path.split('-').pop());
                         document.body.appendChild(fileLink);
 
                         fileLink.click();

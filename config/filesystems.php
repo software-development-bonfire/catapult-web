@@ -67,6 +67,11 @@ return [
             'url' => env('AWS_URL'),
         ],
 
+        Disk::DEFAULT_CSV => [
+            'driver' => 'local',
+            'root' => public_path('Default csv'),
+        ],
+
         Disk::LOCAL_POS_TO_CDIS => [
             'driver' => 'local',
             'root' => public_path(Directory::POS_TO_CDIS)

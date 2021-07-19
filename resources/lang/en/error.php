@@ -35,6 +35,7 @@ return [
     'field_mapping_connection_failed_create' => 'Field Mapping Connection failed to create.',
     'field_mapping_connection_failed_delete' => 'Field Mapping Connection failed to delete.',
     'field_mapping_connection_failed_update' => 'Field Mapping Connection failed to update.',
+    'generate_csv_failed_create' => 'Generate csv failed to create.',
     'remote_setup_failed_create' => 'Remote Setup failed to create',
     'remote_setup_failed_deleted' => 'Remote Setup failed to deleted',
     'remote_setup_failed_update' => 'Remote Setup failed to update',

@@ -29,6 +29,7 @@ return [
     'field_mapping_connection_created' => 'Field Mapping Connection successfully create!',
     'field_mapping_connection_deleted' => 'Field Mapping Connection successfully deleted!',
     'field_mapping_connection_updated' => 'Field Mapping Connection successfully updated!',
+    'generate_csv_created' => 'Generate csv successfully created!.',
     'remote_setup_created' => 'Remote Setup successfully created!',
     'remote_setup_deleted' => 'Remote Setup successfully deleted!',
     'remote_setup_updated' => 'Remote Setup successfully updated!',
