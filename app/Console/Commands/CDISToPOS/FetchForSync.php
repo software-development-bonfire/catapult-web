@@ -40,7 +40,7 @@ class FetchForSync extends Command
     {
         $syncService = app()->make(SyncService::class);
 
-        $this->line('Listening for scheduled tasks..');
+        $this->line('Syncing started..');
 
         while (true) {
             if (now()->startOfMinute()->is(now())) {
