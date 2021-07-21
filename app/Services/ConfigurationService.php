@@ -18,4 +18,9 @@ class ConfigurationService
         Configuration::find('pos_to_cdis_entry_limit')->update(['value' => $data['pos_to_cdis_entry_limit']]);        
         Configuration::find('cdis_to_pos_entry_limit')->update(['value' => $data['cdis_to_pos_entry_limit']]);        
     }
+
+    public function getAttributeValue($attribute)
+    {
+        return Configuration::query()->where('attribute', $attribute)->pluck('value')[0];
+    }
 }

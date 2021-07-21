@@ -42,4 +42,5 @@ return [
     'user_created' => 'User successfully created!',
     'user_deleted' => 'User successfully deleted!',
     'user_updated' => 'User successfully updated!',
+    'value_successfully_synced' => ':value successfully synced.',
 ];
