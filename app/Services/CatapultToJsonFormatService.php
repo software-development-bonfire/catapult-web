@@ -2,10 +2,8 @@
 
 namespace App\Services;
 
-
 class CatapultToJsonFormatService
 {
-
     /**
      * Update the specified resource in storage.
      *
@@ -76,68 +74,66 @@ class CatapultToJsonFormatService
                         'total' => $PM[0]['payment_method_total'],
                         'account_number' => $PM[0]['payment_method_account_number'],
                     ],
-                    "product" => [
-                        collect($PR)->map(function ($product) use ($PD, $AD) {
-                            return [
-                                'id' => $product['product_id'],
-                                'menu_code' => $product['product_menu_code'],
-                                'name' => $product['product_name'],
-                                'description' => $product['product_description'],
-                                'long_description' => $product['product_long_description'],
-                                'quantity' => $product['product_quantity'],
-                                'tax_percentage' => $product['product_tax_percentage'],
-                                'is_free' => $product['product_is_free'],
-                                'is_vatable' => $product['product_is_vatable'],
-                                'original_price' => $product['product_original_price'],
-                                'total_addon' => $product['product_total_addon'],
-                                'total_amount' => $product['product_total_amount'],
-                                'amount_discount' => $product['product_amount_discount'],
-                                'vatable_sales' => $product['product_vatable_sales'],
-                                'zero_rated_sales' => $product['product_zero_rated_sales'],
-                                'tax' => $product['product_tax'],
-                                'vat_exempt' => $product['product_vat_exempt'],
-                                'vat_deduct' => $product['product_vat_deduct'],
-                                'split_number' => $product['product_vat_deduct'],
-                                'order_type' => [
-                                    'id' => $product['order_type_id'],
-                                    'name' => $product['order_type_name']
-                                ],
-                                'category' => [
-                                    'id' => $product['category_id'],
-                                    'name' => $product['category_name']
-                                ],
-                                'addon' => [
-                                    collect($AD)->map(function ($addon) {
-                                        return [
-                                            'name' => $addon['addon_name'],
-                                            'quantity' => $addon['addon_quantity'],
-                                            'original_price' => $addon['addon_original_price'],
-                                            'price' => $addon['addon_price'],
-                                            'total_amount' => $addon['addon_total_amount'],
-                                        ];
-                                    })
-                                ],
-                                'discount' => collect($PD)->where('product_bid', $product['product_id'])
-                                ->map(function ($discount) use ($product) {
-                                        return [
-                                            'id' => isset($discount['discount_id']) ? $discount['discount_id'] : 0,
-                                            'mandated' => isset($discount['discount_mandated']) ? $discount['discount_mandated'] : 0,
-                                            'title' => isset($discount['discount_title']) ? $discount['discount_title'] : '""',
-                                            'total' => isset($discount['discount_total']) ? $discount['discount_total'] : '""',
-                                            'amount_discount' => isset($discount['discount_amount_discount']) ? $discount['discount_amount_discount'] : 0,
-                                            'vat_deduct' => isset($discount['discount_vat_deduct']) ? $discount['discount_vat_deduct'] : 0,
-                                            'vat_exempt' => isset($discount['discount_vat_exempt']) ? $discount['discount_vat_exempt'] : 0,
-                                        ];
-                                    }
-                                ),
-                                'price_override_details' => [
-                                    'price' => $product['price_override_details_price'],
-                                    'approved_by' => $product['price_override_details_approved_by'],
-                                    'approved_date' => $product['price_override_details_approved_date']
-                                ]
-                            ];
-                        })
-                    ]
+                    "product" => collect($PR)->map(function ($product) use ($PD, $AD) {
+                        return [
+                            'id' => $product['product_id'],
+                            'menu_code' => $product['product_menu_code'],
+                            'name' => $product['product_name'],
+                            'description' => $product['product_description'],
+                            'long_description' => $product['product_long_description'],
+                            'quantity' => $product['product_quantity'],
+                            'tax_percentage' => $product['product_tax_percentage'],
+                            'is_free' => $product['product_is_free'],
+                            'is_vatable' => $product['product_is_vatable'],
+                            'original_price' => $product['product_original_price'],
+                            'total_addon' => $product['product_total_addon'],
+                            'total_amount' => $product['product_total_amount'],
+                            'amount_discount' => $product['product_amount_discount'],
+                            'vatable_sales' => $product['product_vatable_sales'],
+                            'zero_rated_sales' => $product['product_zero_rated_sales'],
+                            'tax' => $product['product_tax'],
+                            'vat_exempt' => $product['product_vat_exempt'],
+                            'vat_deduct' => $product['product_vat_deduct'],
+                            'split_number' => $product['product_vat_deduct'],
+                            'order_type' => [
+                                'id' => $product['order_type_id'],
+                                'name' => $product['order_type_name']
+                            ],
+                            'category' => [
+                                'id' => $product['category_id'],
+                                'name' => $product['category_name']
+                            ],
+                            'addon' => [
+                                collect($AD)->map(function ($addon) {
+                                    return [
+                                        'name' => $addon['addon_name'],
+                                        'quantity' => $addon['addon_quantity'],
+                                        'original_price' => $addon['addon_original_price'],
+                                        'price' => $addon['addon_price'],
+                                        'total_amount' => $addon['addon_total_amount'],
+                                    ];
+                                })
+                            ],
+                            'discount' => collect($PD)->where('product_bid', $product['product_id'])
+                            ->map(function ($discount) use ($product) {
+                                    return [
+                                        'id' => isset($discount['discount_id']) ? $discount['discount_id'] : 0,
+                                        'mandated' => isset($discount['discount_mandated']) ? $discount['discount_mandated'] : 0,
+                                        'title' => isset($discount['discount_title']) ? $discount['discount_title'] : '""',
+                                        'total' => isset($discount['discount_total']) ? $discount['discount_total'] : '""',
+                                        'amount_discount' => isset($discount['discount_amount_discount']) ? $discount['discount_amount_discount'] : 0,
+                                        'vat_deduct' => isset($discount['discount_vat_deduct']) ? $discount['discount_vat_deduct'] : 0,
+                                        'vat_exempt' => isset($discount['discount_vat_exempt']) ? $discount['discount_vat_exempt'] : 0,
+                                    ];
+                                }
+                            ),
+                            'price_override_details' => [
+                                'price' => $product['price_override_details_price'],
+                                'approved_by' => $product['price_override_details_approved_by'],
+                                'approved_date' => $product['price_override_details_approved_date']
+                            ]
+                        ];
+                    })
                 ],
             ];
         })];
