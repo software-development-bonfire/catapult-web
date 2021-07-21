@@ -93,7 +93,7 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'mapping_type' => 'INT',
                 'file_name' => 'DR',
                 'default_value' => 0,
-                'column_name' => 'approver_id',
+                'column_name' => 'approver',
             ],
             [
                 'field_mapping_bid' => $field_map->bid,

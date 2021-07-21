@@ -117,8 +117,8 @@ class CatapultToJsonFormatService
                                         ];
                                     })
                                 ],
-                                'discount' => [
-                                    collect($PD)->map(function ($discount) {
+                                'discount' => collect($PD)->where('product_bid', $product['product_id'])
+                                ->map(function ($discount) use ($product) {
                                         return [
                                             'id' => isset($discount['discount_id']) ? $discount['discount_id'] : 0,
                                             'mandated' => isset($discount['discount_mandated']) ? $discount['discount_mandated'] : 0,
@@ -128,8 +128,8 @@ class CatapultToJsonFormatService
                                             'vat_deduct' => isset($discount['discount_vat_deduct']) ? $discount['discount_vat_deduct'] : 0,
                                             'vat_exempt' => isset($discount['discount_vat_exempt']) ? $discount['discount_vat_exempt'] : 0,
                                         ];
-                                    })
-                                ],
+                                    }
+                                ),
                                 'price_override_details' => [
                                     'price' => $product['price_override_details_price'],
                                     'approved_by' => $product['price_override_details_approved_by'],

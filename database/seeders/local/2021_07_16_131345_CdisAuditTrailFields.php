@@ -38,12 +38,12 @@ class CdisAuditTrailFields extends MigratableSeeder
             [
                 'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
-                'field' => 'terminal_no',
+                'field' => 'terminal_number',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'AT',
                 'default_value' => '""',
-                'column_name' => 'terminal_no',
+                'column_name' => 'terminal_number',
             ],
             [
                 'field_mapping_bid' => $field_map->bid,
