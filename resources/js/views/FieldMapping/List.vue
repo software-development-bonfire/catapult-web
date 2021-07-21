@@ -483,7 +483,7 @@
                 this.dialog.message = this.$t('message.do_you_want_to_remove_this_data');
                 this.dialog.ok.function = () => {
 
-                    axios.delete(`${config}/field-mapping/detail/list/${data.values.api_setup_bid}`)
+                    axios.delete(`${config}/field-mapping/detail/list/${data.values.bid}`)
                         .then(response => {
                             this.paginate();
 
