@@ -5,7 +5,7 @@ namespace App\Entities;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class UnitOfMeasurement extends Model
+class CDISUnitOfMeasurement extends Model
 {
     use SoftDeletes;
 
