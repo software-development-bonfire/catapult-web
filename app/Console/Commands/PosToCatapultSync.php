@@ -47,7 +47,8 @@ class PosToCatapultSync extends Command implements ShouldQueue
      */
     public function handle()
     {
-        try {
+        while (true) {
+            $this->line('Syncing started..');
             $remote_setup = RemoteSetup::where('status', Status::ACTIVE)->first();
         
             if ($remote_setup) {
@@ -98,19 +99,19 @@ class PosToCatapultSync extends Command implements ShouldQueue
             ];
             
             $disk = Storage::disk(Disk::FTP_POST_TO_CDIS);
-
+    
             foreach ($endpoints as $endpoint) {
                 $directories = $disk->allDirectories($endpoint['source_path']);
-
+    
                 foreach ($directories as $directory) {
                     $file_count = substr($directory, -1);
-
+    
                     $files = $disk->allFiles($directory);
-
+    
                     if (count($files) == $file_count) {
                         $return = $this->Collection($files, $disk, $endpoint, $remote_setup);
                     }
-
+    
                     $local = Storage::disk(Disk::LOCAL_POS_TO_CDIS)->allFiles($return);
                     if (count($files) == count($local)) {
                         $disk->move($endpoint['source_path'].'/'.$return, $endpoint['move_to'].'/'.$return);
@@ -118,9 +119,8 @@ class PosToCatapultSync extends Command implements ShouldQueue
                 }
             }
 
-            return ['message' => 'success'];
-        } catch (\Throwable $th) {
-            return ['message' => $th->getMessage()];
+            $this->info('Sync successful');
+            sleep(10);
         }
     }
 
