@@ -13,7 +13,7 @@ class CatapultToJsonFormatService
      * @param Array  $PM
      * @param Array  $PD
      * @param Array  $AD
-     * @return \Illuminate\Http\Response
+     * @return object
      */
     public function transaction($TH, $TD, $PR, $PM, $PD, $AD)
     {
