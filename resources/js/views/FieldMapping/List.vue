@@ -444,14 +444,19 @@
                     }
                 }
 
-                axios.get(`${config}/field-mapping/detail/generate-csv`, {
-                    params: payload
-                })
+                axios.get(`${config}/field-mapping/detail/generate-csv`, { params: payload })
                     .then(response => {
                         var file_path = response.data.data;
                         file_path.forEach(path => {
                             this.downloadCSV(path);
                         })
+                    }).catch(error => {
+                        this.dialog.visible = true;
+                        this.dialog.status = 'error';
+                        this.dialog.message = this.$t('error.generate_csv_failed_create');
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                        };
                     })
             },
 
@@ -468,7 +473,7 @@
                         document.body.appendChild(fileLink);
 
                         fileLink.click();
-                    });
+                    })
             },
 
             openDetail(data) {

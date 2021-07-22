@@ -326,6 +326,24 @@
       ),
     ),
   ),
+  'endpoint' => 
+  array (
+    'cdis' => 
+    array (
+      'domain' => 'http://localhost:8001',
+      'for' => 
+      array (
+        'catapult' => 
+        array (
+          'v1' => 
+          array (
+            'forSync' => '/api/catapult/v1/for-sync',
+            'deleteSynced' => '/api/catapult/v1/delete-synced',
+          ),
+        ),
+      ),
+    ),
+  ),
   'excel' => 
   array (
     'exports' => 
