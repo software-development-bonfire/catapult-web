@@ -4,9 +4,8 @@ namespace App\Services\CDIS;
 
 use App\Entities\CDISSync;
 use App\Jobs\CDIS\DeleteSynced;
-use App\Services\ConfigurationService;
+use App\Jobs\CDIS\Sync;
 use App\Traits\DatabaseTransaction;
-use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Support\Str;
 
@@ -15,7 +14,7 @@ class SyncService
     use DatabaseTransaction;
 
     /**
-     * For sync.
+     * Get for sync bids.
      *
      * @param array $data
      * @return \Illuminate\Http\Response
@@ -23,7 +22,76 @@ class SyncService
     public function forSync()
     {
         return $this->transaction(function () {
-            $bodyContent = $this->getForSync();
+            $client = [
+                'verify' => false,
+                'http_errors' => false,
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json'
+            ];
+
+            $uri = config('endpoint.cdis.domain').''.config('endpoint.cdis.for.catapult.v1.forSync');
+            $limit = config('sync.cdis.to_catapult.limit');
+
+            $options = [
+                'json' => ['sender_details' => $this->getSenderDetails(), 'limit' => $limit],
+                'headers' => [
+                    'Accept' => 'application/json',
+                ]
+            ];
+
+            $bodyContent = $this->request($uri, $options, $client);
+
+            $count = $bodyContent->data->count;
+            $total = $bodyContent->data->total;
+            $bids = $bodyContent->data->bids;
+
+            if ($count == 0) {
+                return (object) [
+                    'count' => $count,
+                    'total' => $total
+                ];
+            }
+
+            $bidsChunks = array_chunk($bids, $limit);
+
+            foreach ($bidsChunks as $bidsChunk) {
+                Sync::dispatch($bidsChunk);
+            }
+
+            return (object) [
+                'count' => $count,
+                'total' => $total,
+                'bidsChunks' => $bidsChunks,
+            ];
+        });
+    }
+
+    /**
+     * Sync details and data.
+     *
+     * @param array $data
+     * @return \Illuminate\Http\Response
+     */
+    public function sync($bids = [])
+    {
+        return $this->transaction(function () use ($bids) {
+            $client = [
+                'verify' => false,
+                'http_errors' => false,
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json'
+            ];
+
+            $uri = config('endpoint.cdis.domain').''.config('endpoint.cdis.for.catapult.v1.sync');
+
+            $options = [
+                'json' => ['sender_details' => $this->getSenderDetails(), 'bids' => $bids],
+                'headers' => [
+                    'Accept' => 'application/json',
+                ]
+            ];
+
+            $bodyContent = $this->request($uri, $options, $client);
 
             $count = $bodyContent->data->count;
             $total = $bodyContent->data->total;
@@ -99,39 +167,23 @@ class SyncService
         });
     }
 
-    public function getForSync()
+    public function request($uri, $options, $clientConfig, $method = 'POST')
     {
+        $client = new Client($clientConfig);
+        $response = $client->request($method, $uri, $options);
+
+        return json_decode($response->getBody()->getContents());
+    }
+
+    private function getSenderDetails() {
 //        $configuration = app()->make(ConfigurationService::class);
 
-        $senderDetails = [
+        return [
 //            'client_id' => $configuration->getAttributeValue('client_id'),
 //            'product_key' => $configuration->getAttributeValue('product_key'),
 //            'machine_uuid' => $configuration->getAttributeValue('machine_uuid'),
 //            'system_datetime' => Carbon::now()->format('Y-m-d h:i:s'),
         ];
-
-        $client = new Client([
-            'verify' => false,
-            'http_errors' => false,
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/json'
-        ]);
-
-        $options = [
-            'json' => ['sender_details' => $senderDetails, 'chunk' => 10],
-            'headers' => [
-//                'Authorization' => 'Bearer '. $configuration->getAttributeValue('bearer_token'),
-                'Accept' => 'application/json',
-            ]
-        ];
-
-        $uri = config('endpoint.cdis.domain').''.config('endpoint.cdis.for.catapult.v1.forSync');
-
-        $response = $client->request('POST', $uri, $options);
-
-        $responseBodyContent = json_decode($response->getBody()->getContents());
-
-        return $responseBodyContent;
     }
 }
 

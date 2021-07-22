@@ -4,6 +4,7 @@ namespace App\Console\Commands\CDISToPOS;
 
 use App\Services\CDIS\SyncService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
 
 class FetchForSync extends Command
 {
@@ -38,31 +39,38 @@ class FetchForSync extends Command
      */
     public function handle()
     {
+        $interval = config('sync.cdis.to_catapult.interval');
         $syncService = app()->make(SyncService::class);
 
         $this->line('Syncing started..');
+        $this->line('');
 
-        while (true) {
-            if (now()->startOfMinute()->is(now())) {
-                $forSync = $syncService->forSync();
+        do {
+            $this->line('Checking for sync...');
+            $forSync = $syncService->forSync();
 
-                if (! isset($forSync->bids)) {
-                    $this->info('Count: '.$forSync->count);
-                    $this->info('Total: '.$forSync->total);
-                    $this->info('');
-                    $this->info('Note: '. __('message.no_data_to_sync'));
-                } else if (isset($forSync->bids) && $forSync->bids > 0) {
-                    $this->info('Count: '.$forSync->count);
-                    $this->info('Total: '.$forSync->total);
-                    $this->info('');
+            if (! isset($forSync->bidsChunks)) {
+                $this->info('Count: '.$forSync->count);
+                $this->info('Total: '.$forSync->total);
+                $this->info('Note: '. __('message.no_data_to_sync'));
+            } else if (isset($forSync->bidsChunks) && $forSync->bidsChunks > 0) {
+                $this->info('Count: '.$forSync->count);
+                $this->info('Total: '.$forSync->total);
 
-                    foreach ($forSync->bids as $bid) {
-                        $this->info(__('success.value_successfully_synced', ['value' => "[".$bid."]"]));
+                $this->info('---------------------------------------');
+                foreach ($forSync->bidsChunks as $bidsChunk) {
+                    foreach ($bidsChunk as $bid) {
+                        $this->info(__('success.value_queued_to_sync', ['value' => "[".$bid."]"]). ' |');
                     }
+
                 }
+                $this->info('---------------------------------------');
             }
 
-            sleep(1);
+            $this->info('');
+
+            sleep($interval);
         }
+        while (true);
     }
 }
