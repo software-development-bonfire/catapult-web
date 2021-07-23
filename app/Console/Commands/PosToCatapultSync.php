@@ -111,10 +111,12 @@ class PosToCatapultSync extends Command implements ShouldQueue
                     if (count($files) == $file_count) {
                         $return = $this->Collection($files, $disk, $endpoint, $remote_setup);
                     }
-    
-                    $local = Storage::disk(Disk::LOCAL_POS_TO_CDIS)->allFiles($return);
-                    if (count($files) == count($local)) {
-                        $disk->move($endpoint['source_path'].'/'.$return, $endpoint['move_to'].'/'.$return);
+
+                    if ($return) {
+                        $local = Storage::disk(Disk::LOCAL_POS_TO_CDIS)->allFiles($return);
+                        if (count($files) == count($local)) {
+                            $disk->move($endpoint['source_path'].'/'.$return, $endpoint['move_to'].'/'.$return);
+                        }
                     }
                 }
             }

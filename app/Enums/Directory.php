@@ -44,18 +44,18 @@ final class Directory extends Enum
     const CONVERTED_CASH_DRAWER_FAILED_SYNC = "/POS to CDIS/Converted/Cash Drawer/Failed Sync";
 
     
-    const FTP_TRANSACTION_TO_FETCH = "/Transaction/To fetch";
-    const FTP_TRANSACTION_FETCHED = "/Transaction/Fetched";
+    const FTP_TRANSACTION_TO_FETCH = "/POS to CDIS/Transaction/To fetch";
+    const FTP_TRANSACTION_FETCHED = "/POS to CDIS/Transaction/Fetched";
 
-    const FTP_ZREAD_TO_FETCH = "/Zread/To fetch";
-    const FTP_ZREAD_FETCHED = "/Zread/Fetched";
+    const FTP_ZREAD_TO_FETCH = "/POS to CDIS/Zread/To fetch";
+    const FTP_ZREAD_FETCHED = "/POS to CDIS/Zread/Fetched";
 
-    const FTP_AUDIT_TRAIL_TO_FETCH = "/Audit Trail/To fetch";
-    const FTP_AUDIT_TRAIL_FETCHED = "/Audit Trail/Fetched";
+    const FTP_AUDIT_TRAIL_TO_FETCH = "/POS to CDIS/Audit Trail/To fetch";
+    const FTP_AUDIT_TRAIL_FETCHED = "/POS to CDIS/Audit Trail/Fetched";
 
-    const FTP_CASH_BREAKDOWN_TO_FETCH = "/Cash Breakdown/To fetch";
-    const FTP_CASH_BREAKDOWN_FETCHED = "/Cash Breakdown/Fetched";
+    const FTP_CASH_BREAKDOWN_TO_FETCH = "/POS to CDIS/Cash Breakdown/To fetch";
+    const FTP_CASH_BREAKDOWN_FETCHED = "/POS to CDIS/Cash Breakdown/Fetched";
 
-    const FTP_CASH_DRAWER_TO_FETCH = "/Cash Drawer/To fetch";
-    const FTP_CASH_DRAWER_FETCHED = "/Cash Drawer/Fetched";
+    const FTP_CASH_DRAWER_TO_FETCH = "/POS to CDIS/Cash Drawer/To fetch";
+    const FTP_CASH_DRAWER_FETCHED = "/POS to CDIS/Cash Drawer/Fetched";
 }
