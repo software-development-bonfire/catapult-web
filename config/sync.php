@@ -1,0 +1,10 @@
+<?php
+
+return [
+    'cdis' => [
+        'to_catapult' => [
+            'limit' => 60,
+            'interval' => 300
+        ]
+    ],
+];
