@@ -104,7 +104,7 @@ class CatapultToJsonFormat extends Command
                 $directories = $localDisk->directories();
 
                 $result = $this->process($directories, $localDisk, $endpoint);
-                // dd(json_encode($result));
+
                 $TH = []; $TH_success = false;
                 $TD = []; $TD_success = false;
                 $PR = []; $PR_success = false;
@@ -219,6 +219,13 @@ class CatapultToJsonFormat extends Command
         }
     }
 
+    /**
+     *
+     * @param mixed $localDisk
+     * @param mixed $endpoint
+     * @param string $directory
+     * @return mixed
+     */
     public function process($directories, $localDisk, $endpoint)
     {
         $allData = array();
@@ -350,7 +357,7 @@ class CatapultToJsonFormat extends Command
             }
     
             $mapped = $this->dataMapped($pos_data, $data_map, $field_mapping_list->dataMappings, $endpoint, $filename_identifier, $filename);
-    
+
             $rules = [];
             foreach ($validate as $key => $valid) {
                 $field = $validate[$key]['field'];
@@ -363,7 +370,7 @@ class CatapultToJsonFormat extends Command
             }
     
             $rules = call_user_func_array("array_merge", $rules);
-    
+
             $validation_message = [];
             if ($mapped) {
                 foreach ($mapped as $key => $data) {
@@ -387,6 +394,7 @@ class CatapultToJsonFormat extends Command
     
                 return $result;
             }
+
             if ($validation_message) {
                 $validation_message = json_decode(json_encode($validation_message));
     
@@ -401,7 +409,7 @@ class CatapultToJsonFormat extends Command
             } else {
                 $validated = true;
             }
-    
+
             if ($validated) {
                 $result = new stdClass;
                 $result->filename_identifier = $filename_identifier;
@@ -410,7 +418,11 @@ class CatapultToJsonFormat extends Command
     
                 return $result;
             } else {
-                return false;
+                $result = new stdClass;
+                $result->filename_identifier = $filename_identifier;
+                $result->data = false;
+                $result->success = false;
+                return $result;
             }
             
         } else {

@@ -119,7 +119,11 @@ class PosToCatapultSync extends Command implements ShouldQueue
                 }
             }
 
-            $this->info('Sync successful');
+            if ($directories) {
+                $this->info('Sync successful');
+            } else {
+                $this->info('No file to be sync');
+            }
             sleep(10);
         }
     }
