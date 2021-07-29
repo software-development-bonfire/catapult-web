@@ -26,11 +26,19 @@
                     <td>
                         <select class="form-control" v-model="form.values.api_endpoint">
                             <template v-if="form.values.mapping_type === 1">
-                                <option :value="label.product">{{ $t('label.product') }}</option>
+                                <option :value="label.product_pricing_type">{{ $t('label.product_pricing_type') }}</option>
                                 <option :value="label.brand">{{ $t('label.brand') }}</option>
+                                <option :value="label.branch">{{ $t('label.branch') }}</option>
                                 <option :value="label.category">{{ $t('label.category') }}</option>
                                 <option :value="label.vendor">{{ $t('label.vendor') }}</option>
                                 <option :value="label.uom">{{ $t('label.uom') }}</option>
+                                <option :value="label.product_branch_availability">{{ $t('label.product_branch_availability') }}</option>
+                                <option :value="label.product_branch_price">{{ $t('label.product_branch_price') }}</option>
+                                <option :value="label.product_head">{{ $t('label.product_head') }}</option>
+                                <option :value="label.product_structure">{{ $t('label.product_structure') }}</option>
+                                <option :value="label.product_structure_detail">{{ $t('label.product_structure_detail') }}</option>
+                                <option :value="label.product_uom_packaging">{{ $t('label.product_uom_packaging') }}</option>
+                                <option :value="label.product_package_vendor">{{ $t('label.product_package_vendor') }}</option>
                             </template>
                             <template v-else>
                                 <option :value="label.transactions">{{ $t('label.transactions') }}</option>
@@ -457,7 +465,7 @@
                 },
                 presets: [],
                 label: {
-                    product: this.$t('label.product'),
+                    product_pricing_type: this.$t('label.product_pricing_type'),
                     brand: this.$t('label.brand'),
                     category: this.$t('label.category'),
                     vendor: this.$t('label.vendor'),
@@ -467,6 +475,12 @@
                     audit_trail: this.$t('label.audit_trail'),
                     cash_breakdown: this.$t('label.cash_breakdown'),
                     cash_drawer: this.$t('label.cash_drawer'),
+                    product_branch_availability: this.$t('label.product_branch_availability'),
+                    product_branch_price: this.$t('label.product_branch_price'),
+                    product_structure: this.$t('label.product_structure'),
+                    product_structure_detail: this.$t('label.product_structure_detail'),
+                    product_uom_packaging: this.$t('label.product_uom_packaging'),
+                    product_package_vendor: this.$t('label.product_package_vendor'),
                 }
             }
         },

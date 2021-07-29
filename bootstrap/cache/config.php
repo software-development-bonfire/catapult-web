@@ -494,7 +494,7 @@
         'username' => '',
         'password' => '',
         'port' => 21,
-        'root' => '/POS to CDIS',
+        'root' => '/',
         'timeout' => 60,
       ),
     ),

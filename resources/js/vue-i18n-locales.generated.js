@@ -62,6 +62,7 @@ export default {
             "batch_syncing": "Batch Syncing",
             "batch_syncing_example": "(Ex. 5mins interval = 60 limit, 10mins interval = 120 limit and so on.)",
             "batch_syncing_note": "NOTE: The entered value will apply on the 5 mins Interval setting ONLY. Limit for the other intervals will be automatically determined by the system multiplier",
+            "branch": "Branch",
             "brand": "Brand",
             "cash_breakdown": "Cash Breakdown",
             "cash_breakdown_head": "Cash Breakdown Head",
@@ -150,6 +151,14 @@ export default {
             "product": "Product",
             "product_key": "Product Key",
             "products": "Products",
+            "product_branch_availability": "Product Branch Availability",
+            "product_branch_price": "Product Branch Price",
+            "product_head": "Product Head",
+            "product_structure": "Product Structure",
+            "product_structure_detail": "Product Structure Detail",
+            "product_uom_packaging": "Product UOM Packaging",
+            "product_package_vendor": "Product Package Vendor",
+            "product_pricing_type": "Product Pricing Type",
             "regular_discount": "Regular Discount",
             "remote_db_setup": "Remote DB Setup",
             "remote_host": "Remote Host",
@@ -226,6 +235,7 @@ export default {
             "error_logs_instructions_2": "You may check where the errors occured on the \"View file errors\" button.",
             "error_logs_instructions_3": "Once correction has been made on the CSV file, reupload the file to its corresponding row.",
             "make_sure_email_active_valid": "Make sure that the e-mail address is active and valid.",
+            "no_data_to_sync": "No data to sync.",
             "no_results_found": "No results found.",
             "the_cdis_field_must_be_lowercase": "The CDIS field must be lowercase.",
             "unauthorized": "Unauthorized"
@@ -277,7 +287,8 @@ export default {
             "sync_interval_setting_updated": "Sync Interval Setting successfully updated!",
             "user_created": "User successfully created!",
             "user_deleted": "User successfully deleted!",
-            "user_updated": "User successfully updated!"
+            "user_updated": "User successfully updated!",
+            "value_successfully_synced": "{value} successfully synced."
         },
         "validation": {
             "accepted": "The {attribute} must be accepted.",
