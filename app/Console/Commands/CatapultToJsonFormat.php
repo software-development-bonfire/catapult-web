@@ -210,7 +210,7 @@ class CatapultToJsonFormat extends Command
                         app()['config']->set('filesystems.disks.'.Disk::LOCAL_POS_TO_CDIS.'.root', public_path($endpoint['converted']));
                         Storage::disk(Disk::LOCAL_POS_TO_CDIS)->put($data['directory'].'.txt', json_encode($value));
 
-                        $this->info('Conversion successful');
+                        $this->info(Lang::get('conversion_successful'));
                     }
                 }
             }

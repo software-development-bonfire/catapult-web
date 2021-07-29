@@ -11,4 +11,12 @@ final class ApiEndpoint extends Enum
     const AUDIT_TRAIL = "Audit Trail";
     const CASH_BREAKDOWN = "Cash Breakdown";
     const CASH_DRAWER = "Cash Drawer";
+    const VENDOR = "Vendor";
+    const PRODUCT = "Product";
+    const UOM = "UOM";
+    const CATEGORY = "Category";
+    const BRAND = "Brand";
+    const BRANCH = "Branch";
+    const PRODUCT_STRUCTURE = "Product Structure";
+    const PRODUCT_PRICING_TYPE = "Product Pricing Type";
 }
