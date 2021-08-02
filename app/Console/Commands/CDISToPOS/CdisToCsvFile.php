@@ -104,7 +104,7 @@ class CdisToCsvFile extends Command
                 ],
                 [
                     'name' => ApiEndpoint::UOM,
-                    'table' => 'uom',
+                    'table' => 'unit_of_measurement',
                     'abv' => 'UOM_',
                     'ftp_path' => '/CDIS to POS/UOM/',
                 ],
