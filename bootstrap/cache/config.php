@@ -338,6 +338,7 @@
           'v1' => 
           array (
             'forSync' => '/api/catapult/v1/for-sync',
+            'sync' => '/api/catapult/v1/sync',
             'deleteSynced' => '/api/catapult/v1/delete-synced',
           ),
         ),
@@ -702,6 +703,17 @@
     'secure' => false,
     'http_only' => true,
     'same_site' => NULL,
+  ),
+  'sync' => 
+  array (
+    'cdis' => 
+    array (
+      'to_catapult' => 
+      array (
+        'limit' => 60,
+        'interval' => 300,
+      ),
+    ),
   ),
   'view' => 
   array (

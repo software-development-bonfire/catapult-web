@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\CatapultToJsonFormatService;
+use Illuminate\Support\Facades\Lang;
 use stdClass;
 
 class CatapultToJsonFormat extends Command
@@ -243,16 +244,11 @@ class CatapultToJsonFormat extends Command
 
                     $extension = substr($file, strrpos($file, '.') + 1);
 
-                    switch($extension) {
-                    case 'csv':
+                    if ($extension == "csv") {
                         $result = $this->ConvertToJson($filename, $directory, $endpoint);
                         $data[] = $result;
-                        break;
-                    case 'xlsx':
-                        //xlsx
-                        break;
-                    default:
-                        dd($extension);
+                    } else {
+                        $this->warn('File not supported.');
                     }
                 }
                 $allData[] = ["data" => $data, "directory" => $directory];

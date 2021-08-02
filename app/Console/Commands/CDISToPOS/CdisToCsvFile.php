@@ -203,7 +203,7 @@ class CdisToCsvFile extends Command
             }
     
             if(! $mapped || ! $header) {
-                $this->warn(Lang::get('no_field_mapping_detected'));
+                $this->warn(Lang::get('error.no_field_mapping_detected'));
                 $this->createError($endpoint);
                 return false;
             }
@@ -217,7 +217,7 @@ class CdisToCsvFile extends Command
     
             $isConverted = $this->cdisToCsvFileService->saveToFTP($counter, $header, $mapped, $cdisSync, $endpoint, $action, $disk);
             if ($isConverted === true) {
-                $this->info(Lang::get('no_field_mapping_detected'));
+                $this->info(Lang::get('error.no_field_mapping_detected'));
                 foreach ($cdisData as $sync) {
                     CDISSync::find($sync->bid)->delete();
                 }
@@ -243,11 +243,10 @@ class CdisToCsvFile extends Command
             $entityName = str_replace('_', '', Str::title($sync->table_name));
             $entity = "App\\Entities\\CDIS".$entityName;
             $dataTable = $entity::where('bid', $sync->table_bid)->first();
-
             $fieldMapping = FieldMappingList::with('dataMappings')
                 ->where([
                     'type' => MappingType::CDIS_TO_POS,
-                    'api_endpoint' => $entityName,
+                    'api_endpoint' => str_replace('_', ' ', Str::title($sync->table_name)),
                     'status' => Status::ACTIVE
                 ])->first();
 
@@ -268,7 +267,7 @@ class CdisToCsvFile extends Command
                 }
 
             } else {
-                $this->warn(Lang::get('no_field_mapping_detected'));
+                $this->warn(Lang::get('error.no_field_mapping_detected'));
                 $this->createError($endpoint);
                 return false;
             }

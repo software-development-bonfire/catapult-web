@@ -168,7 +168,7 @@ return [
     'transaction_detail' => 'Transaction Detail',
     'transaction_head' => 'Transaction Head',
     'transactions' => 'Transactions',
-    'uom' => 'UOM',
+    'unit_of_measurement' => 'Unit Of Measurement',
     'upload_csv' => 'Upload CSV',
     'user_account' => 'User Account',
     'user_account_detail' => 'User Account Detail',
