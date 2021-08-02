@@ -48,16 +48,6 @@ class CdisVendorFields extends MigratableSeeder
             [
                 'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
-                'field' => 'name',
-                'description' => null,
-                'mapping_type' => 'VARCHAR',
-                'file_name' => '""',
-                'default_value' => '""',
-                'column_name' => 'name',
-            ],
-            [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
                 'field' => 'description',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
