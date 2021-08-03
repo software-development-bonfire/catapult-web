@@ -5,7 +5,7 @@ use App\Entities\FieldMappingDetail;
 use Eighty8\LaravelSeeder\Migration\MigratableSeeder;
 use Eighty8\LaravelSeeder\Repository\DisableForeignKeysTrait;
 
-class CdisCategoryFields extends MigratableSeeder
+class CdisProductCategoryFields extends MigratableSeeder
 {
     use DisableForeignKeysTrait;
 
@@ -16,8 +16,8 @@ class CdisCategoryFields extends MigratableSeeder
     {
         $productPricingType = [
             'type' => '1',
-            'api_version_name' => 'Category default',
-            'api_endpoint' => 'Category',
+            'api_version_name' => 'Product Category default',
+            'api_endpoint' => 'Product Category',
             'status' => 1,
             'created_by' => 1,
         ];

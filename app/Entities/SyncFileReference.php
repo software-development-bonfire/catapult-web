@@ -31,8 +31,8 @@ class SyncFileReference extends Model implements Transformable
         'filename',
         'extension',
         'ftp_path',
+        'counter',
         'last_modified'
-
     ];
 
 }

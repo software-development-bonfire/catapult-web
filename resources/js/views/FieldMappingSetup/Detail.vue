@@ -29,9 +29,9 @@
                                 <option :value="label.product_pricing_type">{{ $t('label.product_pricing_type') }}</option>
                                 <option :value="label.brand">{{ $t('label.brand') }}</option>
                                 <option :value="label.branch">{{ $t('label.branch') }}</option>
-                                <option :value="label.category">{{ $t('label.category') }}</option>
                                 <option :value="label.vendor">{{ $t('label.vendor') }}</option>
                                 <option :value="label.unit_of_measurement">{{ $t('label.unit_of_measurement') }}</option>
+                                <option :value="label.product_category">{{ $t('label.product_category') }}</option>
                                 <option :value="label.product_branch_availability">{{ $t('label.product_branch_availability') }}</option>
                                 <option :value="label.product_branch_price">{{ $t('label.product_branch_price') }}</option>
                                 <option :value="label.product_head">{{ $t('label.product_head') }}</option>
@@ -467,7 +467,7 @@
                 label: {
                     product_pricing_type: this.$t('label.product_pricing_type'),
                     brand: this.$t('label.brand'),
-                    category: this.$t('label.category'),
+                    product_category: this.$t('label.product_category'),
                     vendor: this.$t('label.vendor'),
                     unit_of_measurement: this.$t('label.unit_of_measurement'),
                     transactions: this.$t('label.transactions'),
