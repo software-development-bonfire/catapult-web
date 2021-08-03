@@ -4,7 +4,7 @@ namespace App\Entities;
 
 use Illuminate\Database\Eloquent\Model;
 
-class VendorBranch extends Model
+class CDISVendorBranch extends Model
 {
     protected $table = 'cdis_vendor_branch';
 
