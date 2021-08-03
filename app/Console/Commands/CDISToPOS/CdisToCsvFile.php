@@ -115,6 +115,12 @@ class CdisToCsvFile extends Command
                     'ftp_path' => '/CDIS to POS/Vendor/',
                 ],
                 [
+                    'name' => ApiEndpoint::VENDOR_BRANCH,
+                    'table' => 'vendor_branch',
+                    'abv' => 'VN_',
+                    'ftp_path' => '/CDIS to POS/Vendor/',
+                ],
+                [
                     'name' => ApiEndpoint::PRODUCT_STRUCTURE,
                     'table' => 'product_structure',
                     'abv' => 'PS_',
@@ -141,7 +147,7 @@ class CdisToCsvFile extends Command
                 }
                 $this->process($endpointMap[0], $cdisSync, $disk);
             } else {
-                $this->info('No file to be sync.');
+                $this->info(Lang::get('message.no_data_to_sync'));
             }
             
             sleep(5);
@@ -207,7 +213,7 @@ class CdisToCsvFile extends Command
                 $this->createError($endpoint);
                 return false;
             }
-    
+
             $entryCounter = EntryCounter::where('mapping_type', MappingType::CDIS_TO_POS)
                 ->whereDate('created_at', DB::raw('CURDATE()'))
                 ->orderBy('created_at', 'DESC')
@@ -217,14 +223,14 @@ class CdisToCsvFile extends Command
     
             $isConverted = $this->cdisToCsvFileService->saveToFTP($counter, $header, $mapped, $cdisSync, $endpoint, $action, $disk);
             if ($isConverted === true) {
-                $this->info(Lang::get('error.no_field_mapping_detected'));
+                $this->info(Lang::get('error.conversion_successful'));
                 foreach ($cdisData as $sync) {
                     CDISSync::find($sync->bid)->delete();
                 }
             } else if ($isConverted === "limit") {
-                $this->warn(Lang::get('entry_has_reach_the_limit'));
+                $this->warn(Lang::get('error.entry_has_reach_the_limit'));
             } else {
-                $this->warn(Lang::get('conversion_failed'));
+                $this->warn(Lang::get('error.conversion_failed'));
             }
         }
     }
@@ -242,7 +248,7 @@ class CdisToCsvFile extends Command
         foreach ((array) json_decode($cdisData) as $key => $sync) {
             $entityName = str_replace('_', '', Str::title($sync->table_name));
             $entity = "App\\Entities\\CDIS".$entityName;
-            $dataTable = $entity::where('bid', $sync->table_bid)->first();
+            $dataTable = $entity::withTrashed()->where('bid', $sync->table_bid)->first();
             $fieldMapping = FieldMappingList::with('dataMappings')
                 ->where([
                     'type' => MappingType::CDIS_TO_POS,
@@ -311,7 +317,10 @@ class CdisToCsvFile extends Command
             $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
         } else if ($endpoint['name'] == ApiEndpoint::PRODUCT_STRUCTURE && count($cdisData) == EntryLevel::PRODUCT_STRUCTURE) {
             $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
-        } else if ($endpoint['name'] == ApiEndpoint::VENDOR && count($cdisData) == EntryLevel::VENDOR) {
+        } else if (($endpoint['name'] == ApiEndpoint::VENDOR 
+            || $endpoint['name'] == ApiEndpoint::VENDOR_BRANCH)
+            && count($cdisData) == EntryLevel::VENDOR) {
+
             $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
         } else {
             return;
@@ -346,11 +355,11 @@ class CdisToCsvFile extends Command
             $isConverted = $this->cdisToCsvFileService->saveToFTPGroup($header, $mapped, $cdisSync, $endpoint, $action, $disk, $cdisData);
             
             if ($isConverted === true) {
-                $this->info(Lang::get('conversion_successful'));
+                $this->info(Lang::get('message.conversion_successful'));
             } else if ($isConverted === "limit") {
-                $this->warn(Lang::get('entry_has_reach_the_limit'));
+                $this->warn(Lang::get('error.entry_has_reach_the_limit'));
             } else if ($isConverted === false){
-                $this->warn('Conversion Failed.');
+                $this->warn(Lang::get('error.conversion_failed'));
             }
         } else {
             return;
@@ -372,7 +381,7 @@ class CdisToCsvFile extends Command
             $entityName = str_replace('_', '', Str::title($data->table_name));
             $apiEndpoint = str_replace('_', ' ', Str::title($data->table_name));
             $entity = "App\\Entities\\CDIS".$entityName;
-            $dataTable = $entity::where('bid', $data->table_bid)->first();
+            $dataTable = $entity::withTrashed()->where('bid', $data->table_bid)->first();
             // dd($entityName, $apiEndpoint, $entity, $dataTable);
 
             $fieldMapping = FieldMappingList::with('dataMappings')
@@ -398,7 +407,7 @@ class CdisToCsvFile extends Command
             }
                 
             } else {
-                $this->warn('No field mapping detected');
+                $this->warn(Lang::get('error.no_field_mapping_detected'));
                 $this->createError($endpoint);
                 return false;
             }
