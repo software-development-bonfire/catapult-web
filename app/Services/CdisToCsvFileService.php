@@ -65,7 +65,7 @@ class CdisToCsvFileService
      */
     public function saveToFTPGroup($headers, $mapped, $cdisSync, $endpoint, $action, $disk, $cdisData)
     {
-        $folderCounter = FolderCounter::where(['mapping_type' => MappingType::CDIS_TO_POS, 'branch_bid' => $cdisSync->branch_bid])
+        $folderCounter = FolderCounter::where(['mapping_type' => MappingType::CDIS_TO_POS])
             ->whereDate('created_at', DB::raw('CURDATE()'))
             ->orderBy('created_at', 'DESC')
             ->first();
@@ -121,6 +121,34 @@ class CdisToCsvFileService
                     $prefix = "PV_";
                 } else {
                     $prefix = "PVC_";
+                }
+
+                $converted = Excel::store(
+                    new CDISDataToCSV($header, [$mapped[$key]]),
+                    $endpoint['ftp_path'].$cdisSync->branch_bid.'/'.$action.$endpoint['abv'].now()->format('mdy').'_'.$fCount.'/'.$prefix.now()->format('mdy').'_'.$counter.'.csv',
+                    $disk);
+
+                if ($converted == true) {
+                    CDISSync::find($cdisData[$key]->bid)->delete();
+                    EntryCounter::create([
+                        'mapping_type' => MappingType::CDIS_TO_POS,
+                        'counter' => $counter,
+                    ]);
+                }
+            }
+        } else if ($endpoint['name'] == ApiEndpoint::VENDOR) {
+            foreach ($headers as $key => $header) {
+                $entryCounter = EntryCounter::where('mapping_type', MappingType::CDIS_TO_POS)
+                    ->whereDate('created_at', DB::raw('CURDATE()'))
+                    ->orderBy('created_at', 'DESC')
+                    ->first();
+
+                $counter = $entryCounter ? $entryCounter->counter+1 : 1;
+
+                if ($cdisData[$key]->table_name == 'vendor') {
+                    $prefix = "VN_";
+                } else {
+                    $prefix = "VB_";
                 }
 
                 $converted = Excel::store(

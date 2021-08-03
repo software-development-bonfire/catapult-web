@@ -128,7 +128,7 @@ class CdisToCsvFile extends Command
                 ],
             ];
     
-            $cdisSync = CDISSync::orderBy('created_at')->first();
+            $cdisSync = CDISSync::first();
 
             if ($cdisSync) {
                 $endpointMap = [];
@@ -310,6 +310,8 @@ class CdisToCsvFile extends Command
         if ($endpoint['name'] == ApiEndpoint::PRODUCT && count($cdisData) == EntryLevel::PRODUCT) {
             $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
         } else if ($endpoint['name'] == ApiEndpoint::PRODUCT_STRUCTURE && count($cdisData) == EntryLevel::PRODUCT_STRUCTURE) {
+            $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
+        } else if ($endpoint['name'] == ApiEndpoint::VENDOR && count($cdisData) == EntryLevel::VENDOR) {
             $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
         } else {
             return;
