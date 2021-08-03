@@ -21,6 +21,7 @@ class CDISVendorBranch extends Model
     ];
 
     protected $fillable = [
+        'bid',
         'branch_bid',
         'vendor_bid'
     ];
