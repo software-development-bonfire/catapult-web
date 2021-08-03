@@ -12,6 +12,7 @@ final class ApiEndpoint extends Enum
     const CASH_BREAKDOWN = "Cash Breakdown";
     const CASH_DRAWER = "Cash Drawer";
     const VENDOR = "Vendor";
+    const VENDOR_BRANCH = "Vendor Branch";
     const PRODUCT = "Product";
     const UOM = "Unit Of Measurement";
     const CATEGORY = "Category";

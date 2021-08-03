@@ -30,6 +30,7 @@
                                 <option :value="label.brand">{{ $t('label.brand') }}</option>
                                 <option :value="label.branch">{{ $t('label.branch') }}</option>
                                 <option :value="label.vendor">{{ $t('label.vendor') }}</option>
+                                <option :value="label.vendor_branch">{{ $t('label.vendor_branch') }}</option>
                                 <option :value="label.unit_of_measurement">{{ $t('label.unit_of_measurement') }}</option>
                                 <option :value="label.product_category">{{ $t('label.product_category') }}</option>
                                 <option :value="label.product_branch_availability">{{ $t('label.product_branch_availability') }}</option>
@@ -469,6 +470,7 @@
                     brand: this.$t('label.brand'),
                     product_category: this.$t('label.product_category'),
                     vendor: this.$t('label.vendor'),
+                    vendor_branch: this.$t('label.vendor_branch'),
                     unit_of_measurement: this.$t('label.unit_of_measurement'),
                     transactions: this.$t('label.transactions'),
                     zread: this.$t('label.zread'),

@@ -177,6 +177,7 @@ return [
     'users' => 'Users',
     'values' => 'Values',
     'vendor' => 'Vendor',
+    'vendor_branch' => 'Vendor Branch',
     'version_status' => 'Version Status',
     'view' => 'View',
     'view_file_errors' => 'View File Errors',
