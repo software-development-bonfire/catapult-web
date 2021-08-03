@@ -98,7 +98,7 @@ class CdisToCsvFile extends Command
                 ],
                 [
                     'name' => ApiEndpoint::CATEGORY,
-                    'table' => 'category',
+                    'table' => 'product_category',
                     'abv' => 'CT_',
                     'ftp_path' => '/CDIS to POS/Category/',
                 ],

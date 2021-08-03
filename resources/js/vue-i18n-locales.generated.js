@@ -76,7 +76,7 @@ export default {
             "catapult_db_setup_detail": "Catapult DB Setup Detail",
             "catapult_db_setup_name": "Catapult DB Setup Name",
             "catapult_to_cdis": "Catapult to CDIS",
-            "category": "Category",
+            "product_category": "Product Category",
             "cdis_field": "CDIS Field",
             "cdis_fields": "CDIS Fields",
             "cdis_to_catapult": "CDIS to Catapult",

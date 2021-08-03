@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Entities\Configuration;
 use App\Entities\RemoteSetup;
 use App\Entities\SyncFileReference;
 use App\Enums\Directory;
@@ -12,6 +13,8 @@ use App\User;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Storage;
 
 class PosToCatapultSync extends Command implements ShouldQueue
@@ -100,30 +103,43 @@ class PosToCatapultSync extends Command implements ShouldQueue
             
             $disk = Storage::disk(Disk::FTP_POST_TO_CDIS);
     
-            foreach ($endpoints as $endpoint) {
-                $directories = $disk->allDirectories($endpoint['source_path']);
+            $entryCounter = SyncFileReference::whereDate('created_at', DB::raw('CURDATE()'))
+                ->orderBy('created_at', 'DESC')
+                ->first();
+            $counter = $entryCounter ? $entryCounter->counter+1 : 1;
+
+            $entryLimit = Configuration::where('attribute', 'pos_to_cdis_entry_limit')->first();
+                    
+            if ($counter <= (int) $entryLimit->value) {
+                foreach ($endpoints as $endpoint) {
+                    $directories = $disk->allDirectories($endpoint['source_path']);
     
-                foreach ($directories as $directory) {
-                    $file_count = substr($directory, -1);
-    
-                    $files = $disk->allFiles($directory);
-    
-                    if (count($files) == $file_count) {
-                        $return = $this->Collection($files, $disk, $endpoint, $remote_setup);
+                    foreach ($directories as $directory) {
+                        $file_count = substr($directory, -1);
+        
+                        $files = $disk->allFiles($directory);
+        
+                        if (count($files) == $file_count) {
+                            $return = $this->Collection($files, $disk, $endpoint, $remote_setup);
+                        }
+
+                        if ($return) {
+                            $local = Storage::disk(Disk::LOCAL_POS_TO_CDIS)->allFiles($return);
+                            if (count($files) == count($local)) {
+                                $disk->move($endpoint['source_path'].'/'.$return, $endpoint['move_to'].'/'.$return);
+                            }
+                        }
                     }
-    
-                    $local = Storage::disk(Disk::LOCAL_POS_TO_CDIS)->allFiles($return);
-                    if (count($files) == count($local)) {
-                        $disk->move($endpoint['source_path'].'/'.$return, $endpoint['move_to'].'/'.$return);
+                    if ($directories) {
+                        $this->info('Sync processing... ('.$endpoint['name'].')');
+                    } else {
+                        $this->info('No file to be sync ('.$endpoint['name'].')');
                     }
                 }
+            } else {
+                $this->warn(Lang::get('error.entry_has_reach_the_limit'));
             }
 
-            if ($directories) {
-                $this->info('Sync successful');
-            } else {
-                $this->info('No file to be sync');
-            }
             sleep(10);
         }
     }
@@ -151,15 +167,21 @@ class PosToCatapultSync extends Command implements ShouldQueue
 
                 if ($extension == 'csv' || $extension == 'xlsx' || $extension == 'xls') {
 
+                    $entryCounter = SyncFileReference::whereDate('created_at', DB::raw('CURDATE()'))
+                        ->orderBy('created_at', 'DESC')
+                        ->first();
+                    $counter = $entryCounter ? $entryCounter->counter+1 : 1;
+
                     $savedFileLocally = $this->saveToLocal($filename, $disk, $endpoint, $path, $folder_name);
+
                     $exists = SyncFileReference::where('filename', $filename)->first();
 
                     if ($savedFileLocally && ! $exists) {
-
-                        $dataReference = SyncFileReference::create([
+                        SyncFileReference::create([
                             'filename' => $filename,
                             'extension' => $extension,
                             'ftp_path' => $remote_setup->path.$endpoint['move_to'].'/'.$folder_name,
+                            'counter' => $counter,
                             'last_modified' => Carbon::parse($disk->lastModified($file))->format('Y-m-d h:m:s'),
                         ]);
                     }
@@ -177,7 +199,9 @@ class PosToCatapultSync extends Command implements ShouldQueue
      * @param  string  $filename
      * @param  string  $path
      * @param  string  $folder_name
-     * @param  array  $endpoint
+     * @param  array   $endpoint
+     * @param  int     $counter
+     * @param  object  $entryLimit
      * 
      */
     public function saveToLocal($filename, $disk, $endpoint, $path, $folder_name)
