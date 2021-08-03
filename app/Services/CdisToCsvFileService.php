@@ -29,7 +29,6 @@ class CdisToCsvFileService
     public function saveToFTP($counter, $header, $mapped, $cdisSync, $endpoint, $action, $disk)
     {
         $entryLimit = Configuration::where('attribute', 'cdis_to_pos_entry_limit')->first();
-
         $converted = false;
         if ($counter <= $entryLimit->value) {
             $converted = Excel::store(
@@ -136,7 +135,7 @@ class CdisToCsvFileService
                     ]);
                 }
             }
-        } else if ($endpoint['name'] == ApiEndpoint::VENDOR) {
+        } else if ($endpoint['name'] == ApiEndpoint::VENDOR || $endpoint['name'] == ApiEndpoint::VENDOR_BRANCH) {
             foreach ($headers as $key => $header) {
                 $entryCounter = EntryCounter::where('mapping_type', MappingType::CDIS_TO_POS)
                     ->whereDate('created_at', DB::raw('CURDATE()'))
