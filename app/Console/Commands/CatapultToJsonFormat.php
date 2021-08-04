@@ -343,7 +343,7 @@ class CatapultToJsonFormat extends Command
                     'error_log_bid' => $error_log->bid,
                     'sheet' => $this->fileNameIdentifier($filename_identifier),
                     'error_type' => 'Invalid value',
-                    'description' => "No column found, Please add configuration in Field Mapping."
+                    'description' => Lang::get('error.no_column_found')
                 ]);
             }
     
@@ -436,7 +436,7 @@ class CatapultToJsonFormat extends Command
                     'error_log_bid' => $errorLog->bid,
                     'sheet' => "NA",
                     'error_type' => 'No Field Mapping',
-                    'description' => 'Failed conversion due to no field map detected.'
+                    'description' => Lang::get('error.failed_conversion_due_to_no_field_map')
                 ]);
             }
         }

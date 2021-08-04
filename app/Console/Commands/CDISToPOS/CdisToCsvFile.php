@@ -381,8 +381,11 @@ class CdisToCsvFile extends Command
             $entityName = str_replace('_', '', Str::title($data->table_name));
             $apiEndpoint = str_replace('_', ' ', Str::title($data->table_name));
             $entity = "App\\Entities\\CDIS".$entityName;
-            $dataTable = $entity::withTrashed()->where('bid', $data->table_bid)->first();
-            // dd($entityName, $apiEndpoint, $entity, $dataTable);
+            if ($entityName = 'VendorBranch') {
+                $dataTable = $entity::where('bid', $data->table_bid)->first();
+            } else {
+                $dataTable = $entity::withTrashed()->where('bid', $data->table_bid)->first();
+            }
 
             $fieldMapping = FieldMappingList::with('dataMappings')
                 ->where([
@@ -405,7 +408,7 @@ class CdisToCsvFile extends Command
                     "data_type" => ''
                 ]);
             }
-                
+
             } else {
                 $this->warn(Lang::get('error.no_field_mapping_detected'));
                 $this->createError($endpoint);
@@ -445,16 +448,19 @@ class CdisToCsvFile extends Command
      */
     public function createError($endpoint)
     {
-        $error_log = ErrorLog::create([
-            'pos_entry' => $endpoint['name'],
-            'filename' => 'N/A',
-            'status' => 'Failed conversion'
-        ]);
-        ErrorLogDetail::create([
-            'error_log_bid' => $error_log->bid,
-            'sheet' => 'N/A',
-            'error_type' => 'Invalid data',
-            'description' => "No column found, Please add configuration in Field Mapping."
-        ]);
+        $errorExist = ErrorLog::where(['pos_entry' => $endpoint['name'], 'filename' => 'N/A'])->first();
+        if (! $errorExist) {
+            $errorLog = ErrorLog::create([
+                'pos_entry' => $endpoint['name'],
+                'filename' => 'N/A',
+                'status' => Lang::get('error.failed_conversion')
+            ]);
+            ErrorLogDetail::create([
+                'error_log_bid' => $errorLog->bid,
+                'sheet' => 'N/A',
+                'error_type' => 'Invalid data',
+                'description' => "No column found, Please add configuration in Field Mapping."
+            ]);
+        }
     }
 }
