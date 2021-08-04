@@ -166,7 +166,7 @@ class CdisToCsvFile extends Command
         $action = $cdisSync->action == 'create' ? 'C_'
             : ($cdisSync->action == 'update' ? 'U_' : 'D_');
 
-        if ($cdisSync->group || $cdisSync->code) {
+        if ($cdisSync->group) {
             $cdisData = CDISSync::where([
                 'branch_bid' => $cdisSync->branch_bid,
                 'group' => $cdisSync->group,
@@ -223,7 +223,7 @@ class CdisToCsvFile extends Command
     
             $isConverted = $this->cdisToCsvFileService->saveToFTP($counter, $header, $mapped, $cdisSync, $endpoint, $action, $disk);
             if ($isConverted === true) {
-                $this->info(Lang::get('error.conversion_successful'));
+                $this->info(Lang::get('message.conversion_successful'));
                 foreach ($cdisData as $sync) {
                     CDISSync::find($sync->bid)->delete();
                 }
