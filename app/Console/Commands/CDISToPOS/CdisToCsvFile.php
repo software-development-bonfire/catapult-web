@@ -319,7 +319,7 @@ class CdisToCsvFile extends Command
             $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
         } else if (($endpoint['name'] == ApiEndpoint::VENDOR 
             || $endpoint['name'] == ApiEndpoint::VENDOR_BRANCH)
-            && count($cdisData) == EntryLevel::VENDOR) {
+            && count($cdisData) >= EntryLevel::VENDOR) {
 
             $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
         } else {
@@ -328,21 +328,27 @@ class CdisToCsvFile extends Command
 
         if ($result) {
 
-            $dataMap = [];
             
             $header = [];
 
             if ($result) {
-                foreach ($result->value as $index => $arrayData) {
+                foreach ($result->headers as $index => $arrayData) {
                     $dataMap = [];
-                    $head= [];
-                    foreach($arrayData as $tableColumn => $tableData) {
-                        $exist = array_key_exists($tableColumn, $result->headers[$index]);
-                        if ($exist) {
-                            $dataMap[] = $tableData;
+                    foreach($result->value as $key => $tableData) {
+                        if ($index === $key) {
+                            foreach ($tableData as $in => $data) {
+                                $rowData = [];
+                                foreach ($data as $column => $value) {
+                                    if (array_key_exists($column, $arrayData)) {
+                                        $rowData[] = $value;
+                                    }
+                                }
+                                $dataMap[] = $rowData;
+                            }
                         }
                     }
-                    
+
+                    $head= [];
                     foreach ($result->headers[$index] as $cdisHeader => $posHeader) {
                         $head[] = $posHeader;
                     }
@@ -352,7 +358,7 @@ class CdisToCsvFile extends Command
                 }
             }
 
-            $isConverted = $this->cdisToCsvFileService->saveToFTPGroup($header, $mapped, $cdisSync, $endpoint, $action, $disk, $cdisData);
+            $isConverted = $this->cdisToCsvFileService->saveToFTPGroup($header, $mapped, $cdisSync, $endpoint, $action, $disk, $cdisData, $result->tables);
             
             if ($isConverted === true) {
                 $this->info(Lang::get('message.conversion_successful'));
@@ -375,70 +381,90 @@ class CdisToCsvFile extends Command
      */
     public function dataMapWithGroup($cdisData, $endpoint, $cdisSync)
     {
+        $tables = [];
+        foreach(json_decode($cdisData) as $t => $val) {
+            $tableName = $val->table_name;
+            if (! in_array($tableName, $tables)) {
+                $tables[] = $tableName;
+            }
+        }
+
         $value = []; $headers = []; $head = [];
+        
+        foreach ($tables as $table) {
+            $dataValue = [];
+            $array = $cdisData->where('table_name', $table);
+            foreach (json_decode($array) as $key => $data) {
+                $entityName = str_replace('_', '', Str::title($data->table_name));
+                $apiEndpoint = str_replace('_', ' ', Str::title($data->table_name));
+                $entity = "App\\Entities\\CDIS".$entityName;
+                if ($entityName = 'VendorBranch') {
+                    $dataTable = $entity::where('bid', $data->table_bid)->first();
+                } else {
+                    $dataTable = $entity::withTrashed()->where('bid', $data->table_bid)->first();
+                }
 
-        foreach (json_decode($cdisData) as $key => $data) {
-            $entityName = str_replace('_', '', Str::title($data->table_name));
-            $apiEndpoint = str_replace('_', ' ', Str::title($data->table_name));
-            $entity = "App\\Entities\\CDIS".$entityName;
-            if ($entityName = 'VendorBranch') {
-                $dataTable = $entity::where('bid', $data->table_bid)->first();
-            } else {
-                $dataTable = $entity::withTrashed()->where('bid', $data->table_bid)->first();
+                $fieldMapping = FieldMappingList::with('dataMappings')
+                    ->where([
+                        'type' => MappingType::CDIS_TO_POS,
+                        'api_endpoint' => $apiEndpoint,
+                        'status' => Status::ACTIVE
+                    ])->first();
+
+                $data_map = []; $validate = [];
+
+                if ($fieldMapping) {
+                    foreach ($fieldMapping->dataMappings as $key => $data) {
+                        array_push($data_map, [
+                            $data->field => $data->column_name === '""' ? $data->field : $data->column_name,
+                        ]);
+
+                        array_push($validate, [
+                            "field" => $data->column_name === '""' ? $data->field : $data->column_name,
+                            "required" => $data->required === 1 ? "required" : "sometimes",
+                            "data_type" => ''
+                        ]);
+                    }
+
+                } else {
+                    $this->warn(Lang::get('error.no_field_mapping_detected'));
+                    $this->createError($endpoint);
+                    return false;
+                }
+                
+                
+    
+                foreach ($validate as $key => $valid) {
+                    $array_key = array_search($validate[$key]['field'], $data_map);
+                    $validate[$key]['field'] = $array_key;
+                }
+    
+                if ($fieldMapping) {
+                    $val = [];
+                    foreach((array) json_decode($dataTable) as $a => $data) {
+                        $val[$a] = $data;
+                    }
+                    $dataValue[] = $val;
+                }
             }
-
-            $fieldMapping = FieldMappingList::with('dataMappings')
-                ->where([
-                    'type' => MappingType::CDIS_TO_POS,
-                    'api_endpoint' => $apiEndpoint,
-                    'status' => Status::ACTIVE
-                ])->first();
-
-            $data_map = []; $validate = [];
-
-            if ($fieldMapping) {
-                foreach ($fieldMapping->dataMappings as $key => $data) {
-                    array_push($data_map, [
-                    $data->field => $data->column_name === '""' ? $data->field : $data->column_name,
-                ]);
-
-                array_push($validate, [
-                    "field" => $data->column_name === '""' ? $data->field : $data->column_name,
-                    "required" => $data->required === 1 ? "required" : "sometimes",
-                    "data_type" => ''
-                ]);
-            }
-
-            } else {
-                $this->warn(Lang::get('error.no_field_mapping_detected'));
-                $this->createError($endpoint);
-                return false;
-            }
-
             if ($data_map) {
                 $headers = call_user_func_array("array_merge", $data_map);
                 $head[] = $headers; 
             }
-
-            foreach ($validate as $key => $valid) {
-                $array_key = array_search($validate[$key]['field'], $data_map);
-                $validate[$key]['field'] = $array_key;
-            }
-
-            if ($fieldMapping) {
-                $val = [];
-                foreach((array) json_decode($dataTable) as $a => $data) {
-                    $val[$a] = $data;
-                }
-                $value[] = $val;
-            }
+            $value[] = $dataValue;
         }
 
         $result = new stdClass;
         $result->value = $value;
         $result->headers = $head;
+        $result->tables = $tables;
 
         return $result;
+    }
+
+    public function mapping()
+    {
+
     }
 
     /**
