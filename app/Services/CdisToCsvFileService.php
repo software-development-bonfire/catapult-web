@@ -9,6 +9,7 @@ use App\Entities\FolderCounter;
 use App\Enums\ApiEndpoint;
 use App\Enums\MappingType;
 use App\Exports\CDISDataToCSV;
+use App\Exports\CDISDataToCSVGroup;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -61,8 +62,9 @@ class CdisToCsvFileService
      * @param  string  $action
      * @param  string  $disk
      * @param  array   $cdisData
+     * @param  array   $tables
      */
-    public function saveToFTPGroup($headers, $mapped, $cdisSync, $endpoint, $action, $disk, $cdisData)
+    public function saveToFTPGroup($headers, $mapped, $cdisSync, $endpoint, $action, $disk, $cdisData, $tables)
     {
         $folderCounter = FolderCounter::where(['mapping_type' => MappingType::CDIS_TO_POS])
             ->whereDate('created_at', DB::raw('CURDATE()'))
@@ -136,7 +138,8 @@ class CdisToCsvFileService
                 }
             }
         } else if ($endpoint['name'] == ApiEndpoint::VENDOR || $endpoint['name'] == ApiEndpoint::VENDOR_BRANCH) {
-            foreach ($headers as $key => $header) {
+
+            foreach ($tables as $key => $table) {
                 $entryCounter = EntryCounter::where('mapping_type', MappingType::CDIS_TO_POS)
                     ->whereDate('created_at', DB::raw('CURDATE()'))
                     ->orderBy('created_at', 'DESC')
@@ -144,34 +147,35 @@ class CdisToCsvFileService
 
                 $counter = $entryCounter ? $entryCounter->counter+1 : 1;
 
-                if ($cdisData[$key]->table_name == 'vendor') {
+                if ($table == 'vendor') {
                     $prefix = "VN_";
                 } else {
                     $prefix = "VB_";
                 }
 
                 $converted = Excel::store(
-                    new CDISDataToCSV($header, [$mapped[$key]]),
+                    new CDISDataToCSVGroup($headers[$key], $mapped[$key]),
                     $endpoint['ftp_path'].$cdisSync->branch_bid.'/'.$action.$endpoint['abv'].now()->format('mdy').'_'.$fCount.'/'.$prefix.now()->format('mdy').'_'.$counter.'.csv',
                     $disk);
-
-                if ($converted == true) {
-                    CDISSync::find($cdisData[$key]->bid)->delete();
-                    EntryCounter::create([
-                        'mapping_type' => MappingType::CDIS_TO_POS,
-                        'counter' => $counter,
-                    ]);
-                }
+                    
             }
         }
-
+        
         if ($converted == true) {
+            foreach ($cdisData as $cdis) {
+                CDISSync::find($cdis->bid)->delete();
+            }
+
+            EntryCounter::create([
+                'mapping_type' => MappingType::CDIS_TO_POS,
+                'counter' => $counter,
+            ]);
+
             FolderCounter::create([
                 'branch_bid' => $cdisSync->branch_bid,
                 'mapping_type' => MappingType::CDIS_TO_POS,
                 'counter' => $fCount,
             ]);
         }
-
     }
 }
