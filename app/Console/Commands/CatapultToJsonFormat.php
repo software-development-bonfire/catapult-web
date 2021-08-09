@@ -417,6 +417,7 @@ class CatapultToJsonFormat extends Command
             }
 
             if ($validated) {
+                ErrorLog::where('filename', $filename)->update(['status' => Lang::get('label.resolved')]);
                 $result = new stdClass;
                 $result->filename_identifier = $filename_identifier;
                 $result->data = $mapped;

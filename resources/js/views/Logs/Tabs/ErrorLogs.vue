@@ -108,7 +108,7 @@
                         <button class="button button--light w-100" @click="viewFileErrors(tableData)">{{ $t('label.view_file_errors') }}</button>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <template v-if="tableData.path">
+                        <template v-if="tableData.path && tableData.status == 0">
                             <button class="button button--light" @click="downloadCSV(tableData)">{{ $t('label.download_csv') }}</button>
                             <button class="button button--light" @click="uploadCSV(tableData)">{{ $t('label.upload_csv') }}</button>
                         </template>
@@ -436,7 +436,7 @@
                 axios.post('/logs/upload-csv', formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 })
-                    .then(function(){
+                    .then(response => {
                         this.modal.upload_csv.visible = false;
                     })
             }
