@@ -34,4 +34,9 @@ class ErrorLog extends Model implements Transformable
         'status',
     ];
 
+    public function details()
+    {
+        return $this->hasMany(ErrorLogDetail::class, 'error_log_bid', 'bid');
+    }
+
 }

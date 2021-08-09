@@ -68,7 +68,7 @@
                     <div class="form-group col-xl-3">
                         <div class="button--mt">
                             <button class="button button--light" @click="paginate">{{ $t('label.search') }}</button>
-                            <button class="button button--light">{{ $t('label.download_selected_files') }}</button>
+                            <button class="button button--light" @click="downloadMultipleCSV()">{{ $t('label.download_selected_files') }}</button>
                         </div>
                     </div>
                 </div>
@@ -105,11 +105,13 @@
                         <span v-if="tableData.status == 0">{{ $t('label.failed_conversion') }}</span>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <button class="button button--light w-100" @click="viewFileErrors(tableData.csv_file)">{{ $t('label.view_file_errors') }}</button>
+                        <button class="button button--light w-100" @click="viewFileErrors(tableData)">{{ $t('label.view_file_errors') }}</button>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <button class="button button--light" @click="downloadCSV">{{ $t('label.download_csv') }}</button>
-                        <button class="button button--light" @click="uploadCSV">{{ $t('label.upload_csv') }}</button>
+                        <template v-if="tableData.path">
+                            <button class="button button--light" @click="downloadCSV(tableData)">{{ $t('label.download_csv') }}</button>
+                            <button class="button button--light" @click="uploadCSV(tableData)">{{ $t('label.upload_csv') }}</button>
+                        </template>
                     </td>
                 </table-row>
             </template>
@@ -155,6 +157,33 @@
                 
             </template>
         </modal>
+        <modal
+            class="modal--no-footer"
+            width="500px"
+            v-if="modal.upload_csv.visible"
+            @close="modal.upload_csv.visible = false">
+            <template slot="header">
+                {{ $t('label.upload_csv') }}
+            </template>
+            <template slot="content">
+                <div class="form-inline">
+                    <div class="form-group mb-4">
+                        <label>{{ $t('label.csv_file') }}:</label>
+                        <span class="ml-2" v-text="upload_csv.values.filename"></span>
+                    </div>
+                </div>
+                <div class="form-inline">
+                    <div class="form-group mb-4">
+                        <input type="file" id="file" ref="file" @change="fileChange" accept=".xlsx,.csv,.xls">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <button class="button button--light" v-on:click="submitFile()">Submit</button>
+                    </div>
+                </div>
+            </template>
+        </modal>
         <dialog-box
             :status="dialog.status"
             :type="dialog.type"
@@ -169,6 +198,7 @@
 </template>
 
 <script>
+    var config = window.location.origin;
     import Datatable from '../../../components/Datatable2/Datatable.vue';
     import TableRow from '../../../components/Datatable2/TableRow.vue';
     import DialogBox from '../../../components/Message/DialogBox.vue';
@@ -210,7 +240,7 @@
                 filters: {
                     date_from: new Date(),
                     date_to: new Date(),
-                    status: 1,
+                    status: '',
                 },
                 form: {
                     email_address: ''
@@ -218,6 +248,17 @@
                 modal: {
                     file_errors: {
                         visible: false
+                    },
+                    upload_csv: {
+                        visible: false
+                    }
+                },
+                upload_csv: {
+                    values: {
+                        filename: '',
+                        file: '',
+                        endpoint: '',
+                        path: '',
                     }
                 },
                 file_errors: {
@@ -328,16 +369,77 @@
             }
         },
         methods: {
-            paginate(page = 1) {},
+            paginate(page = 1) {
+                axios.get(`${config}/error-log`+'?page='+page, {
+                    params: {
+                        itemsPerPage: this.table.settings.itemsPerPage,
+                        from: this.filters.date_from,
+                        to: this.filters.date_to,
+                        status: this.filters.status
+                    }
+                })
+                .then(response => {
+                    this.table.values.data = response.data.data.data
+                })
+            },
 
-            viewFileErrors(file) {
-                this.file_errors.values.csv_file = file;
+            viewFileErrors(data) {
+                console.log(data)
+                this.file_errors.values.data = data.details;
+                this.file_errors.values.csv_file = data.csv_file;
                 this.modal.file_errors.visible = true;
             },
 
-            downloadCSV() {},
+            downloadMultipleCSV() {
+                this.table.values.data.forEach(element => {
+                    if (element.checked) {
+                        this.downloadCSV(element);
+                    }
+                })
+            },
 
-            uploadCSV() {},
+            downloadCSV(data) {
+                var pos_entry = (data.pos_entry == 'Transactions') ? 'Transaction' : data.pos_entry
+                var path = '/POS to CDIS/For Conversion/'+pos_entry+'/Failed Conversion/'+data.path+'/'+data.csv_file
+                var url = config+path
+                
+                axios({url: url, method: 'GET', responseType: 'blob',
+                    }).then((response) => {
+                        var fileURL = window.URL.createObjectURL(new Blob([response.data]));
+                        var fileLink = document.createElement('a');
+
+                        fileLink.href = fileURL;
+                        fileLink.setAttribute('download', data.csv_file.split('-').pop());
+                        document.body.appendChild(fileLink);
+
+                        fileLink.click();
+                    })
+            },
+
+            uploadCSV(data) {
+                this.upload_csv.values.filename = '';
+                this.upload_csv.values.endpoint = data.pos_entry;
+                this.upload_csv.values.path = data.path;
+                this.modal.upload_csv.visible = true;
+            },
+
+            fileChange() {
+                this.upload_csv.values.filename = this.$refs.file.files[0].name
+                this.upload_csv.values.file = this.$refs.file.files[0]
+            },
+            submitFile() {
+                let formData = new FormData();
+
+                formData.append('file', this.upload_csv.values.file);
+                formData.append('endpoint', this.upload_csv.values.endpoint)
+                formData.append('path', this.upload_csv.values.path)
+                axios.post('/logs/upload-csv', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                })
+                    .then(function(){
+                        this.modal.upload_csv.visible = false;
+                    })
+            }
         }
     }
 </script>

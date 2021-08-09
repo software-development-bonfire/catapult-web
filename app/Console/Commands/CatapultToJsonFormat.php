@@ -480,10 +480,11 @@ class CatapultToJsonFormat extends Command
                         $array[$array_key] = $default['default_value'];
                     }
                 } else {
+                    $row = $key+2;
                     array_push($errors, [
                         'sheet' => $this->fileNameIdentifier($filename_identifier),
                         'error_type' => 'Wrong column name',
-                        'description' => "[column ".$columnName.", row ".($key+1)."] "."Column name missing or mismatch"
+                        'description' => "[column ".$columnName.", row ".$row."] "."Column name missing or mismatch"
                     ]);
 
                     $failed = true;
@@ -547,11 +548,12 @@ class CatapultToJsonFormat extends Command
             $data = ((array) $validation_message[$key]);
             if ($data) {
                 foreach ($data as $columnName => $error) {
+                    $row = $key+2;
                     ErrorLogDetail::create([
                         'error_log_bid' => $error_log->bid,
                         'sheet' => $this->fileNameIdentifier($name),
                         'error_type' => 'Invalid value',
-                        'description' => "[column ".$columnName.", row ".($key+1)."] ".$error[0]
+                        'description' => "[column ".$columnName.", row ".$row."] ".$error[0]
                     ]);
                 }
                 return false;
