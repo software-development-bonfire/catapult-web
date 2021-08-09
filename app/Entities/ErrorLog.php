@@ -30,6 +30,7 @@ class ErrorLog extends Model implements Transformable
         'bid',
         'pos_entry',
         'filename',
+        'path',
         'status',
     ];
 
