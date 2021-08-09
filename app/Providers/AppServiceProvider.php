@@ -25,6 +25,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(\App\Repositories\Contracts\DataMappingRepository::class, \App\Repositories\Eloquent\DataMappingRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\ErrorLogRepository::class, \App\Repositories\Eloquent\ErrorLogRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\ErrorLogDetailRepository::class, \App\Repositories\Eloquent\ErrorLogDetailRepositoryEloquent::class);
+        $this->app->bind(\App\Repositories\Contracts\EntryCounterRepository::class, \App\Repositories\Eloquent\EntryCounterRepositoryEloquent::class);
+        $this->app->bind(\App\Repositories\Contracts\FolderCounterRepository::class, \App\Repositories\Eloquent\FolderCounterRepositoryEloquent::class);
+        $this->app->bind(\App\Repositories\Contracts\SystemLogRepository::class, \App\Repositories\Eloquent\SystemLogRepositoryEloquent::class);
     }
 
     /**

@@ -6,11 +6,13 @@ use App\Entities\Configuration;
 use App\Entities\ErrorLogDetail;
 use App\Entities\RemoteSetup;
 use App\Entities\SyncFileReference;
+use App\Enums\Action;
 use App\Enums\Directory;
 use App\Enums\Disk;
 use App\Enums\Status;
 use App\Enums\UserType;
 use App\Services\ErrorLogService;
+use App\Services\SystemLogService;
 use App\User;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -40,10 +42,11 @@ class PosToCatapultSync extends Command implements ShouldQueue
      *
      * @return void
      */
-    public function __construct(ErrorLogService $errorLogService)
+    public function __construct(ErrorLogService $errorLogService, SystemLogService $systemLogService)
     {
         parent::__construct();
         $this->errorLogService = $errorLogService;
+        $this->systemLogService = $systemLogService;
     }
 
     /**
@@ -154,6 +157,14 @@ class PosToCatapultSync extends Command implements ShouldQueue
                             $this->info(Lang::get('message.conversion_successful').' ('.$endpoint['name'].')');
                         }
                     }
+<<<<<<< HEAD
+=======
+                    if ($directories) {
+                        $this->info('Successful conversion... ('.$endpoint['name'].')');
+                    } else {
+                        $this->info('No file to be sync ('.$endpoint['name'].')');
+                    }
+>>>>>>> 54b1250 (:star: FT_41: Added System logs model, migration and defaults.)
                 }
             } else {
                 $this->warn(Lang::get('error.entry_has_reach_the_limit'));
@@ -236,6 +247,7 @@ class PosToCatapultSync extends Command implements ShouldQueue
             }
 
             if ($copyToLocal) {
+                $this->systemLogService->log(false, 'POS to CDIS', Action::SYCING, $filename.' has synced successfully');
                 return true;
             } else {
                 Storage::disk(Disk::LOCAL_POS_TO_CDIS)->delete($filename);
