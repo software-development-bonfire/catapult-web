@@ -212,7 +212,7 @@ class CatapultToJsonFormat extends Command
 
                         Storage::disk(Disk::LOCAL_POS_TO_CDIS)->put($data['directory'].'.txt', json_encode($value));
 
-                        $this->info(Lang::get('conversion_successful'));
+                        $this->info(Lang::get('message.conversion_successful'));
                     }
                 }
             }
@@ -338,7 +338,8 @@ class CatapultToJsonFormat extends Command
                 $error_log = ErrorLog::create([
                     'pos_entry' => $endpoint['name'],
                     'filename' => $filename,
-                    'status' => 'Failed conversion'
+                    'path' => $directory,
+                    'status' => Lang::get('error.failed_conversion')
                 ]);
                 ErrorLogDetail::create([
                     'error_log_bid' => $error_log->bid,
@@ -353,7 +354,7 @@ class CatapultToJsonFormat extends Command
                 $validate[$key]['field'] = $array_key;
             }
     
-            $mapped = $this->dataMapped($pos_data, $data_map, $field_mapping_list->dataMappings, $endpoint, $filename_identifier, $filename);
+            $mapped = $this->dataMapped($pos_data, $data_map, $field_mapping_list->dataMappings, $endpoint, $filename_identifier, $filename, $directory);
 
             $rules = [];
             foreach ($validate as $key => $valid) {
@@ -402,7 +403,7 @@ class CatapultToJsonFormat extends Command
                 ->move($endpoint['source_path'].'/'.$directory.'/'.$filename, 
                 $endpoint['failed'].'/'.$directory.'/'.$filename);
     
-                $validated = $this->validationError($validation_message, $filename, $filename_identifier, $endpoint);
+                $validated = $this->validationError($validation_message, $filename, $filename_identifier, $endpoint, $directory);
             } else {
                 $validated = true;
             }
@@ -430,7 +431,7 @@ class CatapultToJsonFormat extends Command
                 $errorLog = ErrorLog::create([
                     'pos_entry' => $endpoint['name'],
                     'filename' => $filename,
-                    'status' => 'Failed conversion'
+                    'status' => Lang::get('error.failed_conversion')
                 ]);
     
                 ErrorLogDetail::create([
@@ -454,7 +455,7 @@ class CatapultToJsonFormat extends Command
      * 
      * @return array $mapped
      */
-    public function dataMapped($pos_data, $data_map, $dataMappings, $endpoint, $filename_identifier, $filename)
+    public function dataMapped($pos_data, $data_map, $dataMappings, $endpoint, $filename_identifier, $filename, $directory)
     {
         $failed = false;
         $errors = [];
@@ -494,7 +495,8 @@ class CatapultToJsonFormat extends Command
             $error_log = ErrorLog::create([
                 'pos_entry' => $endpoint['name'],
                 'filename' => $filename,
-                'status' => 'Failed conversion'
+                'path' => $directory,
+                'status' => Lang::get('error.failed_conversion')
             ]);
 
             foreach($errors as $error) {
@@ -519,15 +521,17 @@ class CatapultToJsonFormat extends Command
      * @param string $filename
      * @param string $filename_identifier
      * @param string $name
+     * @param string $directory
      * 
      */
-    public function validationError($validation_message, $filename, $name, $endpoint)
+    public function validationError($validation_message, $filename, $name, $endpoint, $directory)
     {
         if($validation_message) {
             $error_log = ErrorLog::create([
                 'pos_entry' => $endpoint['name'],
                 'filename' => $filename,
-                'status' => 'Failed conversion'
+                'path' => $directory,
+                'status' => Lang::get('error.failed_conversion')
             ]);
         }
 
