@@ -38,7 +38,7 @@ class CdisProductBranchPrice extends MigratableSeeder
             [
                 'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
-                'field' => 'product_branch_avaiability_bid',
+                'field' => 'product_branch_availability_bid',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => '""',

@@ -50,9 +50,9 @@ class CDISDataToCSVGroup implements WithEvents, WithStyles
                     }
                 }
 
-                foreach ($this->value as $value) {
+                foreach ($this->value as $data) {
                     $row++;
-                    // foreach ($data as $value) {
+                    foreach ($data as $value) {
                         foreach(range('A','Z') as $key => $v){
                             if($key <= $no_column) {
                                 if ($value[$key] == "" || $value[$key] == null) {
@@ -62,7 +62,7 @@ class CDISDataToCSVGroup implements WithEvents, WithStyles
                                 }
                             }
                         }
-                    // }
+                    }
                 }
             }
         ];

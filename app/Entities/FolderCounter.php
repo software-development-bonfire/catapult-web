@@ -24,6 +24,7 @@ class FolderCounter extends Model implements Transformable
      */
     protected $fillable = [
         'bid',
+        'branch_bid',
         'mapping_type',
         'counter',
     ];
