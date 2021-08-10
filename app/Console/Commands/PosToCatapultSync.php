@@ -247,7 +247,7 @@ class PosToCatapultSync extends Command implements ShouldQueue
             }
 
             if ($copyToLocal) {
-                $this->systemLogService->log(false, 'POS to CDIS', Action::SYCING, $filename.' has synced successfully');
+                $this->systemLogService->log(false, 'POS to CDIS', Action::SYCING, $filename.' file: DONE syncing');
                 return true;
             } else {
                 Storage::disk(Disk::LOCAL_POS_TO_CDIS)->delete($filename);

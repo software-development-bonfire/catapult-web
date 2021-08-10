@@ -171,6 +171,7 @@ return [
     'transactions' => 'Transactions',
     'unit_of_measurement' => 'Unit Of Measurement',
     'upload_csv' => 'Upload CSV',
+    'uploaded_filename' => 'Uploaded Filename',
     'user_account' => 'User Account',
     'user_account_detail' => 'User Account Detail',
     'user_account_list' => 'User Account List',

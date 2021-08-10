@@ -169,6 +169,12 @@
                 <div class="form-inline">
                     <div class="form-group mb-4">
                         <label>{{ $t('label.csv_file') }}:</label>
+                        <span class="ml-2" v-text="upload_csv.values.original_filname"></span>
+                    </div>
+                </div>
+                <div class="form-inline">
+                    <div class="form-group mb-4">
+                        <label>{{ $t('label.uploaded_filename') }}:</label>
                         <span class="ml-2" v-text="upload_csv.values.filename"></span>
                     </div>
                 </div>
@@ -255,6 +261,7 @@
                 },
                 upload_csv: {
                     values: {
+                        original_filname: '',
                         filename: '',
                         file: '',
                         endpoint: '',
@@ -417,6 +424,7 @@
             },
 
             uploadCSV(data) {
+                this.upload_csv.values.original_filname = data.csv_file;
                 this.upload_csv.values.filename = '';
                 this.upload_csv.values.endpoint = data.pos_entry;
                 this.upload_csv.values.path = data.path;
@@ -428,17 +436,26 @@
                 this.upload_csv.values.file = this.$refs.file.files[0]
             },
             submitFile() {
-                let formData = new FormData();
-
-                formData.append('file', this.upload_csv.values.file);
-                formData.append('endpoint', this.upload_csv.values.endpoint)
-                formData.append('path', this.upload_csv.values.path)
-                axios.post('/logs/upload-csv', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                })
-                    .then(response => {
-                        this.modal.upload_csv.visible = false;
+                if (this.upload_csv.values.original_filname == this.upload_csv.values.filename) {
+                    let formData = new FormData();
+    
+                    formData.append('file', this.upload_csv.values.file);
+                    formData.append('endpoint', this.upload_csv.values.endpoint)
+                    formData.append('path', this.upload_csv.values.path)
+                    axios.post('/logs/upload-csv', formData, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
                     })
+                        .then(response => {
+                            this.modal.upload_csv.visible = false;
+                        })
+                } else {
+                    this.dialog.visible = true;
+                    this.dialog.status = 'error';
+                    this.dialog.message = this.$t('error.filename_should_be_the_same');
+                    this.dialog.ok.function = () => {
+                        this.dialog.visible = false;
+                    };
+                }
             }
         }
     }

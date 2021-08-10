@@ -35,6 +35,7 @@ return [
     'field_mapping_connection_failed_create' => 'Field Mapping Connection failed to create.',
     'field_mapping_connection_failed_delete' => 'Field Mapping Connection failed to delete.',
     'field_mapping_connection_failed_update' => 'Field Mapping Connection failed to update.',
+    'filename_should_be_the_same' => 'Filename should be the same in the CSF FILE column',
     'generate_csv_failed_create' => 'Generate csv failed to create.',
     'no_field_mapping_detected' => 'No field mapping detected',
     'no_column_found' => 'No column found, Please add configuration in Field Mapping.',

@@ -7,6 +7,7 @@ use App\Entities\ErrorLog;
 use App\Entities\ErrorLogDetail;
 use App\Entities\FieldMappingList;
 use App\Enums\Acronym;
+use App\Enums\Action;
 use App\Enums\ApiEndpoint;
 use App\Enums\Directory;
 use App\Enums\Disk;
@@ -21,6 +22,8 @@ use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\CatapultToJsonFormatService;
 use App\Services\SyncDatabaseService;
+use App\Services\SystemLogService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Lang;
 use stdClass;
 
@@ -45,11 +48,19 @@ class CatapultToJsonFormat extends Command
      *
      * @return void
      */
+<<<<<<< HEAD
     public function __construct(CatapultToJsonFormatService $catapultToJsonFormatService, SyncDatabaseService $syncDatabaseService)
     {
         parent::__construct();
         $this->catapultToJsonFormatService = $catapultToJsonFormatService;
         $this->syncDatabaseService = $syncDatabaseService;
+=======
+    public function __construct(CatapultToJsonFormatService $catapultToJsonFormatService, SystemLogService $systemLogService)
+    {
+        parent::__construct();
+        $this->catapultToJsonFormatService = $catapultToJsonFormatService;
+        $this->systemLogService = $systemLogService;
+>>>>>>> 48d000b (:star: FT_41: Added system log for conversion and syncing.)
     }
 
     /**
@@ -219,6 +230,8 @@ class CatapultToJsonFormat extends Command
 
                         Storage::disk(Disk::LOCAL_POS_TO_CDIS)->put($data['directory'].'_'.time().'.txt', json_encode($value));
 
+                        $this->systemLogService->log(false, 'POS to CDIS', Action::CONVERSION, $data['directory'].' file: DONE conversion');
+
                         $this->info(Lang::get('message.conversion_successful'));
                     } else {
                         $this->warn(Lang::get('error.failed_conversion').' ('.$result[0]['directory'].')');
@@ -343,6 +356,8 @@ class CatapultToJsonFormat extends Command
             if ($data_map) {
                 $data_map = call_user_func_array("array_merge", $data_map);
             } else {
+                $this->systemLogService->log(false, 'POS to CDIS', Action::CONVERSION, $filename.' file: FAILED conversion');
+
                 $error_log = ErrorLog::create([
                     'pos_entry' => $endpoint['name'],
                     'filename' => $filename,
@@ -417,6 +432,8 @@ class CatapultToJsonFormat extends Command
             }
 
             if ($validated) {
+                $this->systemLogService->log(false, 'POS to CDIS', Action::CONVERSION, $filename.' file: FAILED conversion');
+
                 ErrorLog::where('filename', $filename)->update(['status' => Lang::get('label.resolved')]);
                 $result = new stdClass;
                 $result->filename_identifier = $filename_identifier;
@@ -434,6 +451,8 @@ class CatapultToJsonFormat extends Command
             
         } else {
             $this->warn('Failed conversion with filename '.$filename.' due to no field map detected.');
+            
+            $this->systemLogService->log(false, 'POS to CDIS', Action::CONVERSION, $filename.' file: FAILED conversion');
 
             $errorExist = ErrorLog::where('filename', $filename)->first();
             if (! $errorExist) {
@@ -502,6 +521,8 @@ class CatapultToJsonFormat extends Command
 
         if($failed) {
 
+            $this->systemLogService->log(false, 'POS to CDIS', Action::CONVERSION, $filename.' file: FAILED conversion');
+
             $error_log = ErrorLog::create([
                 'pos_entry' => $endpoint['name'],
                 'filename' => $filename,
@@ -537,6 +558,8 @@ class CatapultToJsonFormat extends Command
     public function validationError($validation_message, $filename, $name, $endpoint, $directory)
     {
         if($validation_message) {
+            $this->systemLogService->log(false, 'POS to CDIS', Action::CONVERSION, $filename.' file: FAILED conversion');
+
             $error_log = ErrorLog::create([
                 'pos_entry' => $endpoint['name'],
                 'filename' => $filename,

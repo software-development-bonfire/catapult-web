@@ -60,6 +60,7 @@ Route::group(['middleware' => 'auth'], function () {
         'api-setup' => 'ApiSetupController',
         'syncing' => 'SyncingSetupController',
         'user' => 'UserAccountController',
+        'sync-interval-settings' => 'SyncIntervalSettingController',
         'field-mapping-list' => 'FieldMappingController',
         'error-log' => 'ErrorLogController',
     ]);
