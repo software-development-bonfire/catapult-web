@@ -89,7 +89,7 @@ class CdisToCsvFileService
                 }
 
                 $converted = Excel::store(
-                    new CDISDataToCSV($header, [$mapped[$key]]),
+                    new CDISDataToCSV($header, $mapped[$key]),
                     $endpoint['ftp_path'].$cdisSync->branch_bid.'/'.$action.$endpoint['abv'].now()->format('mdy').'_'.$fCount.'/'.$prefix.now()->format('mdy').'_'.$counter.'.csv',
                     $disk);
 
@@ -125,7 +125,7 @@ class CdisToCsvFileService
                 }
 
                 $converted = Excel::store(
-                    new CDISDataToCSVGroup($headers[$key], [$mapped[$key]]),
+                    new CDISDataToCSVGroup($headers[$key], $mapped[$key]),
                     $endpoint['ftp_path'].$cdisSync->branch_bid.'/'.$action.$endpoint['abv'].now()->format('mdy').'_'.$fCount.'/'.$prefix.now()->format('mdy').'_'.$counter.'.csv',
                     $disk);
 
