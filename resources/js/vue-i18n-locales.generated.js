@@ -163,7 +163,7 @@ export default {
             "product_structure": "Product Structure",
             "product_structure_detail": "Product Structure Detail",
             "product_uom_packaging": "Product UOM Packaging",
-            "product_package_vendor": "Product Package Vendor",
+            "packaging_vendor": "Packaging Vendor",
             "product_pricing_type": "Product Pricing Type",
             "regular_discount": "Regular Discount",
             "remote_db_setup": "Remote DB Setup",

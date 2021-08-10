@@ -101,7 +101,7 @@ class CdisToCsvFileService
                     ]);
                 }
             }
-        } else if ($endpoint['name'] == ApiEndpoint::PRODUCT_STRUCTURE) {
+        } else if ($endpoint['name'] == ApiEndpoint::PRODUCT) {
             foreach ($headers as $key => $header) {
                 $entryCounter = EntryCounter::where('mapping_type', MappingType::CDIS_TO_POS)
                     ->whereDate('created_at', DB::raw('CURDATE()'))
@@ -112,9 +112,9 @@ class CdisToCsvFileService
 
                 if ($cdisData[$key]->table_name == 'branch_availability') {
                     $prefix = "BA_";
-                } else if ($cdisData[$key]->table_name == 'branch_price') {
+                } else if ($cdisData[$key]->table_name == 'product_branch_price') {
                     $prefix = "BP_";
-                } else if ($cdisData[$key]->table_name == 'product_head') {
+                } else if ($cdisData[$key]->table_name == 'product') {
                     $prefix = "PH_";
                 } else if ($cdisData[$key]->table_name == 'product_uom_packaging') {
                     $prefix = "PUP_";
@@ -125,7 +125,7 @@ class CdisToCsvFileService
                 }
 
                 $converted = Excel::store(
-                    new CDISDataToCSV($header, [$mapped[$key]]),
+                    new CDISDataToCSVGroup($headers[$key], [$mapped[$key]]),
                     $endpoint['ftp_path'].$cdisSync->branch_bid.'/'.$action.$endpoint['abv'].now()->format('mdy').'_'.$fCount.'/'.$prefix.now()->format('mdy').'_'.$counter.'.csv',
                     $disk);
 
@@ -157,13 +157,15 @@ class CdisToCsvFileService
                     new CDISDataToCSVGroup($headers[$key], $mapped[$key]),
                     $endpoint['ftp_path'].$cdisSync->branch_bid.'/'.$action.$endpoint['abv'].now()->format('mdy').'_'.$fCount.'/'.$prefix.now()->format('mdy').'_'.$counter.'.csv',
                     $disk);
-                    
             }
         }
         
         if ($converted == true) {
             foreach ($cdisData as $cdis) {
-                CDISSync::find($cdis->bid)->delete();
+                $sync = CDISSync::find($cdis->bid);
+                if ($sync) {
+                    $sync->delete();
+                }
             }
 
             EntryCounter::create([

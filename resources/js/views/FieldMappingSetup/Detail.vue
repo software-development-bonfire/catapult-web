@@ -39,7 +39,7 @@
                                 <option :value="label.product_structure">{{ $t('label.product_structure') }}</option>
                                 <option :value="label.product_structure_detail">{{ $t('label.product_structure_detail') }}</option>
                                 <option :value="label.product_uom_packaging">{{ $t('label.product_uom_packaging') }}</option>
-                                <option :value="label.product_package_vendor">{{ $t('label.product_package_vendor') }}</option>
+                                <option :value="label.packaging_vendor">{{ $t('label.packaging_vendor') }}</option>
                             </template>
                             <template v-else>
                                 <option :value="label.transactions">{{ $t('label.transactions') }}</option>
@@ -482,7 +482,7 @@
                     product_structure: this.$t('label.product_structure'),
                     product_structure_detail: this.$t('label.product_structure_detail'),
                     product_uom_packaging: this.$t('label.product_uom_packaging'),
-                    product_package_vendor: this.$t('label.product_package_vendor'),
+                    packaging_vendor: this.$t('label.packaging_vendor'),
                 }
             }
         },
