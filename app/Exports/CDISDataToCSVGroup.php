@@ -50,16 +50,14 @@ class CDISDataToCSVGroup implements WithEvents, WithStyles
                     }
                 }
 
-                foreach ($this->value as $data) {
+                foreach ($this->value as $value) {
                     $row++;
-                    foreach ($data as $value) {
-                        foreach(range('A','Z') as $key => $v){
-                            if($key <= $no_column) {
-                                if ($value[$key] == "" || $value[$key] == null) {
-                                    $delegate->setCellValue($v.$row, '""');
-                                } else {
-                                    $delegate->setCellValueExplicit($v.$row, (string) $value[$key], DataType::TYPE_STRING);
-                                }
+                    foreach(range('A','Z') as $key => $v){
+                        if($key <= $no_column) {
+                            if ($value[$key] == "" || $value[$key] == null) {
+                                $delegate->setCellValue($v.$row, '""');
+                            } else {
+                                $delegate->setCellValueExplicit($v.$row, (string) $value[$key], DataType::TYPE_STRING);
                             }
                         }
                     }
