@@ -249,10 +249,16 @@ class CdisToCsvFile extends Command
             $entityName = str_replace('_', '', Str::title($sync->table_name));
             $entity = "App\\Entities\\CDIS".$entityName;
             $dataTable = $entity::withTrashed()->where('bid', $sync->table_bid)->first();
+            if ($entityName == "Product") {
+                $apiEndpoint = "Product Head";
+            } else {
+                $apiEndpoint = str_replace('_', ' ', Str::title($sync->table_name));
+            }
+
             $fieldMapping = FieldMappingList::with('dataMappings')
                 ->where([
                     'type' => MappingType::CDIS_TO_POS,
-                    'api_endpoint' => str_replace('_', ' ', Str::title($sync->table_name)),
+                    'api_endpoint' => $apiEndpoint,
                     'status' => Status::ACTIVE
                 ])->first();
 
@@ -299,6 +305,7 @@ class CdisToCsvFile extends Command
         $result = new stdClass;
         $result->value = $value;
         $result->data_map = $data_map;
+
         return $result;
     }
     
