@@ -115,12 +115,6 @@ class CdisToCsvFile extends Command
                     'ftp_path' => '/CDIS to POS/Vendor/',
                 ],
                 [
-                    'name' => ApiEndpoint::VENDOR_BRANCH,
-                    'table' => 'vendor_branch',
-                    'abv' => 'VN_',
-                    'ftp_path' => '/CDIS to POS/Vendor/',
-                ],
-                [
                     'name' => ApiEndpoint::PRODUCT_STRUCTURE,
                     'table' => 'product_structure',
                     'abv' => 'PS_',
@@ -132,6 +126,12 @@ class CdisToCsvFile extends Command
                     'abv' => 'PS_',
                     'ftp_path' => '/CDIS to POS/Product Pricing Type/',
                 ],
+                [
+                    'name' => ApiEndpoint::PRODUCT_UOM_PACKAGING,
+                    'table' => 'product_uom_packaging',
+                    'abv' => 'PUP_',
+                    'ftp_path' => '/CDIS to POS/Product/Product UOM Packaging/',
+                ]
             ];
     
             $cdisSync = CDISSync::first();
@@ -315,12 +315,15 @@ class CdisToCsvFile extends Command
     {
         if ($endpoint['name'] == ApiEndpoint::PRODUCT && count($cdisData) <= EntryLevel::PRODUCT) {
             $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
-        } else if ($endpoint['name'] == ApiEndpoint::PRODUCT_STRUCTURE && count($cdisData) == EntryLevel::PRODUCT_STRUCTURE) {
+        } else if ($endpoint['name'] == ApiEndpoint::PRODUCT_STRUCTURE 
+            && count($cdisData) == EntryLevel::PRODUCT_STRUCTURE) {
             $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
         } else if (($endpoint['name'] == ApiEndpoint::VENDOR 
             || $endpoint['name'] == ApiEndpoint::VENDOR_BRANCH)
             && count($cdisData) >= EntryLevel::VENDOR) {
-
+            $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
+        } else if ($endpoint['name'] == ApiEndpoint::PRODUCT_UOM_PACKAGING
+            && count($cdisData) == EntryLevel::PRODUCT_UOM_PACKAGING) {
             $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
         } else {
             return;
