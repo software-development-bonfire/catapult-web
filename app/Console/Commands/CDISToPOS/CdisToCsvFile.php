@@ -316,7 +316,7 @@ class CdisToCsvFile extends Command
         if ($endpoint['name'] == ApiEndpoint::PRODUCT && count($cdisData) >= EntryLevel::PRODUCT) {
             $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
         } else if ($endpoint['name'] == ApiEndpoint::PRODUCT_STRUCTURE 
-            && count($cdisData) == EntryLevel::PRODUCT_STRUCTURE) {
+            && count($cdisData) >= EntryLevel::PRODUCT_STRUCTURE) {
             $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
         } else if (($endpoint['name'] == ApiEndpoint::VENDOR 
             || $endpoint['name'] == ApiEndpoint::VENDOR_BRANCH)
