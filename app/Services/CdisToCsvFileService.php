@@ -89,7 +89,7 @@ class CdisToCsvFileService
                 }
 
                 $converted = Excel::store(
-                    new CDISDataToCSV($header, $mapped[$key]),
+                    new CDISDataToCSVGroup($headers[$key], $mapped[$key]),
                     $endpoint['ftp_path'].$cdisSync->branch_bid.'/'.$action.$endpoint['abv'].now()->format('mdy').'_'.$fCount.'/'.$prefix.now()->format('mdy').'_'.$counter.'.csv',
                     $disk);
 
@@ -110,7 +110,7 @@ class CdisToCsvFileService
 
                 $counter = $entryCounter ? $entryCounter->counter+1 : 1;
 
-                if ($cdisData[$key]->table_name == 'branch_availability') {
+                if ($cdisData[$key]->table_name == 'product_branch_availability') {
                     $prefix = "BA_";
                 } else if ($cdisData[$key]->table_name == 'product_branch_price') {
                     $prefix = "BP_";
@@ -137,7 +137,7 @@ class CdisToCsvFileService
                     ]);
                 }
             }
-        } else if ($endpoint['name'] == ApiEndpoint::VENDOR || $endpoint['name'] == ApiEndpoint::VENDOR_BRANCH) {
+        } else if ($endpoint['name'] == ApiEndpoint::VENDOR) {
 
             foreach ($tables as $key => $table) {
                 $entryCounter = EntryCounter::where('mapping_type', MappingType::CDIS_TO_POS)
@@ -158,8 +158,32 @@ class CdisToCsvFileService
                     $endpoint['ftp_path'].$cdisSync->branch_bid.'/'.$action.$endpoint['abv'].now()->format('mdy').'_'.$fCount.'/'.$prefix.now()->format('mdy').'_'.$counter.'.csv',
                     $disk);
             }
+        } else if ($endpoint['name'] == ApiEndpoint::PRODUCT_UOM_PACKAGING) {
+
+            foreach ($tables as $key => $table) {
+                $entryCounter = EntryCounter::where('mapping_type', MappingType::CDIS_TO_POS)
+                    ->whereDate('created_at', DB::raw('CURDATE()'))
+                    ->orderBy('created_at', 'DESC')
+                    ->first();
+
+                $counter = $entryCounter ? $entryCounter->counter+1 : 1;
+
+                if ($table == 'product_uom_packaging') {
+                    $prefix = "PUP_";
+                } else if ($table == 'packaging_vendor') {
+                    $prefix = "PV_";
+                } else if ($table == 'product_branch_availability') {
+                    $prefix = "BA_";
+                } else {
+                    $prefix = "BP_";
+                }
+
+                $converted = Excel::store(
+                    new CDISDataToCSVGroup($headers[$key], $mapped[$key]),
+                    $endpoint['ftp_path'].$cdisSync->branch_bid.'/'.$action.$endpoint['abv'].now()->format('mdy').'_'.$fCount.'/'.$prefix.now()->format('mdy').'_'.$counter.'.csv',
+                    $disk);
+            }
         }
-        
         if ($converted == true) {
             foreach ($cdisData as $cdis) {
                 $sync = CDISSync::find($cdis->bid);

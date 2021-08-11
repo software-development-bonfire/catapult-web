@@ -9,4 +9,5 @@ final class EntryLevel extends Enum
     const PRODUCT = 5;
     const PRODUCT_STRUCTURE = 2;
     const VENDOR = 2;
+    const PRODUCT_UOM_PACKAGING = 4;
 }
