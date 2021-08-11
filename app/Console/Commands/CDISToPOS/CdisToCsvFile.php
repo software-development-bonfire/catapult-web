@@ -313,7 +313,7 @@ class CdisToCsvFile extends Command
      */
     public function withGroup($cdisData, $endpoint, $cdisSync, $action, $disk)
     {
-        if ($endpoint['name'] == ApiEndpoint::PRODUCT && count($cdisData) <= EntryLevel::PRODUCT) {
+        if ($endpoint['name'] == ApiEndpoint::PRODUCT && count($cdisData) >= EntryLevel::PRODUCT) {
             $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
         } else if ($endpoint['name'] == ApiEndpoint::PRODUCT_STRUCTURE 
             && count($cdisData) == EntryLevel::PRODUCT_STRUCTURE) {
