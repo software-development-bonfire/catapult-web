@@ -164,6 +164,7 @@ export default {
             "product_structure_detail": "Product Structure Detail",
             "product_uom_packaging": "Product UOM Packaging",
             "packaging_vendor": "Packaging Vendor",
+            "packaging_vendor_branch_cost": "Packaging Vendor Branch Cost",
             "product_pricing_type": "Product Pricing Type",
             "regular_discount": "Regular Discount",
             "remote_db_setup": "Remote DB Setup",
