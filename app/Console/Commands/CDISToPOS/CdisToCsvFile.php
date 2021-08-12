@@ -121,6 +121,12 @@ class CdisToCsvFile extends Command
                     'ftp_path' => '/CDIS to POS/Product Structure/',
                 ],
                 [
+                    'name' => ApiEndpoint::PRODUCT_STRUCTURE_DETAIL,
+                    'table' => 'product_structure',
+                    'abv' => 'PS_',
+                    'ftp_path' => '/CDIS to POS/Product Structure/'.ApiEndpoint::PRODUCT_STRUCTURE_DETAIL.'/',
+                ],
+                [
                     'name' => ApiEndpoint::PRODUCT_PRICING_TYPE,
                     'table' => 'product_pricing_type',
                     'abv' => 'PS_',
@@ -130,10 +136,33 @@ class CdisToCsvFile extends Command
                     'name' => ApiEndpoint::PRODUCT_UOM_PACKAGING,
                     'table' => 'product_uom_packaging',
                     'abv' => 'PUP_',
-                    'ftp_path' => '/CDIS to POS/Product/Product UOM Packaging/',
+                    'ftp_path' => '/CDIS to POS/Product/'.ApiEndpoint::PRODUCT_UOM_PACKAGING.'/',
+                ],
+                [
+                    'name' => ApiEndpoint::PRODUCT_BRANCH_PRICE,
+                    'table' => 'product_branch_price',
+                    'abv' => 'BP_',
+                    'ftp_path' => '/CDIS to POS/Product/'.ApiEndpoint::PRODUCT_BRANCH_PRICE.'/',
+                ],
+                [
+                    'name' => ApiEndpoint::PRODUCT_BRANCH_AVAILABILITY,
+                    'table' => 'product_branch_availability',
+                    'abv' => 'BA_',
+                    'ftp_path' => '/CDIS to POS/Product/'.ApiEndpoint::PRODUCT_BRANCH_AVAILABILITY.'/',
+                ],
+                [
+                    'name' => ApiEndpoint::PACKAGING_VENDOR,
+                    'table' => 'product_branch_availability',
+                    'abv' => 'PV_',
+                    'ftp_path' => '/CDIS to POS/Product/'.ApiEndpoint::PACKAGING_VENDOR.'/',
+                ],
+                [
+                    'name' => ApiEndpoint::PACKAGING_VENDOR_BRANCH_COST,
+                    'table' => 'product_branch_availability',
+                    'abv' => 'PVC_',
+                    'ftp_path' => '/CDIS to POS/Product/'.ApiEndpoint::PACKAGING_VENDOR_BRANCH_COST.'/',
                 ]
             ];
-    
             $cdisSync = CDISSync::first();
 
             if ($cdisSync) {
