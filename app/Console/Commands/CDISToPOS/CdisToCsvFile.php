@@ -122,14 +122,14 @@ class CdisToCsvFile extends Command
                 ],
                 [
                     'name' => ApiEndpoint::PRODUCT_STRUCTURE_DETAIL,
-                    'table' => 'product_structure',
+                    'table' => 'product_structure_detail',
                     'abv' => 'PS_',
                     'ftp_path' => '/CDIS to POS/Product Structure/'.ApiEndpoint::PRODUCT_STRUCTURE_DETAIL.'/',
                 ],
                 [
                     'name' => ApiEndpoint::PRODUCT_PRICING_TYPE,
                     'table' => 'product_pricing_type',
-                    'abv' => 'PS_',
+                    'abv' => 'PSD_',
                     'ftp_path' => '/CDIS to POS/Product Pricing Type/',
                 ],
                 [
@@ -194,7 +194,6 @@ class CdisToCsvFile extends Command
     {
         $action = $cdisSync->action == 'create' ? 'C_'
             : ($cdisSync->action == 'update' ? 'U_' : 'D_');
-
         if ($cdisSync->group) {
             $cdisData = CDISSync::where([
                 'branch_bid' => $cdisSync->branch_bid,
@@ -219,14 +218,12 @@ class CdisToCsvFile extends Command
             if ($result) {
                 foreach ($result->value as $index => $arrayData) {
                     $dataMap = [];
-    
                     foreach($arrayData as $tableColumn => $tableData) {
                         $exist = array_key_exists($tableColumn, $result->data_map);
                         if ($exist) {
                             $dataMap[] = $tableData;
                         }
                     }
-    
                     $mapped[] = $dataMap;
                 }
                 
@@ -277,10 +274,15 @@ class CdisToCsvFile extends Command
         foreach ((array) json_decode($cdisData) as $key => $sync) {
             $entityName = str_replace('_', '', Str::title($sync->table_name));
             $entity = "App\\Entities\\CDIS".$entityName;
-            $dataTable = $entity::withTrashed()->where('bid', $sync->table_bid)->first();
+
             if ($entityName == "Product") {
+                $dataTable = $entity::withTrashed()->where('bid', $sync->table_bid)->first();
                 $apiEndpoint = "Product Head";
+            } else if ($entityName == "ProductStructureDetail") {
+                $dataTable = $entity::where('bid', $sync->table_bid)->first();
+                $apiEndpoint = "Product Structure Detail";
             } else {
+                $dataTable = $entity::withTrashed()->where('bid', $sync->table_bid)->first();
                 $apiEndpoint = str_replace('_', ' ', Str::title($sync->table_name));
             }
 
