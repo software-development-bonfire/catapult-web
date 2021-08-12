@@ -387,7 +387,7 @@ class CdisToCsvFile extends Command
      * 
      * @param  mixed  $cdisData
      * @param  array  $endpoint
-     * @param  array  $cdisSync
+     * @param  object  $cdisSync
      */
     public function dataMapWithGroup($cdisData, $endpoint, $cdisSync)
     {
@@ -441,7 +441,7 @@ class CdisToCsvFile extends Command
 
                 } else {
                     $this->warn(Lang::get('error.no_field_mapping_detected'));
-                    $this->createError($endpoint);
+                    $this->createError($endpoint, str_replace('_', ' ', Str::title($data->table_name)));
                     return false;
                 }
                 
@@ -484,8 +484,9 @@ class CdisToCsvFile extends Command
      * create error resource.
      * 
      * @param  array  $endpoint
+     * @param  string  $tableName
      */
-    public function createError($endpoint)
+    public function createError($endpoint, $tableName = null)
     {
         $errorExist = ErrorLog::where(['pos_entry' => $endpoint['name'], 'filename' => 'N/A'])->first();
         if (! $errorExist) {
@@ -498,7 +499,7 @@ class CdisToCsvFile extends Command
                 'error_log_bid' => $errorLog->bid,
                 'sheet' => 'N/A',
                 'error_type' => 'Invalid data',
-                'description' => "No column found, Please add configuration in Field Mapping."
+                'description' => "No column found, Please add configuration in Field Mapping. ".$tableName
             ]);
         }
     }
