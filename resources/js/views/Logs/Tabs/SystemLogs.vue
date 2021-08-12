@@ -50,7 +50,7 @@
             </div>
         </div>
         <div class="box-row box-row--white p-3">
-            <button class="button button--light">{{ $t('label.download_logs') }}</button>
+            <button class="button button--light" @click="downloadLogs()">{{ $t('label.download_logs') }}</button>
         </div>
         <datatable
             :header-fields="table.header"
@@ -67,7 +67,7 @@
                         <span v-text="tableData.initiator"></span>
                     </td>
                     <td class="datatable-cell">
-                        <span v-text="tableData.timestamp"></span>
+                        <span v-text="formatDateTime(tableData.timestamp)"></span>
                     </td>
                     <td class="datatable-cell">
                         <span v-text="tableData.module_or_process"></span>
@@ -95,6 +95,7 @@
 </template>
 
 <script>
+    var config = window.location.origin;
     import Datatable from '../../../components/Datatable2/Datatable.vue';
     import TableRow from '../../../components/Datatable2/TableRow.vue';
     import DialogBox from '../../../components/Message/DialogBox.vue';
@@ -183,6 +184,10 @@
                     module: {
                         superadmin: {
                             options: [
+                                {
+                                    label: 'ALL',
+                                    value: 'All',
+                                },
                                 {
                                     label: this.$t('label.dashboard'),
                                     value: '',
@@ -300,134 +305,8 @@
                         }
                     ],
                     values: {
-                        data: [
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            },
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            },
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            },
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            },
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            },
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            },
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            },
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            },
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            },
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            },
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            },
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            },
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            },
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            },
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            },
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            },
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            },
-                            {
-                                initiator: 'system',
-                                timestamp: 'May 3, 2021 04:00PM',
-                                module_or_process: 'POS to CDIS',
-                                action: 'Syncing',
-                                logs_description: 'Transaction_1 has synced successfully.'
-                            }
-                        ],
+                        filename: '',
+                        data: [],
                         meta: {
                             pagination: {
                                 count: 1,
@@ -448,7 +327,64 @@
             }
         },
         methods: {
-            paginate(page = 1) {},
+            paginate(page = 1) {
+                axios.get(`${config}/system-log`+'?page='+page, {
+                    params: {
+                        itemsPerPage: this.table.settings.itemsPerPage,
+                        from: this.filters.date_from,
+                        to: this.filters.date_to,
+                        modules: this.filters.modules,
+                        users: this.filters.users
+                    }
+                })
+                .then(response => {
+                    this.table.values.data = response.data.data.data
+                })
+            },
+
+            downloadLogs() {
+                var payload = {
+                    itemsPerPage: 1000,
+                    from: this.filters.date_from,
+                    to: this.filters.date_to,
+                    modules: this.filters.modules,
+                    users: this.filters.users
+                }
+                axios.get(`${config}/logs/download-logs`, { params: payload })
+                    .then(response => {
+                        this.table.values.filename = response.data
+                        console.log(response.data)
+                        this.downloadCSV(response.data)
+                    }).catch(error => {
+                        this.dialog.visible = true;
+                        this.dialog.status = 'error';
+                        this.dialog.message = this.$t('error.failed_to_download_system_logs');
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                        };
+                    })
+            },
+
+            downloadCSV(path) {
+                var url = config+'/System Logs/'+path
+                        
+                axios({url: url, method: 'GET', responseType: 'blob',
+                    }).then((response) => {
+                        var fileURL = window.URL.createObjectURL(new Blob([response.data]));
+                        var fileLink = document.createElement('a');
+
+                        fileLink.href = fileURL;
+                        fileLink.setAttribute('download', path);
+                        document.body.appendChild(fileLink);
+
+                        fileLink.click();
+                    })
+            },
+
+            formatDateTime(value)
+            {
+                return moment(value).format('YYYY-MM-DD')+" "+value.substr(value.indexOf("T")+1, 5)+":00";
+            }
         }
     }
 </script>

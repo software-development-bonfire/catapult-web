@@ -27,6 +27,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/field-mapping/detail', 'FieldMappingController@detail');
     Route::get('/logs', 'LogsController@view');
     Route::post('/logs/upload-csv', 'ErrorLogController@uploadCsv');
+    Route::get('/logs/download-logs', 'SystemLogController@downloadLogs');
 
     // Field Mapping Setup
     Route::group(['prefix' => 'field-mapping-setup'], function () {
@@ -63,6 +64,7 @@ Route::group(['middleware' => 'auth'], function () {
         'sync-interval-settings' => 'SyncIntervalSettingController',
         'field-mapping-list' => 'FieldMappingController',
         'error-log' => 'ErrorLogController',
+        'system-log' => 'SystemLogController',
     ]);
 });
 

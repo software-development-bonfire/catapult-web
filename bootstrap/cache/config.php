@@ -488,6 +488,11 @@
         'driver' => 'local',
         'root' => 'C:\\Users\\Bonfire\\Documents\\Bonfire Repository\\catapult-web\\public\\/POS to CDIS',
       ),
+      'system-logs' => 
+      array (
+        'driver' => 'local',
+        'root' => 'C:\\Users\\Bonfire\\Documents\\Bonfire Repository\\catapult-web\\public\\System Logs',
+      ),
       'ftp-pos-to-cdis' => 
       array (
         'driver' => 'ftp',

@@ -77,6 +77,11 @@ return [
             'root' => public_path(Directory::POS_TO_CDIS)
         ],
 
+        Disk::SYSTEM_LOGS => [
+            'driver' => 'local',
+            'root' => public_path('System Logs'),
+        ],
+
         Disk::FTP_POST_TO_CDIS => [
             'driver' => 'ftp',
             'host' => '',

@@ -391,7 +391,6 @@
             },
 
             viewFileErrors(data) {
-                console.log(data)
                 this.file_errors.values.data = data.details;
                 this.file_errors.values.csv_file = data.csv_file;
                 this.modal.file_errors.visible = true;
@@ -399,7 +398,7 @@
 
             downloadMultipleCSV() {
                 this.table.values.data.forEach(element => {
-                    if (element.checked) {
+                    if (element.checked && element.csv_file !== "N/A") {
                         this.downloadCSV(element);
                     }
                 })
