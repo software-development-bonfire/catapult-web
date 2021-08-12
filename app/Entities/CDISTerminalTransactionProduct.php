@@ -1,0 +1,44 @@
+<?php
+
+namespace App\Entities;
+
+class CDISTerminalTransactionProduct extends Base
+{
+    protected $table = 'cdis_terminal_transaction_product';
+
+    protected $fillable = [
+        'transaction_detail_bid',
+        'product_bid',
+        'name',
+        'description',
+        'long_description',
+        'menu_code',
+        'category_bid',
+        'category_name',
+        'quantity',
+        'tax_percentage',
+        'order_type_id',
+        'order_type_name',
+        'is_free',
+        'is_vatable',
+        'original_price',
+        'price',
+        'total_addon',
+        'total_amount',
+        'amount_discount',
+        'vatable_sales',
+        'zero_rated_sales',
+        'tax',
+        'vat_deduct',
+        'vat_exempt',
+        'split_number',
+        'remarks',
+    ];
+
+    protected $casts = [
+        'bid' => 'string',
+        'transaction_detail_bid' => 'string',
+        'product_bid' => 'string',
+        'category_bid' => 'string',
+    ];
+}
