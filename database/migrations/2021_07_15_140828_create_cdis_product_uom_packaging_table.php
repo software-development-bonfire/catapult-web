@@ -22,7 +22,6 @@ class CreateCdisProductUomPackagingTable extends Migration
             $table->unsignedBigInteger('product_bid');
             $table->unsignedBigInteger('uom_bid');
             $table->decimal('pack_content', 23, 6)->default(0.000000);
-            $table->tinyInteger('is_menu_item')->default(1);
             $table->tinyInteger('is_raw_material')->default(0);
             $table->tinyInteger('is_addon')->default(0);
             $table->tinyInteger('is_default')->default(0);
