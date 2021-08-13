@@ -11,15 +11,15 @@ class CDISPriceOverride extends Base
     protected $fillable = [
         'transaction_detail_bid',
         'transaction_product_bid',
-        "product_bid",
-        "product_name",
-        "product_description",
-        "product_code",
-        "old_price",
-        "new_price",
-        "quantity",
-        "approved_by",
-        "approved_date"
+        'product_bid',
+        'product_name',
+        'product_description',
+        'product_code',
+        'old_price',
+        'new_price',
+        'quantity',
+        'approved_by',
+        'approved_date'
     ];
 
     protected $casts = [
