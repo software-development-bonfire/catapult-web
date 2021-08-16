@@ -88,19 +88,19 @@ class CdisToCsvFile extends Command
                     'name' => ApiEndpoint::PRODUCT,
                     'table' => 'product',
                     'abv' => 'PR_',
-                    'ftp_path' => '/CDIS to POS/Product/',
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::PRODUCT,
                 ],
                 [
                     'name' => ApiEndpoint::BRAND,
                     'table' => 'brand',
                     'abv' => 'BD_',
-                    'ftp_path' => '/CDIS to POS/Brand/',
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::BRAND,
                 ],
                 [
                     'name' => ApiEndpoint::CATEGORY,
                     'table' => 'product_category',
                     'abv' => 'CT_',
-                    'ftp_path' => '/CDIS to POS/Category/',
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::CATEGORY,
                 ],
                 [
                     'name' => ApiEndpoint::UOM,
@@ -112,55 +112,67 @@ class CdisToCsvFile extends Command
                     'name' => ApiEndpoint::VENDOR,
                     'table' => 'vendor',
                     'abv' => 'VN_',
-                    'ftp_path' => '/CDIS to POS/Vendor/',
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::VENDOR,
                 ],
                 [
                     'name' => ApiEndpoint::PRODUCT_STRUCTURE,
                     'table' => 'product_structure',
                     'abv' => 'PS_',
-                    'ftp_path' => '/CDIS to POS/Product Structure/',
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::PRODUCT_STRUCTURE,
                 ],
                 [
                     'name' => ApiEndpoint::PRODUCT_STRUCTURE_DETAIL,
                     'table' => 'product_structure_detail',
                     'abv' => 'PS_',
-                    'ftp_path' => '/CDIS to POS/Product Structure/'.ApiEndpoint::PRODUCT_STRUCTURE_DETAIL.'/',
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::PRODUCT_STRUCTURE_DETAIL.'/',
                 ],
                 [
                     'name' => ApiEndpoint::PRODUCT_PRICING_TYPE,
                     'table' => 'product_pricing_type',
                     'abv' => 'PSD_',
-                    'ftp_path' => '/CDIS to POS/Product Pricing Type/',
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::PRODUCT_PRICING_TYPE,
                 ],
                 [
                     'name' => ApiEndpoint::PRODUCT_UOM_PACKAGING,
                     'table' => 'product_uom_packaging',
                     'abv' => 'PUP_',
-                    'ftp_path' => '/CDIS to POS/Product/'.ApiEndpoint::PRODUCT_UOM_PACKAGING.'/',
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::PRODUCT_UOM_PACKAGING.'/',
                 ],
                 [
                     'name' => ApiEndpoint::PRODUCT_BRANCH_PRICE,
                     'table' => 'product_branch_price',
                     'abv' => 'BP_',
-                    'ftp_path' => '/CDIS to POS/Product/'.ApiEndpoint::PRODUCT_BRANCH_PRICE.'/',
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::PRODUCT_BRANCH_PRICE.'/',
                 ],
                 [
                     'name' => ApiEndpoint::PRODUCT_BRANCH_AVAILABILITY,
                     'table' => 'product_branch_availability',
                     'abv' => 'BA_',
-                    'ftp_path' => '/CDIS to POS/Product/'.ApiEndpoint::PRODUCT_BRANCH_AVAILABILITY.'/',
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::PRODUCT_BRANCH_AVAILABILITY.'/',
                 ],
                 [
                     'name' => ApiEndpoint::PACKAGING_VENDOR,
                     'table' => 'product_branch_availability',
                     'abv' => 'PV_',
-                    'ftp_path' => '/CDIS to POS/Product/'.ApiEndpoint::PACKAGING_VENDOR.'/',
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::PACKAGING_VENDOR.'/',
                 ],
                 [
                     'name' => ApiEndpoint::PACKAGING_VENDOR_BRANCH_COST,
                     'table' => 'product_branch_availability',
                     'abv' => 'PVC_',
-                    'ftp_path' => '/CDIS to POS/Product/'.ApiEndpoint::PACKAGING_VENDOR_BRANCH_COST.'/',
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::PACKAGING_VENDOR_BRANCH_COST.'/',
+                ],
+                [
+                    'name' => ApiEndpoint::PRODUCT_ADD_ON,
+                    'table' => 'product_branch_availability',
+                    'abv' => 'PVC_',
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::PRODUCT_ADD_ON.'/',
+                ],
+                [
+                    'name' => ApiEndpoint::PRODUCT_ADD_ON_DETAIL,
+                    'table' => 'product_branch_availability',
+                    'abv' => 'PVC_',
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::PRODUCT_ADD_ON_DETAIL.'/',
                 ]
             ];
             $cdisSync = CDISSync::first();
@@ -351,25 +363,17 @@ class CdisToCsvFile extends Command
      */
     public function withGroup($cdisData, $endpoint, $cdisSync, $action, $disk)
     {
-        if ($endpoint['name'] == ApiEndpoint::PRODUCT && count($cdisData) >= EntryLevel::PRODUCT) {
-            $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
-        } else if ($endpoint['name'] == ApiEndpoint::PRODUCT_STRUCTURE 
-            && count($cdisData) >= EntryLevel::PRODUCT_STRUCTURE) {
-            $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
-        } else if (($endpoint['name'] == ApiEndpoint::VENDOR 
-            || $endpoint['name'] == ApiEndpoint::VENDOR_BRANCH)
-            && count($cdisData) >= EntryLevel::VENDOR) {
-            $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
-        } else if ($endpoint['name'] == ApiEndpoint::PRODUCT_UOM_PACKAGING
-            && count($cdisData) == EntryLevel::PRODUCT_UOM_PACKAGING) {
+        if (($endpoint['name'] == ApiEndpoint::PRODUCT && count($cdisData) >= EntryLevel::PRODUCT) 
+            || ($endpoint['name'] == ApiEndpoint::PRODUCT_STRUCTURE && count($cdisData) >= EntryLevel::PRODUCT_STRUCTURE)
+            || (($endpoint['name'] == ApiEndpoint::VENDOR || $endpoint['name'] == ApiEndpoint::VENDOR_BRANCH) && count($cdisData) >= EntryLevel::VENDOR)
+            || ($endpoint['name'] == ApiEndpoint::PRODUCT_UOM_PACKAGING && count($cdisData) == EntryLevel::PRODUCT_UOM_PACKAGING)
+            || ($endpoint['name'] == ApiEndpoint::PRODUCT_ADD_ON && count($cdisData) == EntryLevel::PRODUCT_ADD_ON)) {
             $result = $this->dataMapWithGroup($cdisData, $endpoint, $cdisSync);
         } else {
             return;
         }
 
         if ($result) {
-
-            
             $header = [];
 
             if ($result) {

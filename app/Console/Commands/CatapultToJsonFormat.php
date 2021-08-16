@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\CatapultToJsonFormatService;
+use App\Services\SyncDatabaseService;
 use Illuminate\Support\Facades\Lang;
 use stdClass;
 
@@ -44,10 +45,11 @@ class CatapultToJsonFormat extends Command
      *
      * @return void
      */
-    public function __construct(CatapultToJsonFormatService $catapultToJsonFormatService)
+    public function __construct(CatapultToJsonFormatService $catapultToJsonFormatService, SyncDatabaseService $syncDatabaseService)
     {
         parent::__construct();
         $this->catapultToJsonFormatService = $catapultToJsonFormatService;
+        $this->syncDatabaseService = $syncDatabaseService;
     }
 
     /**
@@ -176,22 +178,27 @@ class CatapultToJsonFormat extends Command
 
                         if ($endpoint['name'] === ApiEndpoint::TRANSACTION) {
                             $value = $this->catapultToJsonFormatService->transaction($TH, $TD, $PR, $PM, $PD, $AD);
+                            $saveData = $this->syncDatabaseService->transaction($TH, $TD, $PR, $PM, $PD, $AD, $result[0]['directory'], $endpoint);
                         } else if ($endpoint['name'] === ApiEndpoint::ZREAD) {
                             $value = $this->catapultToJsonFormatService->zread($ZCB, $ZCS, $ZH, $ZRD, $ZTD);
+                            $saveData = $this->syncDatabaseService->zread($ZCB, $ZCS, $ZH, $ZRD, $ZTD, $result[0]['directory'], $endpoint);
                         } else if ($endpoint['name'] === ApiEndpoint::AUDIT_TRAIL) {
                             $value = $this->catapultToJsonFormatService->auditTrail($AT);
+                            $saveData = $this->syncDatabaseService->auditTrail($AT, $result[0]['directory'], $endpoint);
                         } else if ($endpoint['name'] === ApiEndpoint::CASH_BREAKDOWN) {
                             $value = $this->catapultToJsonFormatService->cashBreakdown($CH, $CD);
+                            $saveData = $this->syncDatabaseService->cashBreakdown($CH, $CD, $result[0]['directory'], $endpoint);
                         } else {
                             $value = $this->catapultToJsonFormatService->cashDrawer($DR);
+                            $saveData = $this->syncDatabaseService->cashDrawer($DR, $result[0]['directory'], $endpoint);
                         }
                     }
-    
-                    if ($TH_success && $TD_success && $PR_success && $PM_success && $PD_success && $AD_success
+
+                    if (($TH_success && $TD_success && $PR_success && $PM_success && $PD_success && $AD_success && $value
                         || ($ZCB_success && $ZCS_success && $ZH_success && $ZTD_success && $ZRD_success)
                         || $AT_success 
                         || ($CH_success && $CD_success)
-                        || $DR_success) {
+                        || $DR_success) && $value && $saveData == true) {
 
                         resolve('filesystem')->forgetDisk(Disk::LOCAL_POS_TO_CDIS);
                         app()['config']->set('filesystems.disks.'.Disk::LOCAL_POS_TO_CDIS.'.root', public_path());
@@ -213,6 +220,8 @@ class CatapultToJsonFormat extends Command
                         Storage::disk(Disk::LOCAL_POS_TO_CDIS)->put($data['directory'].'_'.time().'.txt', json_encode($value));
 
                         $this->info(Lang::get('message.conversion_successful'));
+                    } else {
+                        $this->warn(Lang::get('error.failed_conversion').' ('.$result[0]['directory'].')');
                     }
                 }
             }
@@ -407,7 +416,6 @@ class CatapultToJsonFormat extends Command
             } else {
                 $validated = true;
             }
-
             if ($validated) {
                 $result = new stdClass;
                 $result->filename_identifier = $filename_identifier;
@@ -552,12 +560,6 @@ class CatapultToJsonFormat extends Command
                 return true;
             }
         }
-    }
-
-    public function defaultValue($dataMappings, $column)
-    {
-        $data = $dataMappings['dataMappings']->where('field', $column)->first();
-        return $data->default_value;
     }
 
     public function fileNameIdentifier($name)

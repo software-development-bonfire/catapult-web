@@ -19,6 +19,7 @@ return [
     'catapult_db_setup_failed_update' => 'Catapult DB Setup failed to update',
     'conversion_failed' => 'Conversion Failed.',
     'failed_conversion' => 'Failed Conversion',
+    'failed_to_insert_the_data' => 'Failed to insert the data.',
     'data_mapping_failed_create' => 'Data Mapping failed to create.',
     'data_mapping_failed_delete' => 'Data Mapping failed to delete.',
     'data_mapping_failed_update' => 'Data Mapping failed to update.',
