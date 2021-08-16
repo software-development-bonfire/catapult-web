@@ -26,4 +26,6 @@ final class ApiEndpoint extends Enum
     const PRODUCT_BRANCH_AVAILABILITY = "Product Branch Availability";
     const PACKAGING_VENDOR = "Packaging Vendor";
     const PACKAGING_VENDOR_BRANCH_COST = "Packaging Vendor Branch Cost";
+    const PRODUCT_ADD_ON = "Product Add On";
+    const PRODUCT_ADD_ON_DETAIL = "Product Add On Detail";
 }
