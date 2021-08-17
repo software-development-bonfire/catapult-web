@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Entities\CDISTerminal;
+
 class CatapultToJsonFormatService
 {
     /**
@@ -20,7 +22,7 @@ class CatapultToJsonFormatService
         return (object) [ "transaction" => collect($TH)->map(function ($data) use ($TD, $PM, $PR, $PD, $AD) {
             return [
                 "branch_code" => $data['branch_code'],
-                "terminal_number" => $data['terminal_number'],
+                "terminal_number" => CDISTerminal::where('number', $data['terminal_number'])->first()->bid,
                 "transaction_id" => $data['transaction_id'],
                 "date" => $data['date'],
                 "amount" => $data['amount'],
