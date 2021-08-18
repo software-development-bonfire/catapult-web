@@ -404,12 +404,12 @@ class CdisToCsvFile extends Command
             }
 
             $isConverted = $this->cdisToCsvFileService->saveToFTPGroup($header, $mapped, $cdisSync, $endpoint, $action, $disk, $cdisData, $result->tables);
-            
+
             if ($isConverted === true) {
                 $this->info(Lang::get('message.conversion_successful'));
             } else if ($isConverted === "limit") {
                 $this->warn(Lang::get('error.entry_has_reach_the_limit'));
-            } else if ($isConverted === false){
+            } else {
                 $this->warn(Lang::get('error.conversion_failed'));
             }
         } else {

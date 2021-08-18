@@ -184,6 +184,7 @@ class CdisToCsvFileService
                     $disk);
             }
         }
+
         if ($converted == true) {
             foreach ($cdisData as $cdis) {
                 $sync = CDISSync::find($cdis->bid);
@@ -202,6 +203,8 @@ class CdisToCsvFileService
                 'mapping_type' => MappingType::CDIS_TO_POS,
                 'counter' => $fCount,
             ]);
+
+            return true;
         }
     }
 }

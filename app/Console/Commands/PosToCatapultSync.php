@@ -3,12 +3,14 @@
 namespace App\Console\Commands;
 
 use App\Entities\Configuration;
+use App\Entities\ErrorLogDetail;
 use App\Entities\RemoteSetup;
 use App\Entities\SyncFileReference;
 use App\Enums\Directory;
 use App\Enums\Disk;
 use App\Enums\Status;
 use App\Enums\UserType;
+use App\Services\ErrorLogService;
 use App\User;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -38,9 +40,10 @@ class PosToCatapultSync extends Command implements ShouldQueue
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(ErrorLogService $errorLogService)
     {
         parent::__construct();
+        $this->errorLogService = $errorLogService;
     }
 
     /**
@@ -53,7 +56,7 @@ class PosToCatapultSync extends Command implements ShouldQueue
         while (true) {
             $this->line('Syncing started..');
             $remote_setup = RemoteSetup::where('status', Status::ACTIVE)->first();
-        
+
             if ($remote_setup) {
                 resolve('filesystem')->forgetDisk(Disk::FTP_POST_TO_CDIS);
                 app()['config']->set('filesystems.disks.'.Disk::FTP_POST_TO_CDIS.'.host', $remote_setup->host);
@@ -61,6 +64,20 @@ class PosToCatapultSync extends Command implements ShouldQueue
                 app()['config']->set('filesystems.disks.'.Disk::FTP_POST_TO_CDIS.'.password', $remote_setup->password);
                 app()['config']->set('filesystems.disks.'.Disk::FTP_POST_TO_CDIS.'.port', $remote_setup->port);
                 app()['config']->set('filesystems.disks.'.Disk::FTP_POST_TO_CDIS.'.root', $remote_setup->path);
+            } else {
+                $error = [
+                    'endpoint' => 'N/A',
+                    'filename' => 'N/A',
+                    'status' => Lang::get('error.failed_conversion'),
+                    'sheet' => 'N/A',
+                    'error_type' => 'Configuration error',
+                    'description' => 'No remote setup configuration'
+                ];
+
+                $errorExist = ErrorLogDetail::where(['error_type' => $error['error_type'], 'description' => $error['description']])->first();
+                if (! $errorExist) {
+                    $this->errorLogService->store($error);
+                }
             }
             
             $endpoints = [
@@ -113,7 +130,13 @@ class PosToCatapultSync extends Command implements ShouldQueue
             if ($counter <= (int) $entryLimit->value) {
                 foreach ($endpoints as $endpoint) {
                     $directories = $disk->allDirectories($endpoint['source_path']);
-    
+                    
+                    if ($directories) {
+                        $this->info('Sync processing... ('.$endpoint['name'].')');
+                    } else {
+                        $this->info('No file to be sync ('.$endpoint['name'].')');
+                    }
+                    
                     foreach ($directories as $directory) {
                         $file_count = substr($directory, -1);
         
@@ -128,19 +151,15 @@ class PosToCatapultSync extends Command implements ShouldQueue
                             if (count($files) == count($local)) {
                                 $disk->move($endpoint['source_path'].'/'.$return, $endpoint['move_to'].'/'.$return);
                             }
+                            $this->info(Lang::get('message.conversion_successful').' ('.$endpoint['name'].')');
                         }
-                    }
-                    if ($directories) {
-                        $this->info('Sync processing... ('.$endpoint['name'].')');
-                    } else {
-                        $this->info('No file to be sync ('.$endpoint['name'].')');
                     }
                 }
             } else {
                 $this->warn(Lang::get('error.entry_has_reach_the_limit'));
             }
 
-            sleep(10);
+            sleep(5);
         }
     }
 

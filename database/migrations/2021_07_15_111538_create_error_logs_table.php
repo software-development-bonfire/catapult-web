@@ -20,6 +20,7 @@ class CreateErrorLogsTable extends Migration
             $table->unsignedBigInteger('bid');
             $table->string('pos_entry');
             $table->string('filename');
+            $table->string('path')->nullable();
             $table->string('status');
             $table->timestamps();
 		});
