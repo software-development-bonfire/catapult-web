@@ -242,7 +242,6 @@ class CatapultToJsonFormat extends Command
         $allData = array();
         foreach($directories as $directory) {
             $file_count = substr($directory, -1);
-
             $allFiles = $localDisk->files($directory);
 
             $data = [];
@@ -416,12 +415,13 @@ class CatapultToJsonFormat extends Command
             } else {
                 $validated = true;
             }
+
             if ($validated) {
                 $result = new stdClass;
                 $result->filename_identifier = $filename_identifier;
                 $result->data = $mapped;
                 $result->success = true;
-    
+
                 return $result;
             } else {
                 $result = new stdClass;
@@ -566,6 +566,7 @@ class CatapultToJsonFormat extends Command
     {
         return $name == Acronym::TRANSACTION_HEAD ? FileNameIdentifier::TH
         :($name == Acronym::TRANSACTION_DETAIL ? FileNameIdentifier::TD
+        :($name == Acronym::TRANSACTION_DETAIL_DISCOUNT ? FileNameIdentifier::TDD
         :($name == Acronym::PRODUCT ? FileNameIdentifier::PR
         :($name == Acronym::PRODUCT_DISCOUNT ? FileNameIdentifier::PD
         :($name == Acronym::ADDON ? FileNameIdentifier::AD
@@ -578,6 +579,6 @@ class CatapultToJsonFormat extends Command
         :($name == Acronym::TENDER_DETAILS ? FileNameIdentifier::ZTD
         :($name == Acronym::CASH_BREACKDOWN_HEAD ? FileNameIdentifier::CH 
         :($name == Acronym::CASH_BREACKDOWN_DETAIL ? FileNameIdentifier::CD
-        : FileNameIdentifier::DR)))))))))))));
+        : FileNameIdentifier::DR))))))))))))));
     }
 }

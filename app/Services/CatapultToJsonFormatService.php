@@ -17,7 +17,7 @@ class CatapultToJsonFormatService
      * @param Array  $AD
      * @return \Illuminate\Http\Response
      */
-    public function transaction($TH, $TD, $PR, $PM, $PD, $AD)
+    public function transaction($TH, $TD, $PR, $PM, $PD = null, $AD = null)
     {
         return (object) [ "transaction" => collect($TH)->map(function ($data) use ($TD, $PM, $PR, $PD, $AD) {
             return [
@@ -213,8 +213,8 @@ class CatapultToJsonFormatService
                     collect($ZCB)->map(function ($CB) {
                         return [
                             'denomination' => $CB['cash_breakdown_detail_denomination'],
-                            'count' => $CB['cash_breakdown_detail_count'],
-                            'amount' => $CB['cash_breakdown_detail_amount'],
+                            'count' => $CB['cash_breakdown_count'],
+                            'amount' => $CB['cash_breakdown_amount'],
                         ];
                     })
                 ],

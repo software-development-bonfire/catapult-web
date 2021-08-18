@@ -28,6 +28,16 @@ class CdisCashDrawerFields extends MigratableSeeder
             [
                 'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
+                'field' => 'cash_drawer_bid',
+                'description' => null,
+                'mapping_type' => 'VARCHAR',
+                'file_name' => 'DR',
+                'default_value' => 1,
+                'column_name' => 'bid',
+            ],
+            [
+                'field_mapping_bid' => $field_map->bid,
+                'required' => 0,
                 'field' => 'branch_code',
                 'description' => null,
                 'mapping_type' => 'INT',

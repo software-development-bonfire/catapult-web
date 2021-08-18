@@ -8,6 +8,7 @@ final class FileNameIdentifier extends Enum
 {
     const TH = "Transaction Head";
     const TD = "Transaction Detail";
+    const TDD = "Transaction Detail Discount";
     const PR = "Product";
     const PM = "Payment Method";
     const AD = "Add on";

@@ -32,6 +32,7 @@ class SyncDatabaseService
     }
     public function transaction($TH, $TD, $PR, $PM, $PD = null, $AD = null, $directory, $endpoint)
     {
+        // dd($TH, $TD, $PR, $PM, $PD, $AD);
         try {
             return DB::transaction(function() use ($TH, $TD, $PR, $PM, $PD, $AD, $directory, $endpoint) {
                 if ($TH) {
@@ -142,7 +143,7 @@ class SyncDatabaseService
 
                         if ($AD) {
                             foreach ($AD as $addon) {
-                                if ($product['product_id'] === $addon['addon_id']) {
+                                if ($product['product_id'] === $addon['addon_bid']) {
                                     $ad = [
                                         'transaction_product_bid' => $saveProduct['bid'],
                                         'name' => $addon['addon_name'],
@@ -215,7 +216,7 @@ class SyncDatabaseService
                             "date_time" => Carbon::parse($zread['date_time'])->format('y-m-d H:i:s'),
                             "terminal_bid" => (int) $zread['terminal_number'],
                             // "branch_code" => $zread['branch_code'],
-                            "guest_count" => ($zread['guest_count'] === '""') ? 0: $zread['guest_count'],
+                            "guest_count" => $zread['guest_count'],
                             "gross_sales_amount" => $zread['gross_sales_amount'],
                             "transaction_count" => $zread['transaction_count'],
                             "mandated_discount_transaction_count" => $zread['mandated_discount_transaction_count'],
@@ -270,8 +271,8 @@ class SyncDatabaseService
                         $zcb = [
                             'head_bid' => isset($head->bid) ? $head->bid : "",
                             'denomination' => $cashBreakdown['cash_breakdown_detail_denomination'],
-                            'quantity' => $cashBreakdown['cash_breakdown_detail_count'],
-                            'amount' => $cashBreakdown['cash_breakdown_detail_amount'],
+                            'quantity' => $cashBreakdown['cash_breakdown_count'],
+                            'amount' => $cashBreakdown['cash_breakdown_amount'],
                         ];
         
                         $cash_breakdown = CDISZreadCashBreakdownDetail::create($zcb);
@@ -455,7 +456,7 @@ class SyncDatabaseService
                             'date' => Carbon::parse($cashDrawer['date'])->format('Y-m-d H:i:s'),
                             'approver_bid' => $cashDrawer['approver_id'],
                             'approver_name' => $cashDrawer['approver_name'],
-                            'approved_date' => $cashDrawer['approved_date'],
+                            'approved_date' => Carbon::parse($cashDrawer['approved_date'])->format('Y-m-d H:i:s'),
                             'type' => $cashDrawer['type'],
                             'remarks' => $cashDrawer['remarks'],
                         ];
