@@ -88,19 +88,19 @@ class CdisToCsvFile extends Command
                     'name' => ApiEndpoint::PRODUCT,
                     'table' => 'product',
                     'abv' => 'PR_',
-                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::PRODUCT,
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::PRODUCT.'/',
                 ],
                 [
                     'name' => ApiEndpoint::BRAND,
                     'table' => 'brand',
                     'abv' => 'BD_',
-                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::BRAND,
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::BRAND.'/',
                 ],
                 [
                     'name' => ApiEndpoint::CATEGORY,
                     'table' => 'product_category',
                     'abv' => 'CT_',
-                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::CATEGORY,
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::CATEGORY.'/',
                 ],
                 [
                     'name' => ApiEndpoint::UOM,
@@ -112,13 +112,13 @@ class CdisToCsvFile extends Command
                     'name' => ApiEndpoint::VENDOR,
                     'table' => 'vendor',
                     'abv' => 'VN_',
-                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::VENDOR,
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::VENDOR.'/',
                 ],
                 [
                     'name' => ApiEndpoint::PRODUCT_STRUCTURE,
                     'table' => 'product_structure',
                     'abv' => 'PS_',
-                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::PRODUCT_STRUCTURE,
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::PRODUCT_STRUCTURE.'/',
                 ],
                 [
                     'name' => ApiEndpoint::PRODUCT_STRUCTURE_DETAIL,
@@ -130,7 +130,7 @@ class CdisToCsvFile extends Command
                     'name' => ApiEndpoint::PRODUCT_PRICING_TYPE,
                     'table' => 'product_pricing_type',
                     'abv' => 'PSD_',
-                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::PRODUCT_PRICING_TYPE,
+                    'ftp_path' => '/CDIS to POS/'.ApiEndpoint::PRODUCT_PRICING_TYPE.'/',
                 ],
                 [
                     'name' => ApiEndpoint::PRODUCT_UOM_PACKAGING,
