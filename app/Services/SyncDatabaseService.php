@@ -40,7 +40,7 @@ class SyncDatabaseService
                         $transactionHead = [
                             'terminal_bid' => CDISTerminal::where('number', $transaction['terminal_number'])->first()->id,
                             'transaction_id' => $transaction['transaction_id'],
-                            'date' => $transaction['date'],
+                            'date' => Carbon::parse($transaction['date'])->format('Y-m-d H:i:s'),
                             'amount' => $transaction['amount'],
                             'transaction_type' => $transaction['transaction_type'],
                             'is_zread' => $transaction['is_zread'],
@@ -56,7 +56,7 @@ class SyncDatabaseService
                             'total_vat_deduct_amount' => $transaction['total_vat_deduct_amount'],
                             'total_vatable_sales' => $transaction['total_vatable_sales'],
                             'total_zero_rated_sales' => $transaction['total_zero_rated_sales'],
-                            'log_date' => $transaction['log_date'],
+                            'log_date' => Carbon::parse($transaction['log_date'])->format('Y-m-d H:i:s'),
                             'order_number' => $transaction['order_number'],
                             'table_number' => $transaction['table_number'],
                             'guest_count' => $transaction['guest_count'],
