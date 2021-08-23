@@ -19,7 +19,11 @@ class CreateCdisKitchenItemSetupDetailTable extends Migration
             $table->unsignedBigInteger('head_bid');
             $table->unsignedBigInteger('kitchen_station_process_bid');
             $table->unsignedBigInteger('product_uom_packaging_bid');
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
+            $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
+            $table->softDeletes();
         });
     }
 

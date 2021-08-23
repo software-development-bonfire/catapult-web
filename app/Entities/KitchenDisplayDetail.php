@@ -2,8 +2,12 @@
 
 namespace App\Entities;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class KitchenDisplayDetail extends Base
 {
+    use SoftDeletes;
+
     protected $table = 'kitchen_display_detail';
 
     protected $fillable = [

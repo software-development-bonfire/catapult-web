@@ -19,7 +19,7 @@ class CreateKitchenDisplayDetailTable extends Migration
             $table->unsignedBigInteger('head_bid');
             $table->unsignedBigInteger('transaction_product_bid');
             $table->decimal('remaining_quantity', 23, 6)->default(0.000000);
-            $table->unsignedBigInteger('kitchen_station_bid');
+            $table->unsignedBigInteger('kitchen_station_bid')->nullable();
             $table->tinyInteger('status');
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
