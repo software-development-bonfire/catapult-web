@@ -41,6 +41,12 @@ class Kernel extends HttpKernel
             'throttle:60,1',
             'bindings',
         ],
+
+        'access-token' => [
+            'throttle:60,1',
+            'bindings',
+            \App\Http\Middleware\AccessToken\KDS::class,
+        ],
     ];
 
     /**

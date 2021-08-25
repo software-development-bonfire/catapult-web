@@ -4,7 +4,9 @@ namespace App\Http\Controllers\KDS\v1;
 
 use App\Http\Controllers\Controller;
 use App\Repositories\Contracts\KitchenDisplayRepository;
+use App\Repositories\Eloquent\KitchenDisplayRepositoryEloquent;
 use App\Services\KitchenDisplayService;
+use App\Transformers\KDS\KitchenDisplay\AddonListTransformer;
 use App\Transformers\KDS\KitchenDisplay\MenuListTransformer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,6 +26,18 @@ class KitchenDisplayController extends Controller
 
         $menus = app()->make(KitchenDisplayRepository::class)
             ->getMenuList($filters);
+
+        foreach ($menus as $menu) {
+            $addonFilters = (object) array(
+                'transaction_product_bid' => $menu->transaction_product_bid
+            );
+
+            $addons = app()->make(KitchenDisplayRepositoryEloquent::class)->getAddonList($addonFilters);
+
+            $addons = fractal($addons, AddonListTransformer::class)->serializeWith(new ArraySerializer());
+
+            $menu->addon = $addons;
+        }
 
         $menus = fractal($menus, MenuListTransformer::class)->serializeWith(new ArraySerializer());
 

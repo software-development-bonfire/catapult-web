@@ -46,6 +46,11 @@ return [
             'provider' => 'users',
             'hash' => false,
         ],
+
+        'kds-api' => [
+            'driver' => 'passport',
+            'provider' => 'cdis_kitchen_user',
+        ]
     ],
 
     /*

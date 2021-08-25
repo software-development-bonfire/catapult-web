@@ -39,6 +39,7 @@ class MenuListTransformer extends TransformerAbstract
             'status' => $model->status,
             'created_at' => Carbon::parse($model->created_at)->format('Y-m-d h:i:s'),
             'updated_at' => Carbon::parse($model->updated_at)->format('Y-m-d h:i:s'),
+            'addon' => $model->addon
         ];
     }
 }

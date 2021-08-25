@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Enums\TokenResponseCode;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Http\JsonResponse;
 

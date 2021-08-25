@@ -42,8 +42,33 @@ class KitchenDisplayRepositoryEloquent extends BaseEloquent implements KitchenDi
             ->rightJoin('kitchen_display', 'kitchen_display.bid', '=', 'kitchen_display_detail.head_bid')
             ->rightJoin('cdis_terminal_transaction_product', 'cdis_terminal_transaction_product.bid', '=', 'kitchen_display_detail.transaction_product_bid')
             ->rightJoin('cdis_terminal_transaction_detail', 'cdis_terminal_transaction_detail.bid', '=', 'kitchen_display.transaction_detail_bid')
-            ->leftJoin('cdis_kitchen_item_setup_detail', 'cdis_kitchen_item_setup_detail.product_uom_packaging_bid', '=', 'cdis_terminal_transaction_product.product_bid')
-            ->whereNull('kitchen_display.completed_at');
+            ->rightJoin('cdis_kitchen_item_setup_detail', 'cdis_kitchen_item_setup_detail.product_uom_packaging_bid', '=', 'cdis_terminal_transaction_product.product_bid')
+            ->whereNull('kitchen_display.completed_at')
+            ->groupBy(['kitchen_display_detail.bid']);
+
+        return $this->model->get();
+    }
+
+    /**
+     * Get addon list
+     *
+     * @param Object $filters
+     * @return Collection $result.
+     */
+    public function getAddonList($filters = null)
+    {
+        $this->model = $this->model
+            ->select([
+                'cdis_terminal_transaction_addon.product_bid',
+                'cdis_terminal_transaction_addon.name',
+                'cdis_terminal_transaction_addon.quantity',
+            ])
+            ->rightJoin('kitchen_display', 'kitchen_display.bid', '=', 'kitchen_display_detail.head_bid')
+            ->leftJoin('cdis_terminal_transaction_addon', 'cdis_terminal_transaction_addon.transaction_product_bid', '=', 'kitchen_display_detail.transaction_product_bid');
+
+        if (isset($filters->transaction_product_bid) || $filters->transaction_product_bid != '') {
+            $this->model->where('cdis_terminal_transaction_addon.transaction_product_bid', $filters->transaction_product_bid);
+        }
 
         return $this->model->get();
     }
