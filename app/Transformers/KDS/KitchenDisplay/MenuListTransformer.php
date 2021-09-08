@@ -37,8 +37,7 @@ class MenuListTransformer extends TransformerAbstract
             'kitchen_station_process_bid' => (string) $model->kitchen_station_process_bid,
             'or_number' => (string) $model->or_number,
             'status' => $model->status,
-            'order_type_id' => $model->order_type_id,
-            'order_type_name' => $model->order_type_name,
+            'order_type' => $model->order_type,
             'created_at' => Carbon::parse($model->created_at)->format('Y-m-d h:i:s'),
             'updated_at' => Carbon::parse($model->updated_at)->format('Y-m-d h:i:s'),
             'addon' => $model->addon

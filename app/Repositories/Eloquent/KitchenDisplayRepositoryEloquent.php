@@ -3,6 +3,7 @@
 namespace App\Repositories\Eloquent;
 
 use App\Entities\KitchenDisplayDetail;
+use App\Enums\KDS\OrderType;
 use App\Repositories\Contracts\KitchenDisplayRepository;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -35,9 +36,18 @@ class KitchenDisplayRepositoryEloquent extends BaseEloquent implements KitchenDi
                 'kitchen_display_detail.kitchen_station_bid',
                 'cdis_kitchen_item_setup_detail.kitchen_station_process_bid',
                 'cdis_terminal_transaction_detail.or_number',
-                'cdis_terminal_transaction_product.order_type_id',
-                'cdis_terminal_transaction_product.order_type_name',
                 'kitchen_display_detail.status',
+                DB::raw('
+                    SUM(
+                        CASE
+                            WHEN LOWER(cdis_terminal_transaction_product.order_type_name) = \'dine_in\' THEN '.OrderType::DINE_IN.'
+                            WHEN LOWER(cdis_terminal_transaction_product.order_type_name) = \'take_out\' THEN '.OrderType::TAKE_OUT.'
+                            WHEN LOWER(cdis_terminal_transaction_product.order_type_name) = \'delivery\' THEN '.OrderType::DELIVERY.'
+                            WHEN LOWER(cdis_terminal_transaction_product.order_type_name) = \'drive_thru\' THEN '.OrderType::DRIVE_THRU.'
+                            ELSE 0
+                        END
+                    ) AS `order_type`
+                '),
                 'kitchen_display_detail.created_at',
                 'kitchen_display_detail.updated_at',
             ])
