@@ -43,4 +43,23 @@ class LoginController extends Controller
 
         return $this->errorResponse([], __('auth.failed'));
     }
+
+    /**
+     * Logout by deleting access token
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function logout(Request $request)
+    {
+        try {
+            $tokenName = 'KDS-'. $request->getHost();
+
+            Passport::token()->where('name', $tokenName)->delete();
+
+            return $this->successfulResponse();
+        } catch (\Exception $ex) {
+            return $this->errorResponse();
+        }
+    }
 }

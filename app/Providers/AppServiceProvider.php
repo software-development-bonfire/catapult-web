@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -30,6 +32,26 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        $this->loadConfiguration();
+    }
+
+    /**
+     * Load configuration from table.
+     *
+     * @return void
+     */
+    private function loadConfiguration()
+    {
+        try {
+            if (Schema::hasTable('configurations')) {
+                config([
+                    'configuration' => Arr::pluck(
+                        \App\Entities\Configuration::all()->toArray(),
+                        'value',
+                        'attribute'
+                    )
+                ]);
+            }
+        } catch (\Exception $e) { }
     }
 }

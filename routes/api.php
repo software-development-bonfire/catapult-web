@@ -18,6 +18,7 @@ Route::group([
     'namespace' => 'KDS\v1'
 ], function () {
     Route::post('login', [\App\Http\Controllers\KDS\v1\LoginController::class, 'login']);
+    Route::post('logout', [\App\Http\Controllers\KDS\v1\LoginController::class, 'logout']);
 
     Route::group(['middleware' => 'access-token'], function () {
         Route::get('station/list', 'KitchenStationController@list');
