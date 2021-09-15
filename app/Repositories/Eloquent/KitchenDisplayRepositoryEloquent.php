@@ -36,6 +36,7 @@ class KitchenDisplayRepositoryEloquent extends BaseEloquent implements KitchenDi
                 'kitchen_display_detail.kitchen_station_bid',
                 'cdis_kitchen_item_setup_detail.kitchen_station_process_bid',
                 'cdis_terminal_transaction_detail.or_number',
+                'cdis_product_uom_packaging.variant_option',
                 'kitchen_display_detail.status',
                 DB::raw('
                     SUM(
@@ -53,6 +54,7 @@ class KitchenDisplayRepositoryEloquent extends BaseEloquent implements KitchenDi
             ])
             ->rightJoin('kitchen_display', 'kitchen_display.bid', '=', 'kitchen_display_detail.head_bid')
             ->rightJoin('cdis_terminal_transaction_product', 'cdis_terminal_transaction_product.bid', '=', 'kitchen_display_detail.transaction_product_bid')
+            ->rightJoin('cdis_product_uom_packaging', 'cdis_product_uom_packaging.bid', '=', 'cdis_terminal_transaction_product.product_bid')
             ->rightJoin('cdis_terminal_transaction_detail', 'cdis_terminal_transaction_detail.bid', '=', 'kitchen_display.transaction_detail_bid')
             ->rightJoin('cdis_kitchen_item_setup_detail', 'cdis_kitchen_item_setup_detail.product_uom_packaging_bid', '=', 'cdis_terminal_transaction_product.product_bid')
             ->whereNull('kitchen_display.completed_at')

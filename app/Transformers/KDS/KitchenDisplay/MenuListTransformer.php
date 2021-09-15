@@ -3,6 +3,7 @@
 namespace App\Transformers\KDS\KitchenDisplay;
 
 use App\Entities\KitchenDisplayDetail;
+use App\Repositories\Contracts\CDISProductVariantRepository;
 use Carbon\Carbon;
 use League\Fractal\TransformerAbstract;
 
@@ -24,6 +25,22 @@ class MenuListTransformer extends TransformerAbstract
     {
         $decimal = config('decimal.places');
 
+        $options = json_decode($model->variant_option);
+
+        $filters = (object) [
+            'product_variant_option_bid' => $options
+        ];
+
+        $variantAndOptions = app(CDISProductVariantRepository::class)->variantAndOptionList($filters);
+
+        $variantNames = [];
+
+        foreach ($variantAndOptions as $variantAndOption) {
+            array_push($variantNames, $variantAndOption['option_name']);
+        }
+
+        $variantLabel = implode('/', $variantNames);
+
         return [
             'kitchen_display_bid' => (string) $model->kitchen_display_bid,
             'kitchen_display_detail_bid' => (string) $model->kitchen_display_detail_bid,
@@ -36,6 +53,7 @@ class MenuListTransformer extends TransformerAbstract
             'kitchen_station_bid' => (string) $model->kitchen_station_bid,
             'kitchen_station_process_bid' => (string) $model->kitchen_station_process_bid,
             'or_number' => (string) $model->or_number,
+            'variant_label' => $variantLabel,
             'status' => $model->status,
             'order_type' => $model->order_type,
             'created_at' => Carbon::parse($model->created_at)->format('Y-m-d h:i:s'),
