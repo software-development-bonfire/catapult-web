@@ -15,6 +15,7 @@ class KitchenDisplayDetail extends Base
         'transaction_product_bid',
         'remaining_quantity',
         'kitchen_station_bid',
+        'status'
     ];
 
     protected $casts = [
@@ -23,4 +24,9 @@ class KitchenDisplayDetail extends Base
         'transaction_product_bid' => 'string',
         'kitchen_station_bid' => 'string',
     ];
+
+    public function head()
+    {
+        return $this->belongsTo(KitchenDisplay::class, 'head_bid','bid');
+    }
 }

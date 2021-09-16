@@ -6,6 +6,7 @@ use App\Entities\KitchenDisplay;
 use App\Entities\KitchenDisplayDetail;
 use App\Enums\KDS\MenuStatus;
 use App\Traits\DatabaseTransaction;
+use Carbon\Carbon;
 
 class KitchenDisplayService
 {
@@ -25,6 +26,20 @@ class KitchenDisplayService
             $transactionProductBid = $kitchenDisplayDetail->transaction_product_bid;
             $remainingQuantity = $kitchenDisplayDetail->remaining_quantity;
             $remainingQuantity = $remainingQuantity - $data['quantity'];
+            $isDone = is_null($data['move_station_bid']) || $data['move_station_bid'] != '';
+
+            $hasAssociatedMenu =
+                KitchenDisplayDetail::where([
+                    'head_bid' => $headBid,
+                    ['status', '=', MenuStatus::ON_PROCESS],
+                    ['bid', '!=', $data['kitchen_display_detail_bid']]
+                ])->count() > 0;
+
+            if (! $hasAssociatedMenu) {
+                $kitchenDisplayDetail->head->update([
+                    'completed_at' => Carbon::now()
+                ]);
+            }
 
             if ($remainingQuantity > 0) {
                 $kitchenDisplayDetail->update([
@@ -48,7 +63,7 @@ class KitchenDisplayService
                 ]);
             } else {
                 $expectedDestinationData['remaining_quantity'] = $data['quantity'];
-                $expectedDestinationData['status'] = MenuStatus::ON_PROCESS;
+                $expectedDestinationData['status'] = $isDone ? MenuStatus::DONE : MenuStatus::ON_PROCESS;
                 $destinationKitchenDisplayDetail->create($expectedDestinationData);
             }
 
