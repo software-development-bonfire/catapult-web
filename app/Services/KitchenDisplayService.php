@@ -22,11 +22,16 @@ class KitchenDisplayService
     {
         return $this->transaction(function () use($data) {
             $kitchenDisplayDetail = KitchenDisplayDetail::find($data['kitchen_display_detail_bid']);
+
+            if ($kitchenDisplayDetail->status == MenuStatus::DONE) {
+                return false;
+            }
+
             $headBid = $kitchenDisplayDetail->head_bid;
             $transactionProductBid = $kitchenDisplayDetail->transaction_product_bid;
             $remainingQuantity = $kitchenDisplayDetail->remaining_quantity;
             $remainingQuantity = $remainingQuantity - $data['quantity'];
-            $isDone = is_null($data['move_station_bid']) || $data['move_station_bid'] != '';
+            $isDone = is_null($data['move_station_bid']) || $data['move_station_bid'] == '';
 
             $hasAssociatedMenu =
                 KitchenDisplayDetail::where([
@@ -35,7 +40,7 @@ class KitchenDisplayService
                     ['bid', '!=', $data['kitchen_display_detail_bid']]
                 ])->count() > 0;
 
-            if (! $hasAssociatedMenu) {
+            if (! $hasAssociatedMenu && $isDone) {
                 $kitchenDisplayDetail->head()->withTrashed()->update([
                     'completed_at' => Carbon::now()
                 ]);
