@@ -36,7 +36,7 @@ class KitchenDisplayService
                 ])->count() > 0;
 
             if (! $hasAssociatedMenu) {
-                $kitchenDisplayDetail->head->update([
+                $kitchenDisplayDetail->head()->withTrashed()->update([
                     'completed_at' => Carbon::now()
                 ]);
             }
