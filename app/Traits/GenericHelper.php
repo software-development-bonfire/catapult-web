@@ -53,7 +53,7 @@ trait GenericHelper
     ) {
         DB::statement(DB::raw("SET @row := 0"));
 
-        $model = DB::table($table. ' AS tablename');
+        $model = DB::table($table.' AS tablename');
 
         if ($withLeadingZeros) {
             $lpadLength = ! is_null($max) && is_numeric($max) ? strlen($max) : 18;
@@ -186,7 +186,7 @@ trait GenericHelper
         $count = 0;
         $days = cal_days_in_month(CAL_GREGORIAN, $month, $year);
         $date = new \Datetime($year.'-'.$month.'-01');
-        $day = date('l', strtotime($year. '-' .$month. '-' .$day));
+        $day = date('l', strtotime($year.'-'.$month.'-'.$day));
     
         for ($i = 0; $i < $days; $i++) {
             if($date->format('l') == $day) {
