@@ -2,8 +2,12 @@
 
 namespace App\Entities;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class KitchenDisplayDetail extends Base
 {
+    use SoftDeletes;
+
     protected $table = 'kitchen_display_detail';
 
     protected $fillable = [
@@ -11,6 +15,7 @@ class KitchenDisplayDetail extends Base
         'transaction_product_bid',
         'remaining_quantity',
         'kitchen_station_bid',
+        'status'
     ];
 
     protected $casts = [
@@ -19,4 +24,9 @@ class KitchenDisplayDetail extends Base
         'transaction_product_bid' => 'string',
         'kitchen_station_bid' => 'string',
     ];
+
+    public function head()
+    {
+        return $this->belongsTo(KitchenDisplay::class, 'head_bid','bid');
+    }
 }

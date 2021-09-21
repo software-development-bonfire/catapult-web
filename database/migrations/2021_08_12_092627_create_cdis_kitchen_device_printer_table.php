@@ -22,6 +22,8 @@ class CreateCdisKitchenDevicePrinterTable extends Migration
             $table->string('printer_host', 45);
             $table->tinyInteger('is_printer_dispatch_copy');
             $table->tinyInteger('status')->default(\App\Enums\Status::ACTIVE);
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
             $table->softDeletes();

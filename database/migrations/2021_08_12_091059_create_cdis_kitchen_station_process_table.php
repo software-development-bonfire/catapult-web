@@ -18,11 +18,13 @@ class CreateCdisKitchenStationProcessTable extends Migration
             $table->unsignedBigInteger('bid')->index()->unique();
             $table->string('code', 45);
             $table->string('description', 128);
-            $table->unsignedBigInteger('kitchen_station_bid_1');
-            $table->unsignedBigInteger('kitchen_station_bid_2');
-            $table->unsignedBigInteger('kitchen_station_bid_3');
-            $table->unsignedBigInteger('kitchen_station_bid_4');
+            $table->unsignedBigInteger('kitchen_station_bid_1')->nullable();
+            $table->unsignedBigInteger('kitchen_station_bid_2')->nullable();
+            $table->unsignedBigInteger('kitchen_station_bid_3')->nullable();
+            $table->unsignedBigInteger('kitchen_station_bid_4')->nullable();
             $table->tinyInteger('status')->default(\App\Enums\Status::ACTIVE);
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
             $table->softDeletes();

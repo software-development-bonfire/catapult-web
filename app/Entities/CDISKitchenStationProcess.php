@@ -16,4 +16,12 @@ class CDISKitchenStationProcess extends Base
         'kitchen_station_bid_4',
         'status'
     ];
+
+    protected $casts = [
+        'bid' => 'string',
+        'kitchen_station_bid_1' => 'string',
+        'kitchen_station_bid_2' => 'string',
+        'kitchen_station_bid_3' => 'string',
+        'kitchen_station_bid_4' => 'string',
+    ];
 }

@@ -21,6 +21,8 @@ class CreateCdisKitchenStationTable extends Migration
             $table->tinyInteger('queueing_group_type');
             $table->tinyInteger('screen_prioritization');
             $table->tinyInteger('status')->default(\App\Enums\Status::ACTIVE);
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
             $table->softDeletes();
