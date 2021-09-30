@@ -25,10 +25,12 @@ class ProcessListTransformer extends TransformerAbstract
             'bid' => (string) $model->bid,
             'code' => $model->code,
             'description' => $model->description,
-            'kitchen_station_bid_1' => (string) $model->kitchen_station_bid_1,
-            'kitchen_station_bid_2' => (string) $model->kitchen_station_bid_2,
-            'kitchen_station_bid_3' => (string) $model->kitchen_station_bid_3,
-            'kitchen_station_bid_4' => (string) $model->kitchen_station_bid_4,
+            'station' => array_filter([
+                (string) $model->kitchen_station_bid_1,
+                (string) $model->kitchen_station_bid_2,
+                (string) $model->kitchen_station_bid_3,
+                (string) $model->kitchen_station_bid_4,
+            ]),
             'status' => $model->status
         ];
     }
