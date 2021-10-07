@@ -42,7 +42,9 @@ class RemoteSetupRepositoryEloquent extends BaseRepository implements RemoteSetu
             ->select([
                 'bid',
                 'name',
-                'path',
+                'storage_type',
+                'local_path',
+                'remote_path',
                 'server',
                 'host',
                 'port',

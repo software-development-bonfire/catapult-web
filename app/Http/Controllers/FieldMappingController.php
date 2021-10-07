@@ -2,32 +2,39 @@
 
 namespace App\Http\Controllers;
 
-use App\Entities\DataMapping;
+use App\Entities\FieldMappingDetail;
+use App\Enums\MappingType;
 use App\Http\Requests\DataMappingRequest;
-use App\Http\Requests\FieldMappingListRequest;
+use App\Http\Requests\FieldMappingRequest;
 use App\Repositories\Contracts\RemoteSetupRepository;
 use App\Repositories\Contracts\CatapultDbSetupRepository;
 use App\Repositories\Contracts\ApiSetupRepository;
-use App\Repositories\Contracts\FieldMappingListRepository;
 use App\Repositories\Contracts\FieldMappingRepository;
-use App\Services\FieldMappingListService;
+use App\Repositories\Contracts\FieldMappingPresetRepository;
+use App\Repositories\Contracts\SyncEntryRepository;
+use App\Services\FieldMappingService;
 use App\Transformers\CatapultDbSetupTransformer;
+use App\Transformers\FieldMappingDetailTransformer;
+use App\Transformers\FieldMappingPresetDataEntriesTransformer;
 use App\Transformers\RemoteSetupTransformer;
 use App\Transformers\ApiSetupTransformer;
-use App\Transformers\FieldMappingSetupTransformer;
+use App\Transformers\FieldMappingPresetTransformer;
 use App\Transformers\FieldMappingTransformer;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
+use Spatie\Fractalistic\ArraySerializer;
 
 class FieldMappingController extends Controller
 {
+    public $fieldMappingService;
+    
     /**
-     * @param  FieldMappingListService  $fieldMappingListService
-     *
+     * @param  FieldMappingService  $fieldMappingService
      */
-    public function __construct(FieldMappingListService $fieldMappingListService)
+    public function __construct(FieldMappingService $fieldMappingService)
     {
-        $this->fieldMappingListService = $fieldMappingListService;
+        $this->fieldMappingService = $fieldMappingService;
     }
 
     /**
@@ -36,9 +43,9 @@ class FieldMappingController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function list(Request $request)
     {
-        $list = app()->make(FieldMappingListRepository::class)->list($request->all());
+        $list = app()->make(FieldMappingRepository::class)->list($request->all());
 
         $list = fractal($list, FieldMappingTransformer::class);
 
@@ -48,19 +55,19 @@ class FieldMappingController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param  Request  $request
+     * @return JsonResponse
      */
     public function dataMappingList(Request $request)
     {
-        return DataMapping::where('field_mapping_list_bid', $request->field_mapping_list_bid)->get();
+        return FieldMappingDetail::where('field_mapping_bid', $request->field_mapping_bid)->get();
     }
 
     /**
      * Display a listing of the resource.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param  Request  $request
+     * @return JsonResponse
      */
     public function getList(Request $request)
     {
@@ -85,14 +92,16 @@ class FieldMappingController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param  Request  $request
+     * @return JsonResponse
      */
-    public function getEndpoint(Request $request)
+    public function getDataEntries(Request $request)
     {
-        $list = app()->make(FieldMappingRepository::class)->getEndpoints($request->all());
+        $filters = (object) stringToJson($request->filters);
 
-        $list = fractal($list, FieldMappingSetupTransformer::class);
+        $list = app()->make(FieldMappingPresetRepository::class)->getDataEntries($filters);
+
+        $list = fractal($list, FieldMappingPresetDataEntriesTransformer::class);
 
         return $this->successfulResponse($list);
     }
@@ -108,25 +117,33 @@ class FieldMappingController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
+     * Displays the product detail page.
      *
      * @return \Illuminate\Http\Response
      */
-    public function detail()
+    public function detail(Request $request)
     {
-        return view('field-mapping.detail');
+        $filters = (object) stringToJson($request->all());
+
+        $detail = app()->make(FieldMappingRepository::class)->getDetail($filters);
+
+        $detail = fractal($detail, FieldMappingDetailTransformer::class)->serializeWith(new ArraySerializer());
+
+        $detail = json_encode($detail);
+
+        return view('field-mapping.detail', compact('detail'));
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  FieldMappingListRequest  $request
+     * @param  FieldMappingRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(FieldMappingListRequest $request)
+    public function store(FieldMappingRequest $request)
     {
         try {
-            $data = $this->fieldMappingListService->store($request->validated());
+            $data = $this->fieldMappingService->store($request->validated());
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],
@@ -148,7 +165,7 @@ class FieldMappingController extends Controller
     public function storeDataMapping(DataMappingRequest $request)
     {
         try {
-            $data = $this->fieldMappingListService->storeDataMapping($request->validated());
+            $data = $this->fieldMappingService->storeDataMapping($request->validated());
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],
@@ -164,14 +181,14 @@ class FieldMappingController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  FieldMappingListRequest  $request
+     * @param  FieldMappingRequest  $request
      * @param  string  $bid
      * @return \Illuminate\Http\Response
      */
-    public function update(FieldMappingListRequest $request, $bid)
+    public function update(FieldMappingRequest $request, $bid)
     {
         try {
-            $this->fieldMappingListService->update($request->validated(), $bid);
+            $this->fieldMappingService->update($request->validated(), $bid);
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],
@@ -191,10 +208,10 @@ class FieldMappingController extends Controller
      * @param  string  $field_mapping_list_bid
      * @return \Illuminate\Http\Response
      */
-    public function updateDataMapping(DataMappingRequest $request, $field_mapping_list_bid)
+    public function updateDataMapping(DataMappingRequest $request, $bid)
     {
         try {
-            $this->fieldMappingListService->updateDataMapping($request->validated(), $field_mapping_list_bid);
+            $this->fieldMappingService->updateDataMapping($request->validated(), $bid);
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],
@@ -216,7 +233,7 @@ class FieldMappingController extends Controller
     public function destroy($bid)
     {
         try {
-            $this->fieldMappingListService->destroy($bid);
+            $this->fieldMappingService->destroy($bid);
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],
@@ -238,7 +255,7 @@ class FieldMappingController extends Controller
     public function generateCsv(Request $request)
     {
         try {
-            $data = $this->fieldMappingListService->generateCsv($request->all());
+            $data = $this->fieldMappingService->generateCsv($request->all());
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],

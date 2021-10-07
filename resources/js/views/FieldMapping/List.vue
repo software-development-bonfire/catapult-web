@@ -42,7 +42,7 @@
                         <span v-text="tableData.api_setup_name"></span>
                     </td>
                     <td class="datatable-cell">
-                        <span v-text="tableData.api_to_map"></span>
+                        <span v-text="tableData.data_entry"></span>
                     </td>
                     <td class="datatable-cell">
                         <span v-text="tableData.status ? $t('label.active') : $t('label.inactive')"></span>
@@ -74,7 +74,7 @@
                 <div class="form-group">
                     <label>{{ $t('label.select_csv_file_to_generate') }}</label>
                     <div class="d-flex">
-                        <template v-if="form.values.transaction == 'Transactions'">
+                        <template v-if="form.values.transaction == 'Transaction'">
                             <ul class="unindented-list">
                                 <li>
                                     <label class="radio-checkbox">
@@ -302,8 +302,8 @@
                             width: '150'
                         },
                         {
-                            name: "api_to_map",
-                            label: this.$t('label.api_to_map'),
+                            name: "data_entry",
+                            label: this.$t('label.data_entry'),
                             width: '150'
                         },
                         {
@@ -337,7 +337,7 @@
                         options: [
                             {
                                 label: 'Transaction',
-                                value: 'Transactions',
+                                value: 'Transaction',
                             },
                             {
                                 label: 'Z Read',
@@ -363,7 +363,7 @@
         methods: {
             paginate(page = 1) {
 
-                axios.get(`${config}/field-mapping/detail/list`+'?page='+page, {
+                axios.get(`${config}/field-mapping/list`+'?page='+page, {
                     params: {
                         itemsPerPage: this.table.settings.itemsPerPage
                     }
@@ -478,7 +478,7 @@
 
             openDetail(data) {
                 window.open('/field-mapping/detail?' + QueryString.stringify({
-                    data: data
+                    bid: data.bid
                 }), '_self');
             },
 

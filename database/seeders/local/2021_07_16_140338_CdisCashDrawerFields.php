@@ -1,7 +1,6 @@
 <?php
 
-use App\Entities\FieldMapping;
-use App\Entities\FieldMappingDetail;
+use App\Entities\FieldMappingPreset;
 use Eighty8\LaravelSeeder\Migration\MigratableSeeder;
 use Eighty8\LaravelSeeder\Repository\DisableForeignKeysTrait;
 
@@ -14,19 +13,18 @@ class CdisCashDrawerFields extends MigratableSeeder
      */
     public function run(): void
     {
-        $cashBreakdown = [
+        $cashDrawer = [
             'type' => '2',
-            'api_version_name' => 'Cash Drawer default',
-            'api_endpoint' => 'Cash Drawer',
+            'preset_name' => 'Cash Drawer (Default)',
+            'data_entry' => 'cash_drawer',
             'status' => 1,
             'created_by' => 1,
         ];
 
-        $field_map = FieldMapping::create($cashBreakdown);
+        $fieldMappingPreset = FieldMappingPreset::create($cashDrawer);
 
-        $field_mapping_details = [
+        $fieldMappingPresetDetail = [
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'cash_drawer_bid',
                 'description' => null,
@@ -36,7 +34,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'column_name' => 'bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'branch_code',
                 'description' => null,
@@ -46,7 +43,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'column_name' => 'branch_code',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'terminal_number',
                 'description' => null,
@@ -56,7 +52,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'column_name' => 'terminal_number',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'cashier_id',
                 'description' => null,
@@ -66,7 +61,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'column_name' => 'cashier_id',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'cashier_name',
                 'description' => null,
@@ -76,7 +70,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'column_name' => 'cashier_name',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'amount',
                 'description' => null,
@@ -86,7 +79,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'column_name' => 'amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'date',
                 'description' => null,
@@ -96,7 +88,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'column_name' => 'date',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'approver_id',
                 'description' => null,
@@ -106,7 +97,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'column_name' => 'approver_id',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'approver_name',
                 'description' => null,
@@ -116,7 +106,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'column_name' => 'approver_name',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'approved_date',
                 'description' => null,
@@ -126,7 +115,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'column_name' => 'approved_date',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'type',
                 'description' => null,
@@ -136,7 +124,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'column_name' => 'type',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'remarks',
                 'description' => null,
@@ -147,8 +134,8 @@ class CdisCashDrawerFields extends MigratableSeeder
             ],
         ];
         
-        foreach ($field_mapping_details as $value) {
-            FieldMappingDetail::create($value);
+        foreach ($fieldMappingPresetDetail as $value) {
+            $fieldMappingPreset->detail()->create($value);
         }
     }
 
@@ -157,6 +144,9 @@ class CdisCashDrawerFields extends MigratableSeeder
      */
     public function down(): void
     {
-        // Remove your data
+        FieldMappingPreset::where([
+            'preset_name' => 'Cash Drawer (Default)',
+            'data_entry' => 'cash_drawer',
+        ])->forceDelete();
     }
 }

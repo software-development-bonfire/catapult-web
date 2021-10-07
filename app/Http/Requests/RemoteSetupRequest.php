@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\StorageType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -24,33 +25,58 @@ class RemoteSetupRequest extends FormRequest
      */
     public function rules()
     {
-        return [
-            'name' => ['required', 'max:45', Rule::unique('remote_setups')->ignore($this->bid)->where(
-                function ($query) {
-                    $query->where('deleted_at', null);
-                }
-            )],
-            'path' => 'required|max:45',
-            'server' => 'required|max:45',
-            'host' => 'required|max:45',
-            'port' => 'required|max:45',
-            'username' => 'required|max:45',
-            'password' => 'required_without:id|max:128',
-            'remarks' => 'sometimes',
+        $storageType = $this->get('storage_type');
+
+        $rules = [
+            'name' => 'required|max:45|unique:remote_setups,name,NULL,bid,deleted_at,NULL',
+            'storage_type' => 'required',
+            'local_path' => 'required|max:254',
+            'remote_path' => 'required|max:254',
             'status' => 'required',
+            'username' => 'nullable|max:45',
+            'password' => 'nullable|max:128',
         ];
+
+        if ($storageType == StorageType::FTP) {
+            $rules['server'] = 'required|max:45';
+            $rules['host'] = 'required|max:45';
+            $rules['port'] = 'required|max:45';
+            $rules['username'] = 'required|max:45';
+            $rules['password'] = 'required_without:id|max:128';
+        }
+
+        if ($this->method() == 'PATCH') {
+            unset($rules['name']);
+            $rules['name'] = 'required|max:45|unique:remote_setups,name,'.$this->bid.',bid,deleted_at,NULL';
+        }
+
+        return $rules;
     }
 
     public function messages()
     {
+        $storageType = $this->get('storage_type');
+
         return [
             'name.required' => __('validation.required', [ 'attribute' => __('label.remote_name') ]),
-            'path.required' => __('validation.required', [ 'attribute' => __('label.remote_path') ]),
+            'storage_type.required' => __('validation.required', [ 'attribute' => __('label.storage_type') ]),
+            'local_path.required' => __('validation.required', [ 'attribute' =>__('label.local_path') ]),
+            'remote_path.required' => __('validation.required', [ 'attribute' =>__('label.remote_path') ]),
             'server.required' => __('validation.required', [ 'attribute' => __('label.remote_server') ]),
             'host.required' => __('validation.required', [ 'attribute' => __('label.remote_host') ]),
             'port.required' => __('validation.required', [ 'attribute' => __('label.remote_port') ]),
-            'username.required' => __('validation.required', [ 'attribute' => __('label.remote_username') ]),
-            'password.required_without' => __('validation.required', [ 'attribute' => __('label.remote_password') ]),
+            'username.required' => __('validation.required', [
+                'attribute' =>
+                    $storageType === StorageType::LOCAL_NETWORK
+                        ? __('label.username')
+                        : __('label.remote_username')
+            ]),
+            'password.required_without' => __('validation.required', [
+                'attribute' =>
+                    $storageType === StorageType::LOCAL_NETWORK
+                        ? __('label.password')
+                        : __('label.remote_password')
+            ]),
             'status.required' => __('validation.required', [ 'attribute' => __('label.remote_status') ]),
         ];
     }

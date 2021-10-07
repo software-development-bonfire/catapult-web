@@ -17,7 +17,7 @@ class CreateEntryCountersTable extends Migration
 	{
 		Schema::create('entry_counters', function(Blueprint $table) {
             $table->increments('id');
-            $table->unsignedBigInteger('bid');
+            $table->unsignedBigInteger('bid')->index()->unique();
             $table->integer('mapping_type');
             $table->integer('counter');
             $table->timestamps();

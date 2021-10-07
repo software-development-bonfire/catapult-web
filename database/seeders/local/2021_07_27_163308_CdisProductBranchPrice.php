@@ -1,7 +1,7 @@
 <?php
 
-use App\Entities\FieldMapping;
-use App\Entities\FieldMappingDetail;
+use App\Entities\FieldMappingPreset;
+use App\Entities\FieldMappingPresetDetail;
 use Eighty8\LaravelSeeder\Migration\MigratableSeeder;
 use Eighty8\LaravelSeeder\Repository\DisableForeignKeysTrait;
 
@@ -16,38 +16,35 @@ class CdisProductBranchPrice extends MigratableSeeder
     {
         $productBranchPrice = [
             'type' => '1',
-            'api_version_name' => 'Product Branch Price default',
-            'api_endpoint' => 'Product Branch Price',
+            'preset_name' => 'Product Branch Price (Default)',
+            'data_entry' => 'product_branch_price',
             'status' => 1,
             'created_by' => 1,
         ];
 
-        $field_map = FieldMapping::create($productBranchPrice);
+        $fieldMappingPreset = FieldMappingPreset::create($productBranchPrice);
 
-        $field_mapping_details = [
+        $fieldMappingPresetDetail = [
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'bid',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => '""',
-                'default_value' => 1,
+                'default_value' => '""',
                 'column_name' => 'bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'product_branch_availability_bid',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => '""',
-                'default_value' => 0,
-                'column_name' => 'product_branch_avaiability_bid',
+                'default_value' => '""',
+                'column_name' => 'product_branch_availability_bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'product_pricing_type_bid',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -56,8 +53,7 @@ class CdisProductBranchPrice extends MigratableSeeder
                 'column_name' => 'product_pricing_type_bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'price',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -66,8 +62,7 @@ class CdisProductBranchPrice extends MigratableSeeder
                 'column_name' => 'price',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'markup',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -77,8 +72,8 @@ class CdisProductBranchPrice extends MigratableSeeder
             ],
         ];
 
-        foreach ($field_mapping_details as $value) {
-            FieldMappingDetail::create($value);
+        foreach ($fieldMappingPresetDetail as $value) {
+            $fieldMappingPreset->detail()->create($value);
         }
     }
 
@@ -87,6 +82,9 @@ class CdisProductBranchPrice extends MigratableSeeder
      */
     public function down(): void
     {
-        // Remove your data
+        FieldMappingPreset::where([
+            'preset_name' => 'Product Branch Price (Default)',
+            'data_entry' => 'product_branch_price',
+        ])->forceDelete();
     }
 }

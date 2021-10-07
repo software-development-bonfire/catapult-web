@@ -30,6 +30,7 @@ return [
     'field_mapping_connection_deleted' => 'Field Mapping Connection successfully deleted!',
     'field_mapping_connection_updated' => 'Field Mapping Connection successfully updated!',
     'generate_csv_created' => 'Generate csv successfully created!.',
+    'queued_to_sync' => 'Queued to sync.',
     'remote_setup_created' => 'Remote Setup successfully created!',
     'remote_setup_deleted' => 'Remote Setup successfully deleted!',
     'remote_setup_updated' => 'Remote Setup successfully updated!',
@@ -49,6 +50,5 @@ return [
     'user_created' => 'User successfully created!',
     'user_deleted' => 'User successfully deleted!',
     'user_updated' => 'User successfully updated!',
-    'value_queued_to_sync' => ':value queued to sync.',
     'value_successfully_synced' => ':value successfully synced.',
 ];

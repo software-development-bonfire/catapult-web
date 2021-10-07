@@ -17,7 +17,7 @@ class CreateErrorLogsTable extends Migration
 	{
 		Schema::create('error_logs', function(Blueprint $table) {
             $table->increments('id');
-            $table->unsignedBigInteger('bid');
+            $table->unsignedBigInteger('bid')->index()->unique();
             $table->string('pos_entry');
             $table->string('filename');
             $table->string('path')->nullable();

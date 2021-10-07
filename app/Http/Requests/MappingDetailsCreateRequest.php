@@ -28,11 +28,11 @@ class MappingDetailsCreateRequest extends FormRequest
         return [
             'bid' => 'sometimes',
             'type' => 'required',
-            'api_endpoint' => 'required|max:45',
-            'api_version_name' => ['required', 'max:128', Rule::unique('field_mappings')->ignore($this->bid)->where(
+            'data_entry' => 'required|max:45',
+            'preset_name' => ['required', 'max:128', Rule::unique('field_mappings')->ignore($this->bid)->where(
                 function ($query) {
                     $query->where(
-                        ['deleted_at' => null, 'type' => $this->type, 'api_endpoint' => $this->api_endpoint]
+                        ['deleted_at' => null, 'type' => $this->type, 'data_entry' => $this->data_entry]
                     );
                 }
             )],

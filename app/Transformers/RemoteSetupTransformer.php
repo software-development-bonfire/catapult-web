@@ -3,28 +3,11 @@
 namespace App\Transformers;
 
 use App\Entities\RemoteSetup;
+use App\Enums\StorageType;
 use League\Fractal\TransformerAbstract;
 
 class RemoteSetupTransformer extends TransformerAbstract
 {
-    /**
-     * List of resources to automatically include
-     *
-     * @var array
-     */
-    protected $defaultIncludes = [
-        //
-    ];
-    
-    /**
-     * List of resources possible to include
-     *
-     * @var array
-     */
-    protected $availableIncludes = [
-        //
-    ];
-    
     /**
      * A Fractal transformer.
      *
@@ -33,9 +16,12 @@ class RemoteSetupTransformer extends TransformerAbstract
     public function transform(RemoteSetup $model)
     {
         return [
-            'bid' => (int) $model->bid,
+            'bid' => (string) $model->bid,
             'name' => (string) $model->name,
-            'path' => (string) $model->path,
+            'storage_type_label' => StorageType::getDescription($model->storage_type),
+            'storage_type' => $model->storage_type,
+            'local_path' => (string) $model->local_path,
+            'remote_path' => (string) $model->remote_path,
             'server' => (string) $model->server,
             'host' => (string) $model->host,
             'port' => (string) $model->port,

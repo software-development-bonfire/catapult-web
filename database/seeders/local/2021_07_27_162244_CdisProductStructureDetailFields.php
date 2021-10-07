@@ -1,7 +1,6 @@
 <?php
 
-use App\Entities\FieldMapping;
-use App\Entities\FieldMappingDetail;
+use App\Entities\FieldMappingPreset;
 use Eighty8\LaravelSeeder\Migration\MigratableSeeder;
 use Eighty8\LaravelSeeder\Repository\DisableForeignKeysTrait;
 
@@ -16,59 +15,55 @@ class CdisProductStructureDetailFields extends MigratableSeeder
     {
         $productStructureDetail = [
             'type' => '1',
-            'api_version_name' => 'Product Structure Detail default',
-            'api_endpoint' => 'Product Structure Detail',
+            'preset_name' => 'Product Structure Detail (Default)',
+            'data_entry' => 'product_structure_detail',
             'status' => 1,
             'created_by' => 1,
         ];
 
-        $field_map = FieldMapping::create($productStructureDetail);
+        $fieldMappingPreset = FieldMappingPreset::create($productStructureDetail);
 
-        $field_mapping_details = [
+        $fieldMappingPresetDetail = [
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'bid',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => '""',
-                'default_value' => 1,
+                'default_value' => '""',
                 'column_name' => 'bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'head_bid',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => '""',
-                'default_value' => 1,
+                'default_value' => '""',
                 'column_name' => 'head_bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'product_uom_bid',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => '""',
-                'default_value' => 0,
+                'default_value' => '""',
                 'column_name' => 'product_uom_bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'quantity',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => '""',
-                'default_value' => '""',
+                'default_value' => '0.000000',
                 'column_name' => 'quantity',
             ],
         ];
 
-        foreach ($field_mapping_details as $value) {
-            FieldMappingDetail::create($value);
+        foreach ($fieldMappingPresetDetail as $value) {
+            $fieldMappingPreset->detail()->create($value);
         }
     }
 
@@ -77,6 +72,9 @@ class CdisProductStructureDetailFields extends MigratableSeeder
      */
     public function down(): void
     {
-        // Remove your data
+        FieldMappingPreset::where([
+            'preset_name' => 'Product Structure Detail (Default)',
+            'data_entry' => 'product_structure_detail',
+        ])->forceDelete();
     }
 }

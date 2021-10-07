@@ -1,7 +1,6 @@
 <?php
 
-use App\Entities\FieldMapping;
-use App\Entities\FieldMappingDetail;
+use App\Entities\FieldMappingPreset;
 use Eighty8\LaravelSeeder\Migration\MigratableSeeder;
 use Eighty8\LaravelSeeder\Repository\DisableForeignKeysTrait;
 
@@ -16,17 +15,16 @@ class CdisZreadFields extends MigratableSeeder
     {
         $zread = [
             'type' => '2',
-            'api_version_name' => 'Zread default',
-            'api_endpoint' => 'Zread',
+            'preset_name' => 'Zread (Default)',
+            'data_entry' => 'zread',
             'status' => 1,
             'created_by' => 1,
         ];
 
-        $field_map = FieldMapping::create($zread);
+        $fieldMappingPreset = FieldMappingPreset::create($zread);
 
-        $field_mapping_details = [
+        $fieldMappingPresetDetail = [
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'zread_bid',
                 'description' => null,
@@ -36,7 +34,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'terminal_number',
                 'description' => null,
@@ -46,7 +43,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'terminal_number',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'branch_code',
                 'description' => null,
@@ -56,7 +52,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'branch_code',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'day_end_report_number',
                 'description' => null,
@@ -66,7 +61,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'day_end_report_number',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'administrator',
                 'description' => null,
@@ -76,7 +70,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'administrator',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'cashier',
                 'description' => null,
@@ -86,7 +79,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'cashier',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'log_date',
                 'description' => null,
@@ -96,7 +88,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'log_date',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'date_time',
                 'description' => null,
@@ -106,7 +97,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'date_time',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'guest_count',
                 'description' => null,
@@ -116,7 +106,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'guest_count',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'gross_sales_amount',
                 'description' => null,
@@ -126,7 +115,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'gross_sales_amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'transaction_count',
                 'description' => null,
@@ -136,7 +124,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'transaction_count',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'total_regular_discount_amount',
                 'description' => null,
@@ -146,7 +133,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'total_regular_discount_amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'mandated_discount_transaction_count',
                 'description' => null,
@@ -156,7 +142,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'mandated_discount_transaction_count',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'total_regular_discount_count',
                 'description' => null,
@@ -166,7 +151,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'total_regular_discount_count',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'senior_transaction_count',
                 'description' => null,
@@ -176,7 +160,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'senior_transaction_count',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'senior_discount_amount',
                 'description' => null,
@@ -186,7 +169,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'senior_discount_amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'sc_vat_deduction_amount',
                 'description' => null,
@@ -196,7 +178,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'sc_vat_deduction_amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'pwd_transaction_count',
                 'description' => null,
@@ -206,7 +187,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'pwd_transaction_count',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'pwd_transaction_amount',
                 'description' => null,
@@ -216,7 +196,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'pwd_transaction_amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'pwd_vat_deduction',
                 'description' => null,
@@ -226,7 +205,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'pwd_vat_deduction',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'diplomat_transaction_count',
                 'description' => null,
@@ -236,7 +214,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'diplomat_transaction_count',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'diplomat_vat_deduction',
                 'description' => null,
@@ -246,7 +223,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'diplomat_vat_deduction',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'vatable_sales',
                 'description' => null,
@@ -256,7 +232,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'vatable_sales',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'vat_amount',
                 'description' => null,
@@ -266,7 +241,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'vat_amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'vat_exempt_sales',
                 'description' => null,
@@ -276,7 +250,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'vat_exempt_sales',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'less_mandated_vat_and_discount',
                 'description' => null,
@@ -286,7 +259,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'less_mandated_vat_and_discount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'net_of_vat_exempt',
                 'description' => null,
@@ -296,7 +268,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'net_of_vat_exempt',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'zero_rated_sales',
                 'description' => null,
@@ -306,7 +277,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'zero_rated_sales',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'non_vat_sales',
                 'description' => null,
@@ -316,7 +286,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'non_vat_sales',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'subtotal',
                 'description' => null,
@@ -326,7 +295,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'subtotal',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'service_charge',
                 'description' => null,
@@ -336,7 +304,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'service_charge',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'net_total',
                 'description' => null,
@@ -346,7 +313,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'net_total',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'beginning_or',
                 'description' => null,
@@ -356,7 +322,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'beginning_or',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'ending_or',
                 'description' => null,
@@ -366,7 +331,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'ending_or',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'no_sales_transaction_count',
                 'description' => null,
@@ -376,7 +340,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'no_sales_transaction_count',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'void_transactions_count',
                 'description' => null,
@@ -386,7 +349,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'void_transactions_count',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'void_transactions_amount',
                 'description' => null,
@@ -396,7 +358,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'void_transactions_amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'void_items_count',
                 'description' => null,
@@ -406,7 +367,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'void_items_count',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'void_items_amount',
                 'description' => null,
@@ -416,7 +376,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'void_items_amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'refunds_count',
                 'description' => null,
@@ -426,7 +385,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'refunds_count',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'refunds_amount',
                 'description' => null,
@@ -436,7 +394,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'refunds_amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'total_tenders_count',
                 'description' => null,
@@ -446,7 +403,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'total_tenders_count',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'total_tenders_amount',
                 'description' => null,
@@ -456,7 +412,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'total_tenders_amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'add_initial_cash_amount',
                 'description' => null,
@@ -466,7 +421,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'add_initial_cash_amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'less_withdrawals_amount',
                 'description' => null,
@@ -476,7 +430,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'less_withdrawals_amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'add_cash_returns_amount',
                 'description' => null,
@@ -486,7 +439,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'add_cash_returns_amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'total_drawer_amount',
                 'description' => null,
@@ -496,7 +448,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'total_drawer_amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'total_cash_breakdown_amount',
                 'description' => null,
@@ -506,7 +457,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'total_cash_breakdown_amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'short_over_amount',
                 'description' => null,
@@ -516,7 +466,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'short_over_amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'total_cashier_sales_amount',
                 'description' => null,
@@ -526,7 +475,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'total_cashier_sales_amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'beginning_balance',
                 'description' => null,
@@ -536,7 +484,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'beginning_balance',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'ending_balance',
                 'description' => null,
@@ -546,7 +493,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'ending_balance',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'regular_discount_bid',
                 'description' => null,
@@ -556,7 +502,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'regular_discount_head_id',
                 'description' => null,
@@ -566,7 +511,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'head_id',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'regular_discount_name',
                 'description' => null,
@@ -576,7 +520,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'name',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'regular_discount_count',
                 'description' => null,
@@ -586,7 +529,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'count',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'regular_discount_amount',
                 'description' => null,
@@ -596,7 +538,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'tender_detail_bid',
                 'description' => null,
@@ -606,7 +547,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'tender_detail_head_id',
                 'description' => null,
@@ -616,7 +556,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'head_id',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'tender_detail_name',
                 'description' => null,
@@ -626,7 +565,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'name',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'tender_detail_count',
                 'description' => null,
@@ -636,7 +574,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'count',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'tender_detail_amount',
                 'description' => null,
@@ -646,7 +583,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'cash_breakdown_bid',
                 'description' => null,
@@ -656,7 +592,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'cash_breakdown_head_id',
                 'description' => null,
@@ -666,7 +601,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'head_id',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'cash_breakdown_detail_denomination',
                 'description' => null,
@@ -676,7 +610,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'denomination',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'cash_breakdown_count',
                 'description' => null,
@@ -686,7 +619,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'count',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'cash_breakdown_amount',
                 'description' => null,
@@ -696,7 +628,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'amount',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'cashier_summary_bid',
                 'description' => null,
@@ -706,7 +637,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'cashier_head_id',
                 'description' => null,
@@ -716,7 +646,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'head_id',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'cashier_sales_summary_name',
                 'description' => null,
@@ -726,7 +655,6 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'name',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'cashier_sales_summary_amount',
                 'description' => null,
@@ -737,8 +665,8 @@ class CdisZreadFields extends MigratableSeeder
             ],
         ];
 
-        foreach ($field_mapping_details as $value) {
-            FieldMappingDetail::create($value);
+        foreach ($fieldMappingPresetDetail as $value) {
+            $fieldMappingPreset->detail()->create($value);
         }
     }
 
@@ -747,6 +675,9 @@ class CdisZreadFields extends MigratableSeeder
      */
     public function down(): void
     {
-        // Remove your data
+        FieldMappingPreset::where([
+            'preset_name' => 'Zread (Default)',
+            'data_entry' => 'zread',
+        ])->forceDelete();
     }
 }

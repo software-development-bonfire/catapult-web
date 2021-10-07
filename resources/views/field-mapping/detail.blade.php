@@ -3,5 +3,7 @@
 @section('page-link', 'field-mapping')
 
 @section('content')
-    <field-mapping-detail></field-mapping-detail>
+    <field-mapping-detail
+        :detail="{{ $detail }}">
+    </field-mapping-detail>
 @endsection

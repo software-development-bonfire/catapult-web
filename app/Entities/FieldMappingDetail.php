@@ -4,11 +4,12 @@ namespace App\Entities;
 
 use App\Traits\BidObserverTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Prettus\Repository\Contracts\Transformable;
 use Prettus\Repository\Traits\TransformableTrait;
 
 /**
- * Class FieldMappingDetail.
+ * Class DataMapping.
  *
  * @package namespace App\Entities;
  */
@@ -17,7 +18,8 @@ class FieldMappingDetail extends Model implements Transformable
     use TransformableTrait,
         BidObserverTrait;
 
-    protected $primaryKey = 'bid';
+    protected $table = 'field_mapping_detail';
+    
     /**
      * The attributes that are mass assignable.
      *
@@ -32,12 +34,9 @@ class FieldMappingDetail extends Model implements Transformable
         'mapping_type',
         'file_name',
         'default_value',
-        'column_name'
+        'column_name',
+        'reference_column_name',
+        'head_reference'
     ];
-
-    public function fieldMapping()
-    {
-        return $this->belongsTo(FieldMapping::class, 'bid', 'field_mapping_bid');
-    }
 
 }

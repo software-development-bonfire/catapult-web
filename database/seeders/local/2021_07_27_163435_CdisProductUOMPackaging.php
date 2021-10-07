@@ -1,7 +1,6 @@
 <?php
 
-use App\Entities\FieldMapping;
-use App\Entities\FieldMappingDetail;
+use App\Entities\FieldMappingPreset;
 use Eighty8\LaravelSeeder\Migration\MigratableSeeder;
 use Eighty8\LaravelSeeder\Repository\DisableForeignKeysTrait;
 
@@ -14,40 +13,37 @@ class CdisProductUOMPackaging extends MigratableSeeder
      */
     public function run(): void
     {
-        $UOMPackaging = [
+        $productUOMPackaging = [
             'type' => '1',
-            'api_version_name' => 'Product UOM Packaging default',
-            'api_endpoint' => 'Product UOM Packaging',
+            'preset_name' => 'Product UOM Packaging (Default)',
+            'data_entry' => 'product_uom_packaging',
             'status' => 1,
             'created_by' => 1,
         ];
 
-        $field_map = FieldMapping::create($UOMPackaging);
+        $fieldMappingPreset = FieldMappingPreset::create($productUOMPackaging);
 
-        $field_mapping_details = [
+        $fieldMappingPresetDetail = [
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'bid',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => '""',
-                'default_value' => 1,
+                'default_value' => '""',
                 'column_name' => 'bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'barcode',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => '""',
-                'default_value' => 0,
+                'default_value' => '""',
                 'column_name' => 'barcode',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'description',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -56,8 +52,7 @@ class CdisProductUOMPackaging extends MigratableSeeder
                 'column_name' => 'description',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'long_description',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -66,8 +61,7 @@ class CdisProductUOMPackaging extends MigratableSeeder
                 'column_name' => 'long_description',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'product_bid',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -76,8 +70,7 @@ class CdisProductUOMPackaging extends MigratableSeeder
                 'column_name' => 'product_bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'uom_bid',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -86,49 +79,99 @@ class CdisProductUOMPackaging extends MigratableSeeder
                 'column_name' => 'uom_bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
+                'field' => 'variant_option',
+                'description' => null,
+                'mapping_type' => 'VARCHAR',
+                'file_name' => '""',
+                'default_value' => '""',
+                'column_name' => 'variant_option',
+            ],
+            [
+                'required' => 1,
                 'field' => 'pack_content',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => '""',
-                'default_value' => '""',
+                'default_value' => 0,
                 'column_name' => 'pack_content',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'is_raw_material',
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => '""',
-                'default_value' => '""',
+                'default_value' => 0,
                 'column_name' => 'is_raw_material',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'is_addon',
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => '""',
-                'default_value' => '""',
+                'default_value' => 0,
                 'column_name' => 'is_addon',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
+                'field' => 'is_sell_item',
+                'description' => null,
+                'mapping_type' => 'INT',
+                'file_name' => '""',
+                'default_value' => 1,
+                'column_name' => 'is_sell_item',
+            ],
+            [
+                'required' => 1,
+                'field' => 'is_inventory_item',
+                'description' => null,
+                'mapping_type' => 'INT',
+                'file_name' => '""',
+                'default_value' => 1,
+                'column_name' => 'is_inventory_item',
+            ],
+            [
+                'required' => 1,
+                'field' => 'is_senior_item',
+                'description' => null,
+                'mapping_type' => 'INT',
+                'file_name' => '""',
+                'default_value' => 0,
+                'column_name' => 'is_senior_item',
+            ],
+            [
+                'required' => 1,
+                'field' => 'is_pwd_item',
+                'description' => null,
+                'mapping_type' => 'INT',
+                'file_name' => '""',
+                'default_value' => 0,
+                'column_name' => 'is_pwd_item',
+            ],
+            [
+                'required' => 1,
                 'field' => 'is_default',
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => '""',
-                'default_value' => '""',
+                'default_value' => 0,
                 'column_name' => 'is_default',
+            ],
+            [
+                'required' => 1,
+                'field' => 'status',
+                'description' => null,
+                'mapping_type' => 'INT',
+                'file_name' => '""',
+                'default_value' => 1,
+                'column_name' => 'status',
             ],
         ];
 
-        foreach ($field_mapping_details as $value) {
-            FieldMappingDetail::create($value);
+        foreach ($fieldMappingPresetDetail as $value) {
+            $fieldMappingPreset->detail()->create($value);
         }
     }
 
@@ -137,6 +180,9 @@ class CdisProductUOMPackaging extends MigratableSeeder
      */
     public function down(): void
     {
-        // Remove your data
+        FieldMappingPreset::where([
+            'preset_name' => 'Product UOM Packaging (Default)',
+            'data_entry' => 'product_uom_packaging',
+        ])->forceDelete();
     }
 }

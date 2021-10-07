@@ -28,9 +28,10 @@ class SyncFileReference extends Model implements Transformable
      */
     protected $fillable = [
         'bid',
+        'storage_type',
         'filename',
         'extension',
-        'ftp_path',
+        'path',
         'counter',
         'last_modified'
     ];

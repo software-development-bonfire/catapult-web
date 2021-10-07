@@ -39,30 +39,17 @@ class UserAccountRepositoryEloquent extends BaseRepository implements UserAccoun
     
     public function list($filters)
     {
-        if (Auth::user()->isSuperadmin()) {
-            $this->model = $this->model
+        $this->model = $this->model
+            ->select([
+                'id',
+                'bid',
+                'name',
+                'username',
+                'status'
+            ])
             ->with('permissions')
-                ->select([
-                    'id',
-                    'bid',
-                    'name',
-                    'username',
-                    'status'
-                ])
-            ->orderBy('bid', 'ASC');
-        } else {
-            $this->model = $this->model
             ->where('type', '!=', UserType::SUPERADMIN)
-                ->select([
-                    'id',
-                    'bid',
-                    'name',
-                    'username',
-                    'status'
-                ])
-            ->with('permissions')
             ->orderBy('bid', 'ASC');
-        }
 
         return $this->paginate($filters['itemsPerPage']);
     }

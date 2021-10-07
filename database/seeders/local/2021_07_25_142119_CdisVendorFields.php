@@ -1,7 +1,6 @@
 <?php
 
-use App\Entities\FieldMapping;
-use App\Entities\FieldMappingDetail;
+use App\Entities\FieldMappingPreset;
 use Eighty8\LaravelSeeder\Migration\MigratableSeeder;
 use Eighty8\LaravelSeeder\Repository\DisableForeignKeysTrait;
 
@@ -16,38 +15,35 @@ class CdisVendorFields extends MigratableSeeder
     {
         $vendor = [
             'type' => '1',
-            'api_version_name' => 'Vendor default',
-            'api_endpoint' => 'Vendor',
+            'preset_name' => 'Vendor (Default)',
+            'data_entry' => 'vendor',
             'status' => 1,
             'created_by' => 1,
         ];
 
-        $field_map = FieldMapping::create($vendor);
+        $fieldMappingPreset = FieldMappingPreset::create($vendor);
 
-        $field_mapping_details = [
+        $fieldMappingPresetDetail = [
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'bid',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => '""',
-                'default_value' => 0,
+                'default_value' => '""',
                 'column_name' => 'bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'code',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => '""',
-                'default_value' => 0,
+                'default_value' => '""',
                 'column_name' => 'code',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'description',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -56,8 +52,7 @@ class CdisVendorFields extends MigratableSeeder
                 'column_name' => 'description',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'contact_person',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -66,8 +61,7 @@ class CdisVendorFields extends MigratableSeeder
                 'column_name' => 'contact_person',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'contact_number',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -76,28 +70,25 @@ class CdisVendorFields extends MigratableSeeder
                 'column_name' => 'contact_number',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'payment_term_days',
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => '""',
-                'default_value' => 1,
+                'default_value' => '""',
                 'column_name' => 'payment_term_days',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'tin_no',
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => '""',
-                'default_value' => 1,
+                'default_value' => '""',
                 'column_name' => 'tin_no',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'email',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -106,8 +97,7 @@ class CdisVendorFields extends MigratableSeeder
                 'column_name' => 'email',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'address',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -116,8 +106,7 @@ class CdisVendorFields extends MigratableSeeder
                 'column_name' => 'address',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'status',
                 'description' => null,
                 'mapping_type' => 'INT',
@@ -127,8 +116,8 @@ class CdisVendorFields extends MigratableSeeder
             ],
         ];
 
-        foreach ($field_mapping_details as $value) {
-            FieldMappingDetail::create($value);
+        foreach ($fieldMappingPresetDetail as $value) {
+            $fieldMappingPreset->detail()->create($value);
         }
     }
 
@@ -137,6 +126,9 @@ class CdisVendorFields extends MigratableSeeder
      */
     public function down(): void
     {
-        // Remove your data
+        FieldMappingPreset::where([
+            'preset_name' => 'Vendor (Default)',
+            'data_entry' => 'vendor',
+        ])->forceDelete();
     }
 }

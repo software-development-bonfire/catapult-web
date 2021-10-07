@@ -2,11 +2,11 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Criteria\FieldMapping\ListCriteria as FieldMappingListListCriteria;
+use App\Criteria\FieldMapping\ListCriteria;
 use Prettus\Repository\Eloquent\BaseRepository;
-use Prettus\Repository\Criteria\RequestCriteria;
 use App\Repositories\Contracts\FieldMappingRepository;
 use App\Entities\FieldMapping;
-use App\Validators\FieldMappingValidator;
 
 /**
  * Class FieldMappingRepositoryEloquent.
@@ -25,38 +25,42 @@ class FieldMappingRepositoryEloquent extends BaseRepository implements FieldMapp
         return FieldMapping::class;
     }
 
-    
-
-    /**
-     * Boot up the repository, pushing criteria
-     */
-    public function boot()
-    {
-        $this->pushCriteria(app(RequestCriteria::class));
-    }
-
-    public function list($filters)
-    {
+    public function list(
+        $filters,
+        $isTablePaginate = true,
+        $with = ['remoteSetup', 'catapultDBSetup', 'apiSetup', 'dataMappings']
+    ) {
         $this->model = $this->model
-            ->with('details')
-            ->withCount('details')
-            ->where('type', 'like', '%'.$filters['mapping_type'].'%')
-            ->where('status', 'like', '%'.$filters['status'].'%')
+            ->with($with)
+            ->select([
+                'bid',
+                'remote_setup_bid',
+                'catapult_db_setup_bid',
+                'api_setup_bid',
+                'name',
+                'type',
+                'status',
+                'data_entry',
+            ])
             ->orderBy('bid', 'ASC');
 
-        return $this->paginate($filters['itemsPerPage']);
+        $this->pushCriteria(new FieldMappingListListCriteria($filters))->applyCriteria();
+
+        if ($isTablePaginate) {
+            return $this->paginate($filters['itemsPerPage']);
+        } else {
+            return $this->get();
+        }
     }
 
-    public function getEndpoints($filters)
+    public function getDetail($filters)
     {
         $this->model = $this->model
-            ->with('details')
-            ->withCount('details')
-            ->where('type', 'like', '%'.$filters['mapping_type'].'%')
-            ->where('api_endpoint', 'like', '%'.$filters['api_endpoint'].'%')
+            ->with('detail')
             ->orderBy('bid', 'ASC');
 
-        return $this->paginate($filters['itemsPerPage']);
+        $this->pushCriteria(new ListCriteria($filters))->applyCriteria();
+
+        return $this->first();
     }
-    
 }

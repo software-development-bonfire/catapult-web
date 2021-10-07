@@ -17,7 +17,7 @@ class CreateFolderCountersTable extends Migration
 	{
 		Schema::create('folder_counters', function(Blueprint $table) {
             $table->increments('id');
-            $table->unsignedBigInteger('bid');
+            $table->unsignedBigInteger('bid')->index()->unique();
             $table->integer('mapping_type');
             $table->integer('counter');
             $table->timestamps();

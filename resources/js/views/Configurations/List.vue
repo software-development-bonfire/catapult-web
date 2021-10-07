@@ -8,7 +8,7 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" :class="activePane === 'remote' ? 'active' : ''" @click="activePane = 'remote'" id="remote-setup-tab" href="#remote-setup" role="tab" aria-controls="remote-setup" aria-selected="false">
-                    {{ $t('label.remote_setup') }}
+                    {{ $t('label.file_storage_setup') }}
                 </a>
             </li>
             <li class="nav-item">

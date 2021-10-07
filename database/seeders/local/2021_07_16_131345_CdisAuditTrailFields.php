@@ -1,7 +1,6 @@
 <?php
 
-use App\Entities\FieldMapping;
-use App\Entities\FieldMappingDetail;
+use App\Entities\FieldMappingPreset;
 use Eighty8\LaravelSeeder\Migration\MigratableSeeder;
 use Eighty8\LaravelSeeder\Repository\DisableForeignKeysTrait;
 
@@ -16,17 +15,16 @@ class CdisAuditTrailFields extends MigratableSeeder
     {
         $auditTrail = [
             'type' => '2',
-            'api_version_name' => 'Audit Trail default',
-            'api_endpoint' => 'Audit Trail',
+            'preset_name' => 'Audit Trail (Default)',
+            'data_entry' => 'audit_trail',
             'status' => 1,
             'created_by' => 1,
         ];
 
-        $field_map = FieldMapping::create($auditTrail);
+        $fieldMappingPreset = FieldMappingPreset::create($auditTrail);
 
-        $field_mapping_details = [
+        $fieldMappingPresetDetail = [
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'branch_code',
                 'description' => null,
@@ -36,7 +34,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'column_name' => 'branch_code',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'terminal_no',
                 'description' => null,
@@ -46,7 +43,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'column_name' => 'terminal_no',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'date',
                 'description' => null,
@@ -56,7 +52,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'column_name' => 'date',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'application',
                 'description' => null,
@@ -66,7 +61,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'column_name' => 'application',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'cashier',
                 'description' => null,
@@ -76,7 +70,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'column_name' => 'cashier',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'supervisor',
                 'description' => null,
@@ -86,7 +79,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'column_name' => 'supervisor',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'job',
                 'description' => null,
@@ -96,7 +88,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'column_name' => 'job',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'transaction_no',
                 'description' => null,
@@ -106,7 +97,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'column_name' => 'transaction_no',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'receipt_no',
                 'description' => null,
@@ -116,7 +106,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'column_name' => 'receipt_no',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
                 'required' => 0,
                 'field' => 'remarks',
                 'description' => null,
@@ -127,8 +116,8 @@ class CdisAuditTrailFields extends MigratableSeeder
             ],
         ];
 
-        foreach ($field_mapping_details as $value) {
-            FieldMappingDetail::create($value);
+        foreach ($fieldMappingPresetDetail as $value) {
+            $fieldMappingPreset->detail()->create($value);
         }
     }
 
@@ -137,6 +126,9 @@ class CdisAuditTrailFields extends MigratableSeeder
      */
     public function down(): void
     {
-        // Remove your data
+        FieldMappingPreset::where([
+            'preset_name' => 'Audit Trail (Default)',
+            'data_entry' => 'audit_trail',
+        ])->forceDelete();
     }
 }

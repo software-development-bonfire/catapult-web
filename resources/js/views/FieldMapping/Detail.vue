@@ -28,7 +28,12 @@
                         </div>
                         <div class="mb-1">
                             <label>{{ $t('label.mapping_type') }}</label>
-                            <select :disabled="form.mode === 'update'" class="form-control" v-model="form.connection_setup.mapping_type">
+                            <select
+                                :disabled="form.mode === 'update'"
+                                class="form-control"
+                                v-model="form.connection_setup.mapping_type"
+                                v-on:change="getSyncEntryChosen"
+                            >
                                 <option :value="1">{{ $t('label.cdis_to_pos') }}</option>
                                 <option :value="2">{{ $t('label.pos_to_cdis') }}</option>
                             </select>
@@ -104,56 +109,40 @@
                 <div class="row">
                     <table class="table-layout pull-left col-xl-4">
                         <tr>
-                            <td valign="top" align="right">{{ $t('label.select_api_endpoint_to_map') }}</td>
+                            <td valign="top" align="right">{{ $t('label.select_entry_to_map') }}</td>
                             <td width="200px">
-                                <select class="form-control" @change="getEndpoint()" v-model="form.data_mapping.api_endpoint">
-                                    <template v-if="form.connection_setup.mapping_type === 1">
-                                        <option :value="label.product_pricing_type">{{ $t('label.product_pricing_type') }}</option>
-                                        <option :value="label.brand">{{ $t('label.brand') }}</option>
-                                        <option :value="label.branch">{{ $t('label.branch') }}</option>
-                                        <option :value="label.vendor">{{ $t('label.vendor') }}</option>
-                                        <option :value="label.vendor_branch">{{ $t('label.vendor_branch') }}</option>
-                                        <option :value="label.unit_of_measurement">{{ $t('label.unit_of_measurement') }}</option>
-                                        <option :value="label.product_category">{{ $t('label.product_category') }}</option>
-                                        <option :value="label.product_branch_availability">{{ $t('label.product_branch_availability') }}</option>
-                                        <option :value="label.product_branch_price">{{ $t('label.product_branch_price') }}</option>
-                                        <option :value="label.product_head">{{ $t('label.product_head') }}</option>
-                                        <option :value="label.product_structure">{{ $t('label.product_structure') }}</option>
-                                        <option :value="label.product_structure_detail">{{ $t('label.product_structure_detail') }}</option>
-                                        <option :value="label.product_uom_packaging">{{ $t('label.product_uom_packaging') }}</option>
-                                        <option :value="label.packaging_vendor">{{ $t('label.packaging_vendor') }}</option>
-                                        <option :value="label.packaging_vendor_branch_cost">{{ $t('label.packaging_vendor_branch_cost') }}</option>
-                                    </template>
-                                    <template v-else>
-                                        <option :value="label.transactions">{{ $t('label.transactions') }}</option>
-                                        <option :value="label.zread">{{ $t('label.zread') }}</option>
-                                        <option :value="label.audit_trail">{{ $t('label.audit_trail') }}</option>
-                                        <option :value="label.cash_breakdown">{{ $t('label.cash_breakdown') }}</option>
-                                        <option :value="label.cash_drawer">{{ $t('label.cash_drawer') }}</option>
-                                    </template>
+                                <select
+                                    class="form-control"
+                                    v-model="form.data_mapping.data_entry"
+                                    @change="getDataEntries()">
+                                    <option
+                                        v-for="(item, index) in selections.sync_entry.options"
+                                        :value="item.value">
+                                        {{ item.label }}
+                                    </option>
                                 </select>
                                 <label
-                                    class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('end_point')">
-                                    {{ errors.end_point[0] }}
+                                    class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('data_entry')">
+                                    {{ errors.data_entry[0] }}
                                 </label>
                             </td>
                         </tr>
                         <tr>
-                            <td valign="top" align="right">{{ $t('label.api_version') }}</td>
+                            <td valign="top" align="right">{{ $t('label.preset_name') }}</td>
                             <td>
                                 <select
                                     @change="getFields()"
                                     type="text"
                                     class="form-control"
-                                    v-model="form.data_mapping.field_mapping_bid">
-                                    <option v-for="(api_version, index) in api_versions" :key="index"
-                                    :value="api_version.bid">
-                                        {{ api_version.api_version_name }}
+                                    v-model="form.data_mapping.field_mapping_preset_bid">
+                                    <option v-for="(preset, index) in presets" :key="index"
+                                    :value="preset.bid">
+                                        {{ preset.preset_name }}
                                     </option>
                                 </select>
                                 <label
-                                    class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('api_version_name')">
-                                    {{ errors.api_version_name[0] }}
+                                    class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('preset_name')">
+                                    {{ errors.preset_name[0] }}
                                 </label>
                             </td>
                         </tr>
@@ -188,15 +177,20 @@
                         <table-data
                             align="center"
                             valign="center">
-                            <i
-                                class="fa fa-check-square"
-                                :class="tableData.required ? 'checkbox--required' : 'checkbox--not-required'">
-                            </i>
+                            <input
+                                type="checkbox"
+                                v-model="tableData.required"
+                            >
                         </table-data>
                         <table-data
                             align="center"
                             valign="center">
-                            <input disabled type="text" class="form-control" v-model="tableData.field">
+                            <input
+                                :disabled="! tableData.required"
+                                type="text"
+                                class="form-control"
+                                v-model="tableData.field"
+                            >
                         </table-data>
                         <table-data
                             align="center"
@@ -213,7 +207,12 @@
                         <table-data
                             align="center"
                             valign="center">
-                            <input disabled type="text" class="form-control" v-model="tableData.mapping_type">
+                            <input
+                                :disabled="! tableData.required"
+                                type="text"
+                                class="form-control"
+                                v-model="tableData.mapping_type"
+                            >
                         </table-data>
                         <table-data
                             :error="getError(errors, `fields.${tableDataIndex}.file_name`)"
@@ -239,6 +238,24 @@
                             <template v-else>
                                 <span class="text-danger">{{ $t('message.default_values_will_be_used') }}</span>
                             </template>
+                        </table-data>
+                        <table-data
+                            :error="getError(errors, `fields.${tableDataIndex}.reference_column_name`)"
+                            align="center"
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2"
+                        >
+                            <input type="text" class="form-control" v-model="tableData.reference_column_name"
+                                   v-on:input="removeError(errors, `fields.${tableDataIndex}.reference_column_name`)">
+                        </table-data>
+                        <table-data
+                            :error="getError(errors, `fields.${tableDataIndex}.head_reference`)"
+                            align="center"
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2"
+                        >
+                            <input type="text" class="form-control" v-model="tableData.head_reference"
+                                   v-on:input="removeError(errors, `fields.${tableDataIndex}.head_reference`)">
                         </table-data>
                     </table-row>
                 </template>
@@ -308,6 +325,9 @@
     import 'vue-popperjs/dist/vue-popper.css';
 
     export default {
+        props: [
+            'detail'
+        ],
         components: {
             DialogBox,
             Datatable,
@@ -317,54 +337,38 @@
             Popper
         },
         mounted() {
-            // this.getData();
-            let urlData = QueryString.parse(window.location.search.substr(1));
-                if (urlData.data) {
+            let searchParams = QueryString.parse(window.location.search.substr(1));
+
+            if (searchParams.bid) {
                 this.form.mode = 'update';
-                this.form.mapping_mode = 'update';
-                this.field_mapping_list_bid = urlData.data.bid;
-                this.form.connection_setup.field_mapping_name = urlData.data.name;
-                this.form.connection_setup.remote_setup_name = urlData.data.remote_setup_name;
-                this.form.connection_setup.catapult_db_setup_name = urlData.data.catapult_db_setup_name;
-                this.form.connection_setup.api_setup_name = urlData.data.api_setup_name;
-                this.form.connection_setup.setup_status = Number(urlData.data.status);
-                this.form.connection_setup.api_setup_bid = urlData.data.api_setup_bid;
-                this.form.connection_setup.remote_setup_bid = urlData.data.remote_setup_bid;
-                this.form.connection_setup.catapult_db_setup_bid = urlData.data.catapult_db_setup_bid
-                this.form.connection_setup.mapping_type = Number(urlData.data.mapping_type);
-                this.form.data_mapping.api_endpoint = urlData.data.api_to_map;
 
-                this.getEndpoint();
+                this.field_mapping_bid = searchParams.bid;
+                this.form.connection_setup.field_mapping_name = this.detail.name;
+                this.form.connection_setup.remote_setup_bid = this.detail.remote_setup_bid;
+                this.form.connection_setup.remote_setup_name = this.detail.remote_setup_name;
+                this.form.connection_setup.catapult_db_setup_bid = this.detail.catapult_db_setup_bid;
+                this.form.connection_setup.catapult_db_setup_name = this.detail.catapult_db_setup_name;
+                this.form.connection_setup.api_setup_bid = this.detail.api_setup_bid;
+                this.form.connection_setup.api_setup_name = this.detail.api_setup_name;
+                this.form.connection_setup.setup_status = Number(this.detail.status);
+                this.form.connection_setup.mapping_type = Number(this.detail.mapping_type);
+                this.form.data_mapping.data_entry = this.detail.data_entry;
 
-                this.form.data_mapping.field_mapping_bid = urlData.data.field_mapping_bid
+                this.getDataEntries();
 
-                axios.get(`${config}/field-mapping/detail/data-mapping-list`, {
-                    params: {
-                        field_mapping_list_bid : this.field_mapping_list_bid
-                    }
-                })
-                    .then(response => {
-                        this.table.values.data = response.data.map(element => {
-                            return {
-                                edit: false,
-                                bid: element.bid,
-                                column_name: element.column_name,
-                                default_value: element.default_value,
-                                description: element.description,
-                                field: element.field,
-                                field_mapping_list_bid: element.field_mapping_list_bid,
-                                file_name: element.file_name,
-                                mapping_type: element.mapping_type,
-                                required: element.required === 1 ? true : false
-                            }
-                        });
-                    })
+                if (this.detail.detail.length > 0) {
+                    this.form.mapping_mode = 'update';
+                }
+
+                this.table.values.data = this.detail.detail;
             }
+
+            this.getSyncEntryChosen();
         },
         data() {
             return {
-                field_mapping_list_bid: null,
-                api_versions: [],
+                field_mapping_bid: null,
+                presets: [],
                 modal: {
                     search: {
                         title: '',
@@ -392,7 +396,7 @@
                     mapping_mode: 'create',
                     connection_setup: {
                         field_mapping_name: '',
-                        mapping_type: 2,
+                        mapping_type: 1,
                         setup_status: 1,
                         remote_setup_name: '',
                         remote_setup_bid: '',
@@ -401,8 +405,8 @@
                         api_setup_bid: '',
                     },
                     data_mapping: {
-                        api_endpoint: '',
-                        field_mapping_bid: '',
+                        data_entry: '',
+                        field_mapping_preset_bid: '',
                     }
                 },
                 errors: {},
@@ -444,7 +448,7 @@
                             {
                                 name: "fields",
                                 label: this.$t('label.cdis_fields'),
-                                width: '200'
+                                width: '320'
                             },
                             {
                                 name: "description",
@@ -458,17 +462,27 @@
                             {
                                 name: "csv_file_name_identifier",
                                 label: this.$t('label.csv_file_name_identifier'),
-                                width: '200'
+                                width: '150'
                             },
                             {
                                 name: "default_field_values",
                                 label: this.$t('label.default_field_values'),
-                                width: '200'
+                                width: '120'
                             },
                             {
                                 name: "csv_column_name",
                                 label: this.$t('label.csv_column_name'),
                                 width: '200'
+                            },
+                            {
+                                name: "reference_column_name",
+                                label: this.$t('label.reference_column_name'),
+                                width: '200'
+                            },
+                            {
+                                name: "head_reference",
+                                label: this.$t('label.head_reference'),
+                                width: '320'
                             },
                         ],
                     },
@@ -492,59 +506,62 @@
                     }
                 },
                 label: {
-                    product_pricing_type: this.$t('label.product_pricing_type'),
                     brand: this.$t('label.brand'),
                     branch: this.$t('label.branch'),
-                    product_category: this.$t('label.product_category'),
                     vendor: this.$t('label.vendor'),
                     vendor_branch: this.$t('label.vendor_branch'),
                     unit_of_measurement: this.$t('label.unit_of_measurement'),
-                    transactions: this.$t('label.transactions'),
+                    transaction: this.$t('label.transaction'),
                     zread: this.$t('label.zread'),
                     audit_trail: this.$t('label.audit_trail'),
                     cash_breakdown: this.$t('label.cash_breakdown'),
                     cash_drawer: this.$t('label.cash_drawer'),
-                    product_structure: this.$t('label.product_structure'),
+                    product: this.$t('label.product'),
+                    product_uom_packaging: this.$t('label.product_uom_packaging'),
                     product_branch_availability: this.$t('label.product_branch_availability'),
                     product_branch_price: this.$t('label.product_branch_price'),
-                    product_head: this.$t('label.product_head'),
-                    product_structure: this.$t('label.product_structure'),
-                    product_structure_detail: this.$t('label.product_structure_detail'),
-                    product_uom_packaging: this.$t('label.product_uom_packaging'),
                     packaging_vendor: this.$t('label.packaging_vendor'),
                     packaging_vendor_branch_cost: this.$t('label.packaging_vendor_branch_cost'),
+                    product_structure: this.$t('label.product_structure'),
+                    product_structure_detail: this.$t('label.product_structure_detail'),
+                    product_category: this.$t('label.product_category'),
+                    product_pricing_type: this.$t('label.product_pricing_type'),
                 },
                 selections: {
                     config: {
                         selected: '',
+                        options: []
+                    },
+                    sync_entry: {
                         options: []
                     }
                 }
             }
         },
         methods: {
-            getEndpoint() {
-                this.form.data_mapping.field_mapping_bid = '';
-                this.table.values.data = [];
+            getDataEntries() {
+                let that = this;
+                this.form.data_mapping.field_mapping_preset_bid = '';
                 this.errors = {};
 
-                axios.get(`${config}/field-mapping/detail/get-endpoint`+'?page=1', {
+                axios.get(`${config}/field-mapping/detail/get-data-entries`+'?page=1', {
                     params: {
-                        api_endpoint: this.form.data_mapping.api_endpoint,
-                        mapping_type: this.form.connection_setup.mapping_type,
-                        itemsPerPage: 100
+                        itemsPerPage: 100,
+                        filters: {
+                            data_entry: this.form.data_mapping.data_entry,
+                            type: this.form.connection_setup.mapping_type,
                         }
-                    })
-                    .then(response => {
-                        this.api_versions = response.data.data.data
-                    })
+                    }
+                }).then(response => {
+                    that.presets = response.data.data.data
+                })
             },
             getFields() {
                 this.errors = {};
-                var selected_api_version = this.api_versions.find(element => (element.bid === this.form.data_mapping.field_mapping_bid))
-                
-                if (selected_api_version.details.length > 0) {
-                    this.table.values.data = selected_api_version.details;
+                var selectedPreset = this.presets.find(element => (element.bid === this.form.data_mapping.field_mapping_preset_bid));
+
+                if (selectedPreset.details.length > 0) {
+                    this.table.values.data = selectedPreset.details;
                 } else {
                     this.table.values.data = [];
                 }
@@ -560,7 +577,7 @@
                         api_setup_bid: this.form.connection_setup.api_setup_bid,
                     };
 
-                    axios.post(`${config}/field-mapping/detail/list`, payload)
+                    axios.post(`${config}/field-mapping/store`, payload)
                         .then(response => {
                             this.dialog.visible = true;
                             this.dialog.status = 'success';
@@ -571,8 +588,8 @@
                             this.dialog.cancel.function = () => {
                                 this.dialog.visible = false;
                             };
-                            
-                            this.field_mapping_list_bid = response.data.data.bid
+
+                            this.field_mapping_bid = response.data.data.bid
                             this.form.mode = "update"
                             this.errors = {}
                         }).catch(error => {
@@ -580,17 +597,17 @@
                         })
                 } else {
                     var payload = {
-                        bid: this.field_mapping_list_bid,
+                        bid: this.field_mapping_bid,
                         name: this.form.connection_setup.field_mapping_name,
                         type: this.form.connection_setup.mapping_type,
                         status: this.form.connection_setup.setup_status,
                         remote_setup_bid: this.form.connection_setup.remote_setup_bid,
                         catapult_db_setup_bid: this.form.connection_setup.catapult_db_setup_bid,
                         api_setup_bid: this.form.connection_setup.api_setup_bid,
-                        api_endpoint: this.form.data_mapping.api_endpoint
+                        data_entry: this.form.data_mapping.data_entry
                     }
 
-                    axios.put(`${config}/field-mapping/detail/list/${this.field_mapping_list_bid}`, payload)
+                    axios.patch(`${config}/field-mapping/update/${this.field_mapping_bid}`, payload)
                         .then(response => {
                             this.dialog.visible = true;
                             this.dialog.status = 'success';
@@ -610,18 +627,16 @@
             },
             saveMapping() {
                 if (this.form.mapping_mode === 'create') {
-                    var api_version = this.api_versions.find(element => (element.bid === this.form.data_mapping.field_mapping_bid))
-                    
+                    var preset = this.presets.find(element => (element.bid === this.form.data_mapping.field_mapping_preset_bid))
+
                     var payload = {
                         mapping_type: this.form.connection_setup.mapping_type,
-                        field_mapping_bid: this.form.data_mapping.field_mapping_bid,
-                        end_point: this.form.data_mapping.api_endpoint,
-                        api_version_name: api_version ? api_version.api_version_name : '',
-                        field_mapping_list_bid: this.field_mapping_list_bid,
+                        field_mapping_bid: this.field_mapping_bid,
+                        data_entry: this.form.data_mapping.data_entry,
                         fields: this.table.values.data
                     };
 
-                    axios.post(`${config}/field-mapping/detail/data-mapping`, payload)
+                    axios.post(`${config}/field-mapping/detail/store`, payload)
                         .then(response => {
                             this.form.mapping_mode = 'update';
                             this.dialog.visible = true;
@@ -638,18 +653,16 @@
                             this.errors = error.response.data.errors;
                         })
                 } else {
-                    var api_version = this.api_versions.find(element => (element.bid == this.form.data_mapping.field_mapping_bid))
+                    var preset = this.presets.find(element => (element.bid == this.form.data_mapping.field_mapping_preset_bid));
 
                     var payload = {
                         mapping_type: this.form.connection_setup.mapping_type,
-                        field_mapping_bid: this.form.data_mapping.field_mapping_bid,
-                        end_point: this.form.data_mapping.api_endpoint,
-                        api_version_name: api_version ? api_version.api_version_name : '',
-                        field_mapping_list_bid: this.field_mapping_list_bid,
+                        field_mapping_bid: this.field_mapping_bid,
+                        data_entry: this.form.data_mapping.data_entry,
                         fields: this.table.values.data
                     };
 
-                    axios.put(`${config}/field-mapping/detail/data-mapping/${this.field_mapping_list_bid}`, payload)
+                    axios.patch(`${config}/field-mapping/detail/update/${this.field_mapping_bid}`, payload)
                         .then(response => {
                             this.dialog.visible = true;
                             this.dialog.status = 'success';
@@ -738,6 +751,19 @@
                 this.dialog.cancel.function = () => {
                     this.dialog.visible = false;
                 };
+            },
+            async getSyncEntryChosen() {
+                let that = this;
+
+                await axios.get('/sync-entry/chosen', {
+                    params: {
+                        filters: {
+                            type: this.form.connection_setup.mapping_type
+                        }
+                    }
+                }).then(function(response) {
+                    that.$set(that.selections.sync_entry, 'options', response.data.data);
+                });
             },
             getError(object, name) {
                 let error = object[name];

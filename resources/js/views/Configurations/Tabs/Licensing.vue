@@ -33,6 +33,15 @@
                             </td>
                         </tr>
                         <tr>
+                            <td>{{ $t('label.branch_code') }} <span class="required">*</span></td>
+                            <td>
+                                <input type="text" class="form-control" v-model="form.values.branch_code">
+                                <label class="text-danger error-message m-0">
+                                    Branch Code is required.
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
                             <td>{{ $t('label.product_key') }} <span class="required">*</span></td>
                             <td>
                                 <input type="text" class="form-control" v-model="form.values.product_key">

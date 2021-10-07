@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Entities\RemoteSetup;
 use App\Http\Requests\RemoteSetupRequest;
 use App\Repositories\Contracts\RemoteSetupRepository;
 use App\Services\RemoteSetupService;
 use App\Transformers\RemoteSetupTransformer;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
 
@@ -27,8 +27,8 @@ class RemoteSetupController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param  Request
+     * @return JsonResponse
      */
     public function index(Request $request)
     {
@@ -43,22 +43,20 @@ class RemoteSetupController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  RemoteSetupRequest  $request
-     * @return \Illuminate\Http\ResponseJson
+     * @return JsonResponse
      */
     public function store(RemoteSetupRequest $request)
     {
-        return $this->remoteSetupService->store($request->validated());
-    }
+        try {
+            $this->remoteSetupService->store($request->validated());
+        } catch(\Exception $ex) {
+            return $this->errorResponse(
+                [],
+                __('error.remote_setup_failed_create')
+            );
+        }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
+        return $this->successfulResponse([], __('success.remote_setup_created'));
     }
 
     /**
@@ -66,18 +64,27 @@ class RemoteSetupController extends Controller
      *
      * @param  RemoteSetupRequest  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function update(RemoteSetupRequest $request, $id)
     {
-        return $this->remoteSetupService->update($request->validated(), $id);
+        try {
+            $this->remoteSetupService->update($request->validated(), $id);
+        } catch(\Exception $ex) {
+            return $this->errorResponse(
+                [],
+                __('error.remote_setup_failed_update')
+            );
+        }
+
+         return $this->successfulResponse([], __('success.remote_setup_updated'));
     }
 
     /**
      * Remove the specified resource from storage.
      *
      * @param  int  $bid
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function destroy($bid)
     {

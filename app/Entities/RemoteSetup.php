@@ -13,12 +13,8 @@ use Prettus\Repository\Traits\TransformableTrait;
  *
  * @package namespace App\Entities;
  */
-class RemoteSetup extends Model implements Transformable
+class RemoteSetup extends Base
 {
-    use TransformableTrait;
-    use BidObserverTrait;
-    use SoftDeletes;
-
     /**
      * The attributes that are mass assignable.
      *
@@ -27,7 +23,9 @@ class RemoteSetup extends Model implements Transformable
     protected $fillable = [
         'bid',
         'name',
-        'path',
+        'storage_type',
+        'local_path',
+        'remote_path',
         'server',
         'host',
         'port',

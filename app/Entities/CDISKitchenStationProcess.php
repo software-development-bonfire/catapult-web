@@ -3,11 +3,14 @@
 namespace App\Entities;
 
 
-class CDISKitchenStationProcess extends Base
+use Illuminate\Database\Eloquent\Model;
+
+class CDISKitchenStationProcess extends Model
 {
     protected $table = 'cdis_kitchen_station_process';
 
     protected $fillable = [
+        'bid',
         'code',
         'description',
         'kitchen_station_bid_1',

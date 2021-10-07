@@ -28,10 +28,8 @@ class DataMappingRequest extends FormRequest
         return [
             'bid' => 'sometimes',
             'mapping_type' => 'sometimes', 
-            'end_point' => 'required',
+            'data_entry' => 'required',
             'field_mapping_bid' => 'required',
-            'field_mapping_list_bid' => 'required',
-            'api_version_name' => 'required',
             'fields' => 'required',
             'fields.*.required' => 'required',
             'fields.*.field' => 'required',
@@ -46,8 +44,8 @@ class DataMappingRequest extends FormRequest
     public function messages()
     {
         return [
-            'end_point.required' => __('validation.required', [ 'attribute' => __('label.api_endpoint') ]),
-            'api_version_name.required' => __('validation.required', [ 'attribute' => __('label.api_version_name') ]),
+            'data_entry.required' => __('validation.required', [ 'attribute' => __('label.data_entry') ]),
+            'preset_name.required' => __('validation.required', [ 'attribute' => __('label.preset_name') ]),
             'field_mapping_list_bid.required' => __('validation.required', [ 'attribute' => __('label.field_mapping_name') ]),
             'fields.required' => __('validation.required', [ 'attribute' => __('label.cdis_field') ]),
             'fields.*.file_name.required_if' => __('validation.required', [ 'attribute' => __('label.csv_file_name_identifier')]),

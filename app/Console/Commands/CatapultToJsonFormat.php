@@ -13,11 +13,14 @@ use App\Enums\Disk;
 use App\Enums\FileNameIdentifier;
 use App\Enums\MappingType;
 use App\Enums\Status;
+use App\Enums\StorageType;
 use App\Exports\PosToCdisExport;
 use App\Http\Requests\PosToCdisValidation;
+use App\Repositories\Contracts\FieldMappingRepository;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\CatapultToJsonFormatService;
 use App\Services\SyncDatabaseService;
@@ -100,11 +103,81 @@ class CatapultToJsonFormat extends Command
                 ];
 
             foreach($endpoints as $endpoint) {
-                resolve('filesystem')->forgetDisk(Disk::LOCAL_POS_TO_CDIS);
-                app()['config']->set('filesystems.disks.'.Disk::LOCAL_POS_TO_CDIS.'.root', public_path($endpoint['source_path']));
-                $localDisk = Storage::disk(Disk::LOCAL_POS_TO_CDIS);
+                $remoteDiskName = '';
+                $localDiskName = '';
 
-                $directories = $localDisk->directories();
+                $filters = (object) [
+                    'data_entry' => 'transaction',
+                    'status' => Status::ACTIVE,
+                ];
+
+                $fieldMappingDetails = app()
+                    ->make(FieldMappingRepository::class)
+                    ->list($filters, false, ['remoteSetup']);
+
+                $entryLabel = '(transaction) ';
+
+                if (count($fieldMappingDetails) > 0) {
+                    $fieldMappingDetails = $fieldMappingDetails[0];
+                } else {
+                    $this->warn('No field mapping details. Please contact administrator. '.$entryLabel);
+                    continue;
+                }
+
+                $remoteSetup = $fieldMappingDetails->remoteSetup;
+
+                $entryLabel .= '('.StorageType::getDescription($remoteSetup->storage_type).')';
+
+                if ($remoteSetup->storage_type == StorageType::FTP) {
+                    $remoteDiskName = 'pos_ftp_remote_sync_data_file';
+                    $localDiskName = 'pos_ftp_local_sync_data_file';
+
+                    resolve('filesystem')->forgetDisk($remoteDiskName);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'ftp');
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.host', $remoteSetup->host);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.username', $remoteSetup->username);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.password', $remoteSetup->password);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.port', $remoteSetup->port);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $remoteSetup->remote_path);
+
+                    resolve('filesystem')->forgetDisk($localDiskName);
+                    app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
+                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $remoteSetup->local_path);
+                } else if ($remoteSetup->storage_type == StorageType::LOCAL_NETWORK) {
+                    $remoteDiskName = 'pos_local_remote_sync_data_file';
+                    $localDiskName = 'pos_local_local_sync_data_file';
+
+                    resolve('filesystem')->forgetDisk($remoteDiskName);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'local');
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $remoteSetup->remote_path);
+
+                    resolve('filesystem')->forgetDisk($localDiskName);
+                    app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
+                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $remoteSetup->local_path);
+                } else {
+                    $error = [
+                        'endpoint' => 'N/A',
+                        'filename' => 'N/A',
+                        'status' => Lang::get('error.failed_conversion'),
+                        'sheet' => 'N/A',
+                        'error_type' => 'Configuration error',
+                        'description' => 'No remote setup configuration'
+                    ];
+
+                    $errorExist = ErrorLogDetail::where([
+                        'error_type' => $error['error_type'],
+                        'description' => $error['description']
+                    ])->first();
+
+                    if (! $errorExist) {
+                        $this->errorLogService->store($error);
+                    }
+                }
+
+                $localDisk = Storage::disk($localDiskName);
+                $entryFolderName = Str::title(str_replace('_', ' ', 'transaction'));
+
+                $directories = $localDisk->allDirectories($sourcePath);
 
                 $result = $this->process($directories, $localDisk, $endpoint);
 

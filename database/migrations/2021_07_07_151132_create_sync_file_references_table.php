@@ -17,10 +17,11 @@ class CreateSyncFileReferencesTable extends Migration
 	{
 		Schema::create('sync_file_references', function(Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('bid');
+            $table->unsignedBigInteger('bid')->index()->unique();
+            $table->tinyInteger('storage_type');
 			$table->string('filename', 128);
 			$table->string('extension', 45);
-			$table->string('ftp_path', 512);
+			$table->string('path', 512);
 			$table->dateTime('last_modified');
             $table->timestamps();
 		});

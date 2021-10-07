@@ -6,7 +6,7 @@ use BenSampo\Enum\Enum;
 
 final class Directory extends Enum
 {
-    const POS_TO_CDIS = "/POS to CDIS";
+    const POS_TO_CDIS = "POS to CDIS";
 
     const FOR_CONVERSION_TRANSACTION_TO_CONVERT = '/POS to CDIS/For Conversion/Transaction/To Convert';
     const FOR_CONVERSION_TRANSACTION_PROCESSED = '/POS to CDIS/For Conversion/Transaction/Processed';

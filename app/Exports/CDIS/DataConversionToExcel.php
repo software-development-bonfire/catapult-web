@@ -1,0 +1,51 @@
+<?php
+
+namespace App\Exports\CDIS;
+
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\BeforeSheet;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+
+class DataConversionToExcel implements WithEvents, ShouldAutoSize
+{
+
+    public function __construct($header, $value, $extension)
+    {
+        $this->header = $header;
+        $this->value = $value;
+        $this->extension = $extension;
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            BeforeSheet::class => function(BeforeSheet $event) {
+                $delegate = $event->sheet->getDelegate();
+
+                $row = 1;
+
+                foreach ($this->header as $index => $header) {
+                    $columnIndex = $index + 1;
+
+                    if ($header == "" || $header == null) {
+                        $delegate->setCellValueByColumnAndRow($columnIndex, $row,  '');
+                    } else {
+                        $delegate->setCellValueExplicitByColumnAndRow($columnIndex, $row, $header, DataType::TYPE_STRING);
+                    }
+                }
+
+                $row++;
+                foreach ($this->value as $index => $value) {
+                    $columnIndex = $index + 1;
+
+                    $delegate->setCellValueExplicitByColumnAndRow(
+                        $columnIndex,
+                        $row,
+                        $value,
+                        DataType::TYPE_STRING);
+                }
+            }
+        ];
+    }
+}

@@ -27,30 +27,34 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/field-mapping/detail', 'FieldMappingController@detail');
     Route::get('/logs', 'LogsController@view');
 
-    // Field Mapping Setup
-    Route::group(['prefix' => 'field-mapping-setup'], function () {
-        Route::get('/', 'FieldMappingSetupController@view');
-        Route::get('/index', 'FieldMappingSetupController@index');
-        Route::get('/detail', 'FieldMappingSetupController@detail');
-        Route::get('/detail/preset', 'FieldMappingSetupController@index');
-        Route::post('/detail/preset', 'FieldMappingSetupController@storePreset');
-        Route::post('/detail', 'FieldMappingSetupController@store');
-        Route::post('/details', 'FieldMappingSetupController@storeDetails');
-        Route::put('/detail/{bid}', 'FieldMappingSetupController@update');
-        Route::post('/detail-create', 'FieldMappingSetupController@detailCreate');
-        Route::put('/detail-update/{bid}', 'FieldMappingSetupController@detailUpdate');
-        Route::delete('/{bid}', 'FieldMappingSetupController@destroy');
-        Route::delete('/detail_delete/{bid}', 'FieldMappingSetupController@detailDestroy');
+    // Field Mapping Preset
+    Route::group(['prefix' => 'field-mapping-preset'], function () {
+        Route::get('/', 'FieldMappingPresetController@view');
+        Route::get('/list', 'FieldMappingPresetController@list');
+        Route::get('/detail', 'FieldMappingPresetController@detail');
+        Route::get('/detail/preset', 'FieldMappingPresetController@index');
+        Route::post('/detail/preset', 'FieldMappingPresetController@storePreset');
+        Route::post('/store', 'FieldMappingPresetController@store');
+        Route::post('/details', 'FieldMappingPresetController@storeDetails');
+        Route::patch('/update/{bid}', 'FieldMappingPresetController@update');
+        Route::post('/detail/store', 'FieldMappingPresetController@storeDetail');
+        Route::patch('/detail/update/{bid}', 'FieldMappingPresetController@updateDetail');
+        Route::delete('/{bid}', 'FieldMappingPresetController@destroy');
+        Route::delete('/detail/{bid}', 'FieldMappingPresetController@destroyDetail');
     });
 
-    Route::group(['prefix' => 'field-mapping/detail'], function () {
-        Route::get('/get-endpoint', 'FieldMappingController@getEndpoint');
-        Route::post('/data-mapping', 'FieldMappingController@storeDataMapping');
-        Route::put('/data-mapping/{field_mapping_list_bid}', 'FieldMappingController@updateDataMapping');
-        Route::get('/get-list', 'FieldMappingController@getList');
-        Route::get('/data-mapping-list', 'FieldMappingController@dataMappingList');
-        Route::get('/generate-csv', 'FieldMappingController@generateCsv');
-        Route::resource('/list', 'FieldMappingController');
+    Route::group(['prefix' => 'field-mapping'], function () {
+        Route::group(['prefix' => 'detail'], function () {
+            Route::get('/get-data-entries', 'FieldMappingController@getDataEntries');
+            Route::post('/store', 'FieldMappingController@storeDataMapping');
+            Route::patch('/update/{bid}', 'FieldMappingController@updateDataMapping');
+            Route::get('/get-list', 'FieldMappingController@getList');
+            Route::get('/data-mapping-list', 'FieldMappingController@dataMappingList');
+            Route::get('/generate-csv', 'FieldMappingController@generateCsv');
+        });
+        Route::patch('/update/{bid}', 'FieldMappingController@update');
+        Route::get('/list', 'FieldMappingController@list');
+        Route::post('/store', 'FieldMappingController@store');
     });
 
     Route::apiResources([
@@ -61,6 +65,8 @@ Route::group(['middleware' => 'auth'], function () {
         'user' => 'UserAccountController',
         'field-mapping-list' => 'FieldMappingController',
     ]);
-});
 
+
+});
+Route::get('/sync-entry/chosen', 'SyncEntryController@getChosen');
 Route::get('/{any_path?}', [HomeController::class, 'index'])->where('any_path', '(.*)');

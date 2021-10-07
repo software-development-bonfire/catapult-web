@@ -1,7 +1,6 @@
 <?php
 
-use App\Entities\FieldMapping;
-use App\Entities\FieldMappingDetail;
+use App\Entities\FieldMappingPreset;
 use Eighty8\LaravelSeeder\Migration\MigratableSeeder;
 use Eighty8\LaravelSeeder\Repository\DisableForeignKeysTrait;
 
@@ -14,81 +13,75 @@ class CdisProductCategoryFields extends MigratableSeeder
      */
     public function run(): void
     {
-        $productPricingType = [
+        $productCategory = [
             'type' => '1',
-            'api_version_name' => 'Product Category default',
-            'api_endpoint' => 'Product Category',
+            'preset_name' => 'Product Category (Default)',
+            'data_entry' => 'product_category',
             'status' => 1,
             'created_by' => 1,
         ];
 
-        $field_map = FieldMapping::create($productPricingType);
+        $fieldMappingPreset = FieldMappingPreset::create($productCategory);
 
-        $field_mapping_details = [
+        $fieldMappingPresetDetail = [
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'bid',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => '""',
-                'default_value' => 1,
+                'default_value' => '""',
                 'column_name' => 'bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'name',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => '""',
-                'default_value' => 1,
+                'default_value' => '""',
                 'column_name' => 'name',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'button_color',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => '""',
-                'default_value' => 1,
+                'default_value' => '""',
                 'column_name' => 'button_color',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'status',
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => '""',
-                'default_value' => 1,
+                'default_value' => 0,
                 'column_name' => 'status',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'parent_bid',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => '""',
-                'default_value' => 1,
+                'default_value' => '""',
                 'column_name' => 'parent_bid',
             ],
             [
-                'field_mapping_bid' => $field_map->bid,
-                'required' => 0,
+                'required' => 1,
                 'field' => 'level',
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => '""',
-                'default_value' => 1,
+                'default_value' => 0,
                 'column_name' => 'level',
             ],
         ];
 
-        foreach ($field_mapping_details as $value) {
-            FieldMappingDetail::create($value);
+        foreach ($fieldMappingPresetDetail as $value) {
+            $fieldMappingPreset->detail()->create($value);
         }
     }
 
@@ -97,6 +90,9 @@ class CdisProductCategoryFields extends MigratableSeeder
      */
     public function down(): void
     {
-        // Remove your data
+        FieldMappingPreset::where([
+            'preset_name' => 'Product Category (Default)',
+            'data_entry' => 'product_category',
+        ])->forceDelete();
     }
 }

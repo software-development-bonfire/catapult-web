@@ -2,15 +2,17 @@
 
 namespace App\Entities;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class CDISTerminal extends Base
+class CDISTerminal extends Model
 {
     use SoftDeletes;
 
     protected $table = 'cdis_terminal';
 
     protected $fillable = [
+        'bid',
         'branch_bid',
         'number',
         'name',

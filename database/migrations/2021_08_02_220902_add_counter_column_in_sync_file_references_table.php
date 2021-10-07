@@ -14,7 +14,7 @@ class AddCounterColumnInSyncFileReferencesTable extends Migration
     public function up()
     {
         Schema::table('sync_file_references', function (Blueprint $table) {
-            $table->integer('counter')->after('ftp_path');
+            $table->integer('counter')->after('storage_type');
         });
     }
 
@@ -26,7 +26,7 @@ class AddCounterColumnInSyncFileReferencesTable extends Migration
     public function down()
     {
         Schema::table('sync_file_references', function (Blueprint $table) {
-            //
+            $table->dropColumn('counter');
         });
     }
 }

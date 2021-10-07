@@ -22,7 +22,13 @@
                         <span v-text="tableData.name"></span>
                     </td>
                     <td class="datatable-cell">
-                        <span v-text="tableData.path"></span>
+                        <span v-text="tableData.storage_type_label"></span>
+                    </td>
+                    <td class="datatable-cell">
+                        <span v-text="tableData.local_path"></span>
+                    </td>
+                    <td class="datatable-cell">
+                        <span v-text="tableData.remote_path"></span>
                     </td>
                     <td class="datatable-cell">
                         <span v-text="tableData.server"></span>
@@ -56,7 +62,22 @@
             </template>
             <template slot="content">
                 <div class="form-group">
-                    <label>{{ $t('label.remote_setup_name') }} <span class="required">*</span></label>
+                    <label>{{ $t('label.storage_type') }}</label>
+                    <select
+                        class="form-control"
+                        v-model="form.values.storage_type"
+                        @change="
+                            form.values.storage_type_label =
+                                $event.target.value == 0
+                                    ? $t('label.local_network')
+                                    : $t('label.ftp')
+                        ">
+                        <option :value="0">{{ $t('label.local_network') }}</option>
+                        <option :value="1">{{ $t('label.ftp') }}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>{{ $t('label.file_storage_setup_name') }} <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.name"
                     :class="{ 'is-invalid': errors.hasOwnProperty('name') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('name')">
@@ -65,13 +86,13 @@
                 </div>
                 <div class="form-group">
                     <label>{{ $t('label.remote_path') }} <span class="required">*</span></label>
-                    <input type="text" class="form-control" v-model="form.values.path"
-                    :class="{ 'is-invalid': errors.hasOwnProperty('path') }">
-                    <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('path')">
-                        {{errors.path[0]}}
+                    <input type="text" class="form-control" v-model="form.values.remote_path"
+                    :class="{ 'is-invalid': errors.hasOwnProperty('remote_path') }">
+                    <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('remote_path')">
+                        {{errors.remote_path[0]}}
                     </label>
                 </div>
-                <div class="form-group">
+                <div class="form-group" v-if="form.values.storage_type == 1">
                     <label>{{ $t('label.remote_server') }} <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.server"
                     :class="{ 'is-invalid': errors.hasOwnProperty('server') }">
@@ -79,7 +100,7 @@
                         {{errors.server[0]}}
                     </label>
                 </div>
-                <div class="form-group">
+                <div class="form-group" v-if="form.values.storage_type == 1">
                     <label>{{ $t('label.remote_host') }} <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.host"
                     :class="{ 'is-invalid': errors.hasOwnProperty('host') }">
@@ -87,7 +108,7 @@
                         {{errors.host[0]}}
                     </label>
                 </div>
-                <div class="form-group">
+                <div class="form-group" v-if="form.values.storage_type == 1">
                     <label>{{ $t('label.remote_port') }} <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.port"
                     :class="{ 'is-invalid': errors.hasOwnProperty('port') }">
@@ -96,7 +117,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.remote_username') }} <span class="required">*</span></label>
+                    <label>{{ form.values.storage_type == 0 ? $t('label.username') : $t('label.remote_username') }} <span class="required">*</span></label>
                     <input type="text" class="form-control" v-model="form.values.username"
                     :class="{ 'is-invalid': errors.hasOwnProperty('username') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('username')">
@@ -104,7 +125,7 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.remote_password') }} <span class="required">*</span></label>
+                    <label>{{ form.values.storage_type == 0 ? $t('label.password') : $t('label.remote_password') }} <span class="required">*</span></label>
                     <input type="password" class="form-control" v-model="form.values.password"
                     :class="{ 'is-invalid': errors.hasOwnProperty('password') }">
                     <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('password')">
@@ -112,7 +133,15 @@
                     </label>
                 </div>
                 <div class="form-group">
-                    <label>{{ $t('label.status') }}</label>
+                    <label>{{ $t('label.local_path') }} <span class="required">*</span></label>
+                    <input type="text" class="form-control" v-model="form.values.local_path"
+                           :class="{ 'is-invalid': errors.hasOwnProperty('local_path') }">
+                    <label class="text-danger error-message m-0" v-if="errors.hasOwnProperty('local_path')">
+                        {{errors.local_path[0]}}
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>{{ $t('label.setup_status') }}</label>
                     <select class="form-control" v-model="form.values.status">
                         <option :value="1">{{ $t('label.active') }}</option>
                         <option :value="0">{{ $t('label.inactive') }}</option>
@@ -178,6 +207,7 @@
                     visible: false
                 },
                 form: {
+                    index: null,
                     mode: 'create',
                     values: {
                         id: '',
@@ -195,32 +225,42 @@
                     header: [
                         {
                             name: "name",
-                            label: this.$t('label.remote_setup_name'),
+                            label: this.$t('label.file_storage_setup_name'),
                             width: '200'
                         },
                         {
-                            name: "path",
+                            name: "storage_type_label",
+                            label: this.$t('label.storage_type'),
+                            width: '150'
+                        },
+                        {
+                            name: "local_path",
+                            label: this.$t('label.local_path'),
+                            width: '250'
+                        },
+                        {
+                            name: "remote_path",
                             label: this.$t('label.remote_path'),
                             width: '250'
                         },
                         {
                             name: "server",
-                            label: this.$t('label.remote_server'),
+                            label: this.$t('label.server'),
                             width: '150'
                         },
                         {
                             name: "host",
-                            label: this.$t('label.remote_host'),
+                            label: this.$t('label.host'),
                             width: '150'
                         },
                         {
                             name: "port",
-                            label: this.$t('label.remote_port'),
+                            label: this.$t('label.port'),
                             width: '150'
                         },
                         {
                             name: "username",
-                            label: this.$t('label.remote_username'),
+                            label: this.$t('label.username'),
                             width: '150'
                         },
                         {
@@ -355,51 +395,41 @@
             },
 
             save() {
+                let that = this;
+
                 if (this.form.mode === 'create') {
-
                     axios.post('remote-setup', this.form.values)
-                    .then(response => {
-                        this.paginate();
-                        this.dialog.visible = true;
-                        this.dialog.status = 'success';
-                        this.dialog.message = response.data.message;
-                        this.dialog.ok.function = () => {
-                            this.dialog.visible = false;
-                            this.modal.visible = false;
-                        };
-                        this.errors = {}
-                    }).catch(error => {
-                        this.errors = error.response.data.errors
-                    })
-
+                        .then(response => {
+                            that.paginate();
+                            that.dialog.visible = true;
+                            that.dialog.status = 'success';
+                            that.dialog.message = response.data.message;
+                            that.dialog.ok.function = () => {
+                                that.dialog.visible = false;
+                                that.modal.visible = false;
+                            };
+                            that.errors = {}
+                        }).catch(error => {
+                            that.errors = error.response.data.errors
+                        });
                 } else {
-                    let index = this.form.values.index;
+                    let index = this.form.index;
 
-                    axios.put(`remote-setup/${this.form.values.bid}`, this.form.values)
-                    .then(response => {
-                        this.table.values.data[index] = {
-                            bid: this.form.values.bid,
-                            name: this.form.values.name,
-                            path: this.form.values.path,
-                            server: this.form.values.server,
-                            host: this.form.values.host,
-                            port: this.form.values.port,
-                            username: this.form.values.username,
-                            password: this.form.values.password,
-                            status: this.form.values.status
-                        }
+                    axios.patch(`remote-setup/${this.form.values.bid}`, this.form.values)
+                        .then(response => {
+                            that.table.values.data[index] = {...that.form.values};
 
-                        this.dialog.visible = true;
-                        this.dialog.status = 'success';
-                        this.dialog.message = 'Successfully updated the Remote Setup!';
-                        this.dialog.ok.function = () => {
-                            this.dialog.visible = false;
-                            this.modal.visible = false;
-                        };
-                        this.errors = {}
-                    }).catch(error => {
-                        this.errors = error.response.data.errors
-                    })
+                            that.dialog.visible = true;
+                            that.dialog.status = 'success';
+                            that.dialog.message = response.data.message;
+                            that.dialog.ok.function = () => {
+                                that.dialog.visible = false;
+                                that.modal.visible = false;
+                            };
+                            that.errors = {}
+                        }).catch(error => {
+                            that.errors = error.response.data.errors
+                        });
                 }
             },
 
@@ -407,18 +437,8 @@
                 this.errors = {}
                 this.form.mode = 'update';
 
-                this.form.values = {
-                    bid: data.bid,
-                    index: index,
-                    name: data.name,
-                    path: data.path,
-                    server: data.server,
-                    host: data.host,
-                    port: data.port,
-                    username: data.username,
-                    password: data.password,
-                    status: data.status
-                }
+                this.form.values = {...data};
+                this.form.index = index;
 
                 this.modal.visible = true;
             },

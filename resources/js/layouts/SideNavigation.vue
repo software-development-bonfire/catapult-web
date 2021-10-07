@@ -65,10 +65,10 @@
                 </a>
                 <a
                 v-if="this.$hasPermissionTo('view.field_mapping_setup')"
-                    href="/field-mapping-setup"
+                    href="/field-mapping-preset"
                     class="list-group-item"
-                    :class="page === 'field-mapping-setup' ? 'active' : ''">
-                    {{ $t('label.field_mapping_setup') }}
+                    :class="page === 'field-mapping-preset' ? 'active' : ''">
+                    {{ $t('label.field_mapping_preset') }}
                 </a>
             </div>
         </div>

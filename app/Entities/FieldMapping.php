@@ -9,7 +9,7 @@ use Prettus\Repository\Contracts\Transformable;
 use Prettus\Repository\Traits\TransformableTrait;
 
 /**
- * Class FieldMapping.
+ * Class FieldMappingList.
  *
  * @package namespace App\Entities;
  */
@@ -18,6 +18,8 @@ class FieldMapping extends Model implements Transformable
     use TransformableTrait,
         SoftDeletes,
         BidObserverTrait;
+
+    protected $table = 'field_mapping';
 
     protected $primaryKey = 'bid';
 
@@ -30,16 +32,39 @@ class FieldMapping extends Model implements Transformable
      */
     protected $fillable = [
         'bid',
+        'name',
         'type',
-        'api_endpoint',
-        'api_version_name',
-        'field_entry',
+        'field_mapping_bid',
+        'remote_setup_bid',
+        'catapult_db_setup_bid',
+        'api_setup_bid',
         'status',
+        'data_entry',
         'created_by',
-        'updated_by'
+        'updated_by',
     ];
 
-    public function details()
+    public function remoteSetup()
+    {
+        return $this->belongsTo(RemoteSetup::class, 'remote_setup_bid', 'bid');
+    }
+
+    public function catapultDBSetup()
+    {
+        return $this->belongsTo(CatapultDbSetup::class, 'catapult_db_setup_bid', 'bid');
+    }
+
+    public function apiSetup()
+    {
+        return $this->belongsTo(ApiSetup::class, 'api_setup_bid', 'bid');
+    }
+
+    public function dataMappings()
+    {
+        return $this->hasMany(FieldMappingDetail::class, 'field_mapping_bid', 'bid');
+    }
+
+    public function detail()
     {
         return $this->hasMany(FieldMappingDetail::class, 'field_mapping_bid', 'bid');
     }

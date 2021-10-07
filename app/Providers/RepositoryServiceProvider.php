@@ -18,6 +18,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(\App\Repositories\Contracts\KitchenDisplayRepository::class, \App\Repositories\Eloquent\KitchenDisplayRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\CDISKitchenUserRepository::class, \App\Repositories\Eloquent\CDISKitchenUserRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\CDISProductVariantRepository::class, \App\Repositories\Eloquent\CDISProductVariantRepositoryEloquent::class);
+        $this->app->bind(\App\Repositories\Contracts\SyncEntryRepository::class, \App\Repositories\Eloquent\SyncEntryRepositoryEloquent::class);
     }
 
     /**

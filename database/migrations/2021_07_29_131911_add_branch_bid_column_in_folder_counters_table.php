@@ -14,7 +14,7 @@ class AddBranchBidColumnInFolderCountersTable extends Migration
     public function up()
     {
         Schema::table('folder_counters', function (Blueprint $table) {
-            $table->unsignedBigInteger('branch_bid')->after('bid')->default(1000000000000000001);
+            $table->unsignedBigInteger('branch_bid')->after('bid');
         });
     }
 
@@ -26,7 +26,7 @@ class AddBranchBidColumnInFolderCountersTable extends Migration
     public function down()
     {
         Schema::table('folder_counters', function (Blueprint $table) {
-            //
+            $table->dropColumn('branch_bid');
         });
     }
 }

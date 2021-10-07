@@ -74,16 +74,16 @@ return [
 
         Disk::LOCAL_POS_TO_CDIS => [
             'driver' => 'local',
-            'root' => public_path(Directory::POS_TO_CDIS)
+            'root' => storage_path('app/public')
         ],
 
-        Disk::FTP_POST_TO_CDIS => [
+        Disk::POS_TO_CDIS => [
             'driver' => 'ftp',
             'host' => '',
             'username' => '',
             'password' => '',
             'port' => 21,
-            'root' => '/',
+            'root' => storage_path('app/public'),
             'timeout' => 60,
         ],
 

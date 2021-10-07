@@ -2,9 +2,11 @@
 
 namespace App\Traits;
 
+use Carbon\Carbon;
 use DateInterval;
 use DatePeriod;
 use DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 trait GenericHelper
@@ -222,5 +224,67 @@ trait GenericHelper
         }
 
         return $missingDates;
+    }
+
+    /**
+     * Create/construct formatted log message.
+     *
+     * @param string  $message
+     * @param string  $logType
+     * @param boolean  $hasDate
+     * @param array  $prefixTags
+     * @param array  $suffixTags
+     * @param boolean  $console
+     *
+     * @return string  $constructedMessage
+     */
+    public function createLog($message = '', $logType = 'info', $hasDate = true, $prefixTags = [], $suffixTags = [], $console = true)
+    {
+        $date = $hasDate ? '['.Carbon::now()->format('Y-m-d H:i:s').']' : '';
+
+        $prefixTagLabel = '';
+        if (is_array($prefixTags) && count($prefixTags) > 0) {
+            foreach ($prefixTags as $prefixTag) {
+                $prefixTagLabel .= '['.$prefixTag.']';
+            }
+        }
+
+        $suffixTagLabel = '';
+        if (is_array($suffixTags) && count($suffixTags) > 0) {
+            foreach ($suffixTags as $suffixTag) {
+                $suffixTagLabel .= '('.$suffixTag.')';
+            }
+        }
+
+        $constructedMessage = $date.$prefixTagLabel.' '.$message.' '.$suffixTagLabel;
+
+        if ($console) {
+            $this->{$logType}($constructedMessage);
+        }
+
+        return $constructedMessage;
+    }
+
+    /**
+     * Cache excluded value.
+     *
+     * @param string  $key
+     * @param string  $value
+     * @param int  $ttl
+     *
+     * @return string  $constructedMessage
+     */
+    public function cacheExcludedValue($key, $value, $ttl = 60)
+    {
+        $savedValue = Cache::get($key) ?? [];
+
+        $savedValue = (is_array($savedValue) && count($savedValue) > 0)
+            ? $savedValue
+            : [];
+
+        if (! in_array($value, $savedValue)) {
+            $savedValue[] = $value;
+            Cache::put($key, $savedValue, $ttl);
+        }
     }
 }

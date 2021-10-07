@@ -2,39 +2,21 @@
 
 namespace App\Transformers;
 
-use App\Entities\FieldMappingList;
+use App\Entities\FieldMapping;
 use League\Fractal\TransformerAbstract;
 
 class FieldMappingTransformer extends TransformerAbstract
 {
     /**
-     * List of resources to automatically include
-     *
-     * @var array
-     */
-    protected $defaultIncludes = [
-        //
-    ];
-    
-    /**
-     * List of resources possible to include
-     *
-     * @var array
-     */
-    protected $availableIncludes = [
-        //
-    ];
-    
-    /**
      * A Fractal transformer.
      *
+     * @param FieldMapping $model
      * @return array
      */
-    public function transform(FieldMappingList $model)
+    public function transform(FieldMapping $model)
     {
         $data = array();
-            $data['bid'] = (int) $model->bid;
-            $data['field_mapping_bid'] = (string) $model->field_mapping_bid;
+            $data['bid'] = (string) $model->bid;
             $data['remote_setup_bid'] = (string) $model->remote_setup_bid;
             $data['catapult_db_setup_bid'] = (string) $model->catapult_db_setup_bid;
             $data['api_setup_bid'] = (string) $model->api_setup_bid;
@@ -45,7 +27,7 @@ class FieldMappingTransformer extends TransformerAbstract
             $data['mapping_type'] = (int) $model->type;
             $data['api_version_name'] = (string) $model->api_version_name;
             $data['status'] = (int) $model->status;
-            $data['api_to_map'] = (string) $model->api_endpoint;
+            $data['data_entry'] = (string) $model->data_entry;
             
         return $data;
     }

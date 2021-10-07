@@ -3,69 +3,61 @@
 namespace App\Services;
 
 use App\Entities\RemoteSetup;
+use App\Traits\DatabaseTransaction;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Lang;
 
 class RemoteSetupService
 {
+    use DatabaseTransaction;
+
     /**
      * Update the specified resource in storage.
      *
-     * @param Array  $data
-     * @return \Illuminate\Http\Response
+     * @param array  $data
+     * @return RemoteSetup
      */
     public function store($data)
     {
-        try {
+        return $this->transaction(function() use($data) {
             $data['created_by'] = Auth::user()->bid;
-            $remote_setup = RemoteSetup::create($data);
-    
-            if ($remote_setup) {
-                return [
-                    'data' => $remote_setup,
-                    'message' => Lang::get('success.remote_setup_created')
-                ];
-            }
-        } catch (\Throwable $th) {
-            return ['message' => Lang::get('error.remote_setup_failed_create')];
-        }
+            $remoteSetup = RemoteSetup::create($data);
+
+            return $remoteSetup;
+        });
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param Array  $data
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param array  $data
+     * @param string  $bid
+     * @return RemoteSetup
      */
     public function update($data, $bid)
     {
-        try {
+        return $this->transaction(function() use($data, $bid) {
             if ($data['password'] === null) {
                 unset($data['password']);
             }
             $data['updated_by'] = Auth::user()->bid;
 
-            $update = RemoteSetup::find( $bid)->update($data);
+            $remoteSetup = RemoteSetup::find($bid)->update($data);
 
-            if ($update) {
-                return ['message' => Lang::get('success.remote_setup_updated')];
-            }
-        } catch (\Throwable $th) {
-            return ['message' => Lang::get('error.remote_setup_failed_update')];
-
-        }
+            return $remoteSetup;
+        });
     }
 
     /**
      * Remove the specified resource from storage.
      *
      * @param  int  $bid
-     *
+     * @return RemoteSetup
      */
     public function destroy($bid)
     {
-        RemoteSetup::find($bid)->delete();
+        return $this->transaction(function() use($bid) {
+            return RemoteSetup::find($bid)->delete();
+        });
     }
 }
 
