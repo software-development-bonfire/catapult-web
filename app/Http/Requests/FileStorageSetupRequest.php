@@ -6,7 +6,7 @@ use App\Enums\StorageType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class RemoteSetupRequest extends FormRequest
+class FileStorageSetupRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -28,7 +28,7 @@ class RemoteSetupRequest extends FormRequest
         $storageType = $this->get('storage_type');
 
         $rules = [
-            'name' => 'required|max:45|unique:remote_setups,name,NULL,bid,deleted_at,NULL',
+            'name' => 'required|max:45|unique:file_storage_setup,name,NULL,bid,deleted_at,NULL',
             'storage_type' => 'required',
             'local_path' => 'required|max:254',
             'remote_path' => 'required|max:254',
@@ -47,7 +47,7 @@ class RemoteSetupRequest extends FormRequest
 
         if ($this->method() == 'PATCH') {
             unset($rules['name']);
-            $rules['name'] = 'required|max:45|unique:remote_setups,name,'.$this->bid.',bid,deleted_at,NULL';
+            $rules['name'] = 'required|max:45|unique:file_storage_setup,name,'.$this->bid.',bid,deleted_at,NULL';
         }
 
         return $rules;
@@ -58,13 +58,13 @@ class RemoteSetupRequest extends FormRequest
         $storageType = $this->get('storage_type');
 
         return [
-            'name.required' => __('validation.required', [ 'attribute' => __('label.remote_name') ]),
+            'name.required' => __('validation.required', [ 'attribute' => __('label.name') ]),
             'storage_type.required' => __('validation.required', [ 'attribute' => __('label.storage_type') ]),
             'local_path.required' => __('validation.required', [ 'attribute' =>__('label.local_path') ]),
             'remote_path.required' => __('validation.required', [ 'attribute' =>__('label.remote_path') ]),
             'server.required' => __('validation.required', [ 'attribute' => __('label.remote_server') ]),
-            'host.required' => __('validation.required', [ 'attribute' => __('label.remote_host') ]),
-            'port.required' => __('validation.required', [ 'attribute' => __('label.remote_port') ]),
+            'host.required' => __('validation.required', [ 'attribute' => __('label.host') ]),
+            'port.required' => __('validation.required', [ 'attribute' => __('label.port') ]),
             'username.required' => __('validation.required', [
                 'attribute' =>
                     $storageType === StorageType::LOCAL_NETWORK
@@ -77,7 +77,7 @@ class RemoteSetupRequest extends FormRequest
                         ? __('label.password')
                         : __('label.remote_password')
             ]),
-            'status.required' => __('validation.required', [ 'attribute' => __('label.remote_status') ]),
+            'status.required' => __('validation.required', [ 'attribute' => __('label.status') ]),
         ];
     }
 }

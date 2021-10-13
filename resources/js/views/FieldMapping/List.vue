@@ -33,7 +33,7 @@
                         </span>
                     </td>
                     <td class="datatable-cell">
-                        <span v-text="tableData.remote_setup_name"></span>
+                        <span v-text="tableData.file_storage_setup_name"></span>
                     </td>
                     <td class="datatable-cell">
                         <span v-text="tableData.catapult_db_setup_name"></span>
@@ -287,8 +287,8 @@
                             width: '180'
                         },
                         {
-                            name: "remote_setup_name",
-                            label: this.$t('label.remote_setup_name'),
+                            name: "file_storage_setup_name",
+                            label: this.$t('label.file_storage_setup_name'),
                             width: '250'
                         },
                         {
@@ -329,7 +329,7 @@
                     settings: {
                         itemsPerPage: 10,
                         withRowNumbers: true,
-                        hasDelete: true
+                        hasDelete: true,
                     }
                 },
                 selections: {

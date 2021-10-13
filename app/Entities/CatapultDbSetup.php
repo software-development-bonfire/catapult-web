@@ -13,10 +13,9 @@ use Prettus\Repository\Traits\TransformableTrait;
  *
  * @package namespace App\Entities;
  */
-class CatapultDbSetup extends Model implements Transformable
+class CatapultDbSetup extends Base implements Transformable
 {
     use TransformableTrait;
-    use BidObserverTrait;
     use SoftDeletes;
 
     /**

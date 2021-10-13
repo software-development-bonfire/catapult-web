@@ -14,4 +14,9 @@ class SyncEntry extends Base
         'alias',
         'type',
     ];
+
+    public function detail()
+    {
+        return $this->hasMany(SyncEntryDetail::class, 'head_bid', 'bid');
+    }
 }

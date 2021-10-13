@@ -13,10 +13,9 @@ use Prettus\Repository\Traits\TransformableTrait;
  *
  * @package namespace App\Entities;
  */
-class ApiSetup extends Model implements Transformable
+class ApiSetup extends Base implements Transformable
 {
     use TransformableTrait;
-    use BidObserverTrait;
     use SoftDeletes;
 
     /**
@@ -31,5 +30,4 @@ class ApiSetup extends Model implements Transformable
         'created_by',
         'updated_by'
     ];
-
 }

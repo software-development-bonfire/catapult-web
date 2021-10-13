@@ -6,7 +6,6 @@ use App\Entities\CDISSync;
 use App\Entities\ErrorLog;
 use App\Entities\ErrorLogDetail;
 use App\Entities\FieldMapping;
-use App\Enums\Disk;
 use App\Enums\MappingType;
 use App\Enums\Status;
 use App\Enums\StorageType;
@@ -126,7 +125,7 @@ class ConvertDataToFile extends Command
 
                 $fieldMappingDetails = app()
                     ->make(FieldMappingRepository::class)
-                    ->list($filters, false, ['remoteSetup']);
+                    ->list($filters, false, ['fileStorageSetup']);
 
                 if (count($fieldMappingDetails) > 0) {
                     $fieldMappingDetails = $fieldMappingDetails[0];
@@ -143,53 +142,40 @@ class ConvertDataToFile extends Command
                     break;
                 }
 
-                $remoteSetup = $fieldMappingDetails->remoteSetup;
+                $fileStorageSetup = $fieldMappingDetails->fileStorageSetup;
 
-                if ($remoteSetup->storage_type == StorageType::FTP) {
-                    $remoteDiskName = 'cdis_ftp_remote_sync_data_file';
-                    $localDiskName = 'cdis_ftp_local_sync_data_file';
+                if ($fileStorageSetup->storage_type == StorageType::FTP) {
+                    $remoteDiskName = 'cdis_ftp_remote_convert_data_to_file';
+                    $localDiskName = 'cdis_ftp_local_convert_data_to_file';
 
                     resolve('filesystem')->forgetDisk($remoteDiskName);
                     app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'ftp');
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.host', $remoteSetup->host);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.username', $remoteSetup->username);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.password', $remoteSetup->password);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.port', $remoteSetup->port);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $remoteSetup->remote_path);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.host', $fileStorageSetup->host);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.username', $fileStorageSetup->username);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.password', $fileStorageSetup->password);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.port', $fileStorageSetup->port);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
 
                     resolve('filesystem')->forgetDisk($localDiskName);
                     app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $remoteSetup->local_path);
-                } else if ($remoteSetup->storage_type == StorageType::LOCAL_NETWORK) {
-                    $remoteDiskName = 'cdis_local_remote_sync_data_file';
-                    $localDiskName = 'cdis_local_local_sync_data_file';
+                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
+                } else if ($fileStorageSetup->storage_type == StorageType::LOCAL_NETWORK) {
+                    $remoteDiskName = 'cdis_local_remote_convert_data_to_file';
+                    $localDiskName = 'cdis_local_local_convert_data_to_file';
 
                     resolve('filesystem')->forgetDisk($remoteDiskName);
                     app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $remoteSetup->remote_path);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
 
                     resolve('filesystem')->forgetDisk($localDiskName);
                     app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $remoteSetup->local_path);
+                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
                 } else {
-                    $error_log = ErrorLog::create([
-                        'pos_entry' => 'Remote Setup module',
-                        'filename' => 'N/A',
-                        'status' => 'Failed conversion'
-                    ]);
-
-                    ErrorLogDetail::create([
-                        'error_log_bid' => $error_log->bid,
-                        'sheet' => 'N/A',
-                        'error_type' => 'Invalid data',
-                        'description' => "No configuration found, Please add configuration in Remote Setup Module."
-                    ]);
-
                     return false;
                 }
 
                 if ($forSyncDatum) {
-                    $this->processConversion($forSyncDatum, $localDiskName, $remoteSetup);
+                    $this->processConversion($forSyncDatum, $localDiskName, $fileStorageSetup);
                 } else {
                     $this->info(__('message.no_data_to_convert_to_file'));
                 }
@@ -204,11 +190,11 @@ class ConvertDataToFile extends Command
      *
      * @param object  $forSyncDatum
      * @param string  $localDiskName
-     * @param object  $remoteSetup
+     * @param object  $fileStorageSetup
      *
      * @return mixed
      */
-    public function processConversion($forSyncDatum, $localDiskName, $remoteSetup)
+    public function processConversion($forSyncDatum, $localDiskName, $fileStorageSetup)
     {
         $action = $forSyncDatum->action == 'create'
             ? 'C_'
@@ -247,7 +233,7 @@ class ConvertDataToFile extends Command
     }
 
     /**
-     * Generate grouped excel file.
+     * Generate excel file.
      *
      * @param object  $forSyncDatum
      * @param string  $action

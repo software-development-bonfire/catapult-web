@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class AddStorageTypeColumnInRemoteSetupsTable extends Migration
+class AddStorageTypeColumnInFileStorageSetupTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,7 @@ class AddStorageTypeColumnInRemoteSetupsTable extends Migration
      */
     public function up()
     {
-        Schema::table('remote_setups', function (Blueprint $table) {
+        Schema::table('file_storage_setup', function (Blueprint $table) {
             $table->tinyInteger('storage_type')->after('name')->default(\App\Enums\StorageType::LOCAL_NETWORK);
         });
     }
@@ -25,7 +25,7 @@ class AddStorageTypeColumnInRemoteSetupsTable extends Migration
      */
     public function down()
     {
-        Schema::table('remote_setups', function (Blueprint $table) {
+        Schema::table('file_storage_setup', function (Blueprint $table) {
             $table->dropColumn('storage_type');
         });
     }

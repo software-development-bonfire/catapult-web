@@ -102,7 +102,7 @@ class FieldMappingService
                 ]);
 
                 FieldMapping::find($bid)->update([
-                    'remote_setup_bid' => $data['remote_setup_bid'],
+                    'file_storage_setup_bid' => $data['file_storage_setup_bid'],
                     'catapult_db_setup_bid' => $data['catapult_db_setup_bid'],
                     'api_setup_bid' => $data['api_setup_bid'],
                     'name' => $data['name'],

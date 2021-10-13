@@ -33,8 +33,8 @@ class FieldMappingDetailTransformer extends TransformerAbstract
 
         $data = array();
             $data['bid'] = (string) $model->bid;
-            $data['remote_setup_bid'] = (string) $model->remote_setup_bid;
-            $data['remote_setup_name'] = $model->remoteSetup->name;
+            $data['file_storage_setup_bid'] = (string) $model->file_storage_setup_bid;
+            $data['file_storage_setup_name'] = $model->fileStorageSetup->name;
             $data['api_setup_bid'] = (string) $model->api_setup_bid;
             $data['api_setup_name'] = $model->apiSetup->name;
             $data['catapult_db_setup_bid'] = (string) $model->catapult_db_setup_bid;

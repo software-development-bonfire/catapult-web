@@ -9,7 +9,7 @@ use Prettus\Repository\Contracts\Transformable;
 use Prettus\Repository\Traits\TransformableTrait;
 
 /**
- * Class FieldMapping.
+ * Class FieldMappingPreset.
  *
  * @package namespace App\Entities;
  */

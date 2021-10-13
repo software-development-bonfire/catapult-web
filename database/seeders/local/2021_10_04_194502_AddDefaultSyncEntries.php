@@ -40,6 +40,7 @@ class AddDefaultSyncEntries extends MigratableSeeder
             [ 'type' => MappingType::CDIS_TO_POS, 'name' => 'product_pricing_type', 'alias' => 'PP' ],
             [ 'type' => MappingType::CDIS_TO_POS, 'name' => 'product_variant', 'alias' => 'VRH' ],
             [ 'type' => MappingType::CDIS_TO_POS, 'name' => 'product_variant_option', 'alias' => 'VRO' ],
+            [ 'type' => MappingType::CDIS_TO_POS, 'name' => 'terminal', 'alias' => 'T' ],
             [ 'type' => MappingType::CDIS_TO_POS, 'name' => 'unit_of_measurement', 'alias' => 'UOM' ],
             [ 'type' => MappingType::CDIS_TO_POS, 'name' => 'vendor', 'alias' => 'VND' ],
             [ 'type' => MappingType::CDIS_TO_POS, 'name' => 'vendor_branch', 'alias' => 'VNB' ],

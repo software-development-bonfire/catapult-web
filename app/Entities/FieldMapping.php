@@ -9,7 +9,7 @@ use Prettus\Repository\Contracts\Transformable;
 use Prettus\Repository\Traits\TransformableTrait;
 
 /**
- * Class FieldMappingList.
+ * Class FieldMapping.
  *
  * @package namespace App\Entities;
  */
@@ -35,7 +35,7 @@ class FieldMapping extends Model implements Transformable
         'name',
         'type',
         'field_mapping_bid',
-        'remote_setup_bid',
+        'file_storage_setup_bid',
         'catapult_db_setup_bid',
         'api_setup_bid',
         'status',
@@ -44,9 +44,9 @@ class FieldMapping extends Model implements Transformable
         'updated_by',
     ];
 
-    public function remoteSetup()
+    public function fileStorageSetup()
     {
-        return $this->belongsTo(RemoteSetup::class, 'remote_setup_bid', 'bid');
+        return $this->belongsTo(FileStorageSetup::class, 'file_storage_setup_bid', 'bid');
     }
 
     public function catapultDBSetup()

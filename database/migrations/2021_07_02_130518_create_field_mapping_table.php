@@ -19,7 +19,7 @@ class CreateFieldMappingTable extends Migration
 		Schema::create('field_mapping', function(Blueprint $table) {
             $table->increments('id');
             $table->unsignedBigInteger('bid')->index()->unique();
-            $table->unsignedBigInteger('remote_setup_bid');
+            $table->unsignedBigInteger('file_storage_setup_bid');
             $table->unsignedBigInteger('catapult_db_setup_bid');
             $table->unsignedBigInteger('api_setup_bid');
             $table->string('name');
@@ -32,15 +32,21 @@ class CreateFieldMappingTable extends Migration
             $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
             $table->softDeletes();
 
-            $table->foreign('remote_setup_bid')
+            $table->foreign('file_storage_setup_bid')
                 ->references('bid')
-                ->on('remote_setups')
+                ->on('file_storage_setup')
                 ->onUpdate('restrict')
                 ->onDelete('cascade');
 
             $table->foreign('catapult_db_setup_bid')
                 ->references('bid')
                 ->on('catapult_db_setups')
+                ->onUpdate('restrict')
+                ->onDelete('cascade');
+
+            $table->foreign('api_setup_bid')
+                ->references('bid')
+                ->on('api_setups')
                 ->onUpdate('restrict')
                 ->onDelete('cascade');
 		});

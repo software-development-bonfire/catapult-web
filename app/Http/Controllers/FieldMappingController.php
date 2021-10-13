@@ -6,7 +6,7 @@ use App\Entities\FieldMappingDetail;
 use App\Enums\MappingType;
 use App\Http\Requests\DataMappingRequest;
 use App\Http\Requests\FieldMappingRequest;
-use App\Repositories\Contracts\RemoteSetupRepository;
+use App\Repositories\Contracts\FileStorageSetupRepository;
 use App\Repositories\Contracts\CatapultDbSetupRepository;
 use App\Repositories\Contracts\ApiSetupRepository;
 use App\Repositories\Contracts\FieldMappingRepository;
@@ -16,7 +16,7 @@ use App\Services\FieldMappingService;
 use App\Transformers\CatapultDbSetupTransformer;
 use App\Transformers\FieldMappingDetailTransformer;
 use App\Transformers\FieldMappingPresetDataEntriesTransformer;
-use App\Transformers\RemoteSetupTransformer;
+use App\Transformers\FileStorageSetupTransformer;
 use App\Transformers\ApiSetupTransformer;
 use App\Transformers\FieldMappingPresetTransformer;
 use App\Transformers\FieldMappingTransformer;
@@ -71,9 +71,9 @@ class FieldMappingController extends Controller
      */
     public function getList(Request $request)
     {
-        if ($request->type === "remote") {
-            $class = RemoteSetupRepository::class;
-            $transformer = RemoteSetupTransformer::class;
+        if ($request->type === "file_storage") {
+            $class = FileStorageSetupRepository::class;
+            $transformer = FileStorageSetupTransformer::class;
         } else if ($request->type === "catapult") {
             $class = CatapultDbSetupRepository::class;
             $transformer = CatapultDbSetupTransformer::class;

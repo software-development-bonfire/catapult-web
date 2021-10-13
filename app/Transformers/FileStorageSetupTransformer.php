@@ -2,18 +2,18 @@
 
 namespace App\Transformers;
 
-use App\Entities\RemoteSetup;
+use App\Entities\FileStorageSetup;
 use App\Enums\StorageType;
 use League\Fractal\TransformerAbstract;
 
-class RemoteSetupTransformer extends TransformerAbstract
+class FileStorageSetupTransformer extends TransformerAbstract
 {
     /**
      * A Fractal transformer.
      *
      * @return array
      */
-    public function transform(RemoteSetup $model)
+    public function transform(FileStorageSetup $model)
     {
         return [
             'bid' => (string) $model->bid,

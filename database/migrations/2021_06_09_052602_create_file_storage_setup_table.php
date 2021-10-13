@@ -4,9 +4,9 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
 /**
- * Class CreateRemoteSetupsTable.
+ * Class CreateFileStorageSetupTable.
  */
-class CreateRemoteSetupsTable extends Migration
+class CreateFileStorageSetupTable extends Migration
 {
 	/**
 	 * Run the migrations.
@@ -15,7 +15,7 @@ class CreateRemoteSetupsTable extends Migration
 	 */
 	public function up()
 	{
-		Schema::create('remote_setups', function(Blueprint $table) {
+        Schema::create('file_storage_setup', function(Blueprint $table) {
             $table->bigIncrements('id');
 			$table->unsignedBigInteger('bid')->index()->unique();
 			$table->string('name', 45);
@@ -42,6 +42,6 @@ class CreateRemoteSetupsTable extends Migration
 	 */
 	public function down()
 	{
-		Schema::drop('remote_setups');
+		Schema::drop('file_storage_setup');
 	}
 }

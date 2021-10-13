@@ -41,7 +41,7 @@ class FieldMappingRequest extends FormRequest
                     ],
                     'type' => 'required',
                     'status' => 'required',
-                    'remote_setup_bid' => 'required',
+                    'file_storage_setup_bid' => 'required',
                     'catapult_db_setup_bid' => 'required',
                     'api_setup_bid' => 'required'
                 ];
@@ -67,7 +67,7 @@ class FieldMappingRequest extends FormRequest
             'name.unique' => __('validation.unique', [ 'attribute' => __('label.field_mapping_name') ]),
             'type.required' => __('validation.required', [ 'attribute' => __('label.mapping_type') ]),
             'status.required' => __('validation.required', [ 'attribute' => __('label.setup_status') ]),
-            'remote_setup_bid.required' => __('validation.required', [ 'attribute' => __('label.remote_setup_name') ]),
+            'file_storage_setup_bid.required' => __('validation.required', [ 'attribute' => __('label.file_storage_setup_name') ]),
             'catapult_db_setup_bid.required' => __('validation.required', [ 'attribute' => __('label.catapult_db_setup_name') ]),
             'api_setup_bid.required' => __('validation.required', [ 'attribute' => __('label.api_setup_name') ]),
         ];

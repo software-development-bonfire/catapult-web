@@ -58,7 +58,7 @@ Route::group(['middleware' => 'auth'], function () {
     });
 
     Route::apiResources([
-        'remote-setup' => 'RemoteSetupController',
+        'file-storage-setup' => 'FileStorageSetupController',
         'catapult-db-setup' => 'CatapultDbSetupController',
         'api-setup' => 'ApiSetupController',
         'syncing' => 'SyncingSetupController',

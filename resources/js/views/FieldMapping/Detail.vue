@@ -48,18 +48,18 @@
                     </div>
                     <div class="col-xl-3">
                         <div class="mb-1">
-                            <label>{{ $t('label.remote_setup_name') }}</label>
+                            <label>{{ $t('label.file_storage_setup_name') }}</label>
                             <div class="input-group">
-                                <input type="text" class="form-control" readonly v-model="form.connection_setup.remote_setup_name">
-                                <div class="input-group-append" @click="openSearchModal('remote')">
+                                <input type="text" class="form-control" readonly v-model="form.connection_setup.file_storage_setup_name">
+                                <div class="input-group-append" @click="openSearchModal('file_storage')">
                                     <span class="input-group-text search-button">
                                         <i class="fa fa-search"></i>
                                     </span>
                                 </div>
                             </div>
                             <label
-                                class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('remote_setup_bid')">
-                                {{ errors.remote_setup_bid[0] }}
+                                class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('file_storage_setup_bid')">
+                                {{ errors.file_storage_setup_bid[0] }}
                             </label>
                         </div>
                         <div class="mb-1">
@@ -344,8 +344,8 @@
 
                 this.field_mapping_bid = searchParams.bid;
                 this.form.connection_setup.field_mapping_name = this.detail.name;
-                this.form.connection_setup.remote_setup_bid = this.detail.remote_setup_bid;
-                this.form.connection_setup.remote_setup_name = this.detail.remote_setup_name;
+                this.form.connection_setup.file_storage_setup_bid = this.detail.file_storage_setup_bid;
+                this.form.connection_setup.file_storage_setup_name = this.detail.file_storage_setup_name;
                 this.form.connection_setup.catapult_db_setup_bid = this.detail.catapult_db_setup_bid;
                 this.form.connection_setup.catapult_db_setup_name = this.detail.catapult_db_setup_name;
                 this.form.connection_setup.api_setup_bid = this.detail.api_setup_bid;
@@ -398,8 +398,8 @@
                         field_mapping_name: '',
                         mapping_type: 1,
                         setup_status: 1,
-                        remote_setup_name: '',
-                        remote_setup_bid: '',
+                        file_storage_setup_name: '',
+                        file_storage_setup_bid: '',
                         catapult_db_setup_name: '',
                         catapult_db_setup_bid: '',
                         api_setup_bid: '',
@@ -502,7 +502,8 @@
                     settings: {
                         itemsPerPage: 10,
                         withRowNumbers: false,
-                        withPagination: false
+                        withPagination: false,
+                        minHeight: 300
                     }
                 },
                 label: {
@@ -572,7 +573,7 @@
                         name: this.form.connection_setup.field_mapping_name,
                         type: this.form.connection_setup.mapping_type,
                         status: this.form.connection_setup.setup_status,
-                        remote_setup_bid: this.form.connection_setup.remote_setup_bid,
+                        file_storage_setup_bid: this.form.connection_setup.file_storage_setup_bid,
                         catapult_db_setup_bid: this.form.connection_setup.catapult_db_setup_bid,
                         api_setup_bid: this.form.connection_setup.api_setup_bid,
                     };
@@ -601,7 +602,7 @@
                         name: this.form.connection_setup.field_mapping_name,
                         type: this.form.connection_setup.mapping_type,
                         status: this.form.connection_setup.setup_status,
-                        remote_setup_bid: this.form.connection_setup.remote_setup_bid,
+                        file_storage_setup_bid: this.form.connection_setup.file_storage_setup_bid,
                         catapult_db_setup_bid: this.form.connection_setup.catapult_db_setup_bid,
                         api_setup_bid: this.form.connection_setup.api_setup_bid,
                         data_entry: this.form.data_mapping.data_entry
@@ -690,8 +691,8 @@
                     } 
                 })
                     .then(response => {
-                        if (selection === 'remote') {
-                            this.modal.search.title = this.$t('label.remote_setup_detail');
+                        if (selection === 'file_storage') {
+                            this.modal.search.title = this.$t('label.file_storage_setup_detail');
                         } else if (selection === 'catapult') {
                             this.modal.search.title = this.$t('label.catapult_db_setup_detail');
                         } else if (selection === 'api') {
@@ -715,11 +716,11 @@
             selectRow() {
                 let that = this;
 
-                if (this.modal.search.selection === 'remote') {
+                if (this.modal.search.selection === 'file_storage') {
                     this.selections.config.options.forEach(function(item) {
                         if (item.value === that.selections.config.selected) {
-                            that.form.connection_setup.remote_setup_name = item.label;
-                            that.form.connection_setup.remote_setup_bid = item.value;
+                            that.form.connection_setup.file_storage_setup_name = item.label;
+                            that.form.connection_setup.file_storage_setup_bid = item.value;
                         }
                     });
                 } else if (this.modal.search.selection === 'catapult') {

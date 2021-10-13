@@ -5,10 +5,10 @@ namespace App\Repositories\Contracts;
 use Prettus\Repository\Contracts\RepositoryInterface;
 
 /**
- * Interface RemoteSetupRepository.
+ * Interface FileStorageSetupRepository.
  *
  * @package namespace App\Repositories;
  */
-interface RemoteSetupRepository extends RepositoryInterface
+interface FileStorageSetupRepository extends RepositoryInterface
 {
 }

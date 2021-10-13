@@ -12,11 +12,12 @@ return [
     'error_logs_instructions_1' => 'Download the CSV file and correct the fields manually.',
     'error_logs_instructions_2' => 'You may check where the errors occured on the "View file errors" button.',
     'error_logs_instructions_3' => 'Once correction has been made on the CSV file, reupload the file to its corresponding row.',
+    'file_sent' => 'File sent.',
     'make_sure_email_active_valid' => 'Make sure that the e-mail address is active and valid.',
     'no_data_to_convert_to_value' => 'No data to convert to :value.',
     'no_data_to_sync' => 'No data to sync.',
+    'no_data_to_send' => 'No data to send.',
     'no_results_found' => 'No results found.',
-    'syncing_file_successful' => 'Syncing file successful.',
     'the_cdis_field_must_be_lowercase' => 'The CDIS field must be lowercase.',
     'unauthorized' => 'Unauthorized',
 ];

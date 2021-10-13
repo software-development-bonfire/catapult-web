@@ -2,36 +2,26 @@
 
 namespace App\Console\Commands\POSToCDIS;
 
-use App\Entities\DataMapping;
-use App\Entities\ErrorLog;
-use App\Entities\ErrorLogDetail;
-use App\Entities\FieldMappingList;
-use App\Enums\Acronym;
-use App\Enums\ApiEndpoint;
-use App\Enums\Directory;
-use App\Enums\Disk;
-use App\Enums\FileNameIdentifier;
 use App\Enums\MappingType;
 use App\Enums\Status;
 use App\Enums\StorageType;
 use App\Exports\PosToCdisExport;
-use App\Http\Requests\PosToCdisValidation;
+use App\Jobs\CDIS\APIRequest;
 use App\Repositories\Contracts\FieldMappingRepository;
 use App\Repositories\Contracts\SyncEntryRepository;
 use App\Traits\GenericHelper;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Services\CatapultToJsonFormatService;
-use App\Services\SyncDatabaseService;
-use Illuminate\Support\Facades\Lang;
-use stdClass;
 
 class ConvertDataFile extends Command
 {
     use GenericHelper;
+
+    public $extension = 'json';
     /**
      * The name and signature of the console command.
      *
@@ -44,19 +34,7 @@ class ConvertDataFile extends Command
      *
      * @var string
      */
-    protected $description = 'Convert csv files to json format';
-
-    /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct(CatapultToJsonFormatService $catapultToJsonFormatService, SyncDatabaseService $syncDatabaseService)
-    {
-        parent::__construct();
-        $this->catapultToJsonFormatService = $catapultToJsonFormatService;
-        $this->syncDatabaseService = $syncDatabaseService;
-    }
+    protected $description = 'Convert pos data file to different file format';
 
     /**
      * Execute the console command.
@@ -65,8 +43,7 @@ class ConvertDataFile extends Command
      */
     public function handle()
     {
-        $this->line("Conversion started..");
-        $this->line('');
+        $this->createLog(__('info.conversion_started'), 'info', true);
 
         $filters = (object) array('type' => MappingType::CDIS_TO_POS);
         $syncEntries = app()->make(SyncEntryRepository::class)->list($filters);
@@ -84,7 +61,12 @@ class ConvertDataFile extends Command
                 'cash_drawer',
             ];
 
+            $entriesMaxLength = max(array_map('strlen', $entries));
+
             foreach ($entries as $entry) {
+                $spaces = ($entriesMaxLength - strlen($entry)) / 2;
+                $entryLogLabel = str_repeat(' ', ceil($spaces)).$entry.str_repeat(' ', floor($spaces));
+
                 $remoteDiskName = '';
                 $localDiskName = '';
 
@@ -95,78 +77,74 @@ class ConvertDataFile extends Command
 
                 $fieldMappingDetails = app()
                     ->make(FieldMappingRepository::class)
-                    ->list($filters, false, ['remoteSetup', 'dataMappings']);
-
-                $entryLabel = '('.$entry.') ';
+                    ->list($filters, false, ['fileStorageSetup', 'dataMappings']);
 
                 if (count($fieldMappingDetails) > 0) {
                     $fieldMappingDetails = $fieldMappingDetails[0];
                 } else {
-                    $this->warn('No field mapping details. Please contact administrator. '.$entryLabel);
+                    $this->createLog(
+                        __('error.no_field_mapping_detected'),
+                        'error',
+                        true,
+                        [$entryLogLabel]
+                    );
                     continue;
                 }
 
-                $remoteSetup = $fieldMappingDetails->remoteSetup;
+                $fileStorageSetup = $fieldMappingDetails->fileStorageSetup;
                 $dataMappings = $fieldMappingDetails->dataMappings;
 
-                $entryLabel .= '('.StorageType::getDescription($remoteSetup->storage_type).')';
-
-                if ($remoteSetup->storage_type == StorageType::FTP) {
-                    $remoteDiskName = 'pos_ftp_remote_sync_data_file';
-                    $localDiskName = 'pos_ftp_local_sync_data_file';
+                if ($fileStorageSetup->storage_type == StorageType::FTP) {
+                    $remoteDiskName = 'pos_ftp_remote_convert_data_file';
+                    $localDiskName = 'pos_ftp_local_convert_data_file';
 
                     resolve('filesystem')->forgetDisk($remoteDiskName);
                     app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'ftp');
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.host', $remoteSetup->host);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.username', $remoteSetup->username);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.password', $remoteSetup->password);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.port', $remoteSetup->port);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $remoteSetup->remote_path);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.host', $fileStorageSetup->host);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.username', $fileStorageSetup->username);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.password', $fileStorageSetup->password);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.port', $fileStorageSetup->port);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
 
                     resolve('filesystem')->forgetDisk($localDiskName);
                     app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $remoteSetup->local_path);
-                } else if ($remoteSetup->storage_type == StorageType::LOCAL_NETWORK) {
-                    $remoteDiskName = 'pos_local_remote_sync_data_file';
-                    $localDiskName = 'pos_local_local_sync_data_file';
+                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
+                } else if ($fileStorageSetup->storage_type == StorageType::LOCAL_NETWORK) {
+                    $remoteDiskName = 'pos_local_remote_convert_data_file';
+                    $localDiskName = 'pos_local_local_convert_data_file';
 
                     resolve('filesystem')->forgetDisk($remoteDiskName);
                     app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $remoteSetup->remote_path);
+                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
 
                     resolve('filesystem')->forgetDisk($localDiskName);
                     app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $remoteSetup->local_path);
+                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
                 } else {
-                    $error = [
-                        'endpoint' => 'N/A',
-                        'filename' => 'N/A',
-                        'status' => Lang::get('error.failed_conversion'),
-                        'sheet' => 'N/A',
-                        'error_type' => 'Configuration error',
-                        'description' => 'No remote setup configuration'
-                    ];
-
-                    $errorExist = ErrorLogDetail::where([
-                        'error_type' => $error['error_type'],
-                        'description' => $error['description']
-                    ])->first();
-
-                    if (! $errorExist) {
-                        $this->errorLogService->store($error);
-                    }
+                    return false;
                 }
 
                 $entryFolderName = Str::title(str_replace('_', ' ', $entry));
 
                 $localDisk = Storage::disk($localDiskName);
-                $sourcePath = $entryFolderName.'/To Convert';
+                $sourcePath = $entryFolderName.'/To convert';
                 $directories = $localDisk->allDirectories($sourcePath);
 
+                if (! $directories) {
+                    $this->createLog(__('message.no_data_to_convert_to_value', ['value' => $this->extension]), 'info', true, [$entryLogLabel]);
+                }
+
                 foreach ($directories as $directory) {
-                    $this->info('Converting ('.$directory.')');
-                    $fileCount = substr($directory, -1);
+                    $folderFileCount = $localDisk->allFiles($directory);
+                    $expectedFileCount = substr($directory, -1);
+
+                    if ($folderFileCount == $expectedFileCount) {
+                        continue;
+                    }
+
                     $folderName = substr($directory, strrpos($directory, '/') + 1);
+                    $this->createLog(__('label.converting'). ' :', 'info', true, [$entryLogLabel], [$folderName]);
+
                     $files = $localDisk->allFiles($directory);
                     $entriesData = (object) array();
 
@@ -186,10 +164,10 @@ class ConvertDataFile extends Command
                             }
 
                             foreach ($content as $dataIndex => $data) {
+                                if (! isset($entriesData->{$entryFileAcronym}[$dataIndex])) {
+                                    $entriesData->{$entryFileAcronym}[$dataIndex] = (object) array();
+                                }
                                 foreach ($data as $datumIndex => $datum) {
-                                    if (! isset($entriesData->{$entryFileAcronym}[$dataIndex])) {
-                                        $entriesData->{$entryFileAcronym}[$dataIndex] = (object) array();
-                                    }
                                     $entriesData->{$entryFileAcronym}[$dataIndex]->{$keys[$datumIndex]} = $datum;
                                 }
                             }
@@ -224,7 +202,9 @@ class ConvertDataFile extends Command
                     array_multisort($levels, SORT_ASC, $entryHierarchy);
 
                     $entryContent = [];
+                    $entryContentForDatabase = [];
                     $hierarchyReferences = [];
+                    $mappingErrors = [];
 
                     foreach ($entryHierarchy as $entryAcronym => $entryDetail) {
                         $mappings = $dataMappings->where('file_name', $entryAcronym)->toArray();
@@ -239,108 +219,191 @@ class ConvertDataFile extends Command
                                     $objectName = $entry;
                                 }
 
-                                $headReferenceEntry = '';
                                 $headReferenceEntryAcronym = '';
-                                $headReferenceEntryFieldName = '';
                                 $referenceValue = '';
                                 $headReferenceIndex = '';
 
                                 foreach ($entryData as $entryDatumIndex => $entryDatum) {
-                                    if (! array_key_exists($entryAcronym, $hierarchyReferences)) {
-                                        if ($mapping['head_reference']) {
-                                            $referenceValue = $mapping['reference_column_name'] ? $entryDatum->{$mapping['reference_column_name']} : '';
-                                            $headReferenceEntry = explode('.', $mapping['head_reference']);
-                                            $headReferenceEntryAcronym = $headReferenceEntry[0];
-                                            $headReferenceEntryFieldName = $headReferenceEntry[1];
-                                            $headReferenceIndex = array_search($referenceValue, array_column($entriesData->{$headReferenceEntryAcronym}, $headReferenceEntryFieldName));
-                                        }
-
-                                        $hierarchyReferences[$entryAcronym][$entryDatumIndex] = array(
-                                            'index' => $entryDatumIndex,
-                                            'level' => $entryDetail['level'],
-                                            'entry_acronym' => $entryAcronym,
-                                            'reference_key_name' => $entryDetail['key'],
-                                            'reference_column' => $mapping['reference_column_name'],
-                                            'reference_value' => $referenceValue,
-                                            'head_reference_entry_acronym' => $headReferenceEntryAcronym,
-                                            'head_reference_entry_index' => (int) $headReferenceIndex,
-                                        );
+                                    if ($mapping['head_reference']) {
+                                        $referenceValue =
+                                            $mapping['reference_column_name']
+                                                ? $entryDatum->{$mapping['reference_column_name']}
+                                                : '';
+                                        $headReferenceEntry = explode('.', $mapping['head_reference']);
+                                        $headReferenceEntryAcronym = $headReferenceEntry[0];
+                                        $headReferenceEntryFieldName = $headReferenceEntry[1];
+                                        $headReferenceIndex =
+                                            array_search(
+                                                $referenceValue,
+                                                array_column($entriesData->{$headReferenceEntryAcronym},
+                                                    $headReferenceEntryFieldName));
                                     }
+
+                                    $hierarchyReferences[$entryAcronym][$entryDatumIndex] = array(
+                                        'index' => $entryDatumIndex,
+                                        'level' => $entryDetail['level'],
+                                        'entry_acronym' => $entryAcronym,
+                                        'reference_key_name' => $entryDetail['key'],
+                                        'reference_column' => $mapping['reference_column_name'],
+                                        'reference_value' => $referenceValue,
+                                        'head_reference_entry_acronym' => $headReferenceEntryAcronym,
+                                        'head_reference_entry_index' => (int) $headReferenceIndex,
+                                    );
 
                                     $entryDatum = (array) $entryDatum;
 
                                     if ($mapping['required']) {
-                                        $fieldValue = $entryDatum[$mapping['column_name']];
+
+                                        $isFieldExists = array_key_exists($mapping['column_name'], $entryDatum);
+
+                                        if ($isFieldExists) {
+                                            $fieldValue = $entryDatum[$mapping['column_name']];
+                                        } else {
+                                            $mappingErrors[$file][] = array(
+                                                'error_type' => 'Missing column',
+                                                'description' => $mapping['column_name'],
+                                            );
+
+                                            break;
+                                        }
                                     } else {
                                         $fieldValue = $mapping['default_value'];
                                     }
 
                                     if (! isset($entryContent[$objectName][$entryDatumIndex])) {
-                                        $entryContent[$objectName][$entryDatumIndex] = (object) array();
+                                        $entryContent[$objectName][$entryDatumIndex] = array();
                                     }
 
-                                    $entryContent[$objectName][$entryDatumIndex]->{$mapping['column_name']} = $fieldValue;
+                                    $fieldPath = explode('.*.', $mapping['field']);
+                                    $fieldPath = $fieldPath[count($fieldPath) - 1];
+
+                                    Arr::set(
+                                        $entryContent,
+                                        $objectName.'.'.$entryDatumIndex.'.'.$fieldPath, $fieldValue);
+
+                                    Arr::set(
+                                        $entryContentForDatabase,
+                                        $entryAcronym.'.'.$entryDatumIndex.'.'.str_replace('.', '_', $fieldPath), $fieldValue);
                                 }
                             }
                         }
                     }
 
-                    $this->convertToFile($hierarchyReferences, $entryContent);
-                }
-
-                $this->info(
-                    $directories
-                        ? 'Sync processing... '.$entryLabel
-                        : 'No file to be sync '.$entryLabel);
-
-                foreach ($directories as $directory) {
-                    $this->info('Converting (' . $directory . ')');
+                    $this->convertToFile(
+                        $hierarchyReferences,
+                        $entry,
+                        $entryContent,
+                        $folderName,
+                        $entryFolderName,
+                        $directory,
+                        $localDisk,
+                        $entryLogLabel);
                 }
             }
 
-            sleep(3);
+            sleep(5);
         }
     }
 
-    public function convertToFile($hierarchyReferences, $entryContent)
-    {
-        $fileContent = array('transaction' => []);
+    /**
+     * Convert to file.
+     *
+     * @param  array  $hierarchyReferences
+     * @param  string  $entry
+     * @param  array  $entryContent
+     * @param  string  $fileName
+     * @param  string  $entryFolderName
+     * @param  string  $directory
+     * @param  Filesystem  $disk
+     * @param  string  $entryLogLabel
+     *
+     * @return bool
+     */
+    public function convertToFile(
+        $hierarchyReferences,
+        $entry,
+        $entryContent,
+        $fileName,
+        $entryFolderName,
+        $directory,
+        $disk,
+        $entryLogLabel
+    ) {
+        $fileContent = array($entry => []);
 
         foreach ($hierarchyReferences as $entryAcronym => $hierarchyReference) {
             foreach ($hierarchyReference as $reference) {
                 $keyName = $reference['reference_key_name'];
-                foreach ($entryContent[$keyName] as $index => $data) {
-                    $path = $keyName;
-                    $this->setValue($hierarchyReferences, $reference, $fileContent, $data, $path);
+                foreach ($entryContent[$keyName] as $dataIndex => $data) {
+                    $path = array();
+                    $fileContent = $this->setValue($hierarchyReferences, $reference, $fileContent, $data, $path, $dataIndex);
                 }
             }
         }
 
-        var_dump($fileContent); die();
+        $filePath = '/'.$entryFolderName.'/Converted/To sync/'.$fileName.'.'.$this->extension;
+        $processedFolderPath = '/'.$entryFolderName.'/Processed/'.$fileName;
+
+        $fileContent = json_encode($fileContent);
+
+        $isMoved = $disk->put($filePath, $fileContent);
+
+        if ($isMoved) {
+            if ($disk->exists($processedFolderPath)) {
+                $disk->deleteDirectory($processedFolderPath);
+            } else {
+                $disk->move($directory, $processedFolderPath);
+            }
+
+            $this->createLog(__('label.converted'). '  :', 'info', true, [$entryLogLabel], [$fileName]);
+        }
+
+        return $isMoved;
     }
 
-    public function setValue($hierarchyReference, $reference, $fileContent, $data, $path)
+    /**
+     * Set value from array path.
+     *
+     * @param  array  $hierarchyReferences
+     * @param  array  $reference
+     * @param  array  $fileContent
+     * @param  array  $data
+     * @param  array  $path
+     * @param  int  $dataIndex
+     *
+     * @return array
+     */
+    public function setValue($hierarchyReferences, $reference, $fileContent, $data, $path, $dataIndex)
     {
         $headReferenceEntryAcronym = $reference['head_reference_entry_acronym'];
-        $referenceValue = $reference['reference_value'];
         $keyName = $reference['reference_key_name'];
         $headReferenceEntryIndex = $reference['head_reference_entry_index'];
 
-
         if ($reference['level'] == 0) {
-            Arr::set($fileContent, $path, Arr::flatten($data));
-            var_dump($fileContent);
-        } else {
-            if ($referenceValue && $headReferenceEntryAcronym) {
-                $path .= $keyName.'.'.$headReferenceEntryIndex;
-
-                $this->setValue(
-                    $hierarchyReference,
-                    $hierarchyReference[$headReferenceEntryAcronym][$headReferenceEntryIndex],
-                    $fileContent,
-                    $data,
-                    $path);
+            $actualPath = '';
+            $path[$reference['reference_key_name']] = $dataIndex;
+            $arrayOfPath = array_reverse($path);
+            foreach ($arrayOfPath as $key => $value) {
+                if (array_key_first($arrayOfPath) == $key) {
+                    $actualPath .= $key.'.'.$value;
+                } else {
+                    $actualPath .= '.'.$key.'.'.$value;
+                }
             }
+
+            Arr::set($fileContent, $actualPath, $data);
+
+            return $fileContent;
+        } else {
+            $path[$keyName] = $dataIndex;
+
+            return $this->setValue(
+                $hierarchyReferences,
+                $hierarchyReferences[$headReferenceEntryAcronym][$headReferenceEntryIndex],
+                $fileContent,
+                $data,
+                $path,
+                $headReferenceEntryIndex);
         }
     }
 
@@ -348,6 +411,7 @@ class ConvertDataFile extends Command
      * Get sync entry alias.
      *
      * @param  string  $name
+     * @return string
      */
     public function getSyncEntryAlias($name = null)
     {

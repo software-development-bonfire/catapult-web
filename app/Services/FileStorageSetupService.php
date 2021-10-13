@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use App\Entities\RemoteSetup;
+use App\Entities\FileStorageSetup;
 use App\Traits\DatabaseTransaction;
 use Illuminate\Support\Facades\Auth;
 
-class RemoteSetupService
+class FileStorageSetupService
 {
     use DatabaseTransaction;
 
@@ -14,15 +14,15 @@ class RemoteSetupService
      * Update the specified resource in storage.
      *
      * @param array  $data
-     * @return RemoteSetup
+     * @return FileStorageSetup
      */
     public function store($data)
     {
         return $this->transaction(function() use($data) {
             $data['created_by'] = Auth::user()->bid;
-            $remoteSetup = RemoteSetup::create($data);
+            $FileStorageSetup = FileStorageSetup::create($data);
 
-            return $remoteSetup;
+            return $FileStorageSetup;
         });
     }
 
@@ -31,7 +31,7 @@ class RemoteSetupService
      *
      * @param array  $data
      * @param string  $bid
-     * @return RemoteSetup
+     * @return FileStorageSetup
      */
     public function update($data, $bid)
     {
@@ -41,9 +41,9 @@ class RemoteSetupService
             }
             $data['updated_by'] = Auth::user()->bid;
 
-            $remoteSetup = RemoteSetup::find($bid)->update($data);
+            $FileStorageSetup = FileStorageSetup::find($bid)->update($data);
 
-            return $remoteSetup;
+            return $FileStorageSetup;
         });
     }
 
@@ -51,12 +51,12 @@ class RemoteSetupService
      * Remove the specified resource from storage.
      *
      * @param  int  $bid
-     * @return RemoteSetup
+     * @return FileStorageSetup
      */
     public function destroy($bid)
     {
         return $this->transaction(function() use($bid) {
-            return RemoteSetup::find($bid)->delete();
+            return FileStorageSetup::find($bid)->delete();
         });
     }
 }

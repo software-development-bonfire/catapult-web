@@ -2,11 +2,9 @@
 
 namespace App\Services;
 
-use App\Entities\RemoteSetup;
 use App\Entities\SyncIntervalSetting;
 use App\Enums\Status;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Lang;
 
 class SyncIntervalSettingService
 {

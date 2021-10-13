@@ -6,6 +6,7 @@ use App\Http\Requests\ApiSetupRequest;
 use App\Repositories\Contracts\ApiSetupRepository;
 use App\Services\ApiSetupService;
 use App\Transformers\ApiSetupTransformer;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
 
@@ -43,7 +44,7 @@ class ApiSetupController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function store(ApiSetupRequest $request)
     {
@@ -51,26 +52,21 @@ class ApiSetupController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function update(ApiSetupRequest $request, $bid)
     {
-        return $this->apiSetupService->update($request->validated(), $bid);
+        try {
+            $this->apiSetupService->update($request->validated(), $bid);
+        } catch (\Exception $exception) {
+            return $this->errorResponse(null, __('error.api_setup_failed_update'));
+        }
+
+        return $this->successfulResponse(null, __('success.api_setup_updated'));
     }
 
     /**

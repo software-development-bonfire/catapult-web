@@ -62,11 +62,10 @@ class FetchDataForSync extends Command
                     foreach ($bidsChunk as $bid) {
                         $this->createLog(__('success.queued_to_sync'), 'info', true, [$bid]);
                     }
-
                 }
             }
 
-            sleep(5);
+            sleep($interval);
         }
         while (true);
     }

@@ -9,12 +9,14 @@ use Prettus\Repository\Contracts\Transformable;
 use Prettus\Repository\Traits\TransformableTrait;
 
 /**
- * Class RemoteSetup.
+ * Class FileStorageSetup.
  *
  * @package namespace App\Entities;
  */
-class RemoteSetup extends Base
+class FileStorageSetup extends Base
 {
+    public $table = 'file_storage_setup';
+
     /**
      * The attributes that are mass assignable.
      *

@@ -228,7 +228,7 @@ class CdisTransactionFields extends MigratableSeeder
             ],
             [
 
-                'required' => 1,
+                'required' => 0,
                 'field' => 'table_number',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -493,6 +493,75 @@ class CdisTransactionFields extends MigratableSeeder
             ],
             // </ ** TRANSACTION DETAIL ** > //
 
+            // < ** TRANSACTION DETAIL DISCOUNT ** > //
+            [
+                'required' => 1,
+                'field' => 'official_receipt.*.discount.*.id',
+                'description' => null,
+                'mapping_type' => 'VARCHAR',
+                'file_name' => 'TDD',
+                'default_value' => 0,
+                'column_name' => 'discount_bid',
+                'reference_column_name' => 'transaction_detail_id',
+                'head_reference' => 'TD.id',
+            ],
+            [
+                'required' => 1,
+                'field' => 'official_receipt.*.discount.*.mandated',
+                'description' => null,
+                'mapping_type' => 'INT',
+                'file_name' => 'TDD',
+                'default_value' => 0,
+                'column_name' => 'mandated',
+                'reference_column_name' => 'transaction_detail_id',
+                'head_reference' => 'TD.id',
+            ],
+            [
+                'required' => 1,
+                'field' => 'official_receipt.*.discount.*.title',
+                'description' => null,
+                'mapping_type' => 'VARCHAR',
+                'file_name' => 'TDD',
+                'default_value' => '""',
+                'column_name' => 'title',
+                'reference_column_name' => 'transaction_detail_id',
+                'head_reference' => 'TD.id',
+            ],
+            [
+                'required' => 1,
+                'field' => 'official_receipt.*.discount.*.total',
+                'description' => null,
+                'mapping_type' => 'DECIMAL',
+                'file_name' => 'TDD',
+                'default_value' => 0,
+                'column_name' => 'total',
+                'reference_column_name' => 'transaction_detail_id',
+                'head_reference' => 'TD.id',
+            ],
+            [
+                'required' => 1,
+                'field' => 'official_receipt.*.discount.*.amount_discount',
+                'description' => null,
+                'mapping_type' => 'DECIMAL',
+                'file_name' => 'TDD',
+                'default_value' => 0,
+                'column_name' => 'amount_discount',
+                'reference_column_name' => 'transaction_detail_id',
+                'head_reference' => 'TD.id',
+            ],
+            [
+                'required' => 1,
+                'field' => 'official_receipt.*.discount.*.vat_deduct',
+                'description' => null,
+                'mapping_type' => 'DECIMAL',
+                'file_name' => 'TDD',
+                'default_value' => 0,
+                'column_name' => 'vat_deduct',
+                'reference_column_name' => 'transaction_detail_id',
+                'head_reference' => 'TD.id',
+            ],
+            // </ ** TRANSACTION DETAIL DISCOUNT ** > //
+
             // < ** PAYMENT METHOD ** > //
             [
                 'required' => 1,
@@ -543,18 +612,7 @@ class CdisTransactionFields extends MigratableSeeder
             // < ** PRODUCT ** > //
             [
                 'required' => 1,
-                'field' => 'official_receipt.*.product.*.bid',
-                'description' => null,
-                'mapping_type' => 'VARCHAR',
-                'file_name' => 'PR',
-                'default_value' => '""',
-                'column_name' => 'bid',
-                'reference_column_name' => 'transaction_detail_id',
-                'head_reference' => 'TD.id',
-            ],
-            [
-                'required' => 1,
-                'field' => 'official_receipt.*.product.*.product_bid',
+                'field' => 'official_receipt.*.product.*.id',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'PR',
@@ -854,12 +912,12 @@ class CdisTransactionFields extends MigratableSeeder
             // < ** ADD ONS ** > //
             [
                 'required' => 1,
-                'field' => 'official_receipt.*.product.*.addon.*.bid',
+                'field' => 'official_receipt.*.product.*.addon.*.id',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'AD',
                 'default_value' => 1,
-                'column_name' => 'bid',
+                'column_name' => 'id',
                 'reference_column_name' => 'transaction_product_id',
                 'head_reference' => 'PR.id',
             ],
@@ -934,12 +992,12 @@ class CdisTransactionFields extends MigratableSeeder
             // < ** PRODUCT DISCOUNT ** > //
             [
                 'required' => 1,
-                'field' => 'official_receipt.*.product.*.discount.*.bid',
+                'field' => 'official_receipt.*.product.*.discount.*.id',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'PD',
                 'default_value' => 0,
-                'column_name' => 'bid',
+                'column_name' => 'id',
                 'reference_column_name' => 'transaction_product_id',
                 'head_reference' => 'PR.id',
             ],

@@ -1,5 +1,5 @@
 <template>
-    <div class="tab-pane fade show active" id="remote-setup" role="tabpanel" aria-labelledby="remote-setup-tab">
+    <div class="tab-pane fade show active" id="file-storage-setup" role="tabpanel" aria-labelledby="file-storage-setup-tab">
         <div class="m-1">
             <button class="button button--dark" @click="create">{{ $t('label.add_new') }}</button>
         </div>
@@ -58,7 +58,7 @@
             v-if="modal.visible"
             @close="closeDetail">
             <template slot="header">
-                {{ $t('label.remote_setup_detail') }}
+                {{ $t('label.file_storage_setup_detail') }}
             </template>
             <template slot="content">
                 <div class="form-group">
@@ -275,53 +275,7 @@
                         }
                     ],
                     values: {
-                        data: [
-                            {
-                                name: 'Transactions',
-                                path: 'ftp://pathto POS Transactions',
-                                server: 'Bonfire 1',
-                                host: '192.168.2.92',
-                                port: '92',
-                                username: 'Admin Bonfire 1',
-                                status: 'Active',
-                            },
-                            {
-                                name: 'Transactions',
-                                path: 'ftp://pathto POS Transactions',
-                                server: 'Bonfire 1',
-                                host: '192.168.2.92',
-                                port: '92',
-                                username: 'Admin Bonfire 1',
-                                status: 'Active',
-                            },
-                            {
-                                name: 'Transactions',
-                                path: 'ftp://pathto POS Transactions',
-                                server: 'Bonfire 1',
-                                host: '192.168.2.92',
-                                port: '92',
-                                username: 'Admin Bonfire 1',
-                                status: 'Active',
-                            },
-                            {
-                                name: 'Transactions',
-                                path: 'ftp://pathto POS Transactions',
-                                server: 'Bonfire 1',
-                                host: '192.168.2.92',
-                                port: '92',
-                                username: 'Admin Bonfire 1',
-                                status: 'Active',
-                            },
-                            {
-                                name: 'Transactions',
-                                path: 'ftp://pathto POS Transactions',
-                                server: 'Bonfire 1',
-                                host: '192.168.2.92',
-                                port: '92',
-                                username: 'Admin Bonfire 1',
-                                status: 'Active',
-                            }
-                        ],
+                        data: [],
                         meta: {
                             pagination: {
                                 count: 1,
@@ -342,7 +296,7 @@
         },
         methods: {
             paginate(page = 1) {
-                axios.get('remote-setup'+'?page='+page, {
+                axios.get('file-storage-setup'+'?page='+page, {
                     params: {
                         itemsPerPage: this.table.settings.itemsPerPage,
                     }
@@ -379,7 +333,7 @@
                 this.dialog.status = 'confirm';
                 this.dialog.message = 'Do you want to remove this data?';
                 this.dialog.ok.function = () => {
-                    axios.delete(`remote-setup/${data.bid}`)
+                    axios.delete(`file-storage-setup/${data.bid}`)
                     .then(response => {
                         this.table.values.data.splice(index, 1);
                         this.dialog.status = 'success';
@@ -398,7 +352,7 @@
                 let that = this;
 
                 if (this.form.mode === 'create') {
-                    axios.post('remote-setup', this.form.values)
+                    axios.post('file-storage-setup', this.form.values)
                         .then(response => {
                             that.paginate();
                             that.dialog.visible = true;
@@ -415,7 +369,7 @@
                 } else {
                     let index = this.form.index;
 
-                    axios.patch(`remote-setup/${this.form.values.bid}`, this.form.values)
+                    axios.patch(`file-storage-setup/${this.form.values.bid}`, this.form.values)
                         .then(response => {
                             that.table.values.data[index] = {...that.form.values};
 

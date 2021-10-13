@@ -24,17 +24,9 @@ class CdisZreadFields extends MigratableSeeder
         $fieldMappingPreset = FieldMappingPreset::create($zread);
 
         $fieldMappingPresetDetail = [
+            // < ** ZREAD HEAD ** > //
             [
-                'required' => 0,
-                'field' => 'zread_bid',
-                'description' => null,
-                'mapping_type' => 'VARCHAR',
-                'file_name' => 'ZH',
-                'default_value' => '""',
-                'column_name' => 'bid',
-            ],
-            [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'terminal_number',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -43,7 +35,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'terminal_number',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'branch_code',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -52,7 +44,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'branch_code',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'day_end_report_number',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -61,7 +53,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'day_end_report_number',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'administrator',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -70,7 +62,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'administrator',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'cashier',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -79,7 +71,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'cashier',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'log_date',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -88,7 +80,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'log_date',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'date_time',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -97,7 +89,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'date_time',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'guest_count',
                 'description' => null,
                 'mapping_type' => 'INT',
@@ -106,7 +98,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'guest_count',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'gross_sales_amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -115,7 +107,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'gross_sales_amount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'transaction_count',
                 'description' => null,
                 'mapping_type' => 'INT',
@@ -124,7 +116,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'transaction_count',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'total_regular_discount_amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -133,7 +125,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'total_regular_discount_amount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'mandated_discount_transaction_count',
                 'description' => null,
                 'mapping_type' => 'INT',
@@ -142,7 +134,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'mandated_discount_transaction_count',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'total_regular_discount_count',
                 'description' => null,
                 'mapping_type' => 'INT',
@@ -151,7 +143,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'total_regular_discount_count',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'senior_transaction_count',
                 'description' => null,
                 'mapping_type' => 'INT',
@@ -160,7 +152,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'senior_transaction_count',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'senior_discount_amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -169,7 +161,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'senior_discount_amount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'sc_vat_deduction_amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -178,7 +170,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'sc_vat_deduction_amount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'pwd_transaction_count',
                 'description' => null,
                 'mapping_type' => 'INT',
@@ -187,7 +179,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'pwd_transaction_count',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'pwd_transaction_amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -196,7 +188,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'pwd_transaction_amount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'pwd_vat_deduction',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -205,7 +197,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'pwd_vat_deduction',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'diplomat_transaction_count',
                 'description' => null,
                 'mapping_type' => 'INT',
@@ -214,7 +206,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'diplomat_transaction_count',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'diplomat_vat_deduction',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -223,7 +215,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'diplomat_vat_deduction',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'vatable_sales',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -232,7 +224,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'vatable_sales',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'vat_amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -241,7 +233,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'vat_amount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'vat_exempt_sales',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -250,7 +242,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'vat_exempt_sales',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'less_mandated_vat_and_discount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -259,7 +251,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'less_mandated_vat_and_discount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'net_of_vat_exempt',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -268,7 +260,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'net_of_vat_exempt',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'zero_rated_sales',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -277,7 +269,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'zero_rated_sales',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'non_vat_sales',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -286,7 +278,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'non_vat_sales',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'subtotal',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -295,7 +287,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'subtotal',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'service_charge',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -304,7 +296,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'service_charge',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'net_total',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -313,7 +305,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'net_total',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'beginning_or',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -322,7 +314,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'beginning_or',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'ending_or',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -331,7 +323,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'ending_or',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'no_sales_transaction_count',
                 'description' => null,
                 'mapping_type' => 'INT',
@@ -340,7 +332,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'no_sales_transaction_count',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'void_transactions_count',
                 'description' => null,
                 'mapping_type' => 'INT',
@@ -349,7 +341,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'void_transactions_count',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'void_transactions_amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -358,7 +350,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'void_transactions_amount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'void_items_count',
                 'description' => null,
                 'mapping_type' => 'INT',
@@ -367,7 +359,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'void_items_count',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'void_items_amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -376,7 +368,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'void_items_amount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'refunds_count',
                 'description' => null,
                 'mapping_type' => 'INT',
@@ -385,7 +377,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'refunds_count',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'refunds_amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -394,7 +386,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'refunds_amount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'total_tenders_count',
                 'description' => null,
                 'mapping_type' => 'INT',
@@ -403,7 +395,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'total_tenders_count',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'total_tenders_amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -412,7 +404,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'total_tenders_amount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'add_initial_cash_amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -421,7 +413,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'add_initial_cash_amount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'less_withdrawals_amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -430,7 +422,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'less_withdrawals_amount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'add_cash_returns_amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -439,7 +431,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'add_cash_returns_amount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'total_drawer_amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -448,7 +440,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'total_drawer_amount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'total_cash_breakdown_amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -457,7 +449,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'total_cash_breakdown_amount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'short_over_amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -466,7 +458,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'short_over_amount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'total_cashier_sales_amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -475,7 +467,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'total_cashier_sales_amount',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'beginning_balance',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -484,7 +476,7 @@ class CdisZreadFields extends MigratableSeeder
                 'column_name' => 'beginning_balance',
             ],
             [
-                'required' => 0,
+                'required' => 1,
                 'field' => 'ending_balance',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
@@ -492,177 +484,140 @@ class CdisZreadFields extends MigratableSeeder
                 'default_value' => '""',
                 'column_name' => 'ending_balance',
             ],
+            // </ ** ZREAD HEAD ** > //
+
+            // < ** ZREAD REGULAR DISCOUNT ** > //
             [
-                'required' => 0,
-                'field' => 'regular_discount_bid',
-                'description' => null,
-                'mapping_type' => 'VARCHAR',
-                'file_name' => 'ZRD',
-                'default_value' => 1,
-                'column_name' => 'bid',
-            ],
-            [
-                'required' => 0,
-                'field' => 'regular_discount_head_id',
-                'description' => null,
-                'mapping_type' => 'VARCHAR',
-                'file_name' => 'ZRD',
-                'default_value' => 1,
-                'column_name' => 'head_id',
-            ],
-            [
-                'required' => 0,
-                'field' => 'regular_discount_name',
+                'required' => 1,
+                'field' => 'regular_discount.*.name',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'ZRD',
                 'default_value' => '""',
                 'column_name' => 'name',
+                'reference_column_name' => 'head_id',
+                'head_reference' => 'ZH.id',
             ],
             [
-                'required' => 0,
-                'field' => 'regular_discount_count',
+                'required' => 1,
+                'field' => 'regular_discount.*.count',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZRD',
                 'default_value' => 0.00,
                 'column_name' => 'count',
+                'reference_column_name' => 'head_id',
+                'head_reference' => 'ZH.id',
             ],
             [
-                'required' => 0,
-                'field' => 'regular_discount_amount',
+                'required' => 1,
+                'field' => 'regular_discount.*.amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZRD',
                 'default_value' => 0.00,
                 'column_name' => 'amount',
+                'reference_column_name' => 'head_id',
+                'head_reference' => 'ZH.id',
             ],
+            // </ ** ZREAD REGULAR DISCOUNT ** > //
+
+            // < ** ZREAD TENDER DETAILS ** > //
             [
-                'required' => 0,
-                'field' => 'tender_detail_bid',
-                'description' => null,
-                'mapping_type' => 'VARCHAR',
-                'file_name' => 'ZTD',
-                'default_value' => 1,
-                'column_name' => 'bid',
-            ],
-            [
-                'required' => 0,
-                'field' => 'tender_detail_head_id',
-                'description' => null,
-                'mapping_type' => 'VARCHAR',
-                'file_name' => 'ZTD',
-                'default_value' => 1,
-                'column_name' => 'head_id',
-            ],
-            [
-                'required' => 0,
-                'field' => 'tender_detail_name',
+                'required' => 1,
+                'field' => 'tender_detail.*.name',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'ZTD',
                 'default_value' => '""',
                 'column_name' => 'name',
+                'reference_column_name' => 'head_id',
+                'head_reference' => 'ZH.id',
             ],
             [
-                'required' => 0,
-                'field' => 'tender_detail_count',
+                'required' => 1,
+                'field' => 'tender_detail.*.count',
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'ZTD',
                 'default_value' => 0,
                 'column_name' => 'count',
+                'reference_column_name' => 'head_id',
+                'head_reference' => 'ZH.id',
             ],
             [
-                'required' => 0,
-                'field' => 'tender_detail_amount',
+                'required' => 1,
+                'field' => 'tender_detail.*.amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZTD',
                 'default_value' => 0.00,
                 'column_name' => 'amount',
+                'reference_column_name' => 'head_id',
+                'head_reference' => 'ZH.id',
             ],
+            // </ ** ZREAD TENDER DETAILS ** > //
+
+            // < ** ZREAD CASH BREAKDOWN DETAIL ** > //
             [
-                'required' => 0,
-                'field' => 'cash_breakdown_bid',
-                'description' => null,
-                'mapping_type' => 'VARCHAR',
-                'file_name' => 'ZCB',
-                'default_value' => 1,
-                'column_name' => 'bid',
-            ],
-            [
-                'required' => 0,
-                'field' => 'cash_breakdown_head_id',
-                'description' => null,
-                'mapping_type' => 'VARCHAR',
-                'file_name' => 'ZCB',
-                'default_value' => 1,
-                'column_name' => 'head_id',
-            ],
-            [
-                'required' => 0,
-                'field' => 'cash_breakdown_detail_denomination',
+                'required' => 1,
+                'field' => 'cash_breakdown_detail.*.denomination',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZCB',
                 'default_value' => 0.00,
                 'column_name' => 'denomination',
+                'reference_column_name' => 'head_id',
+                'head_reference' => 'ZH.id',
             ],
             [
-                'required' => 0,
-                'field' => 'cash_breakdown_count',
+                'required' => 1,
+                'field' => 'cash_breakdown_detail.*.count',
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'ZCB',
                 'default_value' => 0,
                 'column_name' => 'count',
+                'reference_column_name' => 'head_id',
+                'head_reference' => 'ZH.id',
             ],
             [
-                'required' => 0,
-                'field' => 'cash_breakdown_amount',
+                'required' => 1,
+                'field' => 'cash_breakdown_detail.*.amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZCB',
                 'default_value' => 0.00,
                 'column_name' => 'amount',
+                'reference_column_name' => 'head_id',
+                'head_reference' => 'ZH.id',
             ],
+            // </ ** ZREAD CASH BREAKDOWN DETAIL ** > //
+
+            // < ** ZREAD CASHIER SALES SUMMARY ** > //
             [
-                'required' => 0,
-                'field' => 'cashier_summary_bid',
-                'description' => null,
-                'mapping_type' => 'VARCHAR',
-                'file_name' => 'ZCS',
-                'default_value' => 1,
-                'column_name' => 'bid',
-            ],
-            [
-                'required' => 0,
-                'field' => 'cashier_head_id',
-                'description' => null,
-                'mapping_type' => 'VARCHAR',
-                'file_name' => 'ZCS',
-                'default_value' => 1,
-                'column_name' => 'head_id',
-            ],
-            [
-                'required' => 0,
-                'field' => 'cashier_sales_summary_name',
+                'required' => 1,
+                'field' => 'cashier_sales_summary.*.name',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'ZCS',
                 'default_value' => '""',
                 'column_name' => 'name',
+                'reference_column_name' => 'head_id',
+                'head_reference' => 'ZH.id',
             ],
             [
-                'required' => 0,
-                'field' => 'cashier_sales_summary_amount',
+                'required' => 1,
+                'field' => 'cashier_sales_summary.*.amount',
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZCS',
                 'default_value' => 0.00,
                 'column_name' => 'amount',
+                'reference_column_name' => 'head_id',
+                'head_reference' => 'ZH.id',
             ],
+            // </ ** ZREAD CASHIER SALES SUMMARY ** > //
         ];
 
         foreach ($fieldMappingPresetDetail as $value) {

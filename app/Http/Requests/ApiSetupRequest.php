@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\Lowercase;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -24,15 +25,31 @@ class ApiSetupRequest extends FormRequest
      */
     public function rules()
     {
-        return [
-            'name' => ['required', 'max:45', Rule::unique('api_setups')->ignore($this->bid)->where(
-                function ($query) {
-                    $query->where('deleted_at', null);
+        $rules = [];
+
+        $requestMethod = $this->method();
+
+        switch($requestMethod) {
+            case 'PATCH':
+            case 'POST':
+                $rules = [
+                    'name' => ['required', 'max:45', 'unique:api_setups,name,NULL,bid,deleted_at,NULL'],
+                    'end_point' => 'required|max:128',
+                    'status' => 'required',
+                ];
+
+                if ($this->method() == 'PATCH') {
+                    unset($rules['field']);
+
+                    $rules['name'] = [
+                        'required',
+                        'max:45',
+                        'unique:api_setups,name,'.$this->bid.',bid,deleted_at,NULL'
+                    ];
                 }
-            )],
-            'end_point' => 'required|max:128',
-            'status' => 'required',
-        ];
+        }
+
+        return $rules;;
     }
 
     public function messages()

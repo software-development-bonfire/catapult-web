@@ -4,16 +4,15 @@ namespace App\Repositories\Eloquent;
 
 use Prettus\Repository\Eloquent\BaseRepository;
 use Prettus\Repository\Criteria\RequestCriteria;
-use App\Repositories\Contracts\RemoteSetupRepository;
-use App\Entities\RemoteSetup;
-use App\Validators\RemoteSetupValidator;
+use App\Repositories\Contracts\FileStorageSetupRepository;
+use App\Entities\FileStorageSetup;
 
 /**
- * Class RemoteSetupRepositoryEloquent.
+ * Class FileStorageSetupRepositoryEloquent.
  *
  * @package namespace App\Repositories;
  */
-class RemoteSetupRepositoryEloquent extends BaseRepository implements RemoteSetupRepository
+class FileStorageSetupRepositoryEloquent extends BaseRepository implements FileStorageSetupRepository
 {
     /**
      * Specify Model class name
@@ -22,7 +21,7 @@ class RemoteSetupRepositoryEloquent extends BaseRepository implements RemoteSetu
      */
     public function model()
     {
-        return RemoteSetup::class;
+        return FileStorageSetup::class;
     }
 
     public function boot()

@@ -28,13 +28,13 @@ class FieldMappingRepositoryEloquent extends BaseRepository implements FieldMapp
     public function list(
         $filters,
         $isTablePaginate = true,
-        $with = ['remoteSetup', 'catapultDBSetup', 'apiSetup', 'dataMappings']
+        $with = ['fileStorageSetup', 'catapultDBSetup', 'apiSetup', 'dataMappings']
     ) {
         $this->model = $this->model
             ->with($with)
             ->select([
                 'bid',
-                'remote_setup_bid',
+                'file_storage_setup_bid',
                 'catapult_db_setup_bid',
                 'api_setup_bid',
                 'name',

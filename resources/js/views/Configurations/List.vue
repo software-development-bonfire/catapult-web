@@ -7,24 +7,24 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" :class="activePane === 'remote' ? 'active' : ''" @click="activePane = 'remote'" id="remote-setup-tab" href="#remote-setup" role="tab" aria-controls="remote-setup" aria-selected="false">
+                <a class="nav-link" :class="activePane === 'file_storage' ? 'active' : ''" @click="activePane = 'file_storage'" id="file-storage-setup-tab" href="#file-storage-setup" role="tab" aria-controls="file-storage-setup" aria-selected="false">
                     {{ $t('label.file_storage_setup') }}
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" :class="activePane === 'catapult' ? 'active' : ''" @click="activePane = 'catapult'" id="contact-tab" href="#catapult-db-setup" role="tab" aria-controls="catapult-db-setup" aria-selected="false">
+                <a class="nav-link" :class="activePane === 'catapult' ? 'active' : ''" @click="activePane = 'catapult'" id="catapult-db-setup" href="#catapult-db-setup" role="tab" aria-controls="catapult-db-setup" aria-selected="false">
                     {{ $t('label.catapult_db_setup') }}
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" :class="activePane === 'api' ? 'active' : ''" @click="activePane = 'api'" id="contact-tab" href="#api-setup" role="tab" aria-controls="api-setup" aria-selected="false">
+                <a class="nav-link" :class="activePane === 'api' ? 'active' : ''" @click="activePane = 'api'" id="api-setup" href="#api-setup" role="tab" aria-controls="api-setup" aria-selected="false">
                     {{ $t('label.api_setup') }}
                 </a>
             </li>
         </ul>
         <div class="tab-content">
             <licensing v-show="activePane === 'licensing'"></licensing>
-            <remote-setup v-show="activePane === 'remote'"></remote-setup>
+            <file-storage-setup v-show="activePane === 'file_storage'"></file-storage-setup>
             <catapult-db-setup v-show="activePane === 'catapult'"></catapult-db-setup>
             <api-setup v-show="activePane === 'api'"></api-setup>
         </div>
@@ -33,14 +33,14 @@
 
 <script>
     import Licensing from './Tabs/Licensing.vue';
-    import RemoteSetup from './Tabs/RemoteSetup.vue';
+    import FileStorageSetup from './Tabs/FileStorageSetup.vue';
     import CatapultDBSetup from './Tabs/CatapultDBSetup.vue';
     import APISetup from './Tabs/APISetup.vue';
 
     export default {
         components: {
             'licensing': Licensing,
-            'remote-setup': RemoteSetup,
+            'file-storage-setup': FileStorageSetup,
             'catapult-db-setup': CatapultDBSetup,
             'api-setup': APISetup,
         },
