@@ -75,6 +75,10 @@ class ConvertDataToFile extends Command
         }
 
         while (true) {
+            if (Cache::forget('cdis_fetching_data_for_sync')) {
+                sleep(1);
+            }
+
             $excludedEntries = Cache::get('excludedEntries') ?? [];
             $excludedSyncBids = Cache::get('excludedSyncBids') ?? [];
 
@@ -130,7 +134,7 @@ class ConvertDataToFile extends Command
                 if (count($fieldMappingDetails) > 0) {
                     $fieldMappingDetails = $fieldMappingDetails[0];
                 } else {
-                    $this->cacheExcludedValue('excludedEntries', $entryName);
+                    $this->cacheSetOfValue('excludedEntries', $entryName);
                     $this->createLog(
                         __('error.no_field_mapping_detected'),
                         'error',
@@ -206,7 +210,7 @@ class ConvertDataToFile extends Command
             $groupedEntrySymbol = $this->getSyncEntryAlias($forSyncDatum->table_name);
 
             if (is_null($groupedEntrySymbol)) {
-                $this->cacheExcludedValue('excludedSyncBids', $forSyncDatum->bid);
+                $this->cacheSetOfValue('excludedSyncBids', $forSyncDatum->bid);
                 return false;
             }
 
@@ -222,7 +226,7 @@ class ConvertDataToFile extends Command
             $entrySymbol = $this->getSyncEntryAlias($forSyncDatum->table_name);
 
             if (is_null($entrySymbol)) {
-                $this->cacheExcludedValue('excludedSyncBids', $forSyncDatum->bid);
+                $this->cacheSetOfValue('excludedSyncBids', $forSyncDatum->bid);
                 return false;
             }
 
@@ -368,6 +372,7 @@ class ConvertDataToFile extends Command
         foreach ($toSyncData as $key => $data) {
             $entityName = str_replace('_', '', Str::title($data->table_name));
             $entity = "App\\Entities\\CDIS".$entityName;
+
 
             $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($entity));
 

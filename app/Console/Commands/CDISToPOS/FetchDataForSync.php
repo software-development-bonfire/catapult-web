@@ -6,6 +6,7 @@ use App\Services\CDIS\SyncService;
 use App\Traits\GenericHelper;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 
 class FetchDataForSync extends Command
 {
@@ -50,12 +51,16 @@ class FetchDataForSync extends Command
             true
         );
 
+        Cache::forget('cdis_fetching_data_for_sync');
+
         do {
             $forSync = $syncService->forSync();
 
             if (! isset($forSync->bidsChunks)) {
+                Cache::forget('cdis_fetching_data_for_sync');
                 $this->createLog(__('message.no_data_to_sync'), 'info', true);
             } else if (isset($forSync->bidsChunks) && $forSync->bidsChunks > 0) {
+                Cache::forever('cdis_fetching_data_for_sync', true);
                 $this->createLog('---------------------------------------------------------', 'info', false);
                 $this->createLog('Action count: '.$forSync->action_count.' | Entry count: '.$forSync->entry_count, 'info', true);
                 foreach ($forSync->bidsChunks as $bidsChunk) {

@@ -6,9 +6,13 @@ use App\Enums\MappingType;
 use App\Enums\Status;
 use App\Enums\StorageType;
 use App\Exports\PosToCdisExport;
-use App\Jobs\CDIS\APIRequest;
 use App\Repositories\Contracts\FieldMappingRepository;
 use App\Repositories\Contracts\SyncEntryRepository;
+use App\Services\CDIS\v2\CashBreakdownService;
+use App\Services\CDIS\v2\TerminalTransactionService;
+use App\Services\CDIS\v2\ZReadService;
+use App\Services\CDIS\v2\POSAuditTrailService;
+use App\Services\CDIS\v2\CashDrawerService;
 use App\Traits\GenericHelper;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -54,16 +58,16 @@ class ConvertDataFile extends Command
 
         while (true) {
             $entries = [
-                'transaction',
-                'zread',
-                'audit_trail',
-                'cash_breakdown',
-                'cash_drawer',
+                'transaction' => TerminalTransactionService::class,
+                'zread' => ZReadService::class,
+                'audit_trail' => POSAuditTrailService::class,
+                'cash_breakdown' => CashBreakdownService::class,
+                'cash_drawer' => CashDrawerService::class,
             ];
 
-            $entriesMaxLength = max(array_map('strlen', $entries));
+            $entriesMaxLength = max(array_map('strlen', array_keys($entries)));
 
-            foreach ($entries as $entry) {
+            foreach ($entries as $entry => $serviceClass) {
                 $spaces = ($entriesMaxLength - strlen($entry)) / 2;
                 $entryLogLabel = str_repeat(' ', ceil($spaces)).$entry.str_repeat(' ', floor($spaces));
 
@@ -297,7 +301,8 @@ class ConvertDataFile extends Command
                         $entryFolderName,
                         $directory,
                         $localDisk,
-                        $entryLogLabel);
+                        $entryLogLabel,
+                        $serviceClass);
                 }
             }
 
@@ -316,6 +321,7 @@ class ConvertDataFile extends Command
      * @param  string  $directory
      * @param  Filesystem  $disk
      * @param  string  $entryLogLabel
+     * @param  mixed  $serviceClass
      *
      * @return bool
      */
@@ -327,9 +333,10 @@ class ConvertDataFile extends Command
         $entryFolderName,
         $directory,
         $disk,
-        $entryLogLabel
+        $entryLogLabel,
+        $serviceClass
     ) {
-        $fileContent = array($entry => []);
+        $fileContent = array($entry => (object) []);
 
         foreach ($hierarchyReferences as $entryAcronym => $hierarchyReference) {
             foreach ($hierarchyReference as $reference) {
@@ -343,6 +350,10 @@ class ConvertDataFile extends Command
 
         $filePath = '/'.$entryFolderName.'/Converted/To sync/'.$fileName.'.'.$this->extension;
         $processedFolderPath = '/'.$entryFolderName.'/Processed/'.$fileName;
+
+        if (! is_null($serviceClass)) {
+            $fileContent = app()->make($serviceClass)->store($fileContent);
+        }
 
         $fileContent = json_encode($fileContent);
 

@@ -34,4 +34,9 @@ class CDISBranch extends Model
         'bid' => 'string',
         'is_main_branch' => 'boolean'
     ];
+
+    public function terminals()
+    {
+        return $this->hasMany(CDISTerminal::class, 'branch_bid', 'bid');
+    }
 }

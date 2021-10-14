@@ -22,4 +22,9 @@ class CDISTerminalTransactionAddon extends Base
         'transaction_product_bid' => 'string',
         'product_bid' => 'string',
     ];
+
+    public function transactionProduct()
+    {
+        return $this->belongsTo(CDISTerminalTransactionProduct::class, 'transaction_product_bid', 'bid');
+    }
 }

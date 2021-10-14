@@ -6,6 +6,7 @@ use App\Traits\BidObserverTrait;
 use Illuminate\Database\Eloquent\Model;
 use Prettus\Repository\Contracts\Transformable;
 use Prettus\Repository\Traits\TransformableTrait;
+use Symfony\Component\Console\Terminal;
 
 /**
  * Class CDISCashBreakdown.
@@ -39,4 +40,13 @@ class CDISCashBreakdown extends Model implements Transformable
         'approver_bid' => 'string',
     ];
 
+    public function details()
+    {
+        return $this->hasMany(CDISCashBreakdownDetail::class, 'head_bid', 'bid');
+    }
+
+    public function terminal()
+    {
+        return $this->belongsTo(Terminal::class, 'terminal_bid', 'bid');
+    }
 }

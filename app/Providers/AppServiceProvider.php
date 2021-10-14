@@ -27,6 +27,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(\App\Repositories\Contracts\DataMappingRepository::class, \App\Repositories\Eloquent\DataMappingRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\ErrorLogRepository::class, \App\Repositories\Eloquent\ErrorLogRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\ErrorLogDetailRepository::class, \App\Repositories\Eloquent\ErrorLogDetailRepositoryEloquent::class);
+        $this->app->bind(\App\Repositories\Contracts\CDIS\BranchRepository::class, \App\Repositories\Eloquent\CDIS\BranchRepositoryEloquent::class);
+        $this->app->bind(\App\Repositories\Contracts\CDIS\TerminalTransactionRepository::class, \App\Repositories\Eloquent\CDIS\TerminalTransactionRepositoryEloquent::class);
+        $this->app->bind(\App\Repositories\Contracts\CDIS\CashBreakdownRepository::class, \App\Repositories\Eloquent\CDIS\CashBreakdownRepositoryEloquent::class);
+        $this->app->bind(\App\Repositories\Contracts\CDIS\POSAuditTrailRepository::class, \App\Repositories\Eloquent\CDIS\POSAuditTrailRepositoryEloquent::class);
     }
 
     /**

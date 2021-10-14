@@ -142,7 +142,7 @@ class SyncService
                 $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($entity));
 
                 if ($hasSoftDeleting) {
-                    $detail->withTrashed();
+                    $detail = $detail->withTrashed();
                 }
 
                 $isExists = $detail->count() > 0;

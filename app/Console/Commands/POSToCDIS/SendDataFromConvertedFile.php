@@ -130,6 +130,7 @@ class SendDataFromConvertedFile extends Command
                 $sourcePath = $entryFolderName . '/Converted/To sync';
                 $syncedPath = $entryFolderName . '/Converted/Synced';
                 $failedSyncBadRequestPath = $entryFolderName . '/Converted/Failed sync/Bad request';
+                $failedSyncUnsyncablePath = $entryFolderName . '/Converted/Failed sync/Unsyncable';
 
                 $files = $localDisk->allFiles($sourcePath);
 
@@ -159,8 +160,7 @@ class SendDataFromConvertedFile extends Command
                         if (isset($responseBodyContent->exception) || isset($responseBodyContent->trace)) {
                             $this->createLog($responseBodyContent->exception.': '.$responseBodyContent->message, 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
 
-                            $destinationPath = $failedSyncBadRequestPath.'/'.$fileName;
-
+                            $destinationPath = $failedSyncUnsyncablePath.'/'.$fileName;
                         } else {
                             $errors = isset($responseBodyContent->errors) ? (array) $responseBodyContent->errors : [];
 

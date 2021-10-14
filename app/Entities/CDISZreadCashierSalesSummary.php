@@ -32,4 +32,8 @@ class CDISZreadCashierSalesSummary extends Model implements Transformable
         'head_bid' => 'string',
     ];
 
+    public function head()
+    {
+        return $this->belongsTo(CDISZread::class, 'head_bid', 'bid');
+    }
 }

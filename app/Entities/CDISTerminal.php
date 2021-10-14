@@ -37,4 +37,9 @@ class CDISTerminal extends Model
         'branch_bid' => 'string',
         'number' => 'string',
     ];
+
+    public function terminalTransactions()
+    {
+        return $this->hasMany(CDISTerminalTransaction::class, 'terminal_bid', 'bid');
+    }
 }

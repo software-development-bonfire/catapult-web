@@ -41,4 +41,19 @@ class CDISTerminalTransactionProduct extends Base
         'product_bid' => 'string',
         'category_bid' => 'string',
     ];
+
+    public function detail()
+    {
+        return $this->belongsTo(CDISTerminalTransactionDetail::class, 'transaction_detail_bid', 'bid');
+    }
+
+    public function addons()
+    {
+        return $this->hasMany(CDISTerminalTransactionAddon::class, 'transaction_product_bid', 'bid');
+    }
+
+    public function discounts()
+    {
+        return $this->hasMany(CDISTerminalTransactionDiscount::class, 'transaction_product_bid', 'bid');
+    }
 }

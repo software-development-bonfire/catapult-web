@@ -81,4 +81,28 @@ class CDISZread extends Model implements Transformable
         'terminal_bid' => 'string',
     ];
 
+    public function terminal()
+    {
+        return $this->belongsTo(CDISTerminal::class, 'terminal_bid', 'bid');
+    }
+
+    public function regularDiscount()
+    {
+        return $this->hasMany(CDISZreadRegularDiscount::class, 'head_bid', 'bid');
+    }
+
+    public function cashBreakdownDetail()
+    {
+        return $this->hasMany(CDISZreadCashBreakdownDetail::class, 'head_bid', 'bid');
+    }
+
+    public function tenderDetail()
+    {
+        return $this->hasMany(CDISZreadTenderDetail::class, 'head_bid', 'bid');
+    }
+
+    public function cashierSalesSummary()
+    {
+        return $this->hasMany(CDISZreadCashierSalesSummary::class, 'head_bid', 'bid');
+    }
 }

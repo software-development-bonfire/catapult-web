@@ -266,7 +266,7 @@ trait GenericHelper
     }
 
     /**
-     * Cache excluded value.
+     * Cache set of value.
      *
      * @param string  $key
      * @param string  $value
@@ -274,7 +274,7 @@ trait GenericHelper
      *
      * @return string  $constructedMessage
      */
-    public function cacheExcludedValue($key, $value, $ttl = 60)
+    public function cacheSetOfValue($key, $value, $ttl = 60)
     {
         $savedValue = Cache::get($key) ?? [];
 

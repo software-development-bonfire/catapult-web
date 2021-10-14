@@ -33,4 +33,8 @@ class CDISCashBreakdownDetail extends Model implements Transformable
         'head_bid' => 'string',
     ];
 
+    public function head()
+    {
+        return $this->belongsTo(CDISCashBreakdown::class, 'head_bid', 'bid');
+    }
 }

@@ -24,4 +24,9 @@ class CDISTerminalTransactionDiscount extends Base
         'transaction_product_bid' => 'string',
         'discount_bid' => 'string',
     ];
+
+    public function product()
+    {
+        return $this->belongsTo(CDISTerminalTransactionProduct::class, 'transaction_product_bid', 'bid');
+    }
 }
