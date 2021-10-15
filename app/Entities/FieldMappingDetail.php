@@ -4,12 +4,11 @@ namespace App\Entities;
 
 use App\Traits\BidObserverTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Prettus\Repository\Contracts\Transformable;
 use Prettus\Repository\Traits\TransformableTrait;
 
 /**
- * Class DataMapping.
+ * Class FieldMappingDetail.
  *
  * @package namespace App\Entities;
  */
@@ -29,6 +28,7 @@ class FieldMappingDetail extends Model implements Transformable
         'bid',
         'field_mapping_bid',
         'required',
+        'is_primary_key',
         'field',
         'description',
         'mapping_type',

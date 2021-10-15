@@ -2,9 +2,7 @@
 
 namespace App\Entities;
 
-use Illuminate\Database\Eloquent\Model;
-
-class CDISKitchenDevicePrinterBranch extends Model
+class CDISKitchenDevicePrinterBranch extends BaseModel
 {
     protected $table = 'cdis_kitchen_device_printer_branch';
 

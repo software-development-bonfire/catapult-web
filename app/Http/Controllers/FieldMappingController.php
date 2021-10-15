@@ -138,7 +138,7 @@ class FieldMappingController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  FieldMappingRequest  $request
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function store(FieldMappingRequest $request)
     {
@@ -160,12 +160,12 @@ class FieldMappingController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  DataMappingRequest  $request
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function storeDataMapping(DataMappingRequest $request)
     {
         try {
-            $data = $this->fieldMappingService->storeDataMapping($request->validated());
+            $data = $this->fieldMappingService->storeDataMapping($request->all());
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],
@@ -176,6 +176,8 @@ class FieldMappingController extends Controller
             $data,
             Lang::get('success.data_mapping_created')
         );
+
+
     }
 
     /**
@@ -211,7 +213,7 @@ class FieldMappingController extends Controller
     public function updateDataMapping(DataMappingRequest $request, $bid)
     {
         try {
-            $this->fieldMappingService->updateDataMapping($request->validated(), $bid);
+            $this->fieldMappingService->updateDataMapping($request->all(), $bid);
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],

@@ -3,7 +3,6 @@
 namespace App\Entities;
 
 use App\Traits\BidObserverTrait;
-use Illuminate\Database\Eloquent\Model;
 use Prettus\Repository\Contracts\Transformable;
 use Prettus\Repository\Traits\TransformableTrait;
 
@@ -12,7 +11,7 @@ use Prettus\Repository\Traits\TransformableTrait;
  *
  * @package namespace App\Entities;
  */
-class CDISCashBreakdownDetail extends Model implements Transformable
+class CDISCashBreakdownDetail extends BaseModel implements Transformable
 {
     use TransformableTrait,
         BidObserverTrait;

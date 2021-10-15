@@ -17,7 +17,7 @@
             <td class="datatable-cell datatable-cell--row-number" v-if="settings.withRowNumbers">{{ rowNumber($attrs.rowIndex) }}</td>
             <slot></slot>
             <td class="datatable-cell datatable-cell--action" v-if="settings.hasView"><i class="fa fa-eye fa-lg row-view" @click.stop="viewRow($event)"></i></td>
-            <td class="datatable-cell datatable-cell--action" v-if="settings.hasEdit">
+            <td class="datatable-cell datatable-cell--action">
                 <i :class="[updateClass]" @click.stop="updateRow($event)"></i>
             </td>
         </template>

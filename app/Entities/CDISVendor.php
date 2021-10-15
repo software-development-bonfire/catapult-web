@@ -2,10 +2,9 @@
 
 namespace App\Entities;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class CDISVendor extends Model
+class CDISVendor extends BaseModel
 {
     use SoftDeletes;
 

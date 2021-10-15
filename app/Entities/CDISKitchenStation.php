@@ -2,10 +2,7 @@
 
 namespace App\Entities;
 
-
-use Illuminate\Database\Eloquent\Model;
-
-class CDISKitchenStation extends Model
+class CDISKitchenStation extends BaseModel
 {
     protected $table = 'cdis_kitchen_station';
 

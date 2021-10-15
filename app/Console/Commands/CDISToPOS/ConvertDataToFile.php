@@ -16,6 +16,7 @@ use App\Traits\DatabaseTransaction;
 use App\Traits\GenericHelper;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
@@ -67,12 +68,24 @@ class ConvertDataToFile extends Command
             true
         );
 
-        $filters = (object) array('type' => MappingType::CDIS_TO_POS);
-        $syncEntries = app()->make(SyncEntryRepository::class)->list($filters);
+        $syncEntries = app()->make(SyncEntryRepository::class)
+            ->list((object) array('type' => MappingType::CDIS_TO_POS));
 
         foreach ($syncEntries as $syncEntry) {
             $this->syncEntries[$syncEntry->name] = $syncEntry->alias;
         }
+
+        $fieldMappingDetails = app()
+            ->make(FieldMappingRepository::class)
+            ->list(
+                (object) [
+                    'is_customized_mapping' => 1,
+                    'status' => Status::ACTIVE,
+                    'type' => 1,
+                ],
+                false,
+                ['fileStorageSetup', 'dataMappings']
+            );
 
         while (true) {
             if (Cache::forget('cdis_fetching_data_for_sync')) {
@@ -117,80 +130,87 @@ class ConvertDataToFile extends Command
             }
 
             foreach ($forSyncData as $forSyncDatum) {
-                $remoteDiskName = '';
-                $localDiskName = '';
-
                 $entryName = $forSyncDatum->table_name;
 
-                $filters = (object) [
-                    'data_entry' => $entryName,
-                    'status' => Status::ACTIVE,
-                ];
-
-                $fieldMappingDetails = app()
-                    ->make(FieldMappingRepository::class)
-                    ->list($filters, false, ['fileStorageSetup']);
-
-                if (count($fieldMappingDetails) > 0) {
-                    $fieldMappingDetails = $fieldMappingDetails[0];
-                } else {
-                    $this->cacheSetOfValue('excludedEntries', $entryName);
-                    $this->createLog(
-                        __('error.no_field_mapping_detected'),
-                        'error',
-                        true,
-                        [],
-                        [$entryName]
-                    );
-
-                    break;
-                }
-
-                $fileStorageSetup = $fieldMappingDetails->fileStorageSetup;
-
-                if ($fileStorageSetup->storage_type == StorageType::FTP) {
-                    $remoteDiskName = 'cdis_ftp_remote_convert_data_to_file';
-                    $localDiskName = 'cdis_ftp_local_convert_data_to_file';
-
-                    resolve('filesystem')->forgetDisk($remoteDiskName);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'ftp');
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.host', $fileStorageSetup->host);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.username', $fileStorageSetup->username);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.password', $fileStorageSetup->password);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.port', $fileStorageSetup->port);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
-
-                    resolve('filesystem')->forgetDisk($localDiskName);
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
-                } else if ($fileStorageSetup->storage_type == StorageType::LOCAL_NETWORK) {
-                    $remoteDiskName = 'cdis_local_remote_convert_data_to_file';
-                    $localDiskName = 'cdis_local_local_convert_data_to_file';
-
-                    resolve('filesystem')->forgetDisk($remoteDiskName);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
-
-                    resolve('filesystem')->forgetDisk($localDiskName);
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
-                } else {
-                    return false;
-                }
-
-                if ($forSyncDatum) {
-                    $this->processConversion($forSyncDatum, $localDiskName, $fileStorageSetup);
-                } else {
-                    $this->info(__('message.no_data_to_convert_to_file'));
-                }
+                $this->processNonCustomizedMapping($entryName, $forSyncDatum);
+//                $this->processCustomizedMapping($entryName, $forSyncDatum, $fieldMappingDetails);
             }
 
             sleep(5);
         }
     }
 
+    public function processNonCustomizedMapping($entryName, $forSyncDatum)
+    {
+        $remoteDiskName = '';
+        $localDiskName = '';
+
+        $filters = (object) [
+            'data_entry' => $entryName,
+            'status' => Status::ACTIVE,
+            'type' => 1,
+        ];
+
+        $fieldMappingDetails = app()
+            ->make(FieldMappingRepository::class)
+            ->list($filters, false, ['fileStorageSetup']);
+
+        if (count($fieldMappingDetails) > 0) {
+            $fieldMappingDetails = $fieldMappingDetails[0];
+        } else {
+            $this->cacheSetOfValue('excludedEntries', $entryName);
+            $this->createLog(
+                __('error.no_field_mapping_detected'),
+                'error',
+                true,
+                [],
+                [$entryName]
+            );
+
+            return null;
+        }
+
+        $fileStorageSetup = $fieldMappingDetails->fileStorageSetup;
+
+        if ($fileStorageSetup->storage_type == StorageType::FTP) {
+            $remoteDiskName = 'cdis_ftp_remote_convert_data_to_file';
+            $localDiskName = 'cdis_ftp_local_convert_data_to_file';
+
+            resolve('filesystem')->forgetDisk($remoteDiskName);
+            app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'ftp');
+            app()['config']->set('filesystems.disks.'.$remoteDiskName.'.host', $fileStorageSetup->host);
+            app()['config']->set('filesystems.disks.'.$remoteDiskName.'.username', $fileStorageSetup->username);
+            app()['config']->set('filesystems.disks.'.$remoteDiskName.'.password', $fileStorageSetup->password);
+            app()['config']->set('filesystems.disks.'.$remoteDiskName.'.port', $fileStorageSetup->port);
+            app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
+
+            resolve('filesystem')->forgetDisk($localDiskName);
+            app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
+            app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
+        } else if ($fileStorageSetup->storage_type == StorageType::LOCAL_NETWORK) {
+            $remoteDiskName = 'cdis_local_remote_convert_data_to_file';
+            $localDiskName = 'cdis_local_local_convert_data_to_file';
+
+            resolve('filesystem')->forgetDisk($remoteDiskName);
+            app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'local');
+            app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
+
+            resolve('filesystem')->forgetDisk($localDiskName);
+            app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
+            app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
+        } else {
+            return false;
+        }
+
+        if ($forSyncDatum) {
+            $this->processNonCustomizedMappingConversion($forSyncDatum, $localDiskName, $fileStorageSetup);
+        } else {
+            $this->info(__('message.no_data_to_convert_to_file'));
+        }
+    }
+
     /**
-     * Process conversion of CDIS data to excel file
+     * Process non-customized mapping conversion of CDIS data to excel file
      *
      * @param object  $forSyncDatum
      * @param string  $localDiskName
@@ -198,7 +218,7 @@ class ConvertDataToFile extends Command
      *
      * @return mixed
      */
-    public function processConversion($forSyncDatum, $localDiskName, $fileStorageSetup)
+    public function processNonCustomizedMappingConversion($forSyncDatum, $localDiskName, $fileStorageSetup)
     {
         $action = $forSyncDatum->action == 'create'
             ? 'C_'
@@ -221,7 +241,7 @@ class ConvertDataToFile extends Command
                 'action' => $forSyncDatum->action
             ])->get();
 
-            $result = $this->generateGroupedExcelFile($toSyncData, $forSyncDatum, $action, $localDiskName, $groupedEntrySymbol);
+            $result = $this->generateNonCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $action, $localDiskName, $groupedEntrySymbol);
         } else {
             $entrySymbol = $this->getSyncEntryAlias($forSyncDatum->table_name);
 
@@ -230,26 +250,26 @@ class ConvertDataToFile extends Command
                 return false;
             }
 
-            $result = $this->generateExcelFile($forSyncDatum, $action, $localDiskName, $entrySymbol);
+            $result = $this->generateNonCustomizedMappingExcelFile($forSyncDatum, $action, $localDiskName, $entrySymbol);
         }
 
         return $result;
     }
 
     /**
-     * Generate excel file.
+     * Generate non-customized mapping excel file.
      *
      * @param object  $forSyncDatum
      * @param string  $action
      * @param string  $localDiskName
      * @param string  $entrySymbol
      */
-    public function generateExcelFile($forSyncDatum, $action, $localDiskName, $entrySymbol)
+    public function generateNonCustomizedMappingExcelFile($forSyncDatum, $action, $localDiskName, $entrySymbol)
     {
         return $this->transaction(function() use ($forSyncDatum, $action, $localDiskName, $entrySymbol) {
             $folderTimeStamp = Carbon::now()->format('mdY_His_v');
 
-            $result = $this->mapData([$forSyncDatum], $forSyncDatum);
+            $result = $this->nonCustomizedMappingData([$forSyncDatum], $forSyncDatum);
 
             if ($result) {
                 $fileName = $action.$entrySymbol.'_'.$folderTimeStamp;
@@ -298,7 +318,7 @@ class ConvertDataToFile extends Command
     }
     
     /**
-     * Generate grouped excel file.
+     * Generate non-customized mapping grouped excel file.
      * 
      * @param object  $toSyncData
      * @param object  $forSyncDatum
@@ -308,12 +328,12 @@ class ConvertDataToFile extends Command
      *
      * @return boolean
      */
-    public function generateGroupedExcelFile($toSyncData, $forSyncDatum, $action, $localDiskName, $groupedEntrySymbol)
+    public function generateNonCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $action, $localDiskName, $groupedEntrySymbol)
     {
         return $this->transaction(function() use($toSyncData, $forSyncDatum, $action, $localDiskName, $groupedEntrySymbol) {
             $folderTimeStamp = Carbon::now()->format('mdY_his_v');
 
-            $result = $this->mapData($toSyncData, $forSyncDatum);
+            $result = $this->nonCustomizedMappingData($toSyncData, $forSyncDatum);
 
             if ($result) {
                 try {
@@ -364,7 +384,7 @@ class ConvertDataToFile extends Command
      *
      * @return mixed
      */
-    public function mapData($toSyncData, $forSyncDatum)
+    public function nonCustomizedMappingData($toSyncData, $forSyncDatum)
     {
         $headers = [];
         $values = [];
@@ -436,6 +456,145 @@ class ConvertDataToFile extends Command
         );
 
         return $result;
+    }
+
+    /**
+     * Process customized mapping
+     *
+     * @param object  $forSyncDatum
+     * @param string  $localDiskName
+     * @param object  $fieldMappingDetails
+     *
+     * @return mixed
+     */
+    public function processCustomizedMapping($entryName, $forSyncDatum, $fieldMappingDetails)
+    {
+        $remoteDiskName = '';
+        $localDiskName = '';
+
+        if ($forSyncDatum) {
+            $this->processCustomizedMappingConversion($forSyncDatum, $localDiskName, $fieldMappingDetails);
+        } else {
+            $this->info(__('message.no_data_to_convert_to_file'));
+        }
+    }
+
+    /**
+     * Process customized mapping conversion of CDIS data to excel file
+     *
+     * @param object  $forSyncDatum
+     * @param string  $localDiskName
+     * @param object  $fieldMappingDetails
+     *
+     * @return mixed
+     */
+    public function processCustomizedMappingConversion($forSyncDatum, $localDiskName, $fieldMappingDetails)
+    {
+        if ($forSyncDatum->group) {
+            $toSyncData = CDISSync::where([
+                'branch_bid' => $forSyncDatum->branch_bid,
+                'group' => $forSyncDatum->group,
+                'code' => $forSyncDatum->code,
+                'action' => $forSyncDatum->action
+            ])->get();
+
+            $result = $this->generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $localDiskName, $fieldMappingDetails);
+        } else {
+            $entrySymbol = $this->getSyncEntryAlias($forSyncDatum->table_name);
+
+            if (is_null($entrySymbol)) {
+                $this->cacheSetOfValue('excludedSyncBids', $forSyncDatum->bid);
+                return false;
+            }
+
+            $result = $this->generateCustomizedMappingExcelFile($forSyncDatum, $localDiskName, $fieldMappingDetails);
+        }
+
+        return $result;
+    }
+
+    public function generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $localDiskName, $fieldMappingDetails)
+    {
+        $data = [];
+        foreach ($toSyncData as $key => $datum) {
+            $entityName = str_replace('_', '', Str::title($datum->table_name));
+            $entity = "App\\Entities\\CDIS".$entityName;
+
+            $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($entity));
+
+            $entryData = $entity::where('bid', $datum->table_bid);
+            $tableColumns = app()->make($entity)->getTableColumns();
+
+            if ($hasSoftDeleting) {
+                $entryData = $entryData->withTrashed();
+            }
+
+            $entryData = $entryData->first();
+
+            $data[$datum->table_name]['table_columns'] = $tableColumns;
+            $data[$datum->table_name]['data'][] = $entryData->toArray();
+        }
+
+        $mappedData = [];
+        foreach ($fieldMappingDetails as $fieldMappingDetail) {
+            $fileStorageSetup = $fieldMappingDetail->fileStorageSetup;
+            $dataMappings = $fieldMappingDetail->dataMappings->toArray();
+
+            if ($fileStorageSetup->storage_type == StorageType::FTP) {
+                $remoteDiskName = 'cdis_ftp_remote_convert_data_to_file';
+                $localDiskName = 'cdis_ftp_local_convert_data_to_file';
+
+                resolve('filesystem')->forgetDisk($remoteDiskName);
+                app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'ftp');
+                app()['config']->set('filesystems.disks.'.$remoteDiskName.'.host', $fileStorageSetup->host);
+                app()['config']->set('filesystems.disks.'.$remoteDiskName.'.username', $fileStorageSetup->username);
+                app()['config']->set('filesystems.disks.'.$remoteDiskName.'.password', $fileStorageSetup->password);
+                app()['config']->set('filesystems.disks.'.$remoteDiskName.'.port', $fileStorageSetup->port);
+                app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
+
+                resolve('filesystem')->forgetDisk($localDiskName);
+                app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
+                app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
+            } else if ($fileStorageSetup->storage_type == StorageType::LOCAL_NETWORK) {
+                $remoteDiskName = 'cdis_local_remote_convert_data_to_file';
+                $localDiskName = 'cdis_local_local_convert_data_to_file';
+
+                resolve('filesystem')->forgetDisk($remoteDiskName);
+                app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'local');
+                app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
+
+                resolve('filesystem')->forgetDisk($localDiskName);
+                app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
+                app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
+            } else {
+                break;
+            }
+
+            $columnsExistsInMapping = [];
+
+            foreach ($data as $key => $datum) {
+                foreach ($datum['table_columns'] as $tableColumn) {
+                    $fieldName = $key.'.'.$tableColumn;
+                    $filteredMapping = array_filter($dataMappings, function($value) use($fieldName) {
+                        return strpos($value['field'], $fieldName) !== false || strpos($value['default_value'], $fieldName) !== false;
+                    });
+
+                    var_dump($datum); die();
+                    if (count($filteredMapping) > 0) {
+                        $columnsExistsInMapping[] = $fieldName;
+                    }
+                }
+            }
+
+            foreach ($dataMappings as $dataMapping) {
+                var_dump($dataMapping['field']); die();
+            }
+        }
+    }
+
+    public function generateCustomizedMappingExcelFile($forSyncDatum, $localDiskName, $fieldMappingDetails)
+    {
+
     }
 
     /**

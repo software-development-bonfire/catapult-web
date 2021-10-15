@@ -15,7 +15,13 @@ class FieldMappingDetailTransformer extends TransformerAbstract
      */
     public function transform(FieldMapping $model)
     {
-        $details = collect($model['detail'])->map(function($data){
+        $primaryKey = null;
+
+        $details = collect($model['detail'])->map(function($data) use(&$primaryKey) {
+            if ($data->is_primary_key) {
+                $primaryKey = (string) $data->bid;
+            }
+
             return [
                 'bid' => (string) $data->bid,
                 'field_mapping_bid' => (string) $data->field_mapping_bid,
@@ -39,9 +45,11 @@ class FieldMappingDetailTransformer extends TransformerAbstract
             $data['api_setup_name'] = $model->apiSetup->name;
             $data['catapult_db_setup_bid'] = (string) $model->catapult_db_setup_bid;
             $data['catapult_db_setup_name'] = $model->catapultDBSetup->name;
-            $data['name'] = $model->name;
-            $data['mapping_type'] = $model->type;
-            $data['status'] = $model->status;
+            $data['field_mapping_name'] = $model->name;
+            $data['mapping_type'] = (int) $model->type;
+            $data['setup_status'] = (int) $model->status;
+            $data['is_customized_mapping'] = (int) $model->is_customized_mapping;
+            $data['primary_key'] = $primaryKey;
             $data['data_entry'] = $model->data_entry;
             $data['preset_name'] = $model->preset_name;
             $data['detail'] = $details;

@@ -2,8 +2,7 @@
 
 namespace App\Entities;
 
-
-class CDISKitchenItemSetupDetail extends Base
+class CDISKitchenItemSetupDetail extends BaseModel
 {
     protected $table = 'cdis_kitchen_item_setup_detail';
 

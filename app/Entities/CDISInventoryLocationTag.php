@@ -2,7 +2,7 @@
 
 namespace App\Entities;
 
-class CDISInventoryLocationTag extends Base
+class CDISInventoryLocationTag extends BaseModel
 {
     protected $table = 'cdis_inventory_location_tag';
 

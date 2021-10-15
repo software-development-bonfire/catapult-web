@@ -39,6 +39,7 @@ class FieldMapping extends Model implements Transformable
         'catapult_db_setup_bid',
         'api_setup_bid',
         'status',
+        'is_customized_mapping',
         'data_entry',
         'created_by',
         'updated_by',

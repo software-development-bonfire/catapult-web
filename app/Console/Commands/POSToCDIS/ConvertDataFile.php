@@ -154,27 +154,34 @@ class ConvertDataFile extends Command
 
                     foreach ($files as $file) {
                         $filename = substr($file, strrpos($file, '/') + 1);
-                        $entryFileAcronym = explode('_', $filename)[0];
-                        $contents = Excel::toArray(new PosToCdisExport, $file, $localDiskName);
 
-                        foreach ($contents as $index => $content) {
-                            $keys = $content[0];
-                            unset($content[0]);
+                        try {
+                            $entryFileAcronym = explode('_', $filename)[0];
+                            $contents = Excel::toArray(new PosToCdisExport, $file, $localDiskName);
 
-                            $content = array_values($content);
+                            foreach ($contents as $index => $content) {
+                                $keys = $content[0];
+                                unset($content[0]);
 
-                            if (! isset($entriesData->{$entryFileAcronym})) {
-                                $entriesData->{$entryFileAcronym} = array();
-                            }
+                                $content = array_values($content);
 
-                            foreach ($content as $dataIndex => $data) {
-                                if (! isset($entriesData->{$entryFileAcronym}[$dataIndex])) {
-                                    $entriesData->{$entryFileAcronym}[$dataIndex] = (object) array();
+                                if (! isset($entriesData->{$entryFileAcronym})) {
+                                    $entriesData->{$entryFileAcronym} = array();
                                 }
-                                foreach ($data as $datumIndex => $datum) {
-                                    $entriesData->{$entryFileAcronym}[$dataIndex]->{$keys[$datumIndex]} = $datum;
+
+                                foreach ($content as $dataIndex => $data) {
+                                    if (! isset($entriesData->{$entryFileAcronym}[$dataIndex])) {
+                                        $entriesData->{$entryFileAcronym}[$dataIndex] = (object) array();
+                                    }
+                                    foreach ($data as $datumIndex => $datum) {
+                                        $entriesData->{$entryFileAcronym}[$dataIndex]->{$keys[$datumIndex]} = $datum;
+                                    }
                                 }
                             }
+                        } catch(\Exception $exception) {
+                            $this->createLog($exception->getMessage(), 'error', true, [$entryLogLabel], [$filename]);
+
+                            continue;
                         }
                     }
 
@@ -351,8 +358,14 @@ class ConvertDataFile extends Command
         $filePath = '/'.$entryFolderName.'/Converted/To sync/'.$fileName.'.'.$this->extension;
         $processedFolderPath = '/'.$entryFolderName.'/Processed/'.$fileName;
 
-        if (! is_null($serviceClass)) {
-            $fileContent = app()->make($serviceClass)->store($fileContent);
+        try {
+            if (! is_null($serviceClass)) {
+                $fileContent = app()->make($serviceClass)->store($fileContent);
+            }
+        } catch(\Exception $exception) {
+            $this->createLog($exception->getMessage(), 'error', true, [$entryLogLabel], [$fileName]);
+
+            return;
         }
 
         $fileContent = json_encode($fileContent);

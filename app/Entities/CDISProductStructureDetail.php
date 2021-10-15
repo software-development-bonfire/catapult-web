@@ -2,9 +2,7 @@
 
 namespace App\Entities;
 
-use Illuminate\Database\Eloquent\Model;
-
-class CDISProductStructureDetail extends Model
+class CDISProductStructureDetail extends BaseModel
 {
     protected $table = 'cdis_product_structure_detail';
 

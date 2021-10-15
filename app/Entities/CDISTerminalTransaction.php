@@ -2,7 +2,6 @@
 
 namespace App\Entities;
 
-
 class CDISTerminalTransaction extends Base
 {
     protected $table = 'cdis_terminal_transaction';

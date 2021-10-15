@@ -93,6 +93,20 @@
                             </label>
                         </div>
                     </div>
+                    <div class="col-xl-3">
+                        <div class="mb-1" v-if="form.connection_setup.mapping_type == 1">
+                            <label>{{ $t('label.customized_mapping') }}</label>
+                            <select
+
+                                :disabled="form.mode === 'update'"
+                                class="form-control"
+                                v-model="form.connection_setup.is_customized_mapping"
+                            >
+                                <option :value="1">{{ $t('label.yes') }}</option>
+                                <option :value="0">{{ $t('label.no') }}</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -108,7 +122,7 @@
                 </div>
                 <div class="row">
                     <table class="table-layout pull-left col-xl-4">
-                        <tr>
+                        <tr v-if="form.connection_setup.is_customized_mapping === 0">
                             <td valign="top" align="right">{{ $t('label.select_entry_to_map') }}</td>
                             <td width="200px">
                                 <select
@@ -127,7 +141,7 @@
                                 </label>
                             </td>
                         </tr>
-                        <tr>
+                        <tr v-if="form.connection_setup.is_customized_mapping === 0">
                             <td valign="top" align="right">{{ $t('label.preset_name') }}</td>
                             <td>
                                 <select
@@ -143,6 +157,16 @@
                                 <label
                                     class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('preset_name')">
                                     {{ errors.preset_name[0] }}
+                                </label>
+                            </td>
+                        </tr>
+                        <tr v-if="form.connection_setup.is_customized_mapping === 1">
+                            <td align="right">{{ $t('message.set_the_file_name_to_be_generated') }}</td>
+                            <td width="200px">
+                                <input type="text" class="form-control" v-model="form.data_mapping.data_entry">
+                                <label
+                                    class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('data_entry')">
+                                    {{ errors.data_entry[0] }}
                                 </label>
                             </td>
                         </tr>
@@ -164,22 +188,42 @@
                     overflow-initial
                     datatable--overflow-initial
                     datatable--font-sm"
-                :header-fields="form.connection_setup.mapping_type === 1 ? table.cdis_to_pos.header : table.pos_to_cdis.header"
+                :header-fields="
+                    form.connection_setup.mapping_type === 2
+                        ? table.pos_to_cdis.header
+                        : (form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 1)
+                            ? table.cdis_to_pos_customized.header
+                            : table.cdis_to_pos.header"
                 :settings="table.settings"
-                :table="table.values">
+                :table="table.values"
+                v-on:add-row="addRow"
+                v-on:delete-row="deleteRow"
+            >
                 <template slot="content">
                     <table-row
+                        type="edit"
                         class="datatable-row--sm"
                         v-for="(tableData, tableDataIndex) in table.values.data" :key="tableDataIndex"
                         :values="tableData"
                         :settings="table.settings"
-                        :rowIndex="tableDataIndex">
+                        :rowIndex="tableDataIndex"
+                        v-on:enable-row="tableData.edit = $event.state">
                         <table-data
                             align="center"
                             valign="center">
                             <input
                                 type="checkbox"
                                 v-model="tableData.required"
+                            >
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 1">
+                            <input
+                                type="radio"
+                                v-bind:value="tableData.bid"
+                                v-model="form.data_mapping.primary_key"
                             >
                         </table-data>
                         <table-data
@@ -194,7 +238,8 @@
                         </table-data>
                         <table-data
                             align="center"
-                            valign="center">
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2 || (form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 0)">
                             <popper
                                 trigger="hover"
                                 :options="{ placement: 'top' }">
@@ -206,7 +251,8 @@
                         </table-data>
                         <table-data
                             align="center"
-                            valign="center">
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2 || (form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 0)">
                             <input
                                 :disabled="! tableData.required"
                                 type="text"
@@ -224,14 +270,14 @@
                         </table-data>
                         <table-data
                             valign="center"
-                            v-if="form.connection_setup.mapping_type === 2">
-                            <span v-text="tableData.default_value"></span>
+                            v-if="form.connection_setup.mapping_type === 2 || (form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 1)">
+                            <input type="text" class="form-control" v-model="tableData.default_value">
                         </table-data>
                         <table-data
                             :error="getError(errors, `fields.${tableDataIndex}.column_name`)"
                             align="center"
                             valign="center">
-                            <template v-if="tableData.required">
+                            <template v-if="(form.connection_setup.mapping_type === 2 && tableData.required) || form.connection_setup.mapping_type === 1">
                                 <input type="text" class="form-control" v-model="tableData.column_name"
                                 v-on:input="removeError(errors, `fields.${tableDataIndex}.column_name`)">
                             </template>
@@ -256,6 +302,79 @@
                         >
                             <input type="text" class="form-control" v-model="tableData.head_reference"
                                    v-on:input="removeError(errors, `fields.${tableDataIndex}.head_reference`)">
+                        </table-data>
+                    </table-row>
+
+                    <table-row
+                        class="datatable-row--sm"
+                        type="add"
+                        :values="form.data_mapping.add"
+                        :settings="table.settings">
+                        <table-data
+                            align="center"
+                            valign="center">
+                            <input
+                                type="checkbox"
+                                v-model="form.data_mapping.add.required"
+                            >
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 1">
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center">
+                            <input
+                                type="text"
+                                class="form-control"
+                                v-model="form.data_mapping.add.field"
+                            >
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2 || (form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 0)">
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2 || (form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 0)">
+                            <input
+                                type="text"
+                                class="form-control"
+                                v-model="form.data_mapping.add.mapping_type">
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2">
+                            <input type="text" class="form-control" v-model="form.data_mapping.add.file_name">
+                        </table-data>
+                        <table-data
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2 || (form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 1)">
+                            <input type="text" class="form-control" v-model="form.data_mapping.add.default_value">
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center">
+                            <template>
+                                <input type="text" class="form-control" v-model="form.data_mapping.add.column_name">
+                            </template>
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2">
+                            <input type="text" class="form-control" v-model="form.data_mapping.add.reference_column_name">
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2">
+                            <input type="text" class="form-control" v-model="form.data_mapping.add.head_reference">
                         </table-data>
                     </table-row>
                 </template>
@@ -343,16 +462,9 @@
                 this.form.mode = 'update';
 
                 this.field_mapping_bid = searchParams.bid;
-                this.form.connection_setup.field_mapping_name = this.detail.name;
-                this.form.connection_setup.file_storage_setup_bid = this.detail.file_storage_setup_bid;
-                this.form.connection_setup.file_storage_setup_name = this.detail.file_storage_setup_name;
-                this.form.connection_setup.catapult_db_setup_bid = this.detail.catapult_db_setup_bid;
-                this.form.connection_setup.catapult_db_setup_name = this.detail.catapult_db_setup_name;
-                this.form.connection_setup.api_setup_bid = this.detail.api_setup_bid;
-                this.form.connection_setup.api_setup_name = this.detail.api_setup_name;
-                this.form.connection_setup.setup_status = Number(this.detail.status);
-                this.form.connection_setup.mapping_type = Number(this.detail.mapping_type);
+                this.form.connection_setup = this.detail;
                 this.form.data_mapping.data_entry = this.detail.data_entry;
+                this.form.data_mapping.primary_key = this.detail.primary_key;
 
                 this.getDataEntries();
 
@@ -403,11 +515,24 @@
                         catapult_db_setup_name: '',
                         catapult_db_setup_bid: '',
                         api_setup_bid: '',
+                        is_customized_mapping: 0,
                     },
                     data_mapping: {
                         data_entry: '',
                         field_mapping_preset_bid: '',
-                    }
+                        primary_key: '',
+                        add: {
+                            edit: false,
+                            required: false,
+                            field: '',
+                            description: '',
+                            mapping_type: 'DECIMAL',
+                            file_name: '',
+                            default_value: '',
+                            column_name: '',
+                            head_reference: '',
+                        },
+                    },
                 },
                 errors: {},
                 table: {
@@ -431,6 +556,35 @@
                                 name: "data_type",
                                 label: this.$t('label.data_type'),
                                 width: '120'
+                            },
+                            {
+                                name: "csv_column_name",
+                                label: this.$t('label.csv_column_name'),
+                                width: '200'
+                            }
+                        ],
+                    },
+                    cdis_to_pos_customized: {
+                        header: [
+                            {
+                                name: "required",
+                                label: '',
+                                width: '50'
+                            },
+                            {
+                                name: "primary_key",
+                                label: this.$t('label.primary_key'),
+                                width: '100'
+                            },
+                            {
+                                name: "fields",
+                                label: this.$t('label.cdis_fields'),
+                                width: '300'
+                            },
+                            {
+                                name: "default_field_values",
+                                label: this.$t('label.default_field_values'),
+                                width: '250'
                             },
                             {
                                 name: "csv_column_name",
@@ -503,7 +657,9 @@
                         itemsPerPage: 10,
                         withRowNumbers: false,
                         withPagination: false,
-                        minHeight: 300
+                        minHeight: 300,
+                        hasEdit: true,
+                        hasDelete: true,
                     }
                 },
                 label: {
@@ -634,6 +790,8 @@
                         mapping_type: this.form.connection_setup.mapping_type,
                         field_mapping_bid: this.field_mapping_bid,
                         data_entry: this.form.data_mapping.data_entry,
+                        is_customized_mapping: this.form.connection_setup.is_customized_mapping,
+                        primary_key: this.form.data_mapping.primary_key,
                         fields: this.table.values.data
                     };
 
@@ -660,6 +818,8 @@
                         mapping_type: this.form.connection_setup.mapping_type,
                         field_mapping_bid: this.field_mapping_bid,
                         data_entry: this.form.data_mapping.data_entry,
+                        is_customized_mapping: this.form.connection_setup.is_customized_mapping,
+                        primary_key: this.form.data_mapping.primary_key,
                         fields: this.table.values.data
                     };
 
@@ -774,6 +934,22 @@
             removeError(object, name) {
                 delete object[name];
             },
+            addRow(data) {
+                this.table.values.data.push({...data.values});
+            },
+            deleteRow(data) {
+                this.table.values.data.splice(data.rowIndex, 1);
+            },
+        },
+        watch: {
+            'form.connection_setup.mapping_type': function(value) {
+                if (value === 2) {
+                    this.form.connection_setup.is_customized_mapping = 0;
+                }
+            },
+            'form.connection_setup.is_customized_mapping': function(value) {
+                this.form.data_mapping.field_mapping_preset_bid = '';
+            }
         }
     }
 </script>

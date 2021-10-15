@@ -25,9 +25,9 @@ class DataMappingRequest extends FormRequest
      */
     public function rules()
     {
-        return [
+        $rules = [
             'bid' => 'sometimes',
-            'mapping_type' => 'sometimes', 
+            'mapping_type' => 'sometimes',
             'data_entry' => 'required',
             'field_mapping_bid' => 'required',
             'fields' => 'required',
@@ -39,6 +39,13 @@ class DataMappingRequest extends FormRequest
             'fields.*.default_value' => 'sometimes',
             'fields.*.column_name' => 'required_if:fields.*.required,true',
         ];
+
+        if ($this->is_customized_mapping) {
+            $rules['primary_key'] = 'required';
+            unset($rules['fields.*.field']);
+        }
+
+        return $rules;
     }
 
     public function messages()

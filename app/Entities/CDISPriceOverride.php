@@ -2,7 +2,7 @@
 
 namespace App\Entities;
 
-class CDISPriceOverride extends Base
+class CDISPriceOverride extends BaseModel
 {
     protected $table = 'cdis_price_override';
 

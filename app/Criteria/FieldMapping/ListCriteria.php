@@ -53,6 +53,10 @@ class ListCriteria implements CriteriaInterface
             $model->where('field_mapping.status', $filters->status);
         }
 
+        if (isset($filters->is_customized_mapping) && $filters->is_customized_mapping != '') {
+            $model->where('field_mapping.is_customized_mapping', $filters->is_customized_mapping);
+        }
+
         return $model;
     }
 }

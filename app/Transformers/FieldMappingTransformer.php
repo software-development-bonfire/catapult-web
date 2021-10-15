@@ -27,6 +27,7 @@ class FieldMappingTransformer extends TransformerAbstract
             $data['mapping_type'] = (int) $model->type;
             $data['api_version_name'] = (string) $model->api_version_name;
             $data['status'] = (int) $model->status;
+            $data['is_customized_mapping'] = (int) $model->is_customized_mapping;
             $data['data_entry'] = (string) $model->data_entry;
             
         return $data;

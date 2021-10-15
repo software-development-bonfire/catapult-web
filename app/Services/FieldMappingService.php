@@ -37,17 +37,16 @@ class FieldMappingService
      */
     public function storeDataMapping($data)
     {
-        DB::beginTransaction();
-        try {
+        return $this->transaction(function() use($data) {
             $fieldMapping = FieldMapping::find($data['field_mapping_bid']);
 
-            if ($fieldMapping['status'] == Status::ACTIVE) {
+            if ($fieldMapping['status'] == Status::ACTIVE || ! $fieldMapping['is_customized_mapping']) {
                 FieldMapping::where([
                     'status' => Status::ACTIVE,
                     'data_entry' => $data['data_entry'],
                     'type' => $fieldMapping['type']
-                    ])->where('bid', '!=', $data['field_mapping_bid'])
-                ->update(['status' => Status::INACTIVE]);
+                ])->where('bid', '!=', $data['field_mapping_bid'])
+                    ->update(['status' => Status::INACTIVE]);
             }
 
             $fieldMapping->update([
@@ -55,29 +54,31 @@ class FieldMappingService
                 'data_entry' => $data['data_entry'],
                 'updated_by' => Auth::user()->bid
             ]);
-            
+
             foreach ($data['fields'] as $arr) {
-                $fieldMapping->detail()->create([
+                $detail = [
                     'required' => $arr['required'],
-                    'field' => $arr['field'],
+                    'field' =>  isset($arr['field']) ? $arr['field'] : '',
                     'description' => $arr['description'],
                     'mapping_type' => $arr['mapping_type'],
                     'file_name' => $arr['file_name'],
                     'default_value' => $arr['default_value'],
-                    'column_name' => ($arr['column_name'] == null || $arr['column_name'] == '""') 
+                    'column_name' => ($arr['column_name'] == null || $arr['column_name'] == '""')
                         ? $arr['default_value']
                         : $arr['column_name'],
-                    'reference_column_name' => $arr['reference_column_name'],
-                    'head_reference' => $arr['head_reference'],
-                ]);
-            }
+                    'reference_column_name' => isset($arr['reference_column_name']) ? $arr['reference_column_name'] : NULL,
+                    'head_reference' => isset($arr['head_reference']) ? $arr['head_reference'] : NULL,
+                ];
 
-            DB::commit();
-            return true;
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return ['message' => $th->getMessage()];
-        }
+                if ($arr['bid'] == $data['primary_key']) {
+                    $detail['is_primary_key'] = 1;
+                } else {
+                    $detail['is_primary_key'] = 0;
+                }
+
+                $fieldMapping->detail()->create($detail);
+            }
+        });
     }
 
     /**
