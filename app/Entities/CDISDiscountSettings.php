@@ -4,11 +4,11 @@ namespace App\Entities;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class CDISProductVariant extends BaseModel
+class CDISDiscountSettings extends BaseModel
 {
     use SoftDeletes;
 
-    protected $table = 'cdis_product_variant';
+    protected $table = 'cdis_discount_settings';
 
     protected $primaryKey = 'bid';
 
@@ -16,6 +16,10 @@ class CDISProductVariant extends BaseModel
         'bid',
         'code',
         'description',
+        'method',
+        'discount_type',
+        'discount_amount',
+        'receipt_count',
         'created_by',
         'updated_by',
     ];
@@ -23,9 +27,4 @@ class CDISProductVariant extends BaseModel
     protected $casts = [
         'bid' => 'string',
     ];
-
-    public function options()
-    {
-        return $this->hasMany(CDISProductVariantOption::class, 'head_bid','bid');
-    }
 }

@@ -28,4 +28,9 @@ class CDISProductBranchAvailability extends BaseModel
         'product_uom_bid' => 'string',
         'is_available' => 'boolean',
     ];
+
+    public function productBranchPrice()
+    {
+        return $this->hasMany(CDISProductBranchPrice::class, 'product_branch_availability_bid', 'bid');
+    }
 }

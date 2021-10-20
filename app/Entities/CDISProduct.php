@@ -33,4 +33,9 @@ class CDISProduct extends BaseModel
         'created_by' => 'string',
         'updated_by' => 'string',
     ];
+
+    public function productUomPackaging()
+    {
+        return $this->hasMany(CDISProductUomPackaging::class, 'product_bid', 'bid');
+    }
 }

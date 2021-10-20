@@ -15,13 +15,7 @@ class FieldMappingDetailTransformer extends TransformerAbstract
      */
     public function transform(FieldMapping $model)
     {
-        $primaryKey = null;
-
-        $details = collect($model['detail'])->map(function($data) use(&$primaryKey) {
-            if ($data->is_primary_key) {
-                $primaryKey = (string) $data->bid;
-            }
-
+        $details = collect($model['detail'])->map(function($data) {
             return [
                 'bid' => (string) $data->bid,
                 'field_mapping_bid' => (string) $data->field_mapping_bid,
@@ -49,8 +43,8 @@ class FieldMappingDetailTransformer extends TransformerAbstract
             $data['mapping_type'] = (int) $model->type;
             $data['setup_status'] = (int) $model->status;
             $data['is_customized_mapping'] = (int) $model->is_customized_mapping;
-            $data['primary_key'] = $primaryKey;
             $data['data_entry'] = $model->data_entry;
+            $data['primary_table'] = $model->primary_table;
             $data['preset_name'] = $model->preset_name;
             $data['detail'] = $details;
 

@@ -41,6 +41,7 @@ class FieldMapping extends Model implements Transformable
         'status',
         'is_customized_mapping',
         'data_entry',
+        'primary_table',
         'created_by',
         'updated_by',
     ];

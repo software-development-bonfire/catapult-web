@@ -52,6 +52,7 @@ class FieldMappingService
             $fieldMapping->update([
                 'status' => $fieldMapping['status'],
                 'data_entry' => $data['data_entry'],
+                'primary_table' => $data['primary_table'],
                 'updated_by' => Auth::user()->bid
             ]);
 
@@ -59,22 +60,16 @@ class FieldMappingService
                 $detail = [
                     'required' => $arr['required'],
                     'field' =>  isset($arr['field']) ? $arr['field'] : '',
-                    'description' => $arr['description'],
-                    'mapping_type' => $arr['mapping_type'],
-                    'file_name' => $arr['file_name'],
-                    'default_value' => $arr['default_value'],
+                    'description' => isset($arr['description']) ? $arr['description'] : '',
+                    'mapping_type' => isset($arr['mapping_type']) ? $arr['mapping_type'] : '',
+                    'file_name' => isset($arr['file_name']) ? $arr['file_name'] : '',
+                    'default_value' => isset($arr['default_value']) ? $arr['default_value'] : '',
                     'column_name' => ($arr['column_name'] == null || $arr['column_name'] == '""')
                         ? $arr['default_value']
                         : $arr['column_name'],
                     'reference_column_name' => isset($arr['reference_column_name']) ? $arr['reference_column_name'] : NULL,
                     'head_reference' => isset($arr['head_reference']) ? $arr['head_reference'] : NULL,
                 ];
-
-                if ($arr['bid'] == $data['primary_key']) {
-                    $detail['is_primary_key'] = 1;
-                } else {
-                    $detail['is_primary_key'] = 0;
-                }
 
                 $fieldMapping->detail()->create($detail);
             }
@@ -94,7 +89,6 @@ class FieldMappingService
             $data['updated_by'] = Auth::user()->bid;
             
             if ($data['status'] == Status::ACTIVE && array_key_exists('data_entry', $data)) {
-
                 FieldMapping::where([
                     'status' => Status::ACTIVE,
                     'data_entry' => $data['data_entry'],

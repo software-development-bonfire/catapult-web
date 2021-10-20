@@ -2,6 +2,7 @@
 
 namespace App\Entities;
 
+use App\Enums\KDS\DeviceType;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CDISKitchenDevicePrinter extends BaseModel
@@ -28,4 +29,9 @@ class CDISKitchenDevicePrinter extends BaseModel
         'bid' => 'string',
         'is_printer_dispatch_copy' => 'bool',
     ];
+
+    public function kitchenItemSetup()
+    {
+        return $this->hasMany(CDISKitchenItemSetup::class, 'device_type_bid', 'bid')->where('device_type', DeviceType::KITCHEN_PRINTER);
+    }
 }

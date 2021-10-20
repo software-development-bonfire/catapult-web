@@ -143,7 +143,7 @@ class FieldMappingController extends Controller
     public function store(FieldMappingRequest $request)
     {
         try {
-            $data = $this->fieldMappingService->store($request->validated());
+            $data = $this->fieldMappingService->store($request->all());
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],
@@ -190,7 +190,7 @@ class FieldMappingController extends Controller
     public function update(FieldMappingRequest $request, $bid)
     {
         try {
-            $this->fieldMappingService->update($request->validated(), $bid);
+            $this->fieldMappingService->update($request->all(), $bid);
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],

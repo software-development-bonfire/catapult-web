@@ -29,7 +29,8 @@ class FieldMappingTransformer extends TransformerAbstract
             $data['status'] = (int) $model->status;
             $data['is_customized_mapping'] = (int) $model->is_customized_mapping;
             $data['data_entry'] = (string) $model->data_entry;
-            
+            $data['primary_table'] = (string) $model->primary_table;
+
         return $data;
     }
 }
