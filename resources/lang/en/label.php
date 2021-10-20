@@ -137,7 +137,7 @@ return [
     'pos_to_cdis_process' => 'Set the entry limit per batch syncing (POS TO CDIS PROCESS)',
     'preset_name' => 'Preset Name',
     'price_override' => 'Price Override',
-    'primary_key' => 'Primary Key',
+    'primary_table' => 'Primary Table',
     'product' => 'Product',
     'product_key' => 'Product Key',
     'products' => 'Products',

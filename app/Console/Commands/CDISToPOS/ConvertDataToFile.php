@@ -130,10 +130,7 @@ class ConvertDataToFile extends Command
             }
 
             foreach ($forSyncData as $forSyncDatum) {
-                $entryName = $forSyncDatum->table_name;
-
-                $this->processNonCustomizedMapping($entryName, $forSyncDatum);
-//                $this->processCustomizedMapping($entryName, $forSyncDatum, $fieldMappingDetails);
+                $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails);
             }
 
             sleep(5);
@@ -462,81 +459,53 @@ class ConvertDataToFile extends Command
      * Process customized mapping
      *
      * @param object  $forSyncDatum
-     * @param string  $localDiskName
      * @param object  $fieldMappingDetails
      *
      * @return mixed
      */
-    public function processCustomizedMapping($entryName, $forSyncDatum, $fieldMappingDetails)
+    public function processCustomizedMapping($forSyncDatum, $fieldMappingDetails)
     {
-        $remoteDiskName = '';
-        $localDiskName = '';
+        return $this->transaction(function() use($forSyncDatum, $fieldMappingDetails) {
+            if ($forSyncDatum) {
+                if ($forSyncDatum->group) {
+                    $toSyncData = CDISSync::where([
+                        'branch_bid' => $forSyncDatum->branch_bid,
+                        'group' => $forSyncDatum->group,
+                        'code' => $forSyncDatum->code,
+                    ])->get();
 
-        if ($forSyncDatum) {
-            $this->processCustomizedMappingConversion($forSyncDatum, $localDiskName, $fieldMappingDetails);
-        } else {
-            $this->info(__('message.no_data_to_convert_to_file'));
-        }
-    }
+                    $result = $this->generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails);
 
-    /**
-     * Process customized mapping conversion of CDIS data to excel file
-     *
-     * @param object  $forSyncDatum
-     * @param string  $localDiskName
-     * @param object  $fieldMappingDetails
-     *
-     * @return mixed
-     */
-    public function processCustomizedMappingConversion($forSyncDatum, $localDiskName, $fieldMappingDetails)
-    {
-        if ($forSyncDatum->group) {
-            $toSyncData = CDISSync::where([
-                'branch_bid' => $forSyncDatum->branch_bid,
-                'group' => $forSyncDatum->group,
-                'code' => $forSyncDatum->code,
-                'action' => $forSyncDatum->action
-            ])->get();
+                    if ($result) {
+                        CDISSync::whereIn('bid', $toSyncData->pluck('bid'))->delete();
+                    }
 
-            $result = $this->generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $localDiskName, $fieldMappingDetails);
-        } else {
-            $entrySymbol = $this->getSyncEntryAlias($forSyncDatum->table_name);
+                    return $result;
+                } else {
+                    $result = $this->generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails);
 
-            if (is_null($entrySymbol)) {
-                $this->cacheSetOfValue('excludedSyncBids', $forSyncDatum->bid);
+                    if ($result) {
+                        CDISSync::where([
+                            'table_name' => $forSyncDatum->table_name,
+                            'table_bid' => $forSyncDatum->table_bid,
+                        ])->delete();
+                    }
+
+                    return $result;
+                }
+            } else {
+                $this->info(__('message.no_data_to_convert_to_file'));
+
                 return false;
             }
-
-            $result = $this->generateCustomizedMappingExcelFile($forSyncDatum, $localDiskName, $fieldMappingDetails);
-        }
-
-        return $result;
+        });
     }
 
-    public function generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $localDiskName, $fieldMappingDetails)
+    public function generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails)
     {
-        $data = [];
-        foreach ($toSyncData as $key => $datum) {
-            $entityName = str_replace('_', '', Str::title($datum->table_name));
-            $entity = "App\\Entities\\CDIS".$entityName;
-
-            $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($entity));
-
-            $entryData = $entity::where('bid', $datum->table_bid);
-            $tableColumns = app()->make($entity)->getTableColumns();
-
-            if ($hasSoftDeleting) {
-                $entryData = $entryData->withTrashed();
-            }
-
-            $entryData = $entryData->first();
-
-            $data[$datum->table_name]['table_columns'] = $tableColumns;
-            $data[$datum->table_name]['data'][] = $entryData->toArray();
-        }
-
-        $mappedData = [];
         foreach ($fieldMappingDetails as $fieldMappingDetail) {
+            $primaryTable = $fieldMappingDetail->primary_table;
+            $entryName = $fieldMappingDetail->data_entry;
             $fileStorageSetup = $fieldMappingDetail->fileStorageSetup;
             $dataMappings = $fieldMappingDetail->dataMappings->toArray();
 
@@ -570,55 +539,418 @@ class ConvertDataToFile extends Command
                 break;
             }
 
-            $columnsExistsInMapping = [];
+            foreach ($toSyncData as $syncEntry) {
+                $entityName = $syncEntry->table_name;
 
-            foreach ($data as $key => $datum) {
-                foreach ($datum['table_columns'] as $tableColumn) {
-                    $fieldName = $key.'.'.$tableColumn;
-                    $filteredMapping = array_filter($dataMappings, function($value) use($fieldName) {
-                        return strpos($value['field'], $fieldName) !== false || strpos($value['default_value'], $fieldName) !== false;
-                    });
+                $mappingFound = array_values(array_filter($dataMappings, function($value) use($entityName) {
+                    return preg_match('%\b('.$entityName.'.)\b%i', $value['field'])
+                        || preg_match('%\b('.$entityName.'.)\b%i', $value['default_value']);
+                }));
 
-                    var_dump($datum); die();
-                    if (count($filteredMapping) > 0) {
-                        $columnsExistsInMapping[] = $fieldName;
+                if (count($mappingFound) == 0) {
+                    break;
+                }
+
+                $entityName = str_replace('_', '', Str::title($syncEntry->table_name));
+                $entity = "App\\Entities\\CDIS".$entityName;
+
+                $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($entity));
+
+                $entryData = $entity::where('bid', $syncEntry->table_bid);
+
+                if ($hasSoftDeleting) {
+                    $entryData = $entryData->withTrashed();
+                }
+
+                $entryData = $entryData->first();
+
+                $entryTableName = str_replace('cdis_', '', $entryData->tableName());
+
+                $mappedData = [];
+                if ($primaryTable == $entryTableName) {
+                    $mappedData[] = $this->plotMapping($dataMappings, $entryData, $entryTableName, $syncEntry);
+                } else {
+                    $referenceFound = explode('.', $mappingFound[0]['field']);
+                    unset($referenceFound[count($referenceFound) - 1]);
+
+                    $entryIndexInFoundMapping = array_search($entryTableName, $referenceFound);
+                    foreach ($referenceFound as $key => $datum) {
+                        if ($key >= $entryIndexInFoundMapping) {
+                            unset($referenceFound[$key]);
+                        }
+                    }
+
+                    $relationCamelCase = array_map(function($value) {
+                        return Str::camel($value);
+                    }, $referenceFound);
+
+                    $referenceFoundRelation = implode('.', array_reverse($relationCamelCase));
+
+                    $eagerLoadedData = $entryData->load($referenceFoundRelation);
+
+                    $relationData = $eagerLoadedData;
+                    foreach ($relationCamelCase as $function) {
+                        $relationData = $relationData->{$function};
+                    }
+
+                    foreach ($relationData as $relationDatum) {
+                        $tableName = str_replace('cdis_', '', $relationDatum->tableName());
+                        $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $syncEntry);
+                    }
+                }
+
+                foreach ($mappedData as $mappedDatum) {
+                    $headers = array_keys($mappedDatum);
+                    $values = array_values($mappedDatum);
+
+                    $folderTimeStamp = Carbon::now()->format('mdY_His_v');
+                    $filePath = '/'.$forSyncDatum->branch_bid.'/'.$entryName.'_'.$folderTimeStamp.'.'.$this->extension;
+
+                    $isExcelCreated = Excel::store(
+                        new DataConversionToExcel($headers, $values, $this->extension),
+                        $filePath,
+                        $localDiskName);
+
+                    if ($isExcelCreated) {
+                        $this->createLog(
+                            $filePath .' created',
+                            'info',
+                            true,
+                            []
+                        );
+                    } else {
+                        $this->createLog(
+                            'Failed to create'. $this->extension. '. Please contact administrator',
+                            'error',
+                            true,
+                            []
+                        );
                     }
                 }
             }
+        }
 
-            foreach ($dataMappings as $dataMapping) {
-                var_dump($dataMapping['field']); die();
+        return true;
+    }
+
+    public function plotMapping($dataMappings, $entryData, $entryTableName, $syncEntry)
+    {
+        $data = [];
+        foreach ($dataMappings as $dataMapping) {
+            $field = explode('.', $dataMapping['field']);
+            if ($dataMapping['field'] && count($field) == 2) {
+                $fieldColumn = $field[1];
+                $data[$dataMapping['column_name']] = $entryData[$fieldColumn];
+            } else if ($dataMapping['field'] && count($field) >= 3) {
+                if (str_starts_with($dataMapping['field'], $entryTableName.'.')) {
+                    $data[$dataMapping['column_name']] =
+                        $this->mappedSpecificData($dataMapping, $syncEntry, $entryTableName, $entryData);
+                }
+            } else if (! $dataMapping['field'] && $dataMapping['default_value']) {
+                $defaultValueCondition = $dataMapping['default_value'];
+                preg_match_all("/\\[(.*?)\\]/", $defaultValueCondition, $matches);
+
+                if ($matches[0] || preg_match_all("/\\((.*?)\\)/", $defaultValueCondition, $matches)) {
+                    $matchesColumns = $matches[1];
+                    $bracketedMatchesColumns = $matches[0];
+
+                    foreach ($matchesColumns as $index => $matchesColumnString) {
+                        $matchesColumnString = str_replace(' ', '', $matchesColumnString);
+
+                        if (str_starts_with($matchesColumnString, $entryTableName.'.')) {
+                            $matchesColumn = explode('.', $matchesColumnString);
+
+                            if (count($matchesColumn) >= 3) {
+
+                                $this->mappedSpecificData(['field' => $matchesColumnString], $syncEntry, $entryTableName, $entryData);
+                                $columnName = $matchesColumn[count($matchesColumn) - 1];
+                                $defaultValueCondition =
+                                    str_replace(
+                                        $bracketedMatchesColumns[$index],
+                                        $entryData[$columnName] ?? 'NULL',
+                                        $defaultValueCondition);
+                            } else {
+                                $columnName = $matchesColumn[count($matchesColumn) - 1];
+                                $defaultValueCondition =
+                                    str_replace(
+                                        $bracketedMatchesColumns[$index],
+                                        $entryData[$columnName] ?? 'NULL',
+                                        $defaultValueCondition);
+                            }
+                        }
+                    }
+
+                    eval("\$defaultValueCondition = $defaultValueCondition;");
+                }
+
+                $data[$dataMapping['column_name']] = $defaultValueCondition;
             }
         }
+
+        return $data;
     }
 
-    public function generateCustomizedMappingExcelFile($forSyncDatum, $localDiskName, $fieldMappingDetails)
+    public function mappedSpecificData($dataMapping, $syncEntry = null, $entryTableName = null, $entryData = null)
     {
+        if ((! is_null($entryTableName) || ! is_null($entryData) && ! is_null($syncEntry))) {
+            $relationString = str_replace($entryTableName.'.', '', $dataMapping['field']);
+            $relationArray = preg_split("/\.(?![^{]+\})/", $relationString);
+            $columnName = $relationArray[count($relationArray) - 1];
+            unset($relationArray[count($relationArray) - 1]);
+            $relationData = $entryData;
 
-    }
+            foreach ($relationArray as $entity) {
+                $hasConditions = preg_match('/\{(.+)\}/', $entity) > 0;
 
-    /**
-     * Create error resource.
-     * 
-     * @param  object  $forSyncDatum
-     * @param  string  $tableName
-     */
-    public function createError($forSyncDatum, $tableName = null)
-    {
-        $errorExist = ErrorLog::where(['pos_entry' => $forSyncDatum->table_name, 'filename' => 'N/A'])->first();
-        if (! $errorExist) {
-            $errorLog = ErrorLog::create([
-                'pos_entry' => $forSyncDatum->table_name,
-                'filename' => 'N/A',
-                'status' => Lang::get('error.failed_conversion')
-            ]);
-            ErrorLogDetail::create([
-                'error_log_bid' => $errorLog->bid,
-                'sheet' => 'N/A',
-                'error_type' => 'Invalid data',
-                'description' => "No column found, Please add configuration in Field Mapping. ".$tableName
-            ]);
+                if ($hasConditions) {
+                    preg_match_all('/\{(.+)\}/', $entity, $conditionFound);
+                    if (count($conditionFound[0]) > 0) {
+                        $conditions = $conditionFound[0][0];
+
+                        preg_match_all("/sync\\((.*?)\\)/", $conditions, $syncBasisFound);
+
+                        if (count($syncBasisFound[0]) > 0) {
+                            foreach ($syncBasisFound[0] as $value) {
+                                preg_match_all("/\\((.*?)\\)/", $value, $parameters);
+
+                                if (count($parameters[0]) > 0) {
+                                    $callableFunction = str_replace($parameters[0][0], '', $value);
+                                    $parameters = explode(',', str_replace('"', '', $parameters[1][0]));
+
+                                    foreach ($parameters as $index => $parameter) {
+                                        if (strpos($parameter, '$') !== false) {
+                                            eval("\$parameters[$index] = $parameter;");
+                                        }
+                                    }
+
+                                    $syncReferenceValue = $this->{$callableFunction}(...$parameters);
+
+                                    $conditions = str_replace($syncBasisFound[0][0], $syncReferenceValue, $conditions);
+                                }
+                            }
+                        }
+
+                        preg_match_all('/\{(.+)\}/', $conditions, $match);
+
+
+                        if (count($match[0]) > 0) {
+                            foreach ($match[0] as $value) {
+
+                                if (preg_match_all('/\[(.+)\]/', $value, $conditionColumnReferencesMatches)) {
+                                    if (count($conditionColumnReferencesMatches[0]) > 0) {
+                                        $conditionColumnReferences = $conditionColumnReferencesMatches[1];
+
+                                        if ($entity == 'product_branch_price{"product_pricing_type_bid": [product_pricing_type{"alias": "selling_price"}.bid]}') {
+                                            $conditionColumnValue = $this->mappedSpecificData($conditionColumnReferences[0]);
+
+                                            $conditions = str_replace($conditionColumnReferencesMatches[0][0], $conditionColumnValue, $conditions);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    $conditions = json_decode($conditions, true);
+
+                    $function = Str::camel(str_replace($conditionFound[0][0], '', $entity));
+
+                    $relationData = $relationData->{$function};
+
+                    foreach ($conditions as $key => $value) {
+                        $relationData = $relationData->where($key, $value);
+                    }
+
+                    $relationData = $relationData->first();
+                } else {
+                    $function = Str::camel($entity);
+                    $relationData = $relationData->{$function};
+                }
+            }
+        } else {
+            $relationArray = preg_split("/\.(?![^{]+\})/", $dataMapping);
+
+            $columnName = $relationArray[count($relationArray) - 1];
+            unset($relationArray[count($relationArray) - 1]);
+
+            $relationString = $relationArray[0];
+            preg_match_all('/\{(.+)\}/', $relationString, $conditionFound);
+            $conditions = $conditionFound[0][0];
+            $entityName = str_replace($conditions, '', $relationString);
+
+            $entityName = str_replace('_', '', Str::title($entityName));
+            $entity = "App\\Entities\\CDIS".$entityName;
+
+            $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($entity));
+            $conditions = json_decode($conditions, true);
+
+            $relationData = $entity;
+            foreach ($conditions as $key => $value) {
+                if (array_key_first($conditions) == $key) {
+                    $relationData = $relationData::where($key, $value);
+                } else {
+                    $relationData = $relationData->where($key, $value);
+                }
+            }
+
+            if ($hasSoftDeleting) {
+                $relationData = $relationData->withTrashed();
+            }
+
+            $relationData = $relationData->first();
         }
+
+        $relationData = $relationData->toArray();
+
+        $isNotMultidimensionalArray =
+            count($relationData) == count($relationData, COUNT_RECURSIVE);
+        $datum = null;
+        if ($isNotMultidimensionalArray) {
+            return $relationData[$columnName];
+        } else {
+            $data = collect($relationData)->pluck($columnName)->toArray();
+
+            if (count($data) == 1) {
+                $datum = $data[0];
+            } else if (count($data) >= 2) {
+                $datum = implode(',', $data);
+            }
+        }
+
+        return $datum;
+    }
+
+    public function sync($columnName = 'bid', $syncEntry)
+    {
+        return $syncEntry[$columnName];
+    }
+
+    public function generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails)
+    {
+        foreach ($fieldMappingDetails as $fieldMappingDetail) {
+            $primaryTable = $fieldMappingDetail->primary_table;
+            $entryName = $fieldMappingDetail->data_entry;
+            $fileStorageSetup = $fieldMappingDetail->fileStorageSetup;
+            $dataMappings = $fieldMappingDetail->dataMappings->toArray();
+
+            if ($fileStorageSetup->storage_type == StorageType::FTP) {
+                $remoteDiskName = 'cdis_ftp_remote_convert_data_to_file';
+                $localDiskName = 'cdis_ftp_local_convert_data_to_file';
+
+                resolve('filesystem')->forgetDisk($remoteDiskName);
+                app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'ftp');
+                app()['config']->set('filesystems.disks.'.$remoteDiskName.'.host', $fileStorageSetup->host);
+                app()['config']->set('filesystems.disks.'.$remoteDiskName.'.username', $fileStorageSetup->username);
+                app()['config']->set('filesystems.disks.'.$remoteDiskName.'.password', $fileStorageSetup->password);
+                app()['config']->set('filesystems.disks.'.$remoteDiskName.'.port', $fileStorageSetup->port);
+                app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
+
+                resolve('filesystem')->forgetDisk($localDiskName);
+                app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
+                app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
+            } else if ($fileStorageSetup->storage_type == StorageType::LOCAL_NETWORK) {
+                $remoteDiskName = 'cdis_local_remote_convert_data_to_file';
+                $localDiskName = 'cdis_local_local_convert_data_to_file';
+
+                resolve('filesystem')->forgetDisk($remoteDiskName);
+                app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'local');
+                app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
+
+                resolve('filesystem')->forgetDisk($localDiskName);
+                app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
+                app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
+            } else {
+                break;
+            }
+
+            $entityName = $forSyncDatum->table_name;
+            $mappingFound = array_values(array_filter($dataMappings, function($value) use($entityName) {
+                return preg_match('%\b('.$entityName.'.)\b%i', $value['field'])
+                    || preg_match('%\b('.$entityName.'.)\b%i', $value['default_value']);
+            }));
+
+            if (count($mappingFound) > 0) {
+                $entityName = str_replace('_', '', Str::title($forSyncDatum->table_name));
+                $entity = "App\\Entities\\CDIS".$entityName;
+
+                $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($entity));
+
+                $entryData = $entity::where('bid', $forSyncDatum->table_bid);
+
+                if ($hasSoftDeleting) {
+                    $entryData = $entryData->withTrashed();
+                }
+
+                $entryData = $entryData->first();
+
+                $entryTableName = str_replace('cdis_', '', $entryData->tableName());
+
+                $mappedData = [];
+
+                if ($primaryTable == $entryTableName) {
+                    $mappedData[] = $this->plotMapping($dataMappings, $entryData, $entryTableName, $forSyncDatum);
+                } else {
+                    $referenceFound = explode('.', $mappingFound[0]['field']);
+                    unset($referenceFound[count($referenceFound) - 1]);
+
+                    $entryIndexInFoundMapping = array_search($entryTableName, $referenceFound);
+                    foreach ($referenceFound as $key => $datum) {
+                        if ($key >= $entryIndexInFoundMapping) {
+                            unset($referenceFound[$key]);
+                        }
+                    }
+
+                    $relationCamelCase = array_map(function($value) {
+                        return Str::camel($value);
+                    }, $referenceFound);
+
+                    $referenceFoundRelation = implode('.', array_reverse($relationCamelCase));
+
+                    $eagerLoadedData = $entryData->load($referenceFoundRelation);
+
+                    $relationData = $eagerLoadedData;
+                    foreach ($relationCamelCase as $function) {
+                        $relationData = $relationData->{$function};
+                    }
+
+                    foreach ($relationData as $relationDatum) {
+                        $tableName = str_replace('cdis_', '', $relationDatum->tableName());
+                        $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $forSyncDatum);
+                    }
+                }
+
+                foreach ($mappedData as $mappedDatum) {
+                    $headers = array_keys($mappedDatum);
+                    $values = array_values($mappedDatum);
+
+                    $folderTimeStamp = Carbon::now()->format('mdY_His_v');
+                    $filePath = '/'.$forSyncDatum->branch_bid.'/'.$entryName.'_'.$folderTimeStamp.'.'.$this->extension;
+
+                    $isExcelCreated = Excel::store(
+                        new DataConversionToExcel($headers, $values, $this->extension),
+                        $filePath,
+                        $localDiskName);
+
+                    if ($isExcelCreated) {
+                        $this->createLog(
+                            $filePath .' created',
+                            'info',
+                            true,
+                            []
+                        );
+                    } else {
+                        $this->createLog(
+                            'Failed to create'. $this->extension. '. Please contact administrator',
+                            'error',
+                            true,
+                            []
+                        );
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 
     /**

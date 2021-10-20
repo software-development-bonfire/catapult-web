@@ -170,6 +170,16 @@
                                 </label>
                             </td>
                         </tr>
+                        <tr v-if="form.connection_setup.is_customized_mapping === 1">
+                            <td align="right">{{ $t('label.primary_table') }}</td>
+                            <td width="200px">
+                                <input type="text" class="form-control" v-model="form.data_mapping.primary_table">
+                                <label
+                                    class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('primary_table')">
+                                    {{ errors.primary_table[0] }}
+                                </label>
+                            </td>
+                        </tr>
                     </table>
                     <ul class="unindented-list pull-left ml-4">
                         <li>
@@ -214,16 +224,6 @@
                             <input
                                 type="checkbox"
                                 v-model="tableData.required"
-                            >
-                        </table-data>
-                        <table-data
-                            align="center"
-                            valign="center"
-                            v-if="form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 1">
-                            <input
-                                type="radio"
-                                v-bind:value="tableData.bid"
-                                v-model="form.data_mapping.primary_key"
                             >
                         </table-data>
                         <table-data
@@ -317,11 +317,6 @@
                                 type="checkbox"
                                 v-model="form.data_mapping.add.required"
                             >
-                        </table-data>
-                        <table-data
-                            align="center"
-                            valign="center"
-                            v-if="form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 1">
                         </table-data>
                         <table-data
                             align="center"
@@ -464,7 +459,7 @@
                 this.field_mapping_bid = searchParams.bid;
                 this.form.connection_setup = this.detail;
                 this.form.data_mapping.data_entry = this.detail.data_entry;
-                this.form.data_mapping.primary_key = this.detail.primary_key;
+                this.form.data_mapping.primary_table = this.detail.primary_table;
 
                 this.getDataEntries();
 
@@ -486,6 +481,13 @@
                         title: '',
                         selection: '',
                         visible: false
+                    }
+                },
+                defaults: {
+                    form: {
+                        data_mapping: {
+                            add: {}
+                        }
                     }
                 },
                 dialog: {
@@ -520,13 +522,13 @@
                     data_mapping: {
                         data_entry: '',
                         field_mapping_preset_bid: '',
-                        primary_key: '',
+                        primary_table: '',
                         add: {
                             edit: false,
-                            required: false,
+                            required: true,
                             field: '',
                             description: '',
-                            mapping_type: 'DECIMAL',
+                            mapping_type: '',
                             file_name: '',
                             default_value: '',
                             column_name: '',
@@ -570,11 +572,6 @@
                                 name: "required",
                                 label: '',
                                 width: '50'
-                            },
-                            {
-                                name: "primary_key",
-                                label: this.$t('label.primary_key'),
-                                width: '100'
                             },
                             {
                                 name: "fields",
@@ -696,6 +693,9 @@
             }
         },
         methods: {
+            setDefaults() {
+                this.defaults.form.data_mapping.add = {...this.form.data_mapping.add};
+            },
             getDataEntries() {
                 let that = this;
                 this.form.data_mapping.field_mapping_preset_bid = '';
@@ -731,6 +731,7 @@
                         status: this.form.connection_setup.setup_status,
                         file_storage_setup_bid: this.form.connection_setup.file_storage_setup_bid,
                         catapult_db_setup_bid: this.form.connection_setup.catapult_db_setup_bid,
+                        is_customized_mapping: this.form.connection_setup.is_customized_mapping,
                         api_setup_bid: this.form.connection_setup.api_setup_bid,
                     };
 
@@ -746,9 +747,9 @@
                                 this.dialog.visible = false;
                             };
 
-                            this.field_mapping_bid = response.data.data.bid
-                            this.form.mode = "update"
-                            this.errors = {}
+                            this.field_mapping_bid = response.data.data.bid;
+                            this.form.mode = "update";
+                            this.errors = {};
                         }).catch(error => {
                             this.errors = error.response.data.errors;
                         })
@@ -760,8 +761,9 @@
                         status: this.form.connection_setup.setup_status,
                         file_storage_setup_bid: this.form.connection_setup.file_storage_setup_bid,
                         catapult_db_setup_bid: this.form.connection_setup.catapult_db_setup_bid,
+                        is_customized_mapping: this.form.connection_setup.is_customized_mapping,
                         api_setup_bid: this.form.connection_setup.api_setup_bid,
-                        data_entry: this.form.data_mapping.data_entry
+                        data_entry: this.form.data_mapping.data_entry,
                     }
 
                     axios.patch(`${config}/field-mapping/update/${this.field_mapping_bid}`, payload)
@@ -791,7 +793,7 @@
                         field_mapping_bid: this.field_mapping_bid,
                         data_entry: this.form.data_mapping.data_entry,
                         is_customized_mapping: this.form.connection_setup.is_customized_mapping,
-                        primary_key: this.form.data_mapping.primary_key,
+                        primary_table: this.form.data_mapping.primary_table,
                         fields: this.table.values.data
                     };
 
@@ -819,7 +821,7 @@
                         field_mapping_bid: this.field_mapping_bid,
                         data_entry: this.form.data_mapping.data_entry,
                         is_customized_mapping: this.form.connection_setup.is_customized_mapping,
-                        primary_key: this.form.data_mapping.primary_key,
+                        primary_table: this.form.data_mapping.primary_table,
                         fields: this.table.values.data
                     };
 
@@ -936,6 +938,7 @@
             },
             addRow(data) {
                 this.table.values.data.push({...data.values});
+                this.form.data_mapping.add = {...this.defaults.form.data_mapping.add};
             },
             deleteRow(data) {
                 this.table.values.data.splice(data.rowIndex, 1);
