@@ -33,7 +33,7 @@ class ConvertDataToFile extends Command
      *
      * @var string
      */
-    protected $signature = 'cdis:convert-data-to-file';
+    protected $signature = 'cdis:convert-data-to-file {--interval=true}{--limit=true}';
 
     /**
      * The console command description.
@@ -60,6 +60,26 @@ class ConvertDataToFile extends Command
      */
     public function handle()
     {
+        $interval = $this->option('interval');
+        $interval =
+            filter_var($interval, FILTER_VALIDATE_BOOLEAN)
+                ? config('sync.cdis.to_catapult.interval')
+                : (
+                    (int) $interval
+                        ? filter_var($interval, FILTER_VALIDATE_INT)
+                        : false
+                );
+
+        $limit = $this->option('limit');
+        $limit =
+            filter_var($limit, FILTER_VALIDATE_BOOLEAN)
+                ? config('sync.cdis.to_catapult.limit')
+                : (
+                    (int) $limit
+                        ? filter_var($limit, FILTER_VALIDATE_INT)
+                        : false
+                    );
+
         Cache::forget('excludedEntries');
         Cache::forget('excludedSyncBids');
 
@@ -88,8 +108,6 @@ class ConvertDataToFile extends Command
                 ['fileStorageSetup', 'dataMappings']
             );
 
-
-
         while (true) {
             $timeStamp = Carbon::now()->format('mdY_His_v');
 
@@ -111,7 +129,11 @@ class ConvertDataToFile extends Command
                 $forSyncData = $forSyncData->whereNotIn('bid', $excludedSyncBids);
             }
 
-            $forSyncData = $forSyncData->limit(60)->get();
+            if ($limit) {
+                $forSyncData = $forSyncData->limit($limit);
+            }
+
+            $forSyncData = $forSyncData->get();
 
             if ($forSyncData->count() <= 0) {
                 foreach ($excludedEntries as $excludedEntry) {
@@ -130,7 +152,12 @@ class ConvertDataToFile extends Command
                     true
                 );
 
-                sleep(5);
+                if (is_int($interval)) {
+                    sleep($interval);
+                } else {
+                    break;
+                }
+
                 continue;
             }
 
@@ -138,7 +165,11 @@ class ConvertDataToFile extends Command
                 $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp);
             }
 
-            sleep(5);
+            if (is_int($interval)) {
+                sleep($interval);
+            } else {
+                break;
+            }
         }
     }
 
@@ -657,7 +688,7 @@ class ConvertDataToFile extends Command
                                 'info',
                                 true,
                                 [],
-                                ['Row: '.$rowIndex.' | '.$primaryColumnName.': '.$primaryColumnNameValue]
+                                ['Row: '.($rowIndex + 2).' | '.$primaryColumnName.': '.$primaryColumnNameValue]
                             );
                         } else {
                             $this->createLog(
@@ -1064,7 +1095,7 @@ class ConvertDataToFile extends Command
                                 'info',
                                 true,
                                 [],
-                                ['Row: '.$rowIndex.' | '.$primaryColumnName.': '.$primaryColumnNameValue]
+                                ['Row: '.($rowIndex + 2).' | '.$primaryColumnName.': '.$primaryColumnNameValue]
                             );
                         } else {
                             $this->createLog(
