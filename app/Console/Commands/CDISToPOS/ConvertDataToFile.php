@@ -613,7 +613,7 @@ class ConvertDataToFile extends Command
 
                 $mappedData = [];
                 if ($primaryTable == $entryTableName) {
-                    $mappedData[] = $this->plotMapping($dataMappings, $entryData, $entryTableName, $syncEntry);
+                    $mappedData[] = $this->plotMapping($dataMappings, $entryData, $entryTableName, $syncEntry, $entryName);
                 } else {
                     $referenceFound = explode('.', $mappingFound[0]['field']);
 
@@ -641,7 +641,7 @@ class ConvertDataToFile extends Command
 
                     foreach ($relationData as $relationDatum) {
                         $tableName = str_replace('cdis_', '', $relationDatum->tableName());
-                        $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $syncEntry);
+                        $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $syncEntry, $entryName);
                     }
                 }
 
@@ -727,61 +727,79 @@ class ConvertDataToFile extends Command
         return true;
     }
 
-    public function plotMapping($dataMappings, $entryData, $entryTableName, $syncEntry)
+    public function plotMapping($dataMappings, $entryData, $entryTableName, $syncEntry, $entryName = '')
     {
         $data = [];
+        $mappingField = 'None';
+        $defaultValue = '';
         foreach ($dataMappings as $dataMapping) {
-            $field = explode('.', $dataMapping['field']);
-            if ($dataMapping['field'] && count($field) == 2) {
-                $fieldColumn = $field[1];
-                $data[$dataMapping['column_name']] = $entryData[$fieldColumn];
-            } else if ($dataMapping['field'] && count($field) >= 3) {
-                if (str_starts_with($dataMapping['field'], $entryTableName.'.')) {
-                    $data[$dataMapping['column_name']] =
-                        $this->mappedSpecificData($dataMapping, $syncEntry, $entryTableName, $entryData);
-                }
-            } else if (! $dataMapping['field'] && $dataMapping['default_value']) {
-                $defaultValueCondition = $dataMapping['default_value'];
-                preg_match_all("/\\[(.*?)\\]/", $defaultValueCondition, $matches);
+            try {
+                $mappingField = $dataMapping['field'];
+                $defaultValue = $dataMapping['default_value'];
 
-                if ($matches[0] || preg_match_all("/\\((.*?)\\)/", $defaultValueCondition, $matches)) {
-                    $matchesColumns = array_unique($matches[1]);
-                    $bracketedMatchesColumns = $matches[0];
+                $field = explode('.', $dataMapping['field']);
 
-                    foreach ($matchesColumns as $index => $matchesColumnString) {
-                        $matchesColumnString = str_replace(' ', '', $matchesColumnString);
+                if ($dataMapping['field'] && count($field) == 2) {
+                    $fieldColumn = $field[1];
+                    $data[$dataMapping['column_name']] = $entryData[$fieldColumn];
+                } else if ($dataMapping['field'] && count($field) >= 3) {
+                    if (str_starts_with($dataMapping['field'], $entryTableName.'.')) {
+                        $data[$dataMapping['column_name']] =
+                            $this->mappedSpecificData($dataMapping, $syncEntry, $entryTableName, $entryData);
+                    }
+                } else if (! $dataMapping['field'] && $dataMapping['default_value']) {
+                    $defaultValueCondition = $dataMapping['default_value'];
+                    preg_match_all("/\\[(.*?)\\]/", $defaultValueCondition, $matches);
 
-                        if (str_starts_with($matchesColumnString, $entryTableName.'.')) {
-                            $matchesColumn = preg_split("/\.(?![^{]+\})/", $matchesColumnString);
+                    if ($matches[0] || preg_match_all("/\\((.*?)\\)/", $defaultValueCondition, $matches)) {
+                        $matchesColumns = array_unique($matches[1]);
+                        $bracketedMatchesColumns = $matches[0];
 
-                            if (count($matchesColumn) >= 2) {
-                                $conditionColumnValue = $this->mappedSpecificData(['field' => $matchesColumnString], $syncEntry, $entryTableName, $entryData);
+                        foreach ($matchesColumns as $index => $matchesColumnString) {
+                            $matchesColumnString = str_replace(' ', '', $matchesColumnString);
 
-                                if (is_string($conditionColumnValue)) {
-                                    $conditionColumnValue = '"'.$conditionColumnValue.'"';
+                            if (str_starts_with($matchesColumnString, $entryTableName.'.')) {
+                                $matchesColumn = preg_split("/\.(?![^{]+\})/", $matchesColumnString);
+
+                                if (count($matchesColumn) >= 2) {
+                                    $conditionColumnValue = $this->mappedSpecificData(['field' => $matchesColumnString], $syncEntry, $entryTableName, $entryData);
+
+                                    if (is_string($conditionColumnValue)) {
+                                        $conditionColumnValue = '"'.$conditionColumnValue.'"';
+                                    }
+
+                                    $defaultValueCondition =
+                                        str_replace(
+                                            $bracketedMatchesColumns[$index],
+                                            $conditionColumnValue ?? 'NULL',
+                                            $defaultValueCondition);
+                                } else {
+                                    $columnName = $matchesColumn[count($matchesColumn) - 1];
+                                    $defaultValueCondition =
+                                        str_replace(
+                                            $bracketedMatchesColumns[$index],
+                                            $entryData[$columnName] ?? 'NULL',
+                                            $defaultValueCondition);
                                 }
-
-                                $defaultValueCondition =
-                                    str_replace(
-                                        $bracketedMatchesColumns[$index],
-                                        $conditionColumnValue ?? 'NULL',
-                                        $defaultValueCondition);
-                            } else {
-                                $columnName = $matchesColumn[count($matchesColumn) - 1];
-                                $defaultValueCondition =
-                                    str_replace(
-                                        $bracketedMatchesColumns[$index],
-                                        $entryData[$columnName] ?? 'NULL',
-                                        $defaultValueCondition);
                             }
                         }
+
+                        eval("\$defaultValueCondition = $defaultValueCondition;");
                     }
 
-                    eval("\$defaultValueCondition = $defaultValueCondition;");
+                    $data[$dataMapping['column_name']] = $defaultValueCondition;
                 }
+            } catch (\Throwable $throwable) {
+                $this->createLog(
+                    'Failed to create'. $this->extension. '. Please contact administrator',
+                    'error',
+                    true,
+                    []
+                );
 
-                $data[$dataMapping['column_name']] = $defaultValueCondition;
+                $this->createLog($throwable->getMessage(), 'error', true, ['Mapping'], [$defaultValue, $mappingField, $entryName]);
             }
+
         }
 
         return $data;
@@ -1021,7 +1039,7 @@ class ConvertDataToFile extends Command
                 $mappedData = [];
 
                 if ($primaryTable == $entryTableName) {
-                    $mappedData[] = $this->plotMapping($dataMappings, $entryData, $entryTableName, $forSyncDatum);
+                    $mappedData[] = $this->plotMapping($dataMappings, $entryData, $entryTableName, $forSyncDatum, $entryName);
                 } else {
                     $referenceFound = explode('.', $mappingFound[0]['field']);
                     unset($referenceFound[count($referenceFound) - 1]);
@@ -1048,7 +1066,7 @@ class ConvertDataToFile extends Command
 
                     foreach ($relationData as $relationDatum) {
                         $tableName = str_replace('cdis_', '', $relationDatum->tableName());
-                        $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $forSyncDatum);
+                        $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $forSyncDatum, $entryName);
                     }
                 }
 
