@@ -16,7 +16,7 @@ class FetchDataForSync extends Command
      *
      * @var string
      */
-    protected $signature = 'cdis:fetch-data-for-sync';
+    protected $signature = 'cdis:fetch-data-for-sync {--interval=true}';
 
     /**
      * The console command description.
@@ -42,7 +42,16 @@ class FetchDataForSync extends Command
      */
     public function handle()
     {
-        $interval = config('sync.cdis.to_catapult.interval');
+        $interval = $this->option('interval');
+        $interval =
+            filter_var($interval, FILTER_VALIDATE_BOOLEAN)
+                ? config('sync.cdis.to_catapult.interval')
+                : (
+                    (int) $interval
+                        ? filter_var($interval, FILTER_VALIDATE_INT)
+                        : false
+                    );
+
         $syncService = app()->make(SyncService::class);
 
         $this->createLog(
@@ -70,7 +79,11 @@ class FetchDataForSync extends Command
                 }
             }
 
-            sleep($interval);
+            if (is_int($interval)) {
+                sleep($interval);
+            } else {
+                break;
+            }
         }
         while (true);
     }
