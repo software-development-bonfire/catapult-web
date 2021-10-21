@@ -4,7 +4,7 @@ return [
     'restart' => false,
     'cdis' => [
         'to_catapult' => [
-            'limit' => 100,
+            'limit' => 300,
             'interval' => 3600
         ]
     ],
