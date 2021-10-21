@@ -692,7 +692,7 @@ class ConvertDataToFile extends Command
                             );
                         } else {
                             $this->createLog(
-                                'Failed to create'. $this->extension. '. Please contact administrator',
+                                'Failed to create '.$this->extension.'. Please contact administrator',
                                 'error',
                                 true,
                                 []
@@ -764,7 +764,7 @@ class ConvertDataToFile extends Command
                                 if (count($matchesColumn) >= 2) {
                                     $conditionColumnValue = $this->mappedSpecificData(['field' => $matchesColumnString], $syncEntry, $entryTableName, $entryData);
 
-                                    if (is_string($conditionColumnValue)) {
+                                    if (! is_null($conditionColumnValue)) {
                                         $conditionColumnValue = '"'.$conditionColumnValue.'"';
                                     }
 
@@ -799,7 +799,6 @@ class ConvertDataToFile extends Command
 
                 $this->createLog($throwable->getMessage(), 'error', true, ['Mapping'], [$defaultValue, $mappingField, $entryName]);
             }
-
         }
 
         return $data;
