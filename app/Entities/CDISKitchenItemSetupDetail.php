@@ -10,7 +10,10 @@ class CDISKitchenItemSetupDetail extends BaseModel
         'bid',
         'head_bid',
         'kitchen_station_process_bid',
-        'product_uom_packaging_bid'
+        'product_uom_packaging_bid',
+        'created_by',
+        'updated_by',
+
     ];
 
     protected $casts = [

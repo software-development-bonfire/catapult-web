@@ -147,6 +147,8 @@ class SyncService
 
                 $isExists = $detail->count() > 0;
 
+                unset($value->detail->id);
+
                 if ($isExists) {
                     if ($value->sync->action == 'delete' && $value->detail) {
                         $detail->delete();

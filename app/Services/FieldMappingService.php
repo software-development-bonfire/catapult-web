@@ -56,7 +56,7 @@ class FieldMappingService
                 'updated_by' => Auth::user()->bid
             ]);
 
-            foreach ($data['fields'] as $arr) {
+            foreach ($data['fields'] as $index => $arr) {
                 $detail = [
                     'required' => $arr['required'],
                     'field' =>  isset($arr['field']) ? $arr['field'] : '',
@@ -70,6 +70,10 @@ class FieldMappingService
                     'reference_column_name' => isset($arr['reference_column_name']) ? $arr['reference_column_name'] : NULL,
                     'head_reference' => isset($arr['head_reference']) ? $arr['head_reference'] : NULL,
                 ];
+
+                if ($index == $data['primary_key_index']) {
+                    $detail['is_primary_key'] = true;
+                }
 
                 $fieldMapping->detail()->create($detail);
             }

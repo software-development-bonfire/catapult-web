@@ -13,14 +13,17 @@ class CDISKitchenItemSetup extends BaseModel
         'bid',
         'code',
         'branch_bid',
+        'device_type',
         'device_type_bid',
-        'status'
+        'status',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
         'bid' => 'string',
-        'device_type_bid' => 'string',
         'branch_bid' => 'string',
+        'device_type_bid' => 'string',
     ];
 
     public function productUomPackaging()

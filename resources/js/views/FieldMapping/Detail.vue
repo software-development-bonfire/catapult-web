@@ -227,6 +227,17 @@
                             >
                         </table-data>
                         <table-data
+                            v-if="tableData.bid != null || tableData.bid == ''"
+                            align="center"
+                            valign="center">
+                            <input
+                                type="radio"
+                                v-model="form.data_mapping.primary_key"
+                                :value="tableData.bid"
+                                @change="form.data_mapping.primary_key_index = tableDataIndex"
+                            >
+                        </table-data>
+                        <table-data
                             align="center"
                             valign="center">
                             <input
@@ -317,6 +328,10 @@
                                 type="checkbox"
                                 v-model="form.data_mapping.add.required"
                             >
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center">
                         </table-data>
                         <table-data
                             align="center"
@@ -460,6 +475,8 @@
                 this.form.connection_setup = this.detail;
                 this.form.data_mapping.data_entry = this.detail.data_entry;
                 this.form.data_mapping.primary_table = this.detail.primary_table;
+                this.form.data_mapping.primary_key = this.detail.primary_key;
+                this.form.data_mapping.primary_key_index = this.detail.primary_key_index;
 
                 this.getDataEntries();
 
@@ -523,6 +540,8 @@
                         data_entry: '',
                         field_mapping_preset_bid: '',
                         primary_table: '',
+                        primary_key: '',
+                        primary_key_index: null,
                         add: {
                             edit: false,
                             required: true,
@@ -572,6 +591,11 @@
                                 name: "required",
                                 label: '',
                                 width: '50'
+                            },
+                            {
+                                name: "primary_key",
+                                label: this.$t('label.primary_key'),
+                                width: '100'
                             },
                             {
                                 name: "fields",
@@ -794,6 +818,8 @@
                         data_entry: this.form.data_mapping.data_entry,
                         is_customized_mapping: this.form.connection_setup.is_customized_mapping,
                         primary_table: this.form.data_mapping.primary_table,
+                        primary_key: this.form.data_mapping.primary_key,
+                        primary_key_index: this.form.data_mapping.primary_key_index,
                         fields: this.table.values.data
                     };
 
@@ -822,6 +848,8 @@
                         data_entry: this.form.data_mapping.data_entry,
                         is_customized_mapping: this.form.connection_setup.is_customized_mapping,
                         primary_table: this.form.data_mapping.primary_table,
+                        primary_key: this.form.data_mapping.primary_key,
+                        primary_key_index: this.form.data_mapping.primary_key_index,
                         fields: this.table.values.data
                     };
 

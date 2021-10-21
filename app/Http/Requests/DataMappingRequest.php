@@ -42,6 +42,7 @@ class DataMappingRequest extends FormRequest
 
         if ($this->is_customized_mapping) {
             $rules['primary_table'] = 'required';
+            $rules['primary_key_index'] = 'required';
             unset($rules['fields.*.field']);
             unset($rules['fields.*.description']);
             unset($rules['fields.*.mapping_type']);

@@ -36,14 +36,34 @@ class DataConversionToExcel implements WithEvents, ShouldAutoSize
                 }
 
                 $row++;
-                foreach ($this->value as $index => $value) {
-                    $columnIndex = $index + 1;
 
-                    $delegate->setCellValueExplicitByColumnAndRow(
-                        $columnIndex,
-                        $row,
-                        $value,
-                        DataType::TYPE_STRING);
+                $isNotMultidimensionalArray =
+                    count($this->value) == count($this->value, COUNT_RECURSIVE);
+
+                if ($isNotMultidimensionalArray) {
+                    foreach ($this->value as $index => $value) {
+                        $columnIndex = $index + 1;
+
+                        $delegate->setCellValueExplicitByColumnAndRow(
+                            $columnIndex,
+                            $row,
+                            $value,
+                            DataType::TYPE_STRING);
+                    }
+                } else {
+                    foreach ($this->value as $index => $entry) {
+                        foreach ($entry as $entryIndex => $value) {
+                            $columnIndex = $entryIndex + 1;
+
+                            $delegate->setCellValueExplicitByColumnAndRow(
+                                $columnIndex,
+                                $row,
+                                $value,
+                                DataType::TYPE_STRING);
+                        }
+
+                        $row++;
+                    }
                 }
             }
         ];

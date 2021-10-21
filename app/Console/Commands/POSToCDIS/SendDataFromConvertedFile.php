@@ -165,20 +165,25 @@ class SendDataFromConvertedFile extends Command
                             $errors = isset($responseBodyContent->errors) ? (array) $responseBodyContent->errors : [];
 
                             if ((isset($responseBodyContent->success) && $responseBodyContent->success) || $responseBodyContent->message == 'Duplicate Entry.') {
-                                $this->createLog($responseBodyContent->message, 'warn', true, [$entryLogLabel, $statusCodeLabel], [$file]);
+                                $this->createLog($responseBodyContent->message,
+                                    ($responseBodyContent->message == 'Duplicate Entry.' ? 'warn' : 'info'),
+                                    true,
+                                    [$entryLogLabel, $statusCodeLabel],
+                                    [$file]
+                                );
 
                                 $destinationPath = $syncedPath.'/'.$fileName;
                             } else if (isset($responseBodyContent->success) && ! $responseBodyContent->success && count($errors) > 0) {
                                 $this->createLog(__('error.failed_to_send_data'), 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
                                 $this->createLog('    Errors:', 'error', false);
                                 foreach ($errors as $error) {
-                                    $this->createLog('        -> '.$error[0], 'info', false);
+                                    $this->createLog('        -> '.$error[0], 'error', false);
                                 }
 
                                 $destinationPath = $failedSyncBadRequestPath.'/'.$fileName;
                             } else if (isset($responseBodyContent->success) && ! $responseBodyContent->success || $responseBodyContent->message == 'Request failed.') {
                                 $this->createLog(__('error.failed_to_send_data'), 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
-                                $this->createLog('    Cause: '. $responseBodyContent->message, 'info', false);
+                                $this->createLog('    Cause: '. $responseBodyContent->message, 'error', false);
 
                                 $destinationPath = $failedSyncBadRequestPath.'/'.$fileName;
                             } else {
@@ -192,7 +197,7 @@ class SendDataFromConvertedFile extends Command
 
                         $localDisk->move($file, $destinationPath);
                     } catch (\Exception $exception) {
-                        $this->createLog($exception->getMessage(), 'error', true, [$entryLogLabel]);
+                        $this->createLog($exception->getMessage(), 'warn', true, [$entryLogLabel]);
                         $hasException = true;
                         sleep(5);
                         continue;

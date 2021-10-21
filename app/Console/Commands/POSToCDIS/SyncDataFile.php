@@ -91,7 +91,7 @@ class SyncDataFile extends Command implements ShouldQueue
                 } else {
                     $this->createLog(
                         __('error.no_field_mapping_detected'),
-                        'error',
+                        'warn',
                         true,
                         [$entryLogLabel]
                     );
