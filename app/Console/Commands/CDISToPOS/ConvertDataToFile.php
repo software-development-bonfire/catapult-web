@@ -651,23 +651,22 @@ class ConvertDataToFile extends Command
                 preg_match_all("/\\[(.*?)\\]/", $defaultValueCondition, $matches);
 
                 if ($matches[0] || preg_match_all("/\\((.*?)\\)/", $defaultValueCondition, $matches)) {
-                    $matchesColumns = $matches[1];
+                    $matchesColumns = array_unique($matches[1]);
                     $bracketedMatchesColumns = $matches[0];
 
                     foreach ($matchesColumns as $index => $matchesColumnString) {
                         $matchesColumnString = str_replace(' ', '', $matchesColumnString);
 
                         if (str_starts_with($matchesColumnString, $entryTableName.'.')) {
-                            $matchesColumn = explode('.', $matchesColumnString);
+                            $matchesColumn = preg_split("/\.(?![^{]+\})/", $matchesColumnString);
 
-                            if (count($matchesColumn) >= 3) {
+                            if (count($matchesColumn) >= 2) {
+                                $conditionColumnValue = $this->mappedSpecificData(['field' => $matchesColumnString], $syncEntry, $entryTableName, $entryData);
 
-                                $this->mappedSpecificData(['field' => $matchesColumnString], $syncEntry, $entryTableName, $entryData);
-                                $columnName = $matchesColumn[count($matchesColumn) - 1];
                                 $defaultValueCondition =
                                     str_replace(
                                         $bracketedMatchesColumns[$index],
-                                        $entryData[$columnName] ?? 'NULL',
+                                        $conditionColumnValue ?? 'NULL',
                                         $defaultValueCondition);
                             } else {
                                 $columnName = $matchesColumn[count($matchesColumn) - 1];
@@ -800,21 +799,27 @@ class ConvertDataToFile extends Command
             $relationData = $relationData->first();
         }
 
-        $relationData = $relationData->toArray();
+        if ($relationData) {
+            $relationData = $relationData->toArray();
 
-        $isNotMultidimensionalArray =
-            count($relationData) == count($relationData, COUNT_RECURSIVE);
-        $datum = null;
-        if ($isNotMultidimensionalArray) {
-            return $relationData[$columnName];
-        } else {
-            $data = collect($relationData)->pluck($columnName)->toArray();
+            $isNotMultidimensionalArray =
+                count($relationData) == count($relationData, COUNT_RECURSIVE);
 
-            if (count($data) == 1) {
-                $datum = $data[0];
-            } else if (count($data) >= 2) {
-                $datum = implode(',', $data);
+            $datum = null;
+
+            if ($isNotMultidimensionalArray) {
+                return isset($relationData[$columnName]) ? $relationData[$columnName] : null;
+            } else {
+                $data = collect($relationData)->only($columnName)->toArray();
+
+                if (count($data) == 1) {
+                    $datum = array_values($data)[0];
+                } else if (count($data) >= 2) {
+                    $datum = implode(',', $data);
+                }
             }
+        } else {
+            return null;
         }
 
         return $datum;

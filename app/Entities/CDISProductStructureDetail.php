@@ -20,4 +20,9 @@ class CDISProductStructureDetail extends BaseModel
         'head_bid' => 'string',
         'product_uom_bid' => 'string',
     ];
+
+    public function productUomPackaging()
+    {
+        return $this->belongsTo(CDISProductUomPackaging::class, 'bid', 'uom_bid');
+    }
 }
