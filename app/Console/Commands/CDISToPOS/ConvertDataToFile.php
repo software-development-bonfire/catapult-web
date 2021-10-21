@@ -713,7 +713,7 @@ class ConvertDataToFile extends Command
                             );
                         } else {
                             $this->createLog(
-                                'Failed to create'. $this->extension. '. Please contact administrator',
+                                'Failed to create '. $this->extension. '. Please contact administrator',
                                 'error',
                                 true,
                                 []
@@ -791,7 +791,7 @@ class ConvertDataToFile extends Command
                 }
             } catch (\Throwable $throwable) {
                 $this->createLog(
-                    'Failed to create'. $this->extension. '. Please contact administrator',
+                    'Failed to create '. $this->extension. '. Please contact administrator',
                     'error',
                     true,
                     []
@@ -925,7 +925,7 @@ class ConvertDataToFile extends Command
             if ($isNotMultidimensionalArray) {
                 return isset($relationData[$columnName]) ? $relationData[$columnName] : null;
             } else {
-                $data = collect($relationData)->only($columnName)->toArray();
+                $data = collect($relationData)->pluck($columnName)->toArray();
 
                 if (count($data) == 1) {
                     $datum = array_values($data)[0];
@@ -1116,7 +1116,7 @@ class ConvertDataToFile extends Command
                             );
                         } else {
                             $this->createLog(
-                                'Failed to create'. $this->extension. '. Please contact administrator',
+                                'Failed to create '. $this->extension. '. Please contact administrator',
                                 'error',
                                 true,
                                 []
@@ -1137,7 +1137,7 @@ class ConvertDataToFile extends Command
                             );
                         } else {
                             $this->createLog(
-                                'Failed to create'. $this->extension. '. Please contact administrator',
+                                'Failed to create '. $this->extension. '. Please contact administrator',
                                 'error',
                                 true,
                                 []
