@@ -18,6 +18,7 @@ return [
     'no_data_to_sync' => 'No data to sync.',
     'no_data_to_send' => 'No data to send.',
     'no_results_found' => 'No results found.',
+    'please_contact_administrator' => 'Please contact administrator.',
     'set_the_file_name_to_be_generated' => 'Set the file name to be generated',
     'the_cdis_field_must_be_lowercase' => 'The CDIS field must be lowercase.',
     'unauthorized' => 'Unauthorized',

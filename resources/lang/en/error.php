@@ -19,7 +19,7 @@ return [
     'catapult_db_setup_failed_update' => 'Catapult DB Setup failed to update',
     'expired_license' => 'Expired License',
     'expired_token' => 'Expired Token',
-    'conversion_failed' => 'Conversion Failed.',
+    'conversion_failed' => 'Conversion failed. Please contact administrator.',
     'failed_conversion' => 'Failed Conversion',
     'failed_to_insert_the_data' => 'Failed to insert the data.',
     'failed_to_send_data' => 'Failed to send data. Please contact administrator.',

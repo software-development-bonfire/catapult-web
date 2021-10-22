@@ -147,6 +147,7 @@ class ConvertDataFile extends Command
                     }
 
                     $folderName = substr($directory, strrpos($directory, '/') + 1);
+
                     $this->createLog(__('label.converting'). ' :', 'info', true, [$entryLogLabel], [$folderName]);
 
                     $files = $localDisk->allFiles($directory);
@@ -269,9 +270,10 @@ class ConvertDataFile extends Command
                                         if ($isFieldExists) {
                                             $fieldValue = $entryDatum[$mapping['column_name']];
                                         } else {
-                                            $mappingErrors[$file][] = array(
-                                                'error_type' => 'Missing column',
+                                            $mappingErrors[$entryAcronym][] = array(
+                                                'error_type' => 'Column not found',
                                                 'description' => $mapping['column_name'],
+                                                'row' => $entryDatumIndex + 2
                                             );
 
                                             break;
@@ -299,16 +301,62 @@ class ConvertDataFile extends Command
                         }
                     }
 
-                    $this->convertToFile(
-                        $hierarchyReferences,
-                        $entry,
-                        $entryContent,
-                        $folderName,
-                        $entryFolderName,
-                        $directory,
-                        $localDisk,
-                        $entryLogLabel,
-                        $serviceClass);
+                    if (! $mappingErrors) {
+                        $this->convertToFile(
+                            $hierarchyReferences,
+                            $entry,
+                            $entryContent,
+                            $folderName,
+                            $entryFolderName,
+                            $directory,
+                            $localDisk,
+                            $entryLogLabel,
+                            $serviceClass);
+                    } else {
+                        $this->createLog(
+                            __('error.conversion_failed'),
+                            'error',
+                            true,
+                            [$entryLogLabel],
+                            [$folderName]
+                        );
+
+                        foreach ($mappingErrors as $key => $mappingError) {
+                            $this->createLog(
+                                '   -> at '. $key,
+                                'error',
+                                false
+                            );
+
+                            foreach ($mappingError as $error) {
+                                $this->createLog(
+                                    '       • ['.$error['error_type'].'] '.$error['description'],
+                                    'error',
+                                    false,
+                                    [],
+                                    ['Row: '. $error['row']]
+                                );
+                            }
+                        }
+                        $failedConversionFolderPath = '/'.$entryFolderName.'/Failed conversion/'.$folderName;
+
+                        try {
+                            if ($localDisk->exists($failedConversionFolderPath)) {
+                                $localDisk->deleteDirectory($failedConversionFolderPath);
+                            } else {
+                                $localDisk->move($directory, $failedConversionFolderPath);
+                            }
+                        } catch (\Exception $exception) {
+                            $this->createLog(
+                                $exception->getMessage().' in '.$exception->getFile(). ' at line '. $exception->getLine(),
+                                'error',
+                                true,
+                                [$entryLogLabel],
+                                []
+                            );
+                        }
+
+                    }
                 }
             }
 
@@ -376,14 +424,15 @@ class ConvertDataFile extends Command
 
                 $this->createLog(__('label.converted'). '  :', 'info', true, [$entryLogLabel], [$fileName]);
             }
-        } catch(\Exception $exception) {
+        } catch(\Throwable $exception) {
             $this->createLog(
-                $exception->getMessage(),
+                $exception->getMessage().' in '.$exception->getFile(). ' at line '. $exception->getLine(),
                 'error',
                 true,
                 [$entryLogLabel],
                 [$fileName, 'Failed conversion']
             );
+
             $disk->move($directory, $failedConversionFolderPath);
 
             return;

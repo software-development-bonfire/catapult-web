@@ -227,7 +227,7 @@
                             >
                         </table-data>
                         <table-data
-                            v-if="(form.connection_setup.mapping_type === 0 && form.connection_setup.is_customized_mapping === 1) || (tableData.bid != null || tableData.bid == '')"
+                            v-if="(form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 1)"
                             align="center"
                             valign="center">
                             <input
@@ -235,6 +235,7 @@
                                 v-model="form.data_mapping.primary_key"
                                 :value="tableData.bid"
                                 @change="form.data_mapping.primary_key_index = tableDataIndex"
+                                v-if="(tableData.bid != null || tableData.bid == '')"
                             >
                         </table-data>
                         <table-data
@@ -332,7 +333,7 @@
                         <table-data
                             align="center"
                             valign="center"
-                            v-if="(form.connection_setup.mapping_type === 0 && form.connection_setup.is_customized_mapping === 1)"
+                            v-if="(form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 1)"
                         >
                         </table-data>
                         <table-data
