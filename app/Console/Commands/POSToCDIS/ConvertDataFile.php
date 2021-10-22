@@ -377,7 +377,13 @@ class ConvertDataFile extends Command
                 $this->createLog(__('label.converted'). '  :', 'info', true, [$entryLogLabel], [$fileName]);
             }
         } catch(\Exception $exception) {
-            $this->createLog($exception->getMessage(), 'error', true, [$entryLogLabel], [$fileName, 'Failed conversion']);
+            $this->createLog(
+                $exception->getMessage(),
+                'error',
+                true,
+                [$entryLogLabel],
+                [$fileName, 'Failed conversion']
+            );
             $disk->move($directory, $failedConversionFolderPath);
 
             return;
