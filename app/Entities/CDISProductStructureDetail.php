@@ -31,4 +31,9 @@ class CDISProductStructureDetail extends BaseModel
             'head_bid',
             'product_uom_bid');
     }
+
+    public function productUomPackagingByProductUomBid()
+    {
+        return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_bid', 'bid');
+    }
 }

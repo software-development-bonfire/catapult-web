@@ -227,7 +227,7 @@
                             >
                         </table-data>
                         <table-data
-                            v-if="(form.connection_setup.mapping_type === 0 && form.connection_setup.is_customized_mapping === 1) && (tableData.bid != null || tableData.bid == '')"
+                            v-if="(form.connection_setup.mapping_type === 0 && form.connection_setup.is_customized_mapping === 1) || (tableData.bid != null || tableData.bid == '')"
                             align="center"
                             valign="center">
                             <input
