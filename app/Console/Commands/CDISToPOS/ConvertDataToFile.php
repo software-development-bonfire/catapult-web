@@ -846,19 +846,14 @@ class ConvertDataToFile extends Command
 
                         preg_match_all('/\{(.+)\}/', $conditions, $match);
 
-
                         if (count($match[0]) > 0) {
                             foreach ($match[0] as $value) {
 
                                 if (preg_match_all('/\[(.+)\]/', $value, $conditionColumnReferencesMatches)) {
                                     if (count($conditionColumnReferencesMatches[0]) > 0) {
                                         $conditionColumnReferences = $conditionColumnReferencesMatches[1];
-
-                                        if ($entity == 'product_branch_price{"product_pricing_type_bid": [product_pricing_type{"alias": "selling_price"}.bid]}') {
-                                            $conditionColumnValue = $this->mappedSpecificData($conditionColumnReferences[0]);
-
-                                            $conditions = str_replace($conditionColumnReferencesMatches[0][0], $conditionColumnValue, $conditions);
-                                        }
+                                        $conditionColumnValue = $this->mappedSpecificData($conditionColumnReferences[0]);
+                                        $conditions = str_replace($conditionColumnReferencesMatches[0][0], $conditionColumnValue, $conditions);
                                     }
                                 }
                             }

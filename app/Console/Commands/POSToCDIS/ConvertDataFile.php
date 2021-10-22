@@ -264,7 +264,6 @@ class ConvertDataFile extends Command
                                     $entryDatum = (array) $entryDatum;
 
                                     if ($mapping['required']) {
-
                                         $isFieldExists = array_key_exists($mapping['column_name'], $entryDatum);
 
                                         if ($isFieldExists) {
@@ -357,29 +356,31 @@ class ConvertDataFile extends Command
 
         $filePath = '/'.$entryFolderName.'/Converted/To sync/'.$fileName.'.'.$this->extension;
         $processedFolderPath = '/'.$entryFolderName.'/Processed/'.$fileName;
+        $failedConversionFolderPath = '/'.$entryFolderName.'/Failed conversion/'.$fileName;
 
         try {
             if (! is_null($serviceClass)) {
                 $fileContent = app()->make($serviceClass)->store($fileContent);
             }
+
+            $fileContent = json_encode($fileContent);
+
+            $isMoved = $disk->put($filePath, $fileContent);
+
+            if ($isMoved) {
+                if ($disk->exists($processedFolderPath)) {
+                    $disk->deleteDirectory($processedFolderPath);
+                } else {
+                    $disk->move($directory, $processedFolderPath);
+                }
+
+                $this->createLog(__('label.converted'). '  :', 'info', true, [$entryLogLabel], [$fileName]);
+            }
         } catch(\Exception $exception) {
-            $this->createLog($exception->getMessage(), 'error', true, [$entryLogLabel], [$fileName]);
+            $this->createLog($exception->getMessage(), 'error', true, [$entryLogLabel], [$fileName, 'Failed conversion']);
+            $disk->move($directory, $failedConversionFolderPath);
 
             return;
-        }
-
-        $fileContent = json_encode($fileContent);
-
-        $isMoved = $disk->put($filePath, $fileContent);
-
-        if ($isMoved) {
-            if ($disk->exists($processedFolderPath)) {
-                $disk->deleteDirectory($processedFolderPath);
-            } else {
-                $disk->move($directory, $processedFolderPath);
-            }
-
-            $this->createLog(__('label.converted'). '  :', 'info', true, [$entryLogLabel], [$fileName]);
         }
 
         return $isMoved;
