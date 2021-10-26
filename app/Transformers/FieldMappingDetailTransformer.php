@@ -27,6 +27,7 @@ class FieldMappingDetailTransformer extends TransformerAbstract
                 'bid' => (string) $data->bid,
                 'field_mapping_bid' => (string) $data->field_mapping_bid,
                 'required' => $data->required === 1 ? true : false,
+                'nullable' => $data->nullable,
                 'field' => $data->field,
                 'description' => $data->description,
                 'mapping_type' => $data->mapping_type,

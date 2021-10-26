@@ -29,6 +29,7 @@ class FieldMappingDetail extends Model implements Transformable
         'field_mapping_bid',
         'required',
         'is_primary_key',
+        'nullable',
         'field',
         'description',
         'mapping_type',

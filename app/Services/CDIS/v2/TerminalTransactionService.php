@@ -92,274 +92,293 @@ class TerminalTransactionService
                             ? Carbon::parse($terminalTransaction->deleted_at)->format('Y-m-d H:i:s')
                             : null;
 
-                    foreach ($datum->official_receipt as $officialReceiptIndex => $officialReceipt) {
-                        $officialReceipt = (object) $officialReceipt;
+                    if (isset($datum->official_receipt)) {
+                        foreach ($datum->official_receipt as $officialReceiptIndex => $officialReceipt) {
+                            $officialReceipt = (object) $officialReceipt;
 
-                        $officialReceiptData = [
-                            'transaction_head_bid' => $terminalTransaction->bid,
-                            'or_number' => $officialReceipt->number,
-                            'split_number' => $officialReceipt->split_number,
-                            'total' => $officialReceipt->total,
-                            'discount_amount' => $officialReceipt->discount_amount,
-                            'free_items_amount' => $officialReceipt->free_items_amount,
-                            'vat_deduct_amount' => $officialReceipt->vat_deduct_amount,
-                            'vat_exempt_amount' => $officialReceipt->vat_exempt_amount,
-                            'original_amount' => $officialReceipt->original_amount,
-                            'quantity' => $officialReceipt->quantity,
-                            'local_tax_amount' => $officialReceipt->local_tax_amount,
-                            'tax_amount' => $officialReceipt->tax_amount,
-                            'service_charge' => $officialReceipt->service_charge,
-                            'vatable_sales' => $officialReceipt->vatable_sales,
-                            'zero_rated_sales' => $officialReceipt->zero_rated_sales,
-                            'eligible_amount_to_earn_points' => $officialReceipt->eligible_amount_to_earn_points,
-                            'total_tender' => $officialReceipt->total_tender,
-                            'customer_type' => $officialReceipt->customer['type'] ?? 0,
-                            'customer_bid' => $officialReceipt->customer['id'] ?? null,
-                            'customer_name' => $officialReceipt->customer['name'] ?? null,
-                            'customer_address' => $officialReceipt->customer['address'] ?? null,
-                            'cashier_bid' => $officialReceipt->cashier['id'],
-                            'cashier_name' => $officialReceipt->cashier['name'],
-                        ];
-
-                        $terminalTransactionDetail = $terminalTransaction->details()->create($officialReceiptData);
-
-                        foreach ($officialReceiptData as $officialReceiptDatumKey => $officialReceiptDatum) {
-                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex][$officialReceiptDatumKey] = $officialReceiptDatum;
-                        }
-
-                        unset($data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['customer']);
-                        unset($data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['cashier']);
-
-                        $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['bid'] = $terminalTransactionDetail->bid;
-                        $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['created_at'] =
-                            ! is_null($terminalTransactionDetail->created_at)
-                                ? Carbon::parse($terminalTransactionDetail->created_at)->format('Y-m-d H:i:s')
-                                : null;
-                        $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['updated_at'] =
-                            ! is_null($terminalTransactionDetail->updated_at)
-                                ? Carbon::parse($terminalTransactionDetail->updated_at)->format('Y-m-d H:i:s')
-                                : null;
-                        $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['deleted_at'] =
-                            ! is_null($terminalTransactionDetail->deleted_at)
-                                ? Carbon::parse($terminalTransactionDetail->deleted_at)->format('Y-m-d H:i:s')
-                                : null;
-
-                        if (isset($officialReceipt->discount)) {
-                            foreach ($officialReceipt->discount as $discountIndex => $discount) {
-                                $discount = (object) $discount;
-
-                                $discountData = [
-                                    'transaction_product_bid' => $terminalTransactionDetail->bid,
-                                    'discount_bid' => $discount->id,
-                                    'title' => $discount->title,
-                                    'total' => $discount->total,
-                                    'amount_discount' => $discount->amount_discount,
-                                    'vat_deduct' => $discount->vat_deduct,
-                                    'mandated' => $discount->mandated
-                                ];
-
-                                $terminalTransactionDetailDiscount = $terminalTransactionDetail->discounts()->create($discountData);
-
-                                foreach ($discountData as $discountDatumKey => $discountDatum) {
-                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['discount'][$discountIndex][$discountDatumKey] = $discountDatum;
-                                }
-
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['discount'][$discountIndex]['bid'] = $terminalTransactionDetailDiscount->bid;
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['discount'][$discountIndex]['created_at'] =
-                                    ! is_null($terminalTransactionDetailDiscount->created_at)
-                                        ? Carbon::parse($terminalTransactionDetailDiscount->created_at)->format('Y-m-d H:i:s')
-                                        : null;
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['discount'][$discountIndex]['updated_at'] =
-                                    ! is_null($terminalTransactionDetailDiscount->updated_at)
-                                        ? Carbon::parse($terminalTransactionDetailDiscount->updated_at)->format('Y-m-d H:i:s')
-                                        : null;
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['discount'][$discountIndex]['deleted_at'] =
-                                    ! is_null($terminalTransactionDetailDiscount->deleted_at)
-                                        ? Carbon::parse($terminalTransactionDetailDiscount->deleted_at)->format('Y-m-d H:i:s')
-                                        : null;
-                            }
-                        }
-
-                        if (isset($officialReceipt->payment_method)) {
-                            foreach ($officialReceipt->payment_method as $paymentMethodIndex => $paymentMethod) {
-                                $paymentMethod = (object) $paymentMethod;
-
-                                $paymentMethodData = [
-                                    'transaction_detail_bid' => $terminalTransactionDetail->bid,
-                                    'title' => $paymentMethod->title,
-                                    'total' => $paymentMethod->total,
-                                    'account_number' => $paymentMethod->account_number,
-                                ];
-
-                                $paymentMethodCreated = $terminalTransactionDetail->paymentMethods()->create($paymentMethodData);
-
-                                foreach ($paymentMethodData as $paymentMethodDatumKey => $paymentMethodDatum) {
-                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['payment_method'][$paymentMethodIndex][$paymentMethodDatumKey] = $paymentMethodDatum;
-                                }
-
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['payment_method'][$paymentMethodIndex]['bid'] = $paymentMethodCreated->bid;
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['payment_method'][$paymentMethodIndex]['created_at'] =
-                                    ! is_null($paymentMethodCreated->created_at)
-                                        ? Carbon::parse($paymentMethodCreated->created_at)->format('Y-m-d H:i:s')
-                                        : null;
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['payment_method'][$paymentMethodIndex]['updated_at'] =
-                                    ! is_null($paymentMethodCreated->updated_at)
-                                        ? Carbon::parse($paymentMethodCreated->updated_at)->format('Y-m-d H:i:s')
-                                        : null;
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['payment_method'][$paymentMethodIndex]['deleted_at'] =
-                                    ! is_null($paymentMethodCreated->deleted_at)
-                                        ? Carbon::parse($paymentMethodCreated->deleted_at)->format('Y-m-d H:i:s')
-                                        : null;
-                            }
-                        }
-
-                        foreach ($officialReceipt->product as $productIndex => $product) {
-                            $product = (object) $product;
-
-                            $productData = [
-                                'transaction_detail_bid' => $terminalTransactionDetail->bid,
-                                'product_bid' => $product->id,
-                                'name' => $product->name,
-                                'description' => $product->description,
-                                'long_description' => $product->long_description,
-                                'menu_code' => $product->menu_code,
-                                'category_bid' => $product->category['id'],
-                                'category_name' => $product->category['name'],
-                                'quantity' => $product->quantity,
-                                'tax_percentage' => $product->tax_percentage,
-                                'order_type_id' => $product->order_type['id'],
-                                'order_type_name' => $product->order_type['name'],
-                                'is_free' => $product->is_free,
-                                'is_vatable' => $product->is_vatable,
-                                'original_price' => $product->original_price,
-                                'price' => $product->price,
-                                'total_addon' => $product->total_addon,
-                                'total_amount' => $product->total_amount,
-                                'amount_discount' => $product->amount_discount,
-                                'vatable_sales' => $product->vatable_sales,
-                                'zero_rated_sales' => $product->zero_rated_sales,
-                                'tax' => $product->tax,
-                                'vat_deduct' => $product->vat_deduct,
-                                'vat_exempt' => $product->vat_exempt,
-                                'split_number' => $product->split_number,
+                            $officialReceiptData = [
+                                'transaction_head_bid' => $terminalTransaction->bid,
+                                'or_number' => $officialReceipt->number,
+                                'split_number' => $officialReceipt->split_number,
+                                'total' => $officialReceipt->total,
+                                'discount_amount' => $officialReceipt->discount_amount,
+                                'free_items_amount' => $officialReceipt->free_items_amount,
+                                'vat_deduct_amount' => $officialReceipt->vat_deduct_amount,
+                                'vat_exempt_amount' => $officialReceipt->vat_exempt_amount,
+                                'original_amount' => $officialReceipt->original_amount,
+                                'quantity' => $officialReceipt->quantity,
+                                'local_tax_amount' => $officialReceipt->local_tax_amount,
+                                'tax_amount' => $officialReceipt->tax_amount,
+                                'service_charge' => $officialReceipt->service_charge,
+                                'vatable_sales' => $officialReceipt->vatable_sales,
+                                'zero_rated_sales' => $officialReceipt->zero_rated_sales,
+                                'eligible_amount_to_earn_points' => $officialReceipt->eligible_amount_to_earn_points,
+                                'total_tender' => $officialReceipt->total_tender,
+                                'customer_type' => $officialReceipt->customer['type'] ?? 0,
+                                'customer_bid' => $officialReceipt->customer['id'] ?? null,
+                                'customer_name' => $officialReceipt->customer['name'] ?? null,
+                                'customer_address' => $officialReceipt->customer['address'] ?? null,
+                                'cashier_bid' => $officialReceipt->cashier['id'],
+                                'cashier_name' => $officialReceipt->cashier['name'],
                             ];
 
-                            $terminalTransactionDetailProduct = $terminalTransactionDetail->products()->create($productData);
+                            $terminalTransactionDetail = $terminalTransaction->details()->create($officialReceiptData);
 
-                            foreach ($productData as $productDatumKey => $productDatum) {
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex][$productDatumKey] = $productDatum;
+                            foreach ($officialReceiptData as $officialReceiptDatumKey => $officialReceiptDatum) {
+                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex][$officialReceiptDatumKey] = $officialReceiptDatum;
                             }
 
-                            unset($data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['category']);
-                            unset($data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['order_type']);
+                            unset($data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['customer']);
+                            unset($data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['cashier']);
 
-                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['bid'] = $terminalTransactionDetailProduct->bid;
-                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['created_at'] =
-                                ! is_null($terminalTransactionDetailProduct->created_at)
-                                    ? Carbon::parse($terminalTransactionDetailProduct->created_at)->format('Y-m-d H:i:s')
+                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['bid'] = $terminalTransactionDetail->bid;
+                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['created_at'] =
+                                ! is_null($terminalTransactionDetail->created_at)
+                                    ? Carbon::parse($terminalTransactionDetail->created_at)->format('Y-m-d H:i:s')
                                     : null;
-                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['updated_at'] =
-                                ! is_null($terminalTransactionDetailProduct->updated_at)
-                                    ? Carbon::parse($terminalTransactionDetailProduct->updated_at)->format('Y-m-d H:i:s')
+                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['updated_at'] =
+                                ! is_null($terminalTransactionDetail->updated_at)
+                                    ? Carbon::parse($terminalTransactionDetail->updated_at)->format('Y-m-d H:i:s')
                                     : null;
-                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['deleted_at'] =
-                                ! is_null($terminalTransactionDetailProduct->deleted_at)
-                                    ? Carbon::parse($terminalTransactionDetailProduct->deleted_at)->format('Y-m-d H:i:s')
+                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['deleted_at'] =
+                                ! is_null($terminalTransactionDetail->deleted_at)
+                                    ? Carbon::parse($terminalTransactionDetail->deleted_at)->format('Y-m-d H:i:s')
                                     : null;
 
-                            if (isset($product->price_override_details)) {
-                                $priceOverrideData = [
-                                    'transaction_detail_bid' => $terminalTransactionDetail->bid,
-                                    'transaction_product_bid' => $terminalTransactionDetailProduct->bid,
-                                    'product_bid' => $product->id,
-                                    'product_name' => $product->name,
-                                    'product_description' => $product->description,
-                                    'product_code' => $product->menu_code,
-                                    'old_price' => $product->original_price,
-                                    'new_price' => $product->price_override_details['price'],
-                                    'quantity' => $product->quantity,
-                                    'approved_by' => $product->price_override_details['approved_by'] ?? null,
-                                    'approved_date' => $product->price_override_details['approved_date'] ?? null,
-                                ];
+                            if (isset($officialReceipt->discount)) {
+                                foreach ($officialReceipt->discount as $discountIndex => $discount) {
+                                    $discount = (object) $discount;
 
-                                $priceOverrideDataCreated = $terminalTransactionDetail->priceOverride()->create($priceOverrideData);
+                                    $discountData = [
+                                        'transaction_product_bid' => $terminalTransactionDetail->bid,
+                                        'discount_bid' => $discount->id,
+                                        'title' => $discount->title,
+                                        'total' => $discount->total,
+                                        'amount_discount' => $discount->amount_discount,
+                                        'vat_deduct' => $discount->vat_deduct,
+                                        'mandated' => $discount->mandated
+                                    ];
 
-                                foreach ($priceOverrideData as $priceOverrideDatumKey => $priceOverrideDatum) {
-                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['price_override_details'][$priceOverrideDatumKey] = $priceOverrideDatum;
+                                    $terminalTransactionDetailDiscount = $terminalTransactionDetail->discounts()->create($discountData);
+
+                                    foreach ($discountData as $discountDatumKey => $discountDatum) {
+                                        $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['discount'][$discountIndex][$discountDatumKey] = $discountDatum;
+                                    }
+
+                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['discount'][$discountIndex]['bid'] = $terminalTransactionDetailDiscount->bid;
+                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['discount'][$discountIndex]['created_at'] =
+                                        ! is_null($terminalTransactionDetailDiscount->created_at)
+                                            ? Carbon::parse($terminalTransactionDetailDiscount->created_at)->format('Y-m-d H:i:s')
+                                            : null;
+                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['discount'][$discountIndex]['updated_at'] =
+                                        ! is_null($terminalTransactionDetailDiscount->updated_at)
+                                            ? Carbon::parse($terminalTransactionDetailDiscount->updated_at)->format('Y-m-d H:i:s')
+                                            : null;
+                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['discount'][$discountIndex]['deleted_at'] =
+                                        ! is_null($terminalTransactionDetailDiscount->deleted_at)
+                                            ? Carbon::parse($terminalTransactionDetailDiscount->deleted_at)->format('Y-m-d H:i:s')
+                                            : null;
                                 }
-
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['price_override_details']['bid'] = $priceOverrideDataCreated->bid;
                             }
 
+                            if (isset($officialReceipt->payment_method)) {
+                                foreach ($officialReceipt->payment_method as $paymentMethodIndex => $paymentMethod) {
+                                    $paymentMethod = (object) $paymentMethod;
 
-                            foreach ($product->addon as $addonIndex => $addon) {
-                                $addon = (object) $addon;
+                                    $paymentMethodData = [
+                                        'transaction_detail_bid' => $terminalTransactionDetail->bid,
+                                        'title' => $paymentMethod->title,
+                                        'total' => $paymentMethod->total,
+                                        'account_number' => $paymentMethod->account_number,
+                                    ];
 
-                                $addonData = [
-                                    'transaction_detail_bid' => $terminalTransactionDetailProduct->bid,
-                                    'name' => $addon->name,
-                                    'quantity' => $addon->quantity,
-                                    'original_price' => $addon->original_price,
-                                    'price' => $addon->price,
-                                    'total_amount' => $addon->total_amount
-                                ];
+                                    $paymentMethodCreated = $terminalTransactionDetail->paymentMethods()->create($paymentMethodData);
 
-                                $terminalTransactionDetailAddon = $terminalTransactionDetailProduct->addons()->create($addonData);
+                                    foreach ($paymentMethodData as $paymentMethodDatumKey => $paymentMethodDatum) {
+                                        $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['payment_method'][$paymentMethodIndex][$paymentMethodDatumKey] = $paymentMethodDatum;
+                                    }
 
-                                foreach ($addonData as $addonDatumKey => $addonDatum) {
-                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex][$addonDatumKey] = $addonDatum;
+                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['payment_method'][$paymentMethodIndex]['bid'] = $paymentMethodCreated->bid;
+                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['payment_method'][$paymentMethodIndex]['created_at'] =
+                                        ! is_null($paymentMethodCreated->created_at)
+                                            ? Carbon::parse($paymentMethodCreated->created_at)->format('Y-m-d H:i:s')
+                                            : null;
+                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['payment_method'][$paymentMethodIndex]['updated_at'] =
+                                        ! is_null($paymentMethodCreated->updated_at)
+                                            ? Carbon::parse($paymentMethodCreated->updated_at)->format('Y-m-d H:i:s')
+                                            : null;
+                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['payment_method'][$paymentMethodIndex]['deleted_at'] =
+                                        ! is_null($paymentMethodCreated->deleted_at)
+                                            ? Carbon::parse($paymentMethodCreated->deleted_at)->format('Y-m-d H:i:s')
+                                            : null;
                                 }
-
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['bid'] = $terminalTransactionDetailAddon->bid;
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['created_at'] =
-                                    ! is_null($terminalTransactionDetailAddon->created_at)
-                                        ? Carbon::parse($terminalTransactionDetailAddon->created_at)->format('Y-m-d H:i:s')
-                                        : null;
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['updated_at'] =
-                                    ! is_null($terminalTransactionDetailAddon->updated_at)
-                                        ? Carbon::parse($terminalTransactionDetailAddon->updated_at)->format('Y-m-d H:i:s')
-                                        : null;
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['deleted_at'] =
-                                    ! is_null($terminalTransactionDetailAddon->deleted_at)
-                                        ? Carbon::parse($terminalTransactionDetailAddon->deleted_at)->format('Y-m-d H:i:s')
-                                        : null;
                             }
 
-                            foreach ($product->discount as $discountIndex => $discount) {
-                                $discount = (object) $discount;
+                            if (isset($officialReceipt->product)) {
+                                foreach ($officialReceipt->product as $productIndex => $product) {
+                                    $product = (object) $product;
 
-                                $discountData = [
-                                    'transaction_product_bid' => $terminalTransactionDetailProduct->bid,
-                                    'discount_bid' => $discount->id,
-                                    'title' => $discount->title,
-                                    'total' => $discount->total,
-                                    'amount_discount' => $discount->amount_discount,
-                                    'vat_deduct' => $discount->vat_deduct,
-                                    'vat_exempt' => $discount->vat_exempt,
-                                    'mandated' => (int) $discount->mandated
-                                ];
+                                    $productData = [
+                                        'transaction_detail_bid' => $terminalTransactionDetail->bid,
+                                        'product_bid' => $product->id,
+                                        'name' => $product->name,
+                                        'description' => $product->description,
+                                        'long_description' => $product->long_description,
+                                        'menu_code' => $product->menu_code,
+                                        'category_bid' => $product->category['id'],
+                                        'category_name' => $product->category['name'],
+                                        'quantity' => $product->quantity,
+                                        'tax_percentage' => $product->tax_percentage,
+                                        'order_type_id' => $product->order_type['id'],
+                                        'order_type_name' => $product->order_type['name'],
+                                        'is_free' => $product->is_free,
+                                        'is_vatable' => $product->is_vatable,
+                                        'original_price' => $product->original_price,
+                                        'price' => $product->price,
+                                        'total_addon' => $product->total_addon,
+                                        'total_amount' => $product->total_amount,
+                                        'amount_discount' => $product->amount_discount,
+                                        'vatable_sales' => $product->vatable_sales,
+                                        'zero_rated_sales' => $product->zero_rated_sales,
+                                        'tax' => $product->tax,
+                                        'vat_deduct' => $product->vat_deduct,
+                                        'vat_exempt' => $product->vat_exempt,
+                                        'split_number' => $product->split_number,
+                                    ];
 
-                                $terminalTransactionDiscount = $terminalTransactionDetailProduct->discounts()->create($discountData);
+                                    $terminalTransactionDetailProduct = $terminalTransactionDetail->products()->create($productData);
 
-                                foreach ($discountData as $discountDatumKey => $discountDatum) {
-                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'][$discountIndex][$discountDatumKey] = $discountDatum;
+                                    foreach ($productData as $productDatumKey => $productDatum) {
+                                        $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex][$productDatumKey] = $productDatum;
+                                    }
+
+                                    unset($data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['category']);
+                                    unset($data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['order_type']);
+
+                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['bid'] = $terminalTransactionDetailProduct->bid;
+                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['created_at'] =
+                                        ! is_null($terminalTransactionDetailProduct->created_at)
+                                            ? Carbon::parse($terminalTransactionDetailProduct->created_at)->format('Y-m-d H:i:s')
+                                            : null;
+                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['updated_at'] =
+                                        ! is_null($terminalTransactionDetailProduct->updated_at)
+                                            ? Carbon::parse($terminalTransactionDetailProduct->updated_at)->format('Y-m-d H:i:s')
+                                            : null;
+                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['deleted_at'] =
+                                        ! is_null($terminalTransactionDetailProduct->deleted_at)
+                                            ? Carbon::parse($terminalTransactionDetailProduct->deleted_at)->format('Y-m-d H:i:s')
+                                            : null;
+
+                                    if (isset($product->price_override_details)) {
+                                        if ($product->price_override_details['price']) {
+                                            $priceOverrideData = [
+                                                'transaction_detail_bid' => $terminalTransactionDetail->bid,
+                                                'transaction_product_bid' => $terminalTransactionDetailProduct->bid,
+                                                'product_bid' => $product->id,
+                                                'product_name' => $product->name,
+                                                'product_description' => $product->description,
+                                                'product_code' => $product->menu_code,
+                                                'old_price' => $product->original_price,
+                                                'new_price' => $product->price_override_details['price'],
+                                                'quantity' => $product->quantity,
+                                                'approved_by' => $product->price_override_details['approved_by'] ?? null,
+                                                'approved_date' => $product->price_override_details['approved_date'] ?? null,
+                                            ];
+
+                                            $priceOverrideDataCreated = $terminalTransactionDetail->priceOverride()->create($priceOverrideData);
+
+                                            foreach ($priceOverrideData as $priceOverrideDatumKey => $priceOverrideDatum) {
+                                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['price_override_details'][$priceOverrideDatumKey] = $priceOverrideDatum;
+                                            }
+
+                                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['price_override_details']['bid'] = $priceOverrideDataCreated->bid;
+                                        } else {
+                                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['price_override_details'] = null;
+                                        }
+                                    }
+
+                                    if (isset($product->addon)) {
+                                        foreach ($product->addon as $addonIndex => $addon) {
+                                            $addon = (object) $addon;
+
+                                            $addonData = [
+                                                'transaction_detail_bid' => $terminalTransactionDetailProduct->bid,
+                                                'name' => $addon->name,
+                                                'quantity' => $addon->quantity,
+                                                'original_price' => $addon->original_price,
+                                                'price' => $addon->price,
+                                                'total_amount' => $addon->total_amount
+                                            ];
+
+                                            $terminalTransactionDetailAddon = $terminalTransactionDetailProduct->addons()->create($addonData);
+
+                                            foreach ($addonData as $addonDatumKey => $addonDatum) {
+                                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex][$addonDatumKey] = $addonDatum;
+                                            }
+
+                                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['bid'] = $terminalTransactionDetailAddon->bid;
+                                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['created_at'] =
+                                                ! is_null($terminalTransactionDetailAddon->created_at)
+                                                    ? Carbon::parse($terminalTransactionDetailAddon->created_at)->format('Y-m-d H:i:s')
+                                                    : null;
+                                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['updated_at'] =
+                                                ! is_null($terminalTransactionDetailAddon->updated_at)
+                                                    ? Carbon::parse($terminalTransactionDetailAddon->updated_at)->format('Y-m-d H:i:s')
+                                                    : null;
+                                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['deleted_at'] =
+                                                ! is_null($terminalTransactionDetailAddon->deleted_at)
+                                                    ? Carbon::parse($terminalTransactionDetailAddon->deleted_at)->format('Y-m-d H:i:s')
+                                                    : null;
+                                        }
+                                    } else {
+                                        $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'] = [];
+                                    }
+
+                                    if (isset($product->discount)) {
+                                        foreach ($product->discount as $discountIndex => $discount) {
+                                            $discount = (object) $discount;
+
+                                            $discountData = [
+                                                'transaction_product_bid' => $terminalTransactionDetailProduct->bid,
+                                                'discount_bid' => $discount->id,
+                                                'title' => $discount->title,
+                                                'total' => $discount->total,
+                                                'amount_discount' => $discount->amount_discount,
+                                                'vat_deduct' => $discount->vat_deduct,
+                                                'vat_exempt' => $discount->vat_exempt,
+                                                'mandated' => (int) $discount->mandated
+                                            ];
+
+                                            $terminalTransactionDiscount = $terminalTransactionDetailProduct->discounts()->create($discountData);
+
+                                            foreach ($discountData as $discountDatumKey => $discountDatum) {
+                                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'][$discountIndex][$discountDatumKey] = $discountDatum;
+                                            }
+
+                                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'][$discountIndex]['bid'] = $terminalTransactionDiscount->bid;
+                                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'][$discountIndex]['created_at'] =
+                                                ! is_null($terminalTransactionDiscount->created_at)
+                                                    ? Carbon::parse($terminalTransactionDiscount->created_at)->format('Y-m-d H:i:s')
+                                                    : null;
+                                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'][$discountIndex]['updated_at'] =
+                                                ! is_null($terminalTransactionDiscount->updated_at)
+                                                    ? Carbon::parse($terminalTransactionDiscount->updated_at)->format('Y-m-d H:i:s')
+                                                    : null;
+                                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'][$discountIndex]['deleted_at'] =
+                                                ! is_null($terminalTransactionDiscount->deleted_at)
+                                                    ? Carbon::parse($terminalTransactionDiscount->deleted_at)->format('Y-m-d H:i:s')
+                                                    : null;
+                                        }
+                                    } else {
+                                        $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'] = [];
+                                    }
                                 }
-
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'][$discountIndex]['bid'] = $terminalTransactionDiscount->bid;
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'][$discountIndex]['created_at'] =
-                                    ! is_null($terminalTransactionDiscount->created_at)
-                                        ? Carbon::parse($terminalTransactionDiscount->created_at)->format('Y-m-d H:i:s')
-                                        : null;
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'][$discountIndex]['updated_at'] =
-                                    ! is_null($terminalTransactionDiscount->updated_at)
-                                        ? Carbon::parse($terminalTransactionDiscount->updated_at)->format('Y-m-d H:i:s')
-                                        : null;
-                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'][$discountIndex]['deleted_at'] =
-                                    ! is_null($terminalTransactionDiscount->deleted_at)
-                                        ? Carbon::parse($terminalTransactionDiscount->deleted_at)->format('Y-m-d H:i:s')
-                                        : null;
+                            } else {
+                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'] = [];
                             }
                         }
+                    } else {
+                        $data[$headIndex][$datumIndex]['official_receipt'] = [];
                     }
                 }
             }

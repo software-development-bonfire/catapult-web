@@ -23,8 +23,7 @@ class POSAuditTrailService
         return $this->transaction(function() use($data) {
             foreach ($data as $headIndex => $headData) {
                 foreach ($headData as $datumIndex => $datum) {
-                    $datum = (object)$datum;
-                    $datum = (object)$datum;
+                    $datum = (object) $datum;
 
                     $branch = app()->make(BranchRepository::class)
                         ->with(['terminals' => function ($query) use ($datum) {

@@ -16,7 +16,7 @@ class FetchDataForSync extends Command
      *
      * @var string
      */
-    protected $signature = 'cdis:fetch-data-for-sync {--interval=true}';
+    protected $signature = 'cdis:fetch-data-for-sync {--interval=true}{--limit=true}';
 
     /**
      * The console command description.
@@ -52,6 +52,16 @@ class FetchDataForSync extends Command
                         : false
                     );
 
+        $limit = $this->option('limit');
+        $limit =
+            filter_var($limit, FILTER_VALIDATE_BOOLEAN)
+                ? config('sync.cdis.to_catapult.limit')
+                : (
+            (int) $limit
+                ? filter_var($limit, FILTER_VALIDATE_INT)
+                : false
+            );
+
         $syncService = app()->make(SyncService::class);
 
         $this->createLog(
@@ -63,7 +73,7 @@ class FetchDataForSync extends Command
         Cache::forget('cdis_fetching_data_for_sync');
 
         do {
-            $forSync = $syncService->forSync();
+            $forSync = $syncService->forSync($limit);
 
             if (! isset($forSync->bidsChunks)) {
                 Cache::forget('cdis_fetching_data_for_sync');

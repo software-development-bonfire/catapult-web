@@ -59,6 +59,7 @@ class FieldMappingService
             foreach ($data['fields'] as $index => $arr) {
                 $detail = [
                     'required' => $arr['required'],
+                    'nullable' => $arr['nullable'],
                     'field' =>  isset($arr['field']) ? $arr['field'] : '',
                     'description' => isset($arr['description']) ? $arr['description'] : '',
                     'mapping_type' => isset($arr['mapping_type']) ? $arr['mapping_type'] : '',

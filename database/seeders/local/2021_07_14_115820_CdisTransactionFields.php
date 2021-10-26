@@ -884,6 +884,7 @@ class CdisTransactionFields extends MigratableSeeder
                 'column_name' => 'price_override_price',
                 'reference_column_name' => 'transaction_detail_id',
                 'head_reference' => 'TD.id',
+                'nullable' => 1,
             ],
             [
                 'required' => 1,
@@ -895,6 +896,7 @@ class CdisTransactionFields extends MigratableSeeder
                 'column_name' => 'price_override_approved_by',
                 'reference_column_name' => 'transaction_detail_id',
                 'head_reference' => 'TD.id',
+                'nullable' => 1,
             ],
             [
                 'required' => 1,
@@ -906,6 +908,7 @@ class CdisTransactionFields extends MigratableSeeder
                 'column_name' => 'price_override_approved_date',
                 'reference_column_name' => 'transaction_detail_id',
                 'head_reference' => 'TD.id',
+                'nullable' => 1,
             ],
             // </ ** PRODUCT ** > //
 

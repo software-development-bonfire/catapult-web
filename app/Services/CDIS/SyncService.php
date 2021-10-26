@@ -22,9 +22,9 @@ class SyncService
      * @param array $data
      * @return \Illuminate\Http\Response
      */
-    public function forSync()
+    public function forSync($limit = 100)
     {
-        return $this->transaction(function () {
+        return $this->transaction(function () use($limit) {
             $client = [
                 'verify' => false,
                 'http_errors' => false,
@@ -33,7 +33,7 @@ class SyncService
             ];
 
             $uri = config('endpoint.cdis.domain').''.config('endpoint.cdis.for.catapult.v1.forSync');
-            $limit = config('sync.cdis.to_catapult.limit');
+            $limit = $limit ? $limit : config('sync.cdis.to_catapult.limit');
 
             $options = [
                 'json' => ['sender_details' => $this->getSenderDetails(), 'limit' => $limit],
@@ -153,7 +153,10 @@ class SyncService
                     if ($value->sync->action == 'delete' && $value->detail) {
                         $detail->delete();
                     } else if ($value->sync->action == 'update' || $value->sync->action == 'create') {
-                        $detail->update((array) $value->detail);
+                        $data = (array) $value->detail;
+                        if (count($data) > 0) {
+                            $detail->update($data);
+                        }
                     }
                 } else {
                     if ($value->detail

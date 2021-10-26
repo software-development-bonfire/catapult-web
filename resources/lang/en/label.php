@@ -128,6 +128,7 @@ return [
     'no' => 'No',
     'not_required_field' => 'Not Required Field',
     'note' => 'Note',
+    'nullable' => 'Nullable',
     'password' => 'Password',
     'path' => 'Path',
     'payment' => 'Payment',

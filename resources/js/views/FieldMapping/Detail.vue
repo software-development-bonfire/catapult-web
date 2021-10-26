@@ -286,6 +286,14 @@
                             <input type="text" class="form-control" v-model="tableData.default_value">
                         </table-data>
                         <table-data
+                            align="center"
+                            valign="center">
+                            <input
+                                type="checkbox"
+                                v-model="tableData.nullable"
+                            >
+                        </table-data>
+                        <table-data
                             :error="getError(errors, `fields.${tableDataIndex}.column_name`)"
                             align="center"
                             valign="center">
@@ -369,6 +377,14 @@
                             valign="center"
                             v-if="form.connection_setup.mapping_type === 2 || (form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 1)">
                             <input type="text" class="form-control" v-model="form.data_mapping.add.default_value">
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center">
+                            <input
+                                type="checkbox"
+                                v-model="form.data_mapping.add.nullable"
+                            >
                         </table-data>
                         <table-data
                             align="center"
@@ -548,6 +564,7 @@
                         add: {
                             edit: false,
                             required: true,
+                            nullable: false,
                             field: '',
                             description: '',
                             mapping_type: '',
@@ -582,6 +599,11 @@
                                 width: '120'
                             },
                             {
+                                name: "nullable",
+                                label: this.$t('label.nullable'),
+                                width: '80'
+                            },
+                            {
                                 name: "csv_column_name",
                                 label: this.$t('label.csv_column_name'),
                                 width: '200'
@@ -609,6 +631,11 @@
                                 name: "default_field_values",
                                 label: this.$t('label.default_field_values'),
                                 width: '250'
+                            },
+                            {
+                                name: "nullable",
+                                label: this.$t('label.nullable'),
+                                width: '80'
                             },
                             {
                                 name: "csv_column_name",
@@ -646,6 +673,11 @@
                                 name: "default_field_values",
                                 label: this.$t('label.default_field_values'),
                                 width: '120'
+                            },
+                            {
+                                name: "nullable",
+                                label: this.$t('label.nullable'),
+                                width: '80'
                             },
                             {
                                 name: "csv_column_name",

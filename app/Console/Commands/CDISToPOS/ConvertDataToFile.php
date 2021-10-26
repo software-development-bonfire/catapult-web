@@ -848,7 +848,6 @@ class ConvertDataToFile extends Command
 
                         if (count($match[0]) > 0) {
                             foreach ($match[0] as $value) {
-
                                 if (preg_match_all('/\[(.+)\]/', $value, $conditionColumnReferencesMatches)) {
                                     if (count($conditionColumnReferencesMatches[0]) > 0) {
                                         $conditionColumnReferences = $conditionColumnReferencesMatches[1];

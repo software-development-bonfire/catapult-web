@@ -269,6 +269,8 @@ class ConvertDataFile extends Command
 
                                         if ($isFieldExists) {
                                             $fieldValue = $entryDatum[$mapping['column_name']];
+                                        } else if ($mapping['nullable']) {
+                                            $fieldValue = NULL;
                                         } else {
                                             $mappingErrors[$entryAcronym][] = array(
                                                 'error_type' => 'Column not found',
@@ -338,6 +340,7 @@ class ConvertDataFile extends Command
                                 );
                             }
                         }
+
                         $failedConversionFolderPath = '/'.$entryFolderName.'/Failed conversion/'.$folderName;
 
                         try {
@@ -351,8 +354,7 @@ class ConvertDataFile extends Command
                                 $exception->getMessage().' in '.$exception->getFile(). ' at line '. $exception->getLine(),
                                 'error',
                                 true,
-                                [$entryLogLabel],
-                                []
+                                [$entryLogLabel]
                             );
                         }
 
@@ -433,7 +435,6 @@ class ConvertDataFile extends Command
                 [$fileName, 'Failed conversion']
             );
 
-            $disk->move($directory, $failedConversionFolderPath);
 
             return;
         }
