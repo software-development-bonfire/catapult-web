@@ -351,6 +351,11 @@ class ConvertDataFile extends Command
                         $failedConversionFolderPath = '/'.$entryFolderName.'/Failed conversion/'.$folderName;
 
                         try {
+                            if ($localDisk->exists($failedConversionFolderPath)) {
+                                $localDisk->deleteDirectory($failedConversionFolderPath);
+                            } else {
+                                $localDisk->move($directory, $failedConversionFolderPath);
+                            }
                         } catch (\Exception $exception) {
                             $this->createLog(
                                 $exception->getMessage().' in '.$exception->getFile(). ' at line '. $exception->getLine(),
@@ -364,7 +369,7 @@ class ConvertDataFile extends Command
                 }
             }
 
-            sleep(5);
+            sleep(3);
         }
     }
 
