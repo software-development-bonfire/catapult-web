@@ -162,6 +162,9 @@ class ConvertDataFile extends Command
 
                             foreach ($contents as $index => $content) {
                                 $keys = $content[0];
+
+                                $keys = array_map('trim', $keys);
+
                                 unset($content[0]);
 
                                 $content = array_values($content);
@@ -269,6 +272,16 @@ class ConvertDataFile extends Command
 
                                         if ($isFieldExists) {
                                             $fieldValue = $entryDatum[$mapping['column_name']];
+
+                                            if (is_null($fieldValue)) {
+                                                $mappingErrors[$entryAcronym][] = array(
+                                                    'error_type' => 'Column not found',
+                                                    'description' => $mapping['column_name'],
+                                                    'row' => $entryDatumIndex + 2
+                                                );
+
+                                                break;
+                                            }
                                         } else if ($mapping['nullable']) {
                                             $fieldValue = NULL;
                                         } else {
@@ -344,11 +357,6 @@ class ConvertDataFile extends Command
                         $failedConversionFolderPath = '/'.$entryFolderName.'/Failed conversion/'.$folderName;
 
                         try {
-                            if ($localDisk->exists($failedConversionFolderPath)) {
-                                $localDisk->deleteDirectory($failedConversionFolderPath);
-                            } else {
-                                $localDisk->move($directory, $failedConversionFolderPath);
-                            }
                         } catch (\Exception $exception) {
                             $this->createLog(
                                 $exception->getMessage().' in '.$exception->getFile(). ' at line '. $exception->getLine(),
@@ -436,7 +444,7 @@ class ConvertDataFile extends Command
             );
 
 
-            return;
+            return false;
         }
 
         return $isMoved;
