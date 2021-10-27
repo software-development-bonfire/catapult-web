@@ -509,7 +509,7 @@ class ConvertDataToFile extends Command
                     $result = $this->generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails, $timeStamp);
 
                     if ($result) {
-                        CDISSync::whereIn('bid', $toSyncData->pluck('bid'))->delete();
+//                        CDISSync::whereIn('bid', $toSyncData->pluck('bid'))->delete();
                     }
 
                     return $result;
@@ -517,10 +517,10 @@ class ConvertDataToFile extends Command
                     $result = $this->generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails, $timeStamp);
 
                     if ($result) {
-                        CDISSync::where([
-                            'table_name' => $forSyncDatum->table_name,
-                            'table_bid' => $forSyncDatum->table_bid,
-                        ])->delete();
+//                        CDISSync::where([
+//                            'table_name' => $forSyncDatum->table_name,
+//                            'table_bid' => $forSyncDatum->table_bid,
+//                        ])->delete();
                     }
 
                     return $result;
@@ -749,6 +749,7 @@ class ConvertDataToFile extends Command
                     }
                 } else if (! $dataMapping['field'] && $dataMapping['default_value']) {
                     $defaultValueCondition = $dataMapping['default_value'];
+
                     preg_match_all("/\\[(.*?)\\]/", $defaultValueCondition, $matches);
 
                     if ($matches[0] || preg_match_all("/\\((.*?)\\)/", $defaultValueCondition, $matches)) {
@@ -762,6 +763,7 @@ class ConvertDataToFile extends Command
                                 $matchesColumn = preg_split("/\.(?![^{]+\})/", $matchesColumnString);
 
                                 if (count($matchesColumn) >= 2) {
+
                                     $conditionColumnValue = $this->mappedSpecificData(['field' => $matchesColumnString], $syncEntry, $entryTableName, $entryData);
 
                                     if (! is_null($conditionColumnValue)) {
@@ -785,6 +787,10 @@ class ConvertDataToFile extends Command
                         }
 
                         eval("\$defaultValueCondition = $defaultValueCondition;");
+
+                        if (strpos($dataMapping['default_value'], 'is_senior_item') !== false) {
+                            var_dump($defaultValueCondition);
+                        }
                     }
 
                     $data[$dataMapping['column_name']] = $defaultValueCondition;
@@ -797,7 +803,7 @@ class ConvertDataToFile extends Command
                     []
                 );
 
-                $this->createLog($throwable->getMessage(), 'error', true, ['Mapping'], [$defaultValue, $mappingField, $entryName]);
+                $this->createLog($throwable->getMessage(). ' at line '. $throwable->getLine(), 'error', true, ['Mapping'], [$defaultValue, $mappingField, $entryName]);
             }
         }
 
@@ -911,27 +917,24 @@ class ConvertDataToFile extends Command
         if ($relationData) {
             $relationData = $relationData->toArray();
 
-            $isNotMultidimensionalArray =
-                count($relationData) == count($relationData, COUNT_RECURSIVE);
-
             $datum = null;
 
-            if ($isNotMultidimensionalArray) {
-                return isset($relationData[$columnName]) ? $relationData[$columnName] : null;
+            if (isset($relationData[$columnName])) {
+                return $relationData[$columnName];
             } else {
-                $data = collect($relationData)->pluck($columnName)->toArray();
+                $data = array_filter(collect($relationData)->pluck($columnName)->toArray());
 
                 if (count($data) == 1) {
                     $datum = array_values($data)[0];
                 } else if (count($data) >= 2) {
                     $datum = implode(',', $data);
                 }
+
+                return $datum;
             }
         } else {
             return null;
         }
-
-        return $datum;
     }
 
     public function sync($columnName = 'bid', $syncEntry)
