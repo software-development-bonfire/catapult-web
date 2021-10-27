@@ -270,10 +270,10 @@ class ConvertDataFile extends Command
                                     if ($mapping['required']) {
                                         $isFieldExists = array_key_exists($mapping['column_name'], $entryDatum);
 
-                                        if ($isFieldExists && $mapping['default_value'] == '') {
+                                        if ($isFieldExists) {
                                             $fieldValue = $entryDatum[$mapping['column_name']];
 
-                                            if (is_null($fieldValue)) {
+                                            if (is_null($fieldValue) || $fieldValue === '') {
                                                 $fieldValue = $mapping['default_value'];
                                             }
                                         } else if ($mapping['nullable']) {
