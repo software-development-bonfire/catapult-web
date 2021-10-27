@@ -787,10 +787,6 @@ class ConvertDataToFile extends Command
                         }
 
                         eval("\$defaultValueCondition = $defaultValueCondition;");
-
-                        if (strpos($dataMapping['default_value'], 'is_senior_item') !== false) {
-                            var_dump($defaultValueCondition);
-                        }
                     }
 
                     $data[$dataMapping['column_name']] = $defaultValueCondition;

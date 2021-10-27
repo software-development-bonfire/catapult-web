@@ -270,17 +270,11 @@ class ConvertDataFile extends Command
                                     if ($mapping['required']) {
                                         $isFieldExists = array_key_exists($mapping['column_name'], $entryDatum);
 
-                                        if ($isFieldExists) {
+                                        if ($isFieldExists && $mapping['default_value'] == '') {
                                             $fieldValue = $entryDatum[$mapping['column_name']];
 
                                             if (is_null($fieldValue)) {
-                                                $mappingErrors[$entryAcronym][] = array(
-                                                    'error_type' => 'Column not found',
-                                                    'description' => $mapping['column_name'],
-                                                    'row' => $entryDatumIndex + 2
-                                                );
-
-                                                break;
+                                                $fieldValue = $mapping['default_value'];
                                             }
                                         } else if ($mapping['nullable']) {
                                             $fieldValue = NULL;
