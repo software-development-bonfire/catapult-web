@@ -60,6 +60,6 @@ class AddDefaultSyncEntryDetails extends MigratableSeeder
      */
     public function down(): void
     {
-        SyncEntryDetail::delete();
+        SyncEntryDetail::all()->delete();
     }
 }
