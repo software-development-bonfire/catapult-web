@@ -30,7 +30,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'DR',
-                'default_value' => 0,
                 'column_name' => 'branch_code',
             ],
             [
@@ -39,7 +38,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'DR',
-                'default_value' => 0,
                 'column_name' => 'terminal_number',
             ],
             [
@@ -48,7 +46,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'DR',
-                'default_value' => 0,
                 'column_name' => 'cashier_id',
             ],
             [
@@ -57,7 +54,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'DR',
-                'default_value' => 0,
                 'column_name' => 'cashier_name',
             ],
             [
@@ -66,7 +62,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'DR',
-                'default_value' => 0,
                 'column_name' => 'amount',
             ],
             [
@@ -75,7 +70,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DATETIME',
                 'file_name' => 'DR',
-                'default_value' => 0,
                 'column_name' => 'date',
             ],
             [
@@ -84,7 +78,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'DR',
-                'default_value' => 0,
                 'column_name' => 'approver_id',
             ],
             [
@@ -93,7 +86,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'DR',
-                'default_value' => 0,
                 'column_name' => 'approver_name',
             ],
             [
@@ -102,7 +94,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DATETIME',
                 'file_name' => 'DR',
-                'default_value' => 0,
                 'column_name' => 'approved_date',
             ],
             [
@@ -111,7 +102,6 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'DR',
-                'default_value' => 0,
                 'column_name' => 'type',
             ],
             [
@@ -120,7 +110,7 @@ class CdisCashDrawerFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'DR',
-                'default_value' => 0,
+                'default_value' => '""',
                 'column_name' => 'remarks',
             ],
         ];

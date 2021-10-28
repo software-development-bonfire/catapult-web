@@ -31,7 +31,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'ZH',
-                'default_value' => '""',
                 'column_name' => 'terminal_number',
             ],
             [
@@ -40,7 +39,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'ZH',
-                'default_value' => '""',
                 'column_name' => 'branch_code',
             ],
             [
@@ -49,7 +47,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'ZH',
-                'default_value' => '""',
                 'column_name' => 'day_end_report_number',
             ],
             [
@@ -58,7 +55,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'ZH',
-                'default_value' => '""',
                 'column_name' => 'administrator',
             ],
             [
@@ -67,7 +63,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'ZH',
-                'default_value' => '""',
                 'column_name' => 'cashier',
             ],
             [
@@ -76,7 +71,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'ZH',
-                'default_value' => '""',
                 'column_name' => 'log_date',
             ],
             [
@@ -85,7 +79,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'ZH',
-                'default_value' => '""',
                 'column_name' => 'date_time',
             ],
             [
@@ -94,7 +87,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'ZH',
-                'default_value' => 0,
                 'column_name' => 'guest_count',
             ],
             [
@@ -103,7 +95,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'gross_sales_amount',
             ],
             [
@@ -112,7 +103,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'ZH',
-                'default_value' => 0,
                 'column_name' => 'transaction_count',
             ],
             [
@@ -121,7 +111,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'total_regular_discount_amount',
             ],
             [
@@ -130,7 +119,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'ZH',
-                'default_value' => 0,
                 'column_name' => 'mandated_discount_transaction_count',
             ],
             [
@@ -139,7 +127,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'ZH',
-                'default_value' => 0,
                 'column_name' => 'total_regular_discount_count',
             ],
             [
@@ -148,7 +135,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'senior_transaction_count',
             ],
             [
@@ -157,7 +143,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'senior_discount_amount',
             ],
             [
@@ -166,7 +151,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'sc_vat_deduction_amount',
             ],
             [
@@ -175,7 +159,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'ZH',
-                'default_value' => 0,
                 'column_name' => 'pwd_transaction_count',
             ],
             [
@@ -184,7 +167,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'pwd_transaction_amount',
             ],
             [
@@ -193,7 +175,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'pwd_vat_deduction',
             ],
             [
@@ -202,7 +183,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'ZH',
-                'default_value' => 0,
                 'column_name' => 'diplomat_transaction_count',
             ],
             [
@@ -211,7 +191,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'diplomat_vat_deduction',
             ],
             [
@@ -220,7 +199,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'vatable_sales',
             ],
             [
@@ -229,7 +207,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'vat_amount',
             ],
             [
@@ -238,7 +215,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'vat_exempt_sales',
             ],
             [
@@ -247,7 +223,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'less_mandated_vat_and_discount',
             ],
             [
@@ -256,7 +231,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'net_of_vat_exempt',
             ],
             [
@@ -265,7 +239,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'zero_rated_sales',
             ],
             [
@@ -274,7 +247,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'non_vat_sales',
             ],
             [
@@ -283,7 +255,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'subtotal',
             ],
             [
@@ -292,7 +263,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'service_charge',
             ],
             [
@@ -301,7 +271,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'net_total',
             ],
             [
@@ -310,7 +279,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'ZH',
-                'default_value' => '""',
                 'column_name' => 'beginning_or',
             ],
             [
@@ -319,7 +287,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'ZH',
-                'default_value' => '""',
                 'column_name' => 'ending_or',
             ],
             [
@@ -328,7 +295,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'ZH',
-                'default_value' => 0,
                 'column_name' => 'no_sales_transaction_count',
             ],
             [
@@ -337,7 +303,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'ZH',
-                'default_value' => 0,
                 'column_name' => 'void_transactions_count',
             ],
             [
@@ -346,7 +311,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'void_transactions_amount',
             ],
             [
@@ -355,7 +319,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'ZH',
-                'default_value' => 0,
                 'column_name' => 'void_items_count',
             ],
             [
@@ -364,7 +327,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'void_items_amount',
             ],
             [
@@ -373,7 +335,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'ZH',
-                'default_value' => 0,
                 'column_name' => 'refunds_count',
             ],
             [
@@ -382,7 +343,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'refunds_amount',
             ],
             [
@@ -391,7 +351,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'ZH',
-                'default_value' => 0,
                 'column_name' => 'total_tenders_count',
             ],
             [
@@ -400,7 +359,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'total_tenders_amount',
             ],
             [
@@ -409,7 +367,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'add_initial_cash_amount',
             ],
             [
@@ -418,7 +375,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'less_withdrawals_amount',
             ],
             [
@@ -427,7 +383,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'add_cash_returns_amount',
             ],
             [
@@ -436,7 +391,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'total_drawer_amount',
             ],
             [
@@ -445,7 +399,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'total_cash_breakdown_amount',
             ],
             [
@@ -454,7 +407,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'short_over_amount',
             ],
             [
@@ -463,7 +415,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'total_cashier_sales_amount',
             ],
             [
@@ -472,7 +423,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => 0.00,
                 'column_name' => 'beginning_balance',
             ],
             [
@@ -481,7 +431,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZH',
-                'default_value' => '""',
                 'column_name' => 'ending_balance',
             ],
             // </ ** ZREAD HEAD ** > //
@@ -493,7 +442,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'ZRD',
-                'default_value' => '""',
                 'column_name' => 'name',
                 'reference_column_name' => 'head_id',
                 'head_reference' => 'ZH.id',
@@ -504,7 +452,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZRD',
-                'default_value' => 0.00,
                 'column_name' => 'count',
                 'reference_column_name' => 'head_id',
                 'head_reference' => 'ZH.id',
@@ -515,7 +462,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZRD',
-                'default_value' => 0.00,
                 'column_name' => 'amount',
                 'reference_column_name' => 'head_id',
                 'head_reference' => 'ZH.id',
@@ -529,7 +475,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'ZTD',
-                'default_value' => '""',
                 'column_name' => 'name',
                 'reference_column_name' => 'head_id',
                 'head_reference' => 'ZH.id',
@@ -540,7 +485,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'ZTD',
-                'default_value' => 0,
                 'column_name' => 'count',
                 'reference_column_name' => 'head_id',
                 'head_reference' => 'ZH.id',
@@ -551,7 +495,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZTD',
-                'default_value' => 0.00,
                 'column_name' => 'amount',
                 'reference_column_name' => 'head_id',
                 'head_reference' => 'ZH.id',
@@ -565,7 +508,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZCB',
-                'default_value' => 0.00,
                 'column_name' => 'denomination',
                 'reference_column_name' => 'head_id',
                 'head_reference' => 'ZH.id',
@@ -576,7 +518,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'ZCB',
-                'default_value' => 0,
                 'column_name' => 'count',
                 'reference_column_name' => 'head_id',
                 'head_reference' => 'ZH.id',
@@ -587,7 +528,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZCB',
-                'default_value' => 0.00,
                 'column_name' => 'amount',
                 'reference_column_name' => 'head_id',
                 'head_reference' => 'ZH.id',
@@ -601,7 +541,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'ZCS',
-                'default_value' => '""',
                 'column_name' => 'name',
                 'reference_column_name' => 'head_id',
                 'head_reference' => 'ZH.id',
@@ -612,7 +551,6 @@ class CdisZreadFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'ZCS',
-                'default_value' => 0.00,
                 'column_name' => 'amount',
                 'reference_column_name' => 'head_id',
                 'head_reference' => 'ZH.id',

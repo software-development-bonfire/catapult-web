@@ -30,7 +30,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'AT',
-                'default_value' => 0,
                 'column_name' => 'id',
             ],
             [
@@ -39,7 +38,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'AT',
-                'default_value' => 0,
                 'column_name' => 'branch_code',
             ],
             [
@@ -48,7 +46,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'AT',
-                'default_value' => '""',
                 'column_name' => 'terminal_number',
             ],
             [
@@ -57,7 +54,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DATETIME',
                 'file_name' => 'AT',
-                'default_value' => '""',
                 'column_name' => 'date',
             ],
             [
@@ -66,7 +62,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'AT',
-                'default_value' => '""',
                 'column_name' => 'application',
             ],
             [
@@ -75,7 +70,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'AT',
-                'default_value' => '""',
                 'column_name' => 'cashier',
             ],
             [
@@ -84,7 +78,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'AT',
-                'default_value' => '""',
                 'column_name' => 'supervisor',
             ],
             [
@@ -93,7 +86,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'AT',
-                'default_value' => '""',
                 'column_name' => 'job',
             ],
             [
@@ -102,7 +94,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'AT',
-                'default_value' => 1,
                 'column_name' => 'transaction_no',
             ],
             [
@@ -111,7 +102,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'AT',
-                'default_value' => 1,
                 'column_name' => 'receipt_no',
             ],
             [
@@ -120,7 +110,6 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'AT',
-                'default_value' => '""',
                 'column_name' => 'remarks',
             ],
         ];

@@ -30,7 +30,6 @@ class CdisCashBreakdownFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'CH',
-                'default_value' => 0,
                 'column_name' => 'branch_code',
             ],
             [
@@ -39,7 +38,6 @@ class CdisCashBreakdownFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'CH',
-                'default_value' => '""',
                 'column_name' => 'terminal_number',
             ],
             [
@@ -48,7 +46,6 @@ class CdisCashBreakdownFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'CH',
-                'default_value' => 1,
                 'column_name' => 'cashier_id',
             ],
             [
@@ -57,7 +54,6 @@ class CdisCashBreakdownFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'CH',
-                'default_value' => '""',
                 'column_name' => 'cashier_name',
             ],
             [
@@ -66,7 +62,6 @@ class CdisCashBreakdownFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DATETIME',
                 'file_name' => 'CH',
-                'default_value' => '""',
                 'column_name' => 'date',
             ],
             [
@@ -75,7 +70,6 @@ class CdisCashBreakdownFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'CH',
-                'default_value' => 1,
                 'column_name' => 'approver_id',
             ],
             [
@@ -84,7 +78,6 @@ class CdisCashBreakdownFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'CH',
-                'default_value' => 1,
                 'column_name' => 'approver_name',
             ],
             [
@@ -93,7 +86,6 @@ class CdisCashBreakdownFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DATETIME',
                 'file_name' => 'CH',
-                'default_value' => 1,
                 'column_name' => 'approved_date',
             ],
             [
@@ -102,7 +94,7 @@ class CdisCashBreakdownFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'CH',
-                'default_value' => 1,
+                'default_value' => '""',
                 'column_name' => 'remarks',
             ],
             [
@@ -111,7 +103,6 @@ class CdisCashBreakdownFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'CD',
-                'default_value' => 0.00,
                 'column_name' => 'denomination',
                 'reference_column_name' => 'head_id',
                 'head_reference' => 'CH.id',
@@ -123,7 +114,6 @@ class CdisCashBreakdownFields extends MigratableSeeder
                 'mapping_type' => 'INT',
                 'file_name' => 'CD',
                 'default_value' => 1,
-                'column_name' => 'quantity',
                 'reference_column_name' => 'head_id',
                 'head_reference' => 'CH.id',
             ],
@@ -133,7 +123,6 @@ class CdisCashBreakdownFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'DECIMAL',
                 'file_name' => 'CD',
-                'default_value' => 1,
                 'column_name' => 'amount',
                 'reference_column_name' => 'head_id',
                 'head_reference' => 'CH.id',
