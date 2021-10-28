@@ -110,6 +110,7 @@ class CdisAuditTrailFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'AT',
+                'default_value' => '""',
                 'column_name' => 'remarks',
             ],
         ];
