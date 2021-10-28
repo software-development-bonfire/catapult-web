@@ -20,6 +20,7 @@ class FieldMappingPresetDataEntriesTransformer extends TransformerAbstract
                 'bid' => $data->bid,
                 'field_mapping_bid' => $data->field_mapping_bid,
                 'required' => $data->required === 1 ? true : false,
+                'nullable' => $data->nullable === 1 ? true : false,
                 'field' => $data->field,
                 'description' => $data->description,
                 'mapping_type' => $data->mapping_type,

@@ -28,6 +28,7 @@ class FieldMappingPresetDetail extends Base implements Transformable
         'bid',
         'field_mapping_bid',
         'required',
+        'nullable',
         'field',
         'description',
         'mapping_type',
