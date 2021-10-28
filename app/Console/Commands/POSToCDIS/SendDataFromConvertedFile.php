@@ -23,7 +23,7 @@ class SendDataFromConvertedFile extends Command
      *
      * @var string
      */
-    protected $signature = 'pos:send-data-from-converted-file';
+    protected $signature = 'pos:send-data-from-converted-file {--timeout=5}';
 
     /**
      * The console command description.
@@ -49,6 +49,22 @@ class SendDataFromConvertedFile extends Command
      */
     public function handle()
     {
+        $timeout = $this->option('timeout');
+        $timeout =
+            filter_var($timeout, FILTER_VALIDATE_BOOLEAN)
+                ? config('sync.pos.to_cdis.timeout')
+                : (
+                    (int) $timeout
+                        ? filter_var($timeout, FILTER_VALIDATE_INT)
+                        : false
+                );
+
+        if ($timeout <= 0 || ! is_int($timeout)) {
+            $this->createLog('Timeout value must be equal or greater than 1.', 'error', true, []);
+
+            return;
+        }
+
         while (true) {
             $entries = [
                 'transaction',
@@ -199,18 +215,18 @@ class SendDataFromConvertedFile extends Command
                     } catch (\Exception $exception) {
                         $this->createLog($exception->getMessage(), 'warn', true, [$entryLogLabel]);
                         $hasException = true;
-                        sleep(5);
+                        sleep($timeout);
                         continue;
                     }
 
                     if (! $hasException) {
-                        sleep(5);
+                        sleep($timeout);
                     }
                 }
             }
 
             if (! $hasFilesToSync) {
-                sleep(5);
+                sleep($timeout);
             }
         }
     }

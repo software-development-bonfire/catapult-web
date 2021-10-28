@@ -5,7 +5,12 @@ return [
     'cdis' => [
         'to_catapult' => [
             'limit' => 300,
-            'interval' => 3600
+            'interval' => 3600,
+        ]
+    ],
+    'pos' => [
+        'to_cdis' => [
+            'timeout' => 5,
         ]
     ],
 ];
