@@ -113,7 +113,7 @@ class CdisCashBreakdownFields extends MigratableSeeder
                 'description' => null,
                 'mapping_type' => 'INT',
                 'file_name' => 'CD',
-                'default_value' => 1,
+                'column_name' => 'quantity',
                 'reference_column_name' => 'head_id',
                 'head_reference' => 'CH.id',
             ],
