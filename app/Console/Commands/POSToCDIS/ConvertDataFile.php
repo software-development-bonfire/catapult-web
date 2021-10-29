@@ -260,7 +260,6 @@ class ConvertDataFile extends Command
                                                 'description' => $mapping['head_reference'].' with a value of '.$referenceValue.' not found.',
                                                 'meta' => [$mapping['file_name'].'.'.$mapping['reference_column_name'], $folderName]
                                             );
-
                                             break 2;
                                         }
                                     }
@@ -412,7 +411,6 @@ class ConvertDataFile extends Command
     ) {
         $fileContent = array($entry => (object) []);
 
-//        var_dump($hierarchyReferences); die();
         foreach ($hierarchyReferences as $entryAcronym => $hierarchyReference) {
             foreach ($hierarchyReference as $reference) {
                 $keyName = $reference['reference_key_name'];
@@ -436,15 +434,15 @@ class ConvertDataFile extends Command
 
             $isMoved = $disk->put($filePath, $fileContent);
 
-//            if ($isMoved) {
-//                if ($disk->exists($processedFolderPath)) {
-//                    $disk->deleteDirectory($processedFolderPath);
-//                } else {
-//                    $disk->move($directory, $processedFolderPath);
-//                }
-//
-//                $this->createLog(__('label.converted'). '  :', 'info', true, [$entryLogLabel], [$fileName]);
-//            }
+            if ($isMoved) {
+                if ($disk->exists($processedFolderPath)) {
+                    $disk->deleteDirectory($processedFolderPath);
+                } else {
+                    $disk->move($directory, $processedFolderPath);
+                }
+
+                $this->createLog(__('label.converted'). '  :', 'info', true, [$entryLogLabel], [$fileName]);
+            }
         } catch(\Throwable $exception) {
             $this->createLog(
                 $exception->getMessage().' in '.$exception->getFile(). ' at line '. $exception->getLine(),
