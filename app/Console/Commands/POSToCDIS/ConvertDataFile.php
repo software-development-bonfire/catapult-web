@@ -260,7 +260,6 @@ class ConvertDataFile extends Command
                                                 'description' => $mapping['head_reference'].' with a value of '.$referenceValue.' not found.',
                                                 'meta' => [$mapping['file_name'].'.'.$mapping['reference_column_name'], $folderName]
                                             );
-                                            break 2;
                                         }
                                     }
 
