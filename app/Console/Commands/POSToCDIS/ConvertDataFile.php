@@ -234,16 +234,17 @@ class ConvertDataFile extends Command
                                     $objectName = $entry;
                                 }
 
-                                $headReferenceEntryAcronym = '';
-                                $referenceValue = '';
-                                $headReferenceIndex = '';
-
                                 foreach ($entryData as $entryDatumIndex => $entryDatum) {
+                                    $headReferenceEntryAcronym = '';
+                                    $referenceValue = '';
+                                    $headReferenceIndex = '';
+
                                     if ($mapping['head_reference']) {
                                         $referenceValue =
                                             $mapping['reference_column_name']
                                                 ? $entryDatum->{$mapping['reference_column_name']}
                                                 : '';
+
                                         $headReferenceEntry = explode('.', $mapping['head_reference']);
                                         $headReferenceEntryAcronym = $headReferenceEntry[0];
                                         $headReferenceEntryFieldName = $headReferenceEntry[1];
@@ -252,6 +253,16 @@ class ConvertDataFile extends Command
                                                 $referenceValue,
                                                 array_column($entriesData->{$headReferenceEntryAcronym},
                                                     $headReferenceEntryFieldName));
+
+                                        if ($headReferenceIndex === false) {
+                                            $mappingErrors[$entryAcronym][] = array(
+                                                'error_type' => 'Reference error',
+                                                'description' => $mapping['head_reference'].' with a value of '.$referenceValue.' not found.',
+                                                'meta' => [$mapping['file_name'].'.'.$mapping['reference_column_name'], $folderName]
+                                            );
+
+                                            break 2;
+                                        }
                                     }
 
                                     $hierarchyReferences[$entryAcronym][$entryDatumIndex] = array(
@@ -282,7 +293,7 @@ class ConvertDataFile extends Command
                                             $mappingErrors[$entryAcronym][] = array(
                                                 'error_type' => 'Column not found',
                                                 'description' => $mapping['column_name'],
-                                                'row' => $entryDatumIndex + 2
+                                                'meta' => ['Row'. ($entryDatumIndex + 2)]
                                             );
 
                                             break;
@@ -343,7 +354,7 @@ class ConvertDataFile extends Command
                                     'error',
                                     false,
                                     [],
-                                    ['Row: '. $error['row']]
+                                    $error['meta']
                                 );
                             }
                         }
@@ -401,6 +412,7 @@ class ConvertDataFile extends Command
     ) {
         $fileContent = array($entry => (object) []);
 
+//        var_dump($hierarchyReferences); die();
         foreach ($hierarchyReferences as $entryAcronym => $hierarchyReference) {
             foreach ($hierarchyReference as $reference) {
                 $keyName = $reference['reference_key_name'];
@@ -424,15 +436,15 @@ class ConvertDataFile extends Command
 
             $isMoved = $disk->put($filePath, $fileContent);
 
-            if ($isMoved) {
-                if ($disk->exists($processedFolderPath)) {
-                    $disk->deleteDirectory($processedFolderPath);
-                } else {
-                    $disk->move($directory, $processedFolderPath);
-                }
-
-                $this->createLog(__('label.converted'). '  :', 'info', true, [$entryLogLabel], [$fileName]);
-            }
+//            if ($isMoved) {
+//                if ($disk->exists($processedFolderPath)) {
+//                    $disk->deleteDirectory($processedFolderPath);
+//                } else {
+//                    $disk->move($directory, $processedFolderPath);
+//                }
+//
+//                $this->createLog(__('label.converted'). '  :', 'info', true, [$entryLogLabel], [$fileName]);
+//            }
         } catch(\Throwable $exception) {
             $this->createLog(
                 $exception->getMessage().' in '.$exception->getFile(). ' at line '. $exception->getLine(),
