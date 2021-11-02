@@ -51,16 +51,16 @@ class SendDataFromConvertedFile extends Command
     {
         $timeout = $this->option('timeout');
         $timeout =
-            filter_var($timeout, FILTER_VALIDATE_BOOLEAN)
-                ? config('sync.pos.to_cdis.timeout')
+            filter_var($timeout, FILTER_VALIDATE_BOOLEAN) && is_bool($timeout)
+                ? (float) config('sync.pos.to_cdis.timeout')
                 : (
-                    (int) $timeout
-                        ? filter_var($timeout, FILTER_VALIDATE_INT)
+                    (float) $timeout
+                        ? filter_var($timeout, FILTER_VALIDATE_FLOAT)
                         : false
                 );
 
-        if ($timeout <= 0 || ! is_int($timeout)) {
-            $this->createLog('Timeout value must be equal or greater than 1.', 'error', true, []);
+        if ($timeout < 0.3 || (! is_float($timeout))) {
+            $this->createLog('Timeout value must be equal or greater than 0.3.', 'error', true, []);
 
             return;
         }
