@@ -271,7 +271,7 @@ class ConvertDataFile extends Command
                                         'reference_column' => $mapping['reference_column_name'],
                                         'reference_value' => $referenceValue,
                                         'head_reference_entry_acronym' => $headReferenceEntryAcronym,
-                                        'head_reference_entry_index' => (int) $headReferenceIndex,
+                                        'head_reference_entry_index' => $headReferenceIndex,
                                     );
 
                                     $entryDatum = (array) $entryDatum;
@@ -413,10 +413,18 @@ class ConvertDataFile extends Command
         foreach ($hierarchyReferences as $entryAcronym => $hierarchyReference) {
             foreach ($hierarchyReference as $reference) {
                 $keyName = $reference['reference_key_name'];
-                foreach ($entryContent[$keyName] as $dataIndex => $data) {
-                    $path = array();
-                    $fileContent = $this->setValue($hierarchyReferences, $reference, $fileContent, $data, $path, $dataIndex);
+                $index = $reference['index'];
+
+                $data = $entryContent[$keyName][$index];
+
+                if ($reference['head_reference_entry_acronym'] == '' && $reference['head_reference_entry_index'] == '') {
+                    $headReference = $reference;
+                } else {
+                    $headReference = $hierarchyReferences[$reference['entry_acronym']][$reference['index']];
                 }
+
+                $path = array();
+                $fileContent = $this->setValue($hierarchyReferences, $headReference, $fileContent, $data, $path, $index);
             }
         }
 
@@ -434,11 +442,11 @@ class ConvertDataFile extends Command
             $isMoved = $disk->put($filePath, $fileContent);
 
             if ($isMoved) {
-                if ($disk->exists($processedFolderPath)) {
-                    $disk->deleteDirectory($processedFolderPath);
-                } else {
-                    $disk->move($directory, $processedFolderPath);
-                }
+//                if ($disk->exists($processedFolderPath)) {
+//                    $disk->deleteDirectory($processedFolderPath);
+//                } else {
+//                    $disk->move($directory, $processedFolderPath);
+//                }
 
                 $this->createLog(__('label.converted'). '  :', 'info', true, [$entryLogLabel], [$fileName]);
             }
@@ -488,7 +496,20 @@ class ConvertDataFile extends Command
                 }
             }
 
-            Arr::set($fileContent, $actualPath, $data);
+            $pathArray = explode('.', $actualPath);
+            unset($pathArray[count($pathArray) - 1]);
+            $pathArray = implode('.', $pathArray);
+
+            $objectContent = Arr::get($fileContent, $pathArray);
+
+            if (is_null($objectContent)) {
+                $finalPath = $pathArray.'.0';
+            } else {
+                $index = count((array) $objectContent);
+                $finalPath = $pathArray.'.'.$index;
+            }
+
+            Arr::set($fileContent, $finalPath, $data);
 
             return $fileContent;
         } else {

@@ -303,6 +303,7 @@ class TerminalTransactionService
 
                                             $addonData = [
                                                 'transaction_detail_bid' => $terminalTransactionDetailProduct->bid,
+                                                'product_bid' => $addon->product_bid,
                                                 'name' => $addon->name,
                                                 'quantity' => $addon->quantity,
                                                 'original_price' => $addon->original_price,
