@@ -442,11 +442,11 @@ class ConvertDataFile extends Command
             $isMoved = $disk->put($filePath, $fileContent);
 
             if ($isMoved) {
-//                if ($disk->exists($processedFolderPath)) {
-//                    $disk->deleteDirectory($processedFolderPath);
-//                } else {
-//                    $disk->move($directory, $processedFolderPath);
-//                }
+                if ($disk->exists($processedFolderPath)) {
+                    $disk->deleteDirectory($processedFolderPath);
+                } else {
+                    $disk->move($directory, $processedFolderPath);
+                }
 
                 $this->createLog(__('label.converted'). '  :', 'info', true, [$entryLogLabel], [$fileName]);
             }
