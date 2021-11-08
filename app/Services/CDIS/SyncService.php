@@ -19,12 +19,13 @@ class SyncService
     /**
      * Get for sync bids.
      *
-     * @param array $data
+     * @param int $limit
+     * @param string $table
      * @return \Illuminate\Http\Response
      */
-    public function forSync($limit = 100)
+    public function forSync($limit = 100, $table = 'all')
     {
-        return $this->transaction(function () use($limit) {
+        return $this->transaction(function () use($limit, $table) {
             $client = [
                 'verify' => false,
                 'http_errors' => false,
@@ -36,7 +37,7 @@ class SyncService
             $limit = $limit ? $limit : config('sync.cdis.to_catapult.limit');
 
             $options = [
-                'json' => ['sender_details' => $this->getSenderDetails(), 'limit' => $limit],
+                'json' => ['sender_details' => $this->getSenderDetails(), 'limit' => $limit, 'table' => $table],
                 'headers' => [
                     'Accept' => 'application/json',
                 ]
