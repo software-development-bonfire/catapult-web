@@ -341,7 +341,7 @@ class TerminalTransactionService
 
                                             $discountData = [
                                                 'transaction_product_bid' => $terminalTransactionDetailProduct->bid,
-                                                'discount_bid' => $discount->id,
+                                                'discount_bid' => $discount->discount_id,
                                                 'title' => $discount->title,
                                                 'total' => $discount->total,
                                                 'amount_discount' => $discount->amount_discount,
