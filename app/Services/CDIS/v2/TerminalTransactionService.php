@@ -306,9 +306,14 @@ class TerminalTransactionService
                                                 'product_bid' => $addon->product_bid,
                                                 'name' => $addon->name,
                                                 'quantity' => $addon->quantity,
+                                                'tax_percentage' => $addon->tax_percentage,
                                                 'original_price' => $addon->original_price,
                                                 'price' => $addon->price,
-                                                'total_amount' => $addon->total_amount
+                                                'total_amount' => $addon->total_amount,
+                                                'vatable_sales' => $addon->vatable_sales,
+                                                'zero_rated_sales' => $addon->zero_rated_sales,
+                                                'tax' => $addon->tax,
+                                                'vat_exempt' => $addon->vat_exempt,
                                             ];
 
                                             $terminalTransactionDetailAddon = $terminalTransactionDetailProduct->addons()->create($addonData);
@@ -341,7 +346,7 @@ class TerminalTransactionService
 
                                             $discountData = [
                                                 'transaction_product_bid' => $terminalTransactionDetailProduct->bid,
-                                                'discount_bid' => $discount->discount_id,
+                                                'discount_bid' => $discount->discount_bid,
                                                 'title' => $discount->title,
                                                 'total' => $discount->total,
                                                 'amount_discount' => $discount->amount_discount,

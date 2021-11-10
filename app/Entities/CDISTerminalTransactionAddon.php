@@ -11,9 +11,14 @@ class CDISTerminalTransactionAddon extends Base
         'product_bid',
         'name',
         'quantity',
+        'tax_percentage',
         'original_price',
         'price',
         'total_amount',
+        'vatable_sales',
+        'zero_rated_sales',
+        'tax',
+        'vat_exempt',
         'remarks',
     ];
 
