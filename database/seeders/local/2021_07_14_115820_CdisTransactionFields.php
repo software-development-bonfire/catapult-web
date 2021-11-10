@@ -207,7 +207,7 @@ class CdisTransactionFields extends MigratableSeeder
             ],
             [
 
-                'required' => 0,
+                'required' => 1,
                 'field' => 'table_number',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
@@ -217,7 +217,7 @@ class CdisTransactionFields extends MigratableSeeder
             ],
             [
 
-                'required' => 0,
+                'required' => 1,
                 'field' => 'guest_count',
                 'description' => null,
                 'mapping_type' => 'INT',
