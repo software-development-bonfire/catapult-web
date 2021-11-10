@@ -852,7 +852,7 @@ class CdisTransactionFields extends MigratableSeeder
             ],
             [
                 'required' => 1,
-                'field' => 'official_receipt.*.product.*.addon.*.product_id',
+                'field' => 'official_receipt.*.product.*.addon.*.product_bid',
                 'description' => null,
                 'mapping_type' => 'VARCHAR',
                 'file_name' => 'AD',
