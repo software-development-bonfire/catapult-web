@@ -255,7 +255,8 @@ class SendDataFromConvertedFile extends Command
         return $response;
     }
 
-    private function getSenderDetails() {
+    private function getSenderDetails()
+    {
         return [
             'client_id' => config('configuration.client_id'),
             'product_key' => config('configuration.product_key'),

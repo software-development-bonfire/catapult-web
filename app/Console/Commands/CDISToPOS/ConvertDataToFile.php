@@ -509,7 +509,7 @@ class ConvertDataToFile extends Command
                     $result = $this->generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails, $timeStamp);
 
                     if ($result) {
-//                        CDISSync::whereIn('bid', $toSyncData->pluck('bid'))->delete();
+                        CDISSync::whereIn('bid', $toSyncData->pluck('bid'))->delete();
                     }
 
                     return $result;
@@ -517,10 +517,10 @@ class ConvertDataToFile extends Command
                     $result = $this->generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails, $timeStamp);
 
                     if ($result) {
-//                        CDISSync::where([
-//                            'table_name' => $forSyncDatum->table_name,
-//                            'table_bid' => $forSyncDatum->table_bid,
-//                        ])->delete();
+                        CDISSync::where([
+                            'table_name' => $forSyncDatum->table_name,
+                            'table_bid' => $forSyncDatum->table_bid,
+                        ])->delete();
                     }
 
                     return $result;
