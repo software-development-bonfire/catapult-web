@@ -193,7 +193,7 @@ class SendDataFromConvertedFile extends Command
                                 $this->createLog(__('error.failed_to_send_data'), 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
                                 $this->createLog('    Errors:', 'error', false);
                                 foreach ($errors as $error) {
-                                    $this->createLog('        -> '.$error[0], 'error', false);
+                                    $this->createLog('        -> '.json_encode($error), 'error', false);
                                 }
 
                                 $destinationPath = $failedSyncBadRequestPath.'/'.$fileName;

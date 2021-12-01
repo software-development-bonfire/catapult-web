@@ -283,7 +283,17 @@ class ConvertDataFile extends Command
                                             $fieldValue = $entryDatum[$mapping['column_name']];
 
                                             if (is_null($fieldValue) || $fieldValue === '') {
-                                                $fieldValue = $mapping['default_value'];
+                                                $defaultValue = $mapping['default_value'];
+
+                                                if ((is_null($defaultValue) || $defaultValue === '') && ! $mapping['nullable']) {
+                                                    $mappingErrors[$entryAcronym][] = array(
+                                                        'error_type' => 'No value was set even the default value. This is required.',
+                                                        'description' => $mapping['column_name'],
+                                                        'meta' => ['Row: '. ($entryDatumIndex + 2)]
+                                                    );
+                                                } else {
+                                                    $fieldValue = $mapping['default_value'];
+                                                }
                                             }
                                         } else if ($mapping['nullable']) {
                                             $fieldValue = NULL;
@@ -291,7 +301,7 @@ class ConvertDataFile extends Command
                                             $mappingErrors[$entryAcronym][] = array(
                                                 'error_type' => 'Column not found',
                                                 'description' => $mapping['column_name'],
-                                                'meta' => ['Row'. ($entryDatumIndex + 2)]
+                                                'meta' => ['Row: '. ($entryDatumIndex + 2)]
                                             );
 
                                             break;
