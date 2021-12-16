@@ -1,7 +1,7 @@
 module.exports = {
     apps : [
         {
-            name : "[CATAPULT] Queue Worker",
+            name : "CPLT-Queue Worker",
             script: "artisan",
             args: ["queue:work", "--tries=5"],
             exec_interpreter: "php",
@@ -12,7 +12,7 @@ module.exports = {
             autorestart: true,
         },
         {
-            name : "[CATAPULT][CDIS] FDFS",
+            name : "CPLT-CDIS-FDFS",
             script: "artisan",
             args: ["cdis:fetch-data-for-sync"],
             exec_interpreter: "php",
@@ -23,7 +23,7 @@ module.exports = {
             autorestart: true,
         },
         {
-            name : "[CATAPULT][CDIS] CDTF",
+            name : "CPLT-CDIS-CDTF",
             script: "artisan",
             args: ["cdis:convert-data-to-file"],
             exec_interpreter: "php",
@@ -34,7 +34,7 @@ module.exports = {
             autorestart: true,
         },
         {
-            name : "[CATAPULT][POS] SDF",
+            name : "CPLT-POS-SDF",
             script: "artisan",
             args: ["pos:sync-data-file"],
             exec_interpreter: "php",
@@ -45,7 +45,7 @@ module.exports = {
             autorestart: true,
         },
         {
-            name : "[CATAPULT][POS] CDF",
+            name : "CPLT-POS-CDF",
             script: "artisan",
             args: ["pos:convert-data-file"],
             exec_interpreter: "php",
@@ -56,7 +56,7 @@ module.exports = {
             autorestart: true,
         },
         {
-            name : "[CATAPULT][POS] SDFCF",
+            name : "CPLT-POS-SDFCF",
             script: "artisan",
             args: ["pos:send-data-from-converted-file"],
             exec_interpreter: "php",
