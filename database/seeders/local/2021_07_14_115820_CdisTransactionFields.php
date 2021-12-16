@@ -204,6 +204,7 @@ class CdisTransactionFields extends MigratableSeeder
                 'mapping_type' => 'INT',
                 'file_name' => 'TH',
                 'column_name' => 'order_number',
+                'nullable' => 1,
             ],
             [
 
