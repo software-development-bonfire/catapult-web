@@ -469,6 +469,11 @@ class ConvertDataFile extends Command
                 [$fileName, 'Failed conversion']
             );
 
+            if ($disk->exists($failedConversionFolderPath)) {
+                $disk->deleteDirectory($failedConversionFolderPath);
+            } else {
+                $disk->move($directory, $failedConversionFolderPath);
+            }
 
             return false;
         }
