@@ -3,7 +3,6 @@
 namespace App\Services\CDIS\v2;
 
 use App\Entities\CDISTerminalTransaction;
-use App\Enums\CDIS\TerminalTransactionType;
 use App\Repositories\Contracts\CDIS\BranchRepository;
 use App\Repositories\Contracts\CDIS\TerminalTransactionRepository;
 use App\Traits\DatabaseTransaction;
@@ -34,12 +33,23 @@ class TerminalTransactionService
 
                     $terminal = $branch->terminals;
 
-                    $headData = [
+                    $primaryHeadData = [
                         'terminal_bid' => $terminal[0]->bid,
-                        'transaction_id' => $datum->transaction_id,
                         'date' => $datum->date,
-                        'amount' => $datum->amount,
+                        'transaction_id' => $datum->transaction_id,
                         'transaction_type' => $datum->transaction_type,
+                        'log_date' => $datum->log_date,
+                    ];
+
+                    $terminalTransaction = app()->make(TerminalTransactionRepository::class)
+                        ->where($primaryHeadData);
+
+                    if ($terminalTransaction->count() > 0 ?? false) {
+                        $terminalTransaction->forceDelete();
+                    }
+
+                    $secondaryHeadData = [
+                        'amount' => $datum->amount,
                         'is_zread' => $datum->is_zread,
                         'type' => $datum->type,
                         'status' => $datum->status,
@@ -53,20 +63,12 @@ class TerminalTransactionService
                         'total_vat_exempt_amount' => $datum->total_vat_exempt_amount,
                         'total_vatable_sales' => $datum->total_vatable_sales,
                         'total_zero_rated_sales' => $datum->total_zero_rated_sales,
-                        'log_date' => $datum->log_date,
                         'order_number' => $datum->order_number,
                         'table_number' => $datum->table_number,
                         'guest_count' => $datum->guest_count,
                     ];
 
-                    if ($datum->transaction_type == TerminalTransactionType::SALES) {
-                        $terminalTransaction = app()->make(TerminalTransactionRepository::class)
-                                ->findWhere($headData);
-
-                        if ($terminalTransaction->count() > 0) {
-                            $terminalTransaction[0]->delete();
-                        }
-                    }
+                    $headData = array_merge($primaryHeadData, $secondaryHeadData);
 
                     $terminalTransaction = CDISTerminalTransaction::create($headData);
 
