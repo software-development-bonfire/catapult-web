@@ -34,6 +34,7 @@ class SyncService
             ];
 
             $uri = config('endpoint.cdis.domain').''.config('endpoint.cdis.for.catapult.v1.forSync');
+
             $limit = $limit ? $limit : config('sync.cdis.to_catapult.limit');
 
             $options = [
