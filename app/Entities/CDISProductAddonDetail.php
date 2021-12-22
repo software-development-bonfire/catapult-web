@@ -19,12 +19,17 @@ class CDISProductAddonDetail extends BaseModel
     protected $casts = [
         'bid' => 'string',
         'head_bid' => 'string',
-        'product_pricing_type_bid' => 'string',
+        'product_branch_price_bid' => 'string',
         'product_uom_bid' => 'string',
     ];
 
     public function head()
     {
         return $this->belongsTo(CDISProductAddon::class, 'head_bid', 'bid');
+    }
+
+    public function uomPackaging()
+    {
+        return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_bid', 'bid');
     }
 }
