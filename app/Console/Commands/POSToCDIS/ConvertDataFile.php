@@ -17,6 +17,7 @@ use App\Traits\GenericHelper;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -47,6 +48,8 @@ class ConvertDataFile extends Command
      */
     public function handle()
     {
+        Cache::forget('data_mappings_and_file_storage_setup');
+
         $this->createLog(__('info.conversion_started'), 'info', true);
 
         $filters = (object) array('type' => MappingType::CDIS_TO_POS);
@@ -79,9 +82,11 @@ class ConvertDataFile extends Command
                     'status' => Status::ACTIVE,
                 ];
 
-                $fieldMappingDetails = app()
-                    ->make(FieldMappingRepository::class)
-                    ->list($filters, false, ['fileStorageSetup', 'dataMappings']);
+                $fieldMappingDetails = Cache::remember('data_mappings_and_file_storage_setup', 60*60, function () use($filters) {
+                    return app()
+                        ->make(FieldMappingRepository::class)
+                        ->list($filters, false, ['fileStorageSetup', 'dataMappings']);
+                });
 
                 if (count($fieldMappingDetails) > 0) {
                     $fieldMappingDetails = $fieldMappingDetails[0];

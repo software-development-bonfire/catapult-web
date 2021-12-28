@@ -10,6 +10,7 @@ use App\Traits\GenericHelper;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -49,6 +50,8 @@ class SendDataFromConvertedFile extends Command
      */
     public function handle()
     {
+        Cache::forget('api_and_file_storage_setup');
+
         $timeout = $this->option('timeout');
         $timeout =
             filter_var($timeout, FILTER_VALIDATE_BOOLEAN) && is_bool($timeout)
@@ -65,15 +68,15 @@ class SendDataFromConvertedFile extends Command
             return;
         }
 
-        while (true) {
-            $entries = [
-                'transaction',
-                'zread',
-                'audit_trail',
-                'cash_breakdown',
-                'cash_drawer',
-            ];
+        $entries = [
+            'transaction',
+            'zread',
+            'audit_trail',
+            'cash_breakdown',
+            'cash_drawer',
+        ];
 
+        while (true) {
             $entriesMaxLength = max(array_map('strlen', $entries));
             $remoteDiskName = '';
             $localDiskName = '';
@@ -81,7 +84,6 @@ class SendDataFromConvertedFile extends Command
             $hasFilesToSync = false;
 
             foreach ($entries as $entry) {
-                $hasException = false;
                 $spaces = ($entriesMaxLength - strlen($entry)) / 2;
                 $entryLogLabel = str_repeat(' ', ceil($spaces)).$entry.str_repeat(' ', floor($spaces));
 
@@ -90,9 +92,11 @@ class SendDataFromConvertedFile extends Command
                     'status' => Status::ACTIVE,
                 ];
 
-                $fieldMappingDetails = app()
-                    ->make(FieldMappingRepository::class)
-                    ->list($filters, false, ['fileStorageSetup', 'apiSetup']);
+                $fieldMappingDetails = Cache::remember('api_and_file_storage_setup', 60*60, function () use($filters) {
+                    return app()
+                        ->make(FieldMappingRepository::class)
+                        ->list($filters, false, ['fileStorageSetup', 'apiSetup']);
+                });
 
                 if (count($fieldMappingDetails) > 0) {
                     $fieldMappingDetails = $fieldMappingDetails[0];
@@ -136,8 +140,9 @@ class SendDataFromConvertedFile extends Command
                     app()['config']->set('filesystems.disks.' . $localDiskName . '.driver', 'local');
                     app()['config']->set('filesystems.disks.' . $localDiskName . '.root', $fileStorageSetup->local_path);
                 } else {
-
-                    return false;
+                    $this->createLog(__('error.no_file_storage_setup_detected'), 'error', true, [$entryLogLabel], []);
+                    sleep($timeout);
+                    continue;
                 }
 
                 $entryFolderName = Str::title(str_replace('_', ' ', $entry));
@@ -152,6 +157,11 @@ class SendDataFromConvertedFile extends Command
 
                 if (! $files) {
                     $this->createLog(__('message.no_data_to_send'), 'info', true, [$entryLogLabel], []);
+
+                    if (ob_get_length()) {
+                        ob_end_flush();
+                        flush();
+                    }
 
                     continue;
                 } else {
@@ -203,7 +213,8 @@ class SendDataFromConvertedFile extends Command
 
                                 $destinationPath = $failedSyncBadRequestPath.'/'.$fileName;
                             } else {
-                                continue;
+                                $this->createLog(__('error.unsyncable_data'), 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
+                                $destinationPath = $failedSyncUnsyncablePath.'/'.$fileName;
                             }
                         }
 
@@ -214,15 +225,21 @@ class SendDataFromConvertedFile extends Command
                         $localDisk->move($file, $destinationPath);
                     } catch (\Exception $exception) {
                         $this->createLog($exception->getMessage(), 'warn', true, [$entryLogLabel]);
-                        $hasException = true;
                         sleep($timeout);
+
+                        if (ob_get_length()) {
+                            ob_end_flush();
+                            flush();
+                        }
+
                         continue;
                     }
-
-                    if (! $hasException) {
-                        sleep($timeout);
-                    }
                 }
+            }
+
+            if (ob_get_length()) {
+                ob_end_flush();
+                flush();
             }
 
             if (! $hasFilesToSync) {

@@ -11,6 +11,7 @@ use App\Services\ErrorLogService;
 use App\Traits\GenericHelper;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -54,6 +55,8 @@ class SyncDataFile extends Command implements ShouldQueue
      */
     public function handle()
     {
+        Cache::forget('file_storage_setup');
+
         $this->line('Syncing started..');
         $this->line('');
 
@@ -82,9 +85,11 @@ class SyncDataFile extends Command implements ShouldQueue
                     'status' => Status::ACTIVE,
                 ];
 
-                $fieldMappingDetails = app()
-                    ->make(FieldMappingRepository::class)
-                    ->list($filters, false, ['fileStorageSetup']);
+                $fieldMappingDetails = Cache::remember('file_storage_setup', 60*60, function () use($filters) {
+                    return app()
+                        ->make(FieldMappingRepository::class)
+                        ->list($filters, false, ['fileStorageSetup']);
+                });
 
                 if (count($fieldMappingDetails) > 0) {
                     $fieldMappingDetails = $fieldMappingDetails[0];
