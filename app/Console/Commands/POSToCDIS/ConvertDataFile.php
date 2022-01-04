@@ -48,8 +48,6 @@ class ConvertDataFile extends Command
      */
     public function handle()
     {
-        Cache::forget('data_mappings_and_file_storage_setup');
-
         $this->createLog(__('info.conversion_started'), 'info', true);
 
         $filters = (object) array('type' => MappingType::CDIS_TO_POS);
@@ -59,15 +57,19 @@ class ConvertDataFile extends Command
             $this->syncEntries[$syncEntry->name] = $syncEntry->alias;
         }
 
-        while (true) {
-            $entries = [
-                'transaction' => TerminalTransactionService::class,
-                'zread' => ZReadService::class,
-                'audit_trail' => POSAuditTrailService::class,
-                'cash_breakdown' => CashBreakdownService::class,
-                'cash_drawer' => CashDrawerService::class,
-            ];
+        $entries = [
+            'transaction' => TerminalTransactionService::class,
+            'zread' => ZReadService::class,
+            'audit_trail' => POSAuditTrailService::class,
+            'cash_breakdown' => CashBreakdownService::class,
+            'cash_drawer' => CashDrawerService::class,
+        ];
 
+        foreach (array_keys($entries) as $entry) {
+            Cache::forget('data_mappings_and_file_storage_setup_'. $entry);
+        }
+
+        while (true) {
             $entriesMaxLength = max(array_map('strlen', array_keys($entries)));
 
             foreach ($entries as $entry => $serviceClass) {
@@ -82,7 +84,7 @@ class ConvertDataFile extends Command
                     'status' => Status::ACTIVE,
                 ];
 
-                $fieldMappingDetails = Cache::remember('data_mappings_and_file_storage_setup', 60*60, function () use($filters) {
+                $fieldMappingDetails = Cache::remember('data_mappings_and_file_storage_setup_'.$entry, 60*60, function () use($filters) {
                     return app()
                         ->make(FieldMappingRepository::class)
                         ->list($filters, false, ['fileStorageSetup', 'dataMappings']);

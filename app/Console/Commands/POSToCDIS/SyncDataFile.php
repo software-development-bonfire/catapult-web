@@ -55,22 +55,24 @@ class SyncDataFile extends Command implements ShouldQueue
      */
     public function handle()
     {
-        Cache::forget('file_storage_setup');
-
         $this->line('Syncing started..');
         $this->line('');
 
         $entryLimit = Configuration::where('attribute', 'pos_to_cdis_entry_limit')->first();
 
-        while (true) {
-            $entries = [
-                'transaction',
-                'zread',
-                'audit_trail',
-                'cash_breakdown',
-                'cash_drawer',
-            ];
+        $entries = [
+            'transaction',
+            'zread',
+            'audit_trail',
+            'cash_breakdown',
+            'cash_drawer',
+        ];
 
+        foreach (array_keys($entries) as $entry) {
+            Cache::forget('file_storage_setup_'.$entry);
+        }
+
+        while (true) {
             $entriesMaxLength = max(array_map('strlen', $entries));
 
             foreach ($entries as $entry) {
@@ -85,7 +87,7 @@ class SyncDataFile extends Command implements ShouldQueue
                     'status' => Status::ACTIVE,
                 ];
 
-                $fieldMappingDetails = Cache::remember('file_storage_setup', 60*60, function () use($filters) {
+                $fieldMappingDetails = Cache::remember('file_storage_setup_'.$entry, 60*60, function () use($filters) {
                     return app()
                         ->make(FieldMappingRepository::class)
                         ->list($filters, false, ['fileStorageSetup']);

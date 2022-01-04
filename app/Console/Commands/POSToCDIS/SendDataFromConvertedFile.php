@@ -50,8 +50,6 @@ class SendDataFromConvertedFile extends Command
      */
     public function handle()
     {
-        Cache::forget('api_and_file_storage_setup');
-
         $timeout = $this->option('timeout');
         $timeout =
             filter_var($timeout, FILTER_VALIDATE_BOOLEAN) && is_bool($timeout)
@@ -76,6 +74,10 @@ class SendDataFromConvertedFile extends Command
             'cash_drawer',
         ];
 
+        foreach (array_keys($entries) as $entry) {
+            Cache::forget('api_and_file_storage_setup_'.$entry);
+        }
+
         while (true) {
             $entriesMaxLength = max(array_map('strlen', $entries));
             $remoteDiskName = '';
@@ -92,7 +94,7 @@ class SendDataFromConvertedFile extends Command
                     'status' => Status::ACTIVE,
                 ];
 
-                $fieldMappingDetails = Cache::remember('api_and_file_storage_setup', 60*60, function () use($filters) {
+                $fieldMappingDetails = Cache::remember('api_and_file_storage_setup_'.$entry, 60*60, function () use($filters) {
                     return app()
                         ->make(FieldMappingRepository::class)
                         ->list($filters, false, ['fileStorageSetup', 'apiSetup']);

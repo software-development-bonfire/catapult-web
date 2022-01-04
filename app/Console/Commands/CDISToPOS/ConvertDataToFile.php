@@ -82,7 +82,6 @@ class ConvertDataToFile extends Command
 
         Cache::forget('excludedEntries');
         Cache::forget('excludedSyncBids');
-        Cache::forget('file_storage_setup');
 
         $this->createLog(
             __('info.syncing_started'),
@@ -95,6 +94,7 @@ class ConvertDataToFile extends Command
 
         foreach ($syncEntries as $syncEntry) {
             $this->syncEntries[$syncEntry->name] = $syncEntry->alias;
+            Cache::forget('file_storage_setup_'.$syncEntry->name);
         }
 
         $fieldMappingDetails = app()
@@ -185,7 +185,7 @@ class ConvertDataToFile extends Command
             'type' => 1,
         ];
 
-        $fieldMappingDetails = Cache::remember('file_storage_setup', 60*60, function () use($filters) {
+        $fieldMappingDetails = Cache::remember('file_storage_setup_'.$entryName, 60*60, function () use($filters) {
             return app()
                 ->make(FieldMappingRepository::class)
                 ->list($filters, false, ['fileStorageSetup']);
