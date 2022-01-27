@@ -277,7 +277,7 @@
                 } else {
                     let index = this.form.values.index;
 
-                    axios.put(`api-setup/${this.form.values.bid}`, this.form.values)
+                    axios.patch(`api-setup/${this.form.values.bid}`, this.form.values)
                     .then(response => {
                         
                         this.table.values.data[index] = {

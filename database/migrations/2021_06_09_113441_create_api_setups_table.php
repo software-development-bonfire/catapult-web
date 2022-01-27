@@ -17,7 +17,7 @@ class CreateApiSetupsTable extends Migration
 	{
 		Schema::create('api_setups', function(Blueprint $table) {
             $table->bigIncrements('id');
-			$table->unsignedBigInteger('bid');
+			$table->unsignedBigInteger('bid')->index()->unique();
 			$table->string('name', 45);
 			$table->string('end_point', 128);
 			$table->tinyInteger('status');

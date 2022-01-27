@@ -22,7 +22,7 @@ class ApiSetupTransformer extends TransformerAbstract
     public function transform(ApiSetup $model)
     {
         return [
-            'bid' => (int) $model->bid,
+            'bid' => (string) $model->bid,
             'name' => (string) $model->name,
             'end_point' => (string) $model->end_point,
             'status' => (int) $model->status,

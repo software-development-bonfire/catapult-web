@@ -3,11 +3,15 @@
 namespace App\Services;
 
 use App\Entities\ApiSetup;
+use App\Traits\DatabaseTransaction;
+use App\Traits\QueryHelper;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Lang;
 
 class ApiSetupService
 {
+    use DatabaseTransaction;
+
     /**
      * Update the specified resource in storage.
      *
@@ -40,17 +44,12 @@ class ApiSetupService
      */
     public function update($data, $bid)
     {
-        // dd($data, $bid);
-        try {
+        return $this->transaction(function() use($bid, $data) {
             $data['updated_by'] = Auth::user()->bid;
             $update = ApiSetup::find($bid)->update($data);
 
-            if ($update) {
-                return ['message' => Lang::get('success.api_setup_updated')];
-            }
-        } catch (\Throwable $th) {
-            return ['message' => Lang::get('error.api_setup_failed_update')];
-        }
+            return $update;
+        });
     }
 
     /**

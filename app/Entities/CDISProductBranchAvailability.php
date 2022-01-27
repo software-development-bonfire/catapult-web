@@ -2,10 +2,9 @@
 
 namespace App\Entities;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class CDISProductBranchAvailability extends Model
+class CDISProductBranchAvailability extends BaseModel
 {
     use SoftDeletes;
 
@@ -29,4 +28,9 @@ class CDISProductBranchAvailability extends Model
         'product_uom_bid' => 'string',
         'is_available' => 'boolean',
     ];
+
+    public function productBranchPrice()
+    {
+        return $this->hasMany(CDISProductBranchPrice::class, 'product_branch_availability_bid', 'bid');
+    }
 }

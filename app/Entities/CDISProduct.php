@@ -2,10 +2,9 @@
 
 namespace App\Entities;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class CDISProduct extends Model
+class CDISProduct extends BaseModel
 {
     use SoftDeletes;
 
@@ -34,4 +33,9 @@ class CDISProduct extends Model
         'created_by' => 'string',
         'updated_by' => 'string',
     ];
+
+    public function productUomPackaging()
+    {
+        return $this->hasMany(CDISProductUomPackaging::class, 'product_bid', 'bid');
+    }
 }

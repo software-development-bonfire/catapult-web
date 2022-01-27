@@ -1,5 +1,8 @@
 <?php
 
+use App\Enums\Directory;
+use App\Enums\Disk;
+
 return [
 
     /*
@@ -62,6 +65,26 @@ return [
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
             'url' => env('AWS_URL'),
+        ],
+
+        Disk::DEFAULT_CSV => [
+            'driver' => 'local',
+            'root' => public_path('Default csv'),
+        ],
+
+        Disk::LOCAL_POS_TO_CDIS => [
+            'driver' => 'local',
+            'root' => storage_path('app/public')
+        ],
+
+        Disk::POS_TO_CDIS => [
+            'driver' => 'ftp',
+            'host' => '',
+            'username' => '',
+            'password' => '',
+            'port' => 21,
+            'root' => storage_path('app/public'),
+            'timeout' => 60,
         ],
 
     ],

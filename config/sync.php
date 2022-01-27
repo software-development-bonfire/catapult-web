@@ -1,10 +1,16 @@
 <?php
 
 return [
+    'restart' => false,
     'cdis' => [
         'to_catapult' => [
-            'limit' => 60,
-            'interval' => 300
+            'limit' => 300,
+            'interval' => 3600,
+        ]
+    ],
+    'pos' => [
+        'to_cdis' => [
+            'timeout' => 5,
         ]
     ],
 ];

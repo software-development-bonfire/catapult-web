@@ -2,12 +2,14 @@
 
 namespace App\Entities;
 
+use App\Traits\QueryHelper;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\BidObserverTrait;
 
 class Base extends Model
 {
     use BidObserverTrait;
+    use QueryHelper;
 
     protected $primaryKey = 'bid';
 

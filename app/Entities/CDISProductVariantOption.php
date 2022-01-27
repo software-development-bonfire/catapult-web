@@ -4,7 +4,7 @@ namespace App\Entities;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class CDISProductVariantOption extends Base
+class CDISProductVariantOption extends BaseModel
 {
     use SoftDeletes;
 

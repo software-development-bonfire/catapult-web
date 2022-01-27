@@ -25,22 +25,43 @@ class FieldMappingDetailRequest extends FormRequest
      */
     public function rules()
     {
-        return [
-            'bid' => 'sometimes',
-            'field_mapping_bid' => 'sometimes',
-            'required' => 'required',
-            'field' => ['required', 'max:45', new Lowercase, Rule::unique('field_mapping_details')->ignore($this->bid)
-            ->where(
-                function ($query) {
-                    $query->where('field_mapping_bid', $this->field_mapping_bid);
+        $rules = [];
+
+        $requestMethod = $this->method();
+
+        switch($requestMethod) {
+            case 'PATCH':
+            case 'POST':
+                $rules = [
+                    'bid' => 'sometimes',
+                    'field_mapping_bid' => 'sometimes',
+                    'required' => 'required',
+                    'field' => [
+                        'required',
+                        'max:45',
+                        new Lowercase,
+                        'unique:data_mappings,field,NULL,bid,field_mapping_list_bid,'.$this->head['bid']
+                    ],
+                    'description' => 'sometimes|max:128',
+                    'mapping_type' => 'required',
+                    'file_name' => 'sometimes',
+                    'default_value' => 'sometimes',
+                    'column_name' => 'sometimes',
+                ];
+
+                if ($this->method() == 'PATCH') {
+                    unset($rules['field']);
+
+                    $rules['field'] = [
+                        'required',
+                        'max:45',
+                        new Lowercase,
+                        'unique:data_mappings,field,'.$this->bid.',bid,field_mapping_list_bid,'.$this->head['bid']
+                    ];
                 }
-            )],
-            'description' => 'sometimes|max:128',
-            'mapping_type' => 'required',
-            'file_name' => 'sometimes',
-            'default_value' => 'sometimes',
-            'column_name' => 'sometimes',
-        ];
+        }
+
+        return $rules;
     }
 
     public function messages()

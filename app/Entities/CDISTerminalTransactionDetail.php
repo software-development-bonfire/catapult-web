@@ -38,4 +38,29 @@ class CDISTerminalTransactionDetail extends Base
         'transaction_head_bid' => 'string',
         'cashier_bid' => 'string',
     ];
+
+    public function head()
+    {
+        return $this->belongsTo(CDISTerminalTransaction::class, 'transaction_head_bid', 'bid');
+    }
+
+    public function products()
+    {
+        return $this->hasMany(CDISTerminalTransactionProduct::class, 'transaction_detail_bid', 'bid');
+    }
+
+    public function paymentMethods()
+    {
+        return $this->hasMany(CDISTerminalTransactionPaymentMethod::class, 'transaction_detail_bid', 'bid');
+    }
+
+    public function priceOverride()
+    {
+        return $this->hasMany(CDISPriceOverride::class, 'transaction_detail_bid', 'bid');
+    }
+
+    public function discounts()
+    {
+        return $this->hasMany(CDISTerminalTransactionDetailDiscount::class, 'transaction_detail_bid', 'bid');
+    }
 }

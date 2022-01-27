@@ -5,9 +5,12 @@ namespace App\Services\CDIS;
 use App\Entities\CDISSync;
 use App\Jobs\CDIS\DeleteSynced;
 use App\Jobs\CDIS\Sync;
+use App\Services\ConfigurationService;
 use App\Traits\DatabaseTransaction;
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Response;
 
 class SyncService
 {
@@ -16,12 +19,13 @@ class SyncService
     /**
      * Get for sync bids.
      *
-     * @param array $data
+     * @param int $limit
+     * @param string $table
      * @return \Illuminate\Http\Response
      */
-    public function forSync()
+    public function forSync($limit = 100, $table = 'all')
     {
-        return $this->transaction(function () {
+        return $this->transaction(function () use($limit, $table) {
             $client = [
                 'verify' => false,
                 'http_errors' => false,
@@ -30,25 +34,33 @@ class SyncService
             ];
 
             $uri = config('endpoint.cdis.domain').''.config('endpoint.cdis.for.catapult.v1.forSync');
-            $limit = config('sync.cdis.to_catapult.limit');
+
+            $limit = $limit ? $limit : config('sync.cdis.to_catapult.limit');
 
             $options = [
-                'json' => ['sender_details' => $this->getSenderDetails(), 'limit' => $limit],
+                'json' => ['sender_details' => $this->getSenderDetails(), 'limit' => $limit, 'table' => $table],
                 'headers' => [
                     'Accept' => 'application/json',
                 ]
             ];
 
-            $bodyContent = $this->request($uri, $options, $client);
+            $request = $this->request($uri, $options, $client);
 
-            $count = $bodyContent->data->count;
-            $total = $bodyContent->data->total;
-            $bids = $bodyContent->data->bids;
+            $bodyContent = json_decode($request->getBody()->getContents());
 
-            if ($count == 0) {
+            $actionCount = 0;
+            $entryCount = 0;
+
+            if ($request->getStatusCode() == RESPONSE::HTTP_OK) {
+                $actionCount = $bodyContent->data->action_count;
+                $entryCount = $bodyContent->data->entry_count;
+                $bids = $bodyContent->data->bids;
+            }
+
+            if ($actionCount == 0) {
                 return (object) [
-                    'count' => $count,
-                    'total' => $total
+                    'action_count' => $actionCount,
+                    'entry_count' => $entryCount
                 ];
             }
 
@@ -59,8 +71,8 @@ class SyncService
             }
 
             return (object) [
-                'count' => $count,
-                'total' => $total,
+                'action_count' => $actionCount,
+                'entry_count' => $entryCount,
                 'bidsChunks' => $bidsChunks,
             ];
         });
@@ -91,7 +103,9 @@ class SyncService
                 ]
             ];
 
-            $bodyContent = $this->request($uri, $options, $client);
+            $request = $this->request($uri, $options, $client);
+
+            $bodyContent = json_decode($request->getBody()->getContents());
 
             $count = $bodyContent->data->count;
             $total = $bodyContent->data->total;
@@ -112,16 +126,9 @@ class SyncService
                 unset($value->sync->id);
                 unset($value->sync->bid);
 
-                $sync = CDISSync::where([
-                    'branch_bid' => $value->sync->branch_bid,
-                    'table_bid' => $value->sync->table_bid,
-                    'table_name' => $value->sync->table_name,
-                    'level' => $value->sync->level,
-                    'group' => $value->sync->group,
-                    'code' => $value->sync->code,
-                    'action' => $value->sync->action,
+                $data = (array) $value->sync;
 
-                ]);
+                $sync = CDISSync::where($data);
 
                 if ($sync->exists()) {
                     $sync->update((array) $value->sync);
@@ -137,19 +144,26 @@ class SyncService
                 $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($entity));
 
                 if ($hasSoftDeleting) {
-                    $detail->withTrashed();
+                    $detail = $detail->withTrashed();
                 }
 
                 $isExists = $detail->count() > 0;
 
+                unset($value->detail->id);
+
                 if ($isExists) {
-                    if ($value->sync->action == 'delete') {
+                    if ($value->sync->action == 'delete' && $value->detail) {
                         $detail->delete();
-                    } else if ($value->sync->action == 'update' || $value->sync->action == 'create'){
-                        $detail->update((array) $value->detail);
+                    } else if ($value->sync->action == 'update' || $value->sync->action == 'create') {
+                        $data = (array) $value->detail;
+                        if (count($data) > 0) {
+                            $detail->update($data);
+                        }
                     }
                 } else {
-                    if ($value->sync->action == 'create' || $value->sync->action == 'update') {
+                    if ($value->detail
+                        && ($value->sync->action == 'create' || $value->sync->action == 'update')
+                    ) {
                         $detail->create((array) $value->detail);
                     }
                 }
@@ -172,17 +186,15 @@ class SyncService
         $client = new Client($clientConfig);
         $response = $client->request($method, $uri, $options);
 
-        return json_decode($response->getBody()->getContents());
+        return $response;
     }
 
     private function getSenderDetails() {
-//        $configuration = app()->make(ConfigurationService::class);
-
         return [
-//            'client_id' => $configuration->getAttributeValue('client_id'),
-//            'product_key' => $configuration->getAttributeValue('product_key'),
-//            'machine_uuid' => $configuration->getAttributeValue('machine_uuid'),
-//            'system_datetime' => Carbon::now()->format('Y-m-d h:i:s'),
+            'client_id' => config('configuration.client_id'),
+            'product_key' => config('configuration.product_key'),
+            'branch_code' => config('configuration.branch_code'),
+            'system_datetime' => Carbon::now()->format('Y-m-d h:i:s'),
         ];
     }
 }

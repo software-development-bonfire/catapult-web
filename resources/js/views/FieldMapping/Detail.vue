@@ -22,13 +22,18 @@
                             <label>{{ $t('label.field_mapping_name') }}</label>
                             <input type="text" class="form-control" v-model="form.connection_setup.field_mapping_name">
                             <label
-                                class="text-danger error-message mb-0">
-                                Mapping is required.
+                                class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('name')">
+                                {{ errors.name[0] }}
                             </label>
                         </div>
                         <div class="mb-1">
                             <label>{{ $t('label.mapping_type') }}</label>
-                            <select class="form-control" v-model="form.connection_setup.mapping_type">
+                            <select
+                                :disabled="form.mode === 'update'"
+                                class="form-control"
+                                v-model="form.connection_setup.mapping_type"
+                                v-on:change="getSyncEntryChosen"
+                            >
                                 <option :value="1">{{ $t('label.cdis_to_pos') }}</option>
                                 <option :value="2">{{ $t('label.pos_to_cdis') }}</option>
                             </select>
@@ -43,18 +48,18 @@
                     </div>
                     <div class="col-xl-3">
                         <div class="mb-1">
-                            <label>{{ $t('label.remote_setup_name') }}</label>
+                            <label>{{ $t('label.file_storage_setup_name') }}</label>
                             <div class="input-group">
-                                <input type="text" class="form-control" readonly v-model="form.connection_setup.remote_setup_name">
-                                <div class="input-group-append" @click="openSearchModal('remote')">
+                                <input type="text" class="form-control" readonly v-model="form.connection_setup.file_storage_setup_name">
+                                <div class="input-group-append" @click="openSearchModal('file_storage')">
                                     <span class="input-group-text search-button">
                                         <i class="fa fa-search"></i>
                                     </span>
                                 </div>
                             </div>
                             <label
-                                class="text-danger error-message mb-0">
-                                Remote Setup Name is required.
+                                class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('file_storage_setup_bid')">
+                                {{ errors.file_storage_setup_bid[0] }}
                             </label>
                         </div>
                         <div class="mb-1">
@@ -68,8 +73,8 @@
                                 </div>
                             </div>
                             <label
-                                class="text-danger error-message mb-0">
-                                Catapult DB Setup Name is required.
+                                class="text-danger error-message mb-0"  v-if="errors.hasOwnProperty('catapult_db_setup_bid')">
+                                {{ errors.catapult_db_setup_bid[0] }}
                             </label>
                         </div>
                         <div class="mb-3">
@@ -83,9 +88,23 @@
                                 </div>
                             </div>
                             <label
-                                class="text-danger error-message mb-0">
-                                API Setup Name is required.
+                                class="text-danger error-message mb-0"  v-if="errors.hasOwnProperty('api_setup_bid')">
+                                {{ errors.api_setup_bid[0] }}
                             </label>
+                        </div>
+                    </div>
+                    <div class="col-xl-3">
+                        <div class="mb-1" v-if="form.connection_setup.mapping_type == 1">
+                            <label>{{ $t('label.customized_mapping') }}</label>
+                            <select
+
+                                :disabled="form.mode === 'update'"
+                                class="form-control"
+                                v-model="form.connection_setup.is_customized_mapping"
+                            >
+                                <option :value="1">{{ $t('label.yes') }}</option>
+                                <option :value="0">{{ $t('label.no') }}</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -98,49 +117,66 @@
                         <h5 class="text-uppercase"><b>{{ $t('label.data_mapping') }}</b></h5>
                     </div>
                     <div class="col-xl-6" align="right">
-                        <button class="button button--light module-action-button" @click="saveMapping">{{ $t('label.save_mapping') }}</button>
+                        <button class="button button--light module-action-button" :disabled="this.form.mode === 'create'" @click="saveMapping">{{ $t('label.save_mapping') }}</button>
                     </div>
                 </div>
                 <div class="row">
                     <table class="table-layout pull-left col-xl-4">
-                        <tr>
-                            <td valign="top" align="right">{{ $t('label.select_api_endpoint_to_map') }}</td>
+                        <tr v-if="form.connection_setup.is_customized_mapping === 0">
+                            <td valign="top" align="right">{{ $t('label.select_entry_to_map') }}</td>
                             <td width="200px">
-                                <select class="form-control" v-model="form.data_mapping.api_endpoint">
-                                    <template v-if="form.connection_setup.mapping_type === 1">
-                                        <option :value="label.product">{{ $t('label.product') }}</option>
-                                        <option :value="label.brand">{{ $t('label.brand') }}</option>
-                                        <option :value="label.category">{{ $t('label.category') }}</option>
-                                        <option :value="label.vendor">{{ $t('label.vendor') }}</option>
-                                        <option :value="label.uom">{{ $t('label.uom') }}</option>
-                                    </template>
-                                    <template v-else>
-                                        <option :value="label.transactions">{{ $t('label.transactions') }}</option>
-                                        <option :value="label.zread">{{ $t('label.zread') }}</option>
-                                        <option :value="label.audit_trail">{{ $t('label.audit_trail') }}</option>
-                                        <option :value="label.cash_breakdown">{{ $t('label.cash_breakdown') }}</option>
-                                        <option :value="label.cash_drawer">{{ $t('label.cash_drawer') }}</option>
-                                    </template>
+                                <select
+                                    class="form-control"
+                                    v-model="form.data_mapping.data_entry"
+                                    @change="getDataEntries()">
+                                    <option
+                                        v-for="(item, index) in selections.sync_entry.options"
+                                        :value="item.value">
+                                        {{ item.label }}
+                                    </option>
                                 </select>
                                 <label
-                                    class="text-danger error-message mb-0">
-                                    API Endpoint is required.
+                                    class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('data_entry')">
+                                    {{ errors.data_entry[0] }}
                                 </label>
                             </td>
                         </tr>
-                        <tr>
-                            <td valign="top" align="right">{{ $t('label.api_version') }}</td>
+                        <tr v-if="form.connection_setup.is_customized_mapping === 0">
+                            <td valign="top" align="right">{{ $t('label.preset_name') }}</td>
                             <td>
                                 <select
+                                    @change="getFields()"
                                     type="text"
                                     class="form-control"
-                                    v-model="form.data_mapping.api_version">
-                                    <option>Transaction API Field v1.0</option>
-                                    <option>POS API Field v2.0</option>
+                                    v-model="form.data_mapping.field_mapping_preset_bid">
+                                    <option v-for="(preset, index) in presets" :key="index"
+                                    :value="preset.bid">
+                                        {{ preset.preset_name }}
+                                    </option>
                                 </select>
                                 <label
-                                    class="text-danger error-message mb-0">
-                                    API Version is required.
+                                    class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('preset_name')">
+                                    {{ errors.preset_name[0] }}
+                                </label>
+                            </td>
+                        </tr>
+                        <tr v-if="form.connection_setup.is_customized_mapping === 1">
+                            <td align="right">{{ $t('message.set_the_file_name_to_be_generated') }}</td>
+                            <td width="200px">
+                                <input type="text" class="form-control" v-model="form.data_mapping.data_entry">
+                                <label
+                                    class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('data_entry')">
+                                    {{ errors.data_entry[0] }}
+                                </label>
+                            </td>
+                        </tr>
+                        <tr v-if="form.connection_setup.is_customized_mapping === 1">
+                            <td align="right">{{ $t('label.primary_table') }}</td>
+                            <td width="200px">
+                                <input type="text" class="form-control" v-model="form.data_mapping.primary_table">
+                                <label
+                                    class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('primary_table')">
+                                    {{ errors.primary_table[0] }}
                                 </label>
                             </td>
                         </tr>
@@ -162,32 +198,60 @@
                     overflow-initial
                     datatable--overflow-initial
                     datatable--font-sm"
-                :header-fields="form.connection_setup.mapping_type === 1 ? table.cdis_to_pos.header : table.pos_to_cdis.header"
+                :header-fields="
+                    form.connection_setup.mapping_type === 2
+                        ? table.pos_to_cdis.header
+                        : (form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 1)
+                            ? table.cdis_to_pos_customized.header
+                            : table.cdis_to_pos.header"
                 :settings="table.settings"
-                :table="table.values">
+                :table="table.values"
+                v-on:add-row="addRow"
+                v-on:delete-row="deleteRow"
+            >
                 <template slot="content">
                     <table-row
+                        type="edit"
                         class="datatable-row--sm"
                         v-for="(tableData, tableDataIndex) in table.values.data" :key="tableDataIndex"
                         :values="tableData"
                         :settings="table.settings"
-                        :rowIndex="tableDataIndex">
+                        :rowIndex="tableDataIndex"
+                        v-on:enable-row="tableData.edit = $event.state">
                         <table-data
                             align="center"
                             valign="center">
-                            <i
-                                class="fa fa-check-square"
-                                :class="tableData.required ? 'checkbox--required' : 'checkbox--not-required'">
-                            </i>
+                            <input
+                                type="checkbox"
+                                v-model="tableData.required"
+                            >
+                        </table-data>
+                        <table-data
+                            v-if="(form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 1)"
+                            align="center"
+                            valign="center">
+                            <input
+                                type="radio"
+                                v-model="form.data_mapping.primary_key"
+                                :value="tableData.bid"
+                                @change="form.data_mapping.primary_key_index = tableDataIndex"
+                                v-if="(tableData.bid != null || tableData.bid == '')"
+                            >
                         </table-data>
                         <table-data
                             align="center"
                             valign="center">
-                            <input type="text" class="form-control" v-model="tableData.field">
+                            <input
+                                :disabled="! tableData.required"
+                                type="text"
+                                class="form-control"
+                                v-model="tableData.field"
+                            >
                         </table-data>
                         <table-data
                             align="center"
-                            valign="center">
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2 || (form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 0)">
                             <popper
                                 trigger="hover"
                                 :options="{ placement: 'top' }">
@@ -199,29 +263,147 @@
                         </table-data>
                         <table-data
                             align="center"
-                            valign="center">
-                            <input type="text" class="form-control" v-model="tableData.data_type">
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2 || (form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 0)">
+                            <input
+                                :disabled="! tableData.required"
+                                type="text"
+                                class="form-control"
+                                v-model="tableData.mapping_type"
+                            >
                         </table-data>
                         <table-data
+                            :error="getError(errors, `fields.${tableDataIndex}.file_name`)"
                             align="center"
                             valign="center"
                             v-if="form.connection_setup.mapping_type === 2">
-                            <input type="text" class="form-control" v-model="tableData.csv_file_name_identifier">
+                            <input type="text" class="form-control" v-model="tableData.file_name"
+                            v-on:input="removeError(errors, `fields.${tableDataIndex}.file_name`)">
                         </table-data>
                         <table-data
                             valign="center"
-                            v-if="form.connection_setup.mapping_type === 2">
-                            <span v-text="tableData.default_field_values"></span>
+                            v-if="form.connection_setup.mapping_type === 2 || (form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 1)">
+                            <input type="text" class="form-control" v-model="tableData.default_value">
                         </table-data>
                         <table-data
                             align="center"
                             valign="center">
-                            <template v-if="tableData.required">
-                                <input type="text" class="form-control" v-model="tableData.csv_column_name">
+                            <input
+                                type="checkbox"
+                                v-model="tableData.nullable"
+                            >
+                        </table-data>
+                        <table-data
+                            :error="getError(errors, `fields.${tableDataIndex}.column_name`)"
+                            align="center"
+                            valign="center">
+                            <template v-if="(form.connection_setup.mapping_type === 2 && tableData.required) || form.connection_setup.mapping_type === 1">
+                                <input type="text" class="form-control" v-model="tableData.column_name"
+                                v-on:input="removeError(errors, `fields.${tableDataIndex}.column_name`)">
                             </template>
                             <template v-else>
                                 <span class="text-danger">{{ $t('message.default_values_will_be_used') }}</span>
                             </template>
+                        </table-data>
+                        <table-data
+                            :error="getError(errors, `fields.${tableDataIndex}.reference_column_name`)"
+                            align="center"
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2"
+                        >
+                            <input type="text" class="form-control" v-model="tableData.reference_column_name"
+                                   v-on:input="removeError(errors, `fields.${tableDataIndex}.reference_column_name`)">
+                        </table-data>
+                        <table-data
+                            :error="getError(errors, `fields.${tableDataIndex}.head_reference`)"
+                            align="center"
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2"
+                        >
+                            <input type="text" class="form-control" v-model="tableData.head_reference"
+                                   v-on:input="removeError(errors, `fields.${tableDataIndex}.head_reference`)">
+                        </table-data>
+                    </table-row>
+
+                    <table-row
+                        class="datatable-row--sm"
+                        type="add"
+                        :values="form.data_mapping.add"
+                        :settings="table.settings">
+                        <table-data
+                            align="center"
+                            valign="center">
+                            <input
+                                type="checkbox"
+                                v-model="form.data_mapping.add.required"
+                            >
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center"
+                            v-if="(form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 1)"
+                        >
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center">
+                            <input
+                                type="text"
+                                class="form-control"
+                                v-model="form.data_mapping.add.field"
+                            >
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2 || (form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 0)">
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2 || (form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 0)">
+                            <input
+                                type="text"
+                                class="form-control"
+                                v-model="form.data_mapping.add.mapping_type">
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2">
+                            <input type="text" class="form-control" v-model="form.data_mapping.add.file_name">
+                        </table-data>
+                        <table-data
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2 || (form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 1)">
+                            <input type="text" class="form-control" v-model="form.data_mapping.add.default_value">
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center">
+                            <input
+                                type="checkbox"
+                                v-model="form.data_mapping.add.nullable"
+                            >
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center">
+                            <template>
+                                <input type="text" class="form-control" v-model="form.data_mapping.add.column_name">
+                            </template>
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2">
+                            <input type="text" class="form-control" v-model="form.data_mapping.add.reference_column_name">
+                        </table-data>
+                        <table-data
+                            align="center"
+                            valign="center"
+                            v-if="form.connection_setup.mapping_type === 2">
+                            <input type="text" class="form-control" v-model="form.data_mapping.add.head_reference">
                         </table-data>
                     </table-row>
                 </template>
@@ -281,6 +463,7 @@
 </template>
 
 <script>
+    var config = window.location.origin;
     import DialogBox from '../../components/Message/DialogBox.vue';
     import Datatable from '../../components/Datatable2/Datatable.vue';
     import TableRow from '../../components/Datatable2/TableRow.vue';
@@ -290,6 +473,9 @@
     import 'vue-popperjs/dist/vue-popper.css';
 
     export default {
+        props: [
+            'detail'
+        ],
         components: {
             DialogBox,
             Datatable,
@@ -299,27 +485,45 @@
             Popper
         },
         mounted() {
-            let urlData = QueryString.parse(window.location.search.substr(1));
-            console.log(urlData.data.name)
-            if (urlData.data) {
-                this.form.mode = 'update';
-                this.form.connection_setup.field_mapping_name = urlData.data.name;
-                this.form.connection_setup.mapping_type = Number(urlData.data.mapping_type);
-                this.form.connection_setup.remote_setup_name = urlData.data.remote_setup_name;
-                this.form.connection_setup.catapult_db_setup_name = urlData.data.catapult_db_setup_name;
-                this.form.connection_setup.api_setup_name = urlData.data.api_setup_name;
-                this.form.connection_setup.setup_status = Number(urlData.data.status);
+            let searchParams = QueryString.parse(window.location.search.substr(1));
 
-                this.form.data_mapping.api_endpoint = urlData.data.api_to_map;
+            if (searchParams.bid) {
+                this.form.mode = 'update';
+
+                this.field_mapping_bid = searchParams.bid;
+                this.form.connection_setup = this.detail;
+                this.form.data_mapping.data_entry = this.detail.data_entry;
+                this.form.data_mapping.primary_table = this.detail.primary_table;
+                this.form.data_mapping.primary_key = this.detail.primary_key;
+                this.form.data_mapping.primary_key_index = this.detail.primary_key_index;
+
+                this.getDataEntries();
+
+                if (this.detail.detail.length > 0) {
+                    this.form.mapping_mode = 'update';
+                }
+
+                this.table.values.data = this.detail.detail;
             }
+
+            this.getSyncEntryChosen();
         },
         data() {
             return {
+                field_mapping_bid: null,
+                presets: [],
                 modal: {
                     search: {
                         title: '',
                         selection: '',
                         visible: false
+                    }
+                },
+                defaults: {
+                    form: {
+                        data_mapping: {
+                            add: {}
+                        }
                     }
                 },
                 dialog: {
@@ -339,18 +543,37 @@
                 },
                 form: {
                     mode: 'create',
+                    mapping_mode: 'create',
                     connection_setup: {
                         field_mapping_name: '',
-                        mapping_type: 2,
+                        mapping_type: 1,
                         setup_status: 1,
-                        remote_setup_name: '',
+                        file_storage_setup_name: '',
+                        file_storage_setup_bid: '',
                         catapult_db_setup_name: '',
-                        api_setup_name: '',
+                        catapult_db_setup_bid: '',
+                        api_setup_bid: '',
+                        is_customized_mapping: 0,
                     },
                     data_mapping: {
-                        api_endpoint: '',
-                        api_version: '',
-                    }
+                        data_entry: '',
+                        field_mapping_preset_bid: '',
+                        primary_table: '',
+                        primary_key: '',
+                        primary_key_index: null,
+                        add: {
+                            edit: false,
+                            required: true,
+                            nullable: false,
+                            field: '',
+                            description: '',
+                            mapping_type: '',
+                            file_name: '',
+                            default_value: '',
+                            column_name: '',
+                            head_reference: '',
+                        },
+                    },
                 },
                 errors: {},
                 table: {
@@ -376,6 +599,45 @@
                                 width: '120'
                             },
                             {
+                                name: "nullable",
+                                label: this.$t('label.nullable'),
+                                width: '80'
+                            },
+                            {
+                                name: "csv_column_name",
+                                label: this.$t('label.csv_column_name'),
+                                width: '200'
+                            }
+                        ],
+                    },
+                    cdis_to_pos_customized: {
+                        header: [
+                            {
+                                name: "required",
+                                label: '',
+                                width: '50'
+                            },
+                            {
+                                name: "primary_key",
+                                label: this.$t('label.primary_key'),
+                                width: '100'
+                            },
+                            {
+                                name: "fields",
+                                label: this.$t('label.cdis_fields'),
+                                width: '300'
+                            },
+                            {
+                                name: "default_field_values",
+                                label: this.$t('label.default_field_values'),
+                                width: '250'
+                            },
+                            {
+                                name: "nullable",
+                                label: this.$t('label.nullable'),
+                                width: '80'
+                            },
+                            {
                                 name: "csv_column_name",
                                 label: this.$t('label.csv_column_name'),
                                 width: '200'
@@ -391,7 +653,7 @@
                             {
                                 name: "fields",
                                 label: this.$t('label.cdis_fields'),
-                                width: '200'
+                                width: '320'
                             },
                             {
                                 name: "description",
@@ -405,77 +667,37 @@
                             {
                                 name: "csv_file_name_identifier",
                                 label: this.$t('label.csv_file_name_identifier'),
-                                width: '200'
+                                width: '150'
                             },
                             {
                                 name: "default_field_values",
                                 label: this.$t('label.default_field_values'),
-                                width: '200'
+                                width: '120'
+                            },
+                            {
+                                name: "nullable",
+                                label: this.$t('label.nullable'),
+                                width: '80'
                             },
                             {
                                 name: "csv_column_name",
                                 label: this.$t('label.csv_column_name'),
                                 width: '200'
                             },
+                            {
+                                name: "reference_column_name",
+                                label: this.$t('label.reference_column_name'),
+                                width: '200'
+                            },
+                            {
+                                name: "head_reference",
+                                label: this.$t('label.head_reference'),
+                                width: '320'
+                            },
                         ],
                     },
                     values: {
-                        data: [
-                            {
-                                required: true,
-                                field: 'branch_code',
-                                description: 'Code of your branch.',
-                                data_type: 'VARCHAR',
-                                csv_file_name_identifier: 'TR',
-                                default_field_values: '0',
-                                csv_column_name: 'BranchCode',
-                            },
-                            {
-                                required: false,
-                                field: 'terminal_number',
-                                description: 'Your POS Terminal Number.',
-                                data_type: 'BIGINT',
-                                csv_file_name_identifier: 'TR',
-                                default_field_values: '0',
-                                csv_column_name: 'TerminalNumber',
-                            },
-                            {
-                                required: true,
-                                field: 'branch_code',
-                                description: 'Code of your branch.',
-                                data_type: 'INT',
-                                csv_file_name_identifier: 'TR',
-                                default_field_values: '0',
-                                csv_column_name: 'BranchCode',
-                            },
-                            {
-                                required: true,
-                                field: 'branch_code',
-                                description: 'Code of your branch.',
-                                data_type: 'VARCHAR',
-                                csv_file_name_identifier: 'TR',
-                                default_field_values: '0',
-                                csv_column_name: 'BranchCode',
-                            },
-                            {
-                                required: false,
-                                field: 'terminal_number',
-                                description: 'Your POS Terminal Number.',
-                                data_type: 'BIGINT',
-                                csv_file_name_identifier: 'TR',
-                                default_field_values: '0',
-                                csv_column_name: 'TerminalNumber',
-                            },
-                            {
-                                required: true,
-                                field: 'branch_code',
-                                description: 'Code of your branch.',
-                                data_type: 'INT',
-                                csv_file_name_identifier: 'TR',
-                                default_field_values: '0',
-                                csv_column_name: 'BranchCode',
-                            }
-                        ],
+                        data: [],
                         meta: {
                             pagination: {
                                 count: 1,
@@ -490,109 +712,224 @@
                     settings: {
                         itemsPerPage: 10,
                         withRowNumbers: false,
-                        withPagination: false
+                        withPagination: false,
+                        minHeight: 300,
+                        hasEdit: true,
+                        hasDelete: true,
                     }
                 },
                 label: {
-                    product: this.$t('label.product'),
                     brand: this.$t('label.brand'),
-                    category: this.$t('label.category'),
+                    branch: this.$t('label.branch'),
                     vendor: this.$t('label.vendor'),
-                    uom: this.$t('label.uom'),
-                    transactions: this.$t('label.transactions'),
+                    vendor_branch: this.$t('label.vendor_branch'),
+                    unit_of_measurement: this.$t('label.unit_of_measurement'),
+                    transaction: this.$t('label.transaction'),
                     zread: this.$t('label.zread'),
                     audit_trail: this.$t('label.audit_trail'),
                     cash_breakdown: this.$t('label.cash_breakdown'),
                     cash_drawer: this.$t('label.cash_drawer'),
+                    product: this.$t('label.product'),
+                    product_uom_packaging: this.$t('label.product_uom_packaging'),
+                    product_branch_availability: this.$t('label.product_branch_availability'),
+                    product_branch_price: this.$t('label.product_branch_price'),
+                    packaging_vendor: this.$t('label.packaging_vendor'),
+                    packaging_vendor_branch_cost: this.$t('label.packaging_vendor_branch_cost'),
+                    product_structure: this.$t('label.product_structure'),
+                    product_structure_detail: this.$t('label.product_structure_detail'),
+                    product_category: this.$t('label.product_category'),
+                    product_pricing_type: this.$t('label.product_pricing_type'),
                 },
                 selections: {
                     config: {
                         selected: '',
+                        options: []
+                    },
+                    sync_entry: {
                         options: []
                     }
                 }
             }
         },
         methods: {
+            setDefaults() {
+                this.defaults.form.data_mapping.add = {...this.form.data_mapping.add};
+            },
+            getDataEntries() {
+                let that = this;
+                this.form.data_mapping.field_mapping_preset_bid = '';
+                this.errors = {};
+
+                axios.get(`${config}/field-mapping/detail/get-data-entries`+'?page=1', {
+                    params: {
+                        itemsPerPage: 100,
+                        filters: {
+                            data_entry: this.form.data_mapping.data_entry,
+                            type: this.form.connection_setup.mapping_type,
+                        }
+                    }
+                }).then(response => {
+                    that.presets = response.data.data.data
+                })
+            },
+            getFields() {
+                this.errors = {};
+                var selectedPreset = this.presets.find(element => (element.bid === this.form.data_mapping.field_mapping_preset_bid));
+
+                if (selectedPreset.details.length > 0) {
+                    this.table.values.data = selectedPreset.details;
+                } else {
+                    this.table.values.data = [];
+                }
+            },
             saveConnection() {
                 if (this.form.mode === 'create') {
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_added', { value: this.$t('label.connection_setup')});
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
+                    var payload = {
+                        name: this.form.connection_setup.field_mapping_name,
+                        type: this.form.connection_setup.mapping_type,
+                        status: this.form.connection_setup.setup_status,
+                        file_storage_setup_bid: this.form.connection_setup.file_storage_setup_bid,
+                        catapult_db_setup_bid: this.form.connection_setup.catapult_db_setup_bid,
+                        is_customized_mapping: this.form.connection_setup.is_customized_mapping,
+                        api_setup_bid: this.form.connection_setup.api_setup_bid,
                     };
-                    this.dialog.cancel.function = () => {
-                        this.dialog.visible = false;
-                    };
+
+                    axios.post(`${config}/field-mapping/store`, payload)
+                        .then(response => {
+                            this.dialog.visible = true;
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_added', { value: this.$t('label.connection_setup')});
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                            };
+                            this.dialog.cancel.function = () => {
+                                this.dialog.visible = false;
+                            };
+
+                            this.field_mapping_bid = response.data.data.bid;
+                            this.form.mode = "update";
+                            this.errors = {};
+                        }).catch(error => {
+                            this.errors = error.response.data.errors;
+                        })
                 } else {
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_updated', { value: this.$t('label.connection_setup')});
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                    };
-                    this.dialog.cancel.function = () => {
-                        this.dialog.visible = false;
-                    };
+                    var payload = {
+                        bid: this.field_mapping_bid,
+                        name: this.form.connection_setup.field_mapping_name,
+                        type: this.form.connection_setup.mapping_type,
+                        status: this.form.connection_setup.setup_status,
+                        file_storage_setup_bid: this.form.connection_setup.file_storage_setup_bid,
+                        catapult_db_setup_bid: this.form.connection_setup.catapult_db_setup_bid,
+                        is_customized_mapping: this.form.connection_setup.is_customized_mapping,
+                        api_setup_bid: this.form.connection_setup.api_setup_bid,
+                        data_entry: this.form.data_mapping.data_entry,
+                    }
+
+                    axios.patch(`${config}/field-mapping/update/${this.field_mapping_bid}`, payload)
+                        .then(response => {
+                            this.dialog.visible = true;
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_updated', { value: this.$t('label.connection_setup')});
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                            };
+                            this.dialog.cancel.function = () => {
+                                this.dialog.visible = false;
+                            };
+
+                            this.errors = [];
+                        }).catch(error => {
+                            this.errors = error.response.data.errors;
+                        })
                 }
             },
             saveMapping() {
-                if (this.form.mode === 'create') {
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_added', { value: this.$t('label.data_mapping')});
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
+                if (this.form.mapping_mode === 'create') {
+                    var preset = this.presets.find(element => (element.bid === this.form.data_mapping.field_mapping_preset_bid))
+
+                    var payload = {
+                        mapping_type: this.form.connection_setup.mapping_type,
+                        field_mapping_bid: this.field_mapping_bid,
+                        data_entry: this.form.data_mapping.data_entry,
+                        is_customized_mapping: this.form.connection_setup.is_customized_mapping,
+                        primary_table: this.form.data_mapping.primary_table,
+                        primary_key: this.form.data_mapping.primary_key,
+                        primary_key_index: this.form.data_mapping.primary_key_index,
+                        fields: this.table.values.data
                     };
-                    this.dialog.cancel.function = () => {
-                        this.dialog.visible = false;
-                    };
+
+                    axios.post(`${config}/field-mapping/detail/store`, payload)
+                        .then(response => {
+                            this.form.mapping_mode = 'update';
+                            this.dialog.visible = true;
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_added', { value: this.$t('label.data_mapping')});
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                                window.open('/field-mapping', '_self');
+                            };
+                            this.dialog.cancel.function = () => {
+                                this.dialog.visible = false;
+                            };
+                        }).catch(error => {
+                            this.errors = error.response.data.errors;
+                        })
                 } else {
-                    this.dialog.visible = true;
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_updated', { value: this.$t('label.data_mapping')});
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
+                    var preset = this.presets.find(element => (element.bid == this.form.data_mapping.field_mapping_preset_bid));
+
+                    var payload = {
+                        mapping_type: this.form.connection_setup.mapping_type,
+                        field_mapping_bid: this.field_mapping_bid,
+                        data_entry: this.form.data_mapping.data_entry,
+                        is_customized_mapping: this.form.connection_setup.is_customized_mapping,
+                        primary_table: this.form.data_mapping.primary_table,
+                        primary_key: this.form.data_mapping.primary_key,
+                        primary_key_index: this.form.data_mapping.primary_key_index,
+                        fields: this.table.values.data
                     };
-                    this.dialog.cancel.function = () => {
-                        this.dialog.visible = false;
-                    };
+
+                    axios.patch(`${config}/field-mapping/detail/update/${this.field_mapping_bid}`, payload)
+                        .then(response => {
+                            this.dialog.visible = true;
+                            this.dialog.status = 'success';
+                            this.dialog.message = this.$t('success.successfully_updated', { value: this.$t('label.data_mapping')});
+                            this.dialog.ok.function = () => {
+                                this.dialog.visible = false;
+                                window.open('/field-mapping', '_self');
+                            };
+                            this.dialog.cancel.function = () => {
+                                this.dialog.visible = false;
+                            };
+                        }).catch(error => {
+                            this.errors = error.response.data.errors;
+                        })
                 }
             },
             openSearchModal(selection) {
                 this.selections.config.options = [];
                 this.selections.config.selected = '';
 
-                if (selection === 'remote') {
-                    this.modal.search.title = this.$t('label.remote_setup_detail');
-
-                    // Dummy options
-                    this.selections.config.options = [
-                        { label: 'Transaction', value: '1001' },
-                        { label: 'Z Read', value: '1002' },
-                        { label: 'Product', value: '1003' }
-                    ];
-                } else if (selection === 'catapult') {
-                    this.modal.search.title = this.$t('label.catapult_db_setup_detail');
-
-                    // Dummy options
-                    this.selections.config.options = [
-                        { label: 'Product', value: '1001' },
-                        { label: 'POS', value: '1002' },
-                        { label: 'Z Read', value: '1003' },
-                    ];
-                } else if (selection === 'api') {
-                    this.modal.search.title = this.$t('label.api_setup_detail');
-
-                    // Dummy options
-                    this.selections.config.options = [
-                        { label: 'API Transaction', value: '1001' },
-                        { label: 'API POS', value: '1002' },
-                        { label: 'API Z Read', value: '1003' },
-                    ];
-                }
-
+                axios.get(`${config}/field-mapping/detail/get-list`, { 
+                    params: {
+                        type: selection,
+                        itemsPerPage: 1000,
+                    } 
+                })
+                    .then(response => {
+                        if (selection === 'file_storage') {
+                            this.modal.search.title = this.$t('label.file_storage_setup_detail');
+                        } else if (selection === 'catapult') {
+                            this.modal.search.title = this.$t('label.catapult_db_setup_detail');
+                        } else if (selection === 'api') {
+                            this.modal.search.title = this.$t('label.api_setup_detail');
+                        }
+                        this.selections.config.options = response.data.data.data.map(element => {
+                            return {
+                                label: element.name,
+                                value: element.bid
+                            }
+                        })
+                    })
                 this.modal.search.selection = selection;
                 this.modal.search.visible = true;
             },
@@ -604,22 +941,25 @@
             selectRow() {
                 let that = this;
 
-                if (this.modal.search.selection === 'remote') {
+                if (this.modal.search.selection === 'file_storage') {
                     this.selections.config.options.forEach(function(item) {
                         if (item.value === that.selections.config.selected) {
-                            that.form.connection_setup.remote_setup_name = item.label;
+                            that.form.connection_setup.file_storage_setup_name = item.label;
+                            that.form.connection_setup.file_storage_setup_bid = item.value;
                         }
                     });
                 } else if (this.modal.search.selection === 'catapult') {
                     this.selections.config.options.forEach(function(item) {
                         if (item.value === that.selections.config.selected) {
                             that.form.connection_setup.catapult_db_setup_name = item.label;
+                            that.form.connection_setup.catapult_db_setup_bid = item.value;
                         }
                     });
                 } else if (this.modal.search.selection === 'api') {
                     this.selections.config.options.forEach(function(item) {
                         if (item.value === that.selections.config.selected) {
                             that.form.connection_setup.api_setup_name = item.label;
+                            that.form.connection_setup.api_setup_bid = item.value;
                         }
                     });
                 }
@@ -638,6 +978,19 @@
                     this.dialog.visible = false;
                 };
             },
+            async getSyncEntryChosen() {
+                let that = this;
+
+                await axios.get('/sync-entry/chosen', {
+                    params: {
+                        filters: {
+                            type: this.form.connection_setup.mapping_type
+                        }
+                    }
+                }).then(function(response) {
+                    that.$set(that.selections.sync_entry, 'options', response.data.data);
+                });
+            },
             getError(object, name) {
                 let error = object[name];
                 return error ? error[0] : '';
@@ -646,6 +999,23 @@
             removeError(object, name) {
                 delete object[name];
             },
+            addRow(data) {
+                this.table.values.data.push({...data.values});
+                this.form.data_mapping.add = {...this.defaults.form.data_mapping.add};
+            },
+            deleteRow(data) {
+                this.table.values.data.splice(data.rowIndex, 1);
+            },
+        },
+        watch: {
+            'form.connection_setup.mapping_type': function(value) {
+                if (value === 2) {
+                    this.form.connection_setup.is_customized_mapping = 0;
+                }
+            },
+            'form.connection_setup.is_customized_mapping': function(value) {
+                this.form.data_mapping.field_mapping_preset_bid = '';
+            }
         }
     }
 </script>

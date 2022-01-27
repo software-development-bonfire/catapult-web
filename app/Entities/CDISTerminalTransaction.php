@@ -2,7 +2,6 @@
 
 namespace App\Entities;
 
-
 class CDISTerminalTransaction extends Base
 {
     protected $table = 'cdis_terminal_transaction';
@@ -39,4 +38,14 @@ class CDISTerminalTransaction extends Base
         'terminal_bid' => 'string',
         'transaction_id' => 'string',
     ];
+
+    public function terminal()
+    {
+        return $this->belongsTo(CDISTerminal::class, 'terminal_bid', 'bid');
+    }
+
+    public function details()
+    {
+        return $this->hasMany(CDISTerminalTransactionDetail::class, 'transaction_head_bid', 'bid');
+    }
 }

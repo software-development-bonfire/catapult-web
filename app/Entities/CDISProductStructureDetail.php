@@ -2,9 +2,7 @@
 
 namespace App\Entities;
 
-use Illuminate\Database\Eloquent\Model;
-
-class CDISProductStructureDetail extends Model
+class CDISProductStructureDetail extends BaseModel
 {
     protected $table = 'cdis_product_structure_detail';
 
@@ -22,4 +20,20 @@ class CDISProductStructureDetail extends Model
         'head_bid' => 'string',
         'product_uom_bid' => 'string',
     ];
+
+    public function productUomPackaging()
+    {
+        return $this->hasManyThrough(
+            CDISProductUomPackaging::class,
+            CDISProductStructure::class,
+            'bid',
+            'bid',
+            'head_bid',
+            'product_uom_bid');
+    }
+
+    public function productUomPackagingByProductUomBid()
+    {
+        return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_bid', 'bid');
+    }
 }

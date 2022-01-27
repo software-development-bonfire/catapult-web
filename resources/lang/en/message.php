@@ -3,6 +3,8 @@
 return [
     'are_you_sure_you_want_to_leave_the_page' => 'Are you sure you want to leave page without saving?',
     'are_you_sure_you_want_to_overwrite_the_table_with_the_selected_preset' => 'Are you sure you want to overwrite the table with the selected preset?',
+    'are_you_sure_you_want_to_make_this_the_active_mapping' => 'Are you sure you want to make this the active mapping?',
+    'conversion_successful' => 'Conversion Successful.',
     'default_values_will_be_used' => 'NOTE: Default values will be used.',
     'do_you_want_to_remove_this_data' => 'Do you want to remove this data?',
     'email_address_for_notification_note' => 'If there\'s any existing and unresolved error logs on the list, Catapult will send notification on the registered e-mail address on the assigned time everyday.',
@@ -10,9 +12,14 @@ return [
     'error_logs_instructions_1' => 'Download the CSV file and correct the fields manually.',
     'error_logs_instructions_2' => 'You may check where the errors occured on the "View file errors" button.',
     'error_logs_instructions_3' => 'Once correction has been made on the CSV file, reupload the file to its corresponding row.',
+    'file_sent' => 'File sent.',
     'make_sure_email_active_valid' => 'Make sure that the e-mail address is active and valid.',
+    'no_data_to_convert_to_value' => 'No data to convert to :value.',
     'no_data_to_sync' => 'No data to sync.',
+    'no_data_to_send' => 'No data to send.',
     'no_results_found' => 'No results found.',
+    'please_contact_administrator' => 'Please contact administrator.',
+    'set_the_file_name_to_be_generated' => 'Set the file name to be generated',
     'the_cdis_field_must_be_lowercase' => 'The CDIS field must be lowercase.',
     'unauthorized' => 'Unauthorized',
 ];

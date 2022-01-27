@@ -38,6 +38,7 @@ class LoginController extends Controller
     {
         $credentials = $request->only('username', 'password');
 
+
         if (Auth::attempt($credentials)) {
             if ($this->guard()->user()->status === Status::ACTIVE) {
                 $request->session()->put('permissions', $this->guard()->user()->getPermissions());

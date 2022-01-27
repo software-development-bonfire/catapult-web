@@ -17,7 +17,8 @@ class FieldMappingDetail extends Model implements Transformable
     use TransformableTrait,
         BidObserverTrait;
 
-    protected $primaryKey = 'bid';
+    protected $table = 'field_mapping_detail';
+    
     /**
      * The attributes that are mass assignable.
      *
@@ -27,17 +28,16 @@ class FieldMappingDetail extends Model implements Transformable
         'bid',
         'field_mapping_bid',
         'required',
+        'is_primary_key',
+        'nullable',
         'field',
         'description',
         'mapping_type',
         'file_name',
         'default_value',
-        'column_name'
+        'column_name',
+        'reference_column_name',
+        'head_reference'
     ];
-
-    public function fieldMapping()
-    {
-        return $this->belongsTo(FieldMapping::class, 'bid', 'field_mapping_bid');
-    }
 
 }

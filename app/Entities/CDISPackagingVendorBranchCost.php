@@ -2,10 +2,9 @@
 
 namespace App\Entities;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class CDISPackagingVendorBranchCost extends Model
+class CDISPackagingVendorBranchCost extends BaseModel
 {
     use SoftDeletes;
 
@@ -16,6 +15,9 @@ class CDISPackagingVendorBranchCost extends Model
         'packaging_vendor_bid',
         'product_branch_availability_bid',
         'cost',
+        'price_to_branch',
+        'price_to_branch_markup',
+        'is_available',
         'created_by',
         'updated_by',
     ];

@@ -29,7 +29,7 @@ class CreatSuperadminOnUserTable extends MigratableSeeder
      */
     public function down(): void
     {
-        $superadmin = User::where(['username' ,'superadmin'])
+        $superadmin = User::whereUsername('superadmin')
             ->first();
 
         if ($superadmin) {

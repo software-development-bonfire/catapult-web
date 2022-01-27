@@ -2,12 +2,10 @@
 
 namespace App\Entities;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Hash;
 use Laravel\Passport\HasApiTokens;
 
-class CDISKitchenUser extends Model
+class CDISKitchenUser extends BaseModel
 {
     use HasApiTokens, SoftDeletes;
 
@@ -32,6 +30,7 @@ class CDISKitchenUser extends Model
      * @var array
      */
     protected $fillable = [
+        'bid',
         'user_code',
         'full_name',
         'username',

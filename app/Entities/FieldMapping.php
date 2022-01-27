@@ -19,7 +19,12 @@ class FieldMapping extends Model implements Transformable
         SoftDeletes,
         BidObserverTrait;
 
+    protected $table = 'field_mapping';
+
     protected $primaryKey = 'bid';
+
+    public $incrementing = false;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -27,16 +32,41 @@ class FieldMapping extends Model implements Transformable
      */
     protected $fillable = [
         'bid',
+        'name',
         'type',
-        'api_endpoint',
-        'api_version_name',
-        'field_entry',
+        'field_mapping_bid',
+        'file_storage_setup_bid',
+        'catapult_db_setup_bid',
+        'api_setup_bid',
         'status',
+        'is_customized_mapping',
+        'data_entry',
+        'primary_table',
         'created_by',
-        'updated_by'
+        'updated_by',
     ];
 
-    public function details()
+    public function fileStorageSetup()
+    {
+        return $this->belongsTo(FileStorageSetup::class, 'file_storage_setup_bid', 'bid');
+    }
+
+    public function catapultDBSetup()
+    {
+        return $this->belongsTo(CatapultDbSetup::class, 'catapult_db_setup_bid', 'bid');
+    }
+
+    public function apiSetup()
+    {
+        return $this->belongsTo(ApiSetup::class, 'api_setup_bid', 'bid');
+    }
+
+    public function dataMappings()
+    {
+        return $this->hasMany(FieldMappingDetail::class, 'field_mapping_bid', 'bid');
+    }
+
+    public function detail()
     {
         return $this->hasMany(FieldMappingDetail::class, 'field_mapping_bid', 'bid');
     }

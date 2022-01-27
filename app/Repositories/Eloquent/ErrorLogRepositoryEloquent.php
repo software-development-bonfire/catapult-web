@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Repositories\Eloquent;
+
+use Prettus\Repository\Eloquent\BaseRepository;
+use Prettus\Repository\Criteria\RequestCriteria;
+use App\Repositories\Contracts\ErrorLogRepository;
+use App\Entities\ErrorLog;
+use App\Validators\ErrorLogValidator;
+
+/**
+ * Class ErrorLogRepositoryEloquent.
+ *
+ * @package namespace App\Repositories;
+ */
+class ErrorLogRepositoryEloquent extends BaseRepository implements ErrorLogRepository
+{
+    /**
+     * Specify Model class name
+     *
+     * @return string
+     */
+    public function model()
+    {
+        return ErrorLog::class;
+    }
+
+    
+
+    /**
+     * Boot up the repository, pushing criteria
+     */
+    public function boot()
+    {
+        $this->pushCriteria(app(RequestCriteria::class));
+    }
+    
+}

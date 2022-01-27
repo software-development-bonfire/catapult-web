@@ -8,24 +8,6 @@ use League\Fractal\TransformerAbstract;
 class CatapultDbSetupTransformer extends TransformerAbstract
 {
     /**
-     * List of resources to automatically include
-     *
-     * @var array
-     */
-    protected $defaultIncludes = [
-        //
-    ];
-    
-    /**
-     * List of resources possible to include
-     *
-     * @var array
-     */
-    protected $availableIncludes = [
-        //
-    ];
-    
-    /**
      * A Fractal transformer.
      *
      * @return array
@@ -33,7 +15,7 @@ class CatapultDbSetupTransformer extends TransformerAbstract
     public function transform(CatapultDbSetup $model)
     {
         return [
-            'bid' => (int) $model->bid,
+            'bid' => (string) $model->bid,
             'name' => (string) $model->name,
             'host' => (string) $model->host,
             'port' => (string) $model->port,

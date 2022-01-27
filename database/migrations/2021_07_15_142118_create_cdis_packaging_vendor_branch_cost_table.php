@@ -19,6 +19,8 @@ class CreateCdisPackagingVendorBranchCostTable extends Migration
             $table->unsignedBigInteger('packaging_vendor_bid');
             $table->unsignedBigInteger('product_branch_availability_bid');
             $table->decimal('cost', 23, 6)->nullable();
+            $table->decimal('price_to_branch', 23, 6)->nullable();
+            $table->decimal('price_to_branch_markup', 23, 6)->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));

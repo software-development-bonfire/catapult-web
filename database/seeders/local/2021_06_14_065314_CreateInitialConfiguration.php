@@ -26,6 +26,10 @@ class CreateInitialConfiguration extends MigratableSeeder
      */
     public function down(): void
     {
-        // Remove your data
+        Configuration::whereIn('attribute', [
+            'syncing_order',
+            'pos_to_cdis_entry_limit',
+            'cdis_to_pos_entry_limit',
+        ])->delete();
     }
 }

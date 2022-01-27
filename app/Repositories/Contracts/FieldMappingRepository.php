@@ -5,7 +5,7 @@ namespace App\Repositories\Contracts;
 use Prettus\Repository\Contracts\RepositoryInterface;
 
 /**
- * Interface FieldMappingRepository.
+ * Interface FieldMappingListRepository.
  *
  * @package namespace App\Repositories;
  */

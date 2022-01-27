@@ -17,7 +17,7 @@ class CreateCatapultDbSetupsTable extends Migration
 	{
 		Schema::create('catapult_db_setups', function(Blueprint $table) {
             $table->bigIncrements('id');
-			$table->unsignedBigInteger('bid');
+			$table->unsignedBigInteger('bid')->index()->unique();
 			$table->string('name', 45);
 			$table->string('host', 45);
 			$table->string('port', 45);

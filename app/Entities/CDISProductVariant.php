@@ -4,7 +4,7 @@ namespace App\Entities;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class CDISProductVariant extends Base
+class CDISProductVariant extends BaseModel
 {
     use SoftDeletes;
 
@@ -22,13 +22,6 @@ class CDISProductVariant extends Base
 
     protected $casts = [
         'bid' => 'string',
-    ];
-
-    protected $auditExclude = [
-        'id',
-        'bid',
-        'created_by',
-        'updated_by',
     ];
 
     public function options()
