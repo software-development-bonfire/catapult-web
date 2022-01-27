@@ -4,7 +4,6 @@ namespace App\Console\Commands\POSToCDIS;
 
 use App\Enums\Status;
 use App\Enums\StorageType;
-use App\Exports\PosToCdisExport;
 use App\Repositories\Contracts\FieldMappingRepository;
 use App\Traits\GenericHelper;
 use Carbon\Carbon;
@@ -13,7 +12,6 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Maatwebsite\Excel\Facades\Excel;
 
 class SendDataFromConvertedFile extends Command
 {
