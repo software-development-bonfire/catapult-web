@@ -38,4 +38,9 @@ class CDISProduct extends BaseModel
     {
         return $this->hasMany(CDISProductUomPackaging::class, 'product_bid', 'bid');
     }
+
+    public function productCategory()
+    {
+        return $this->belongsTo(CDISProductCategory::class, 'category_bid', 'bid');
+    }
 }

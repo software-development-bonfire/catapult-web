@@ -180,6 +180,16 @@
                                 </label>
                             </td>
                         </tr>
+                        <tr v-if="form.connection_setup.is_customized_mapping === 1">
+                            <td align="right">{{ $t('label.data_condition') }}</td>
+                            <td width="200px">
+                                <input type="text" class="form-control" v-model="form.data_mapping.data_condition">
+                                <label
+                                    class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('data_condition')">
+                                    {{ errors.data_condition[0] }}
+                                </label>
+                            </td>
+                        </tr>
                     </table>
                     <ul class="unindented-list pull-left ml-4">
                         <li>
@@ -496,6 +506,7 @@
                 this.form.data_mapping.primary_table = this.detail.primary_table;
                 this.form.data_mapping.primary_key = this.detail.primary_key;
                 this.form.data_mapping.primary_key_index = this.detail.primary_key_index;
+                this.form.data_mapping.data_condition = this.detail.data_condition;
 
                 this.getDataEntries();
 
@@ -561,6 +572,7 @@
                         primary_table: '',
                         primary_key: '',
                         primary_key_index: null,
+                        data_condition: '',
                         add: {
                             edit: false,
                             required: true,
@@ -853,6 +865,7 @@
                         data_entry: this.form.data_mapping.data_entry,
                         is_customized_mapping: this.form.connection_setup.is_customized_mapping,
                         primary_table: this.form.data_mapping.primary_table,
+                        data_condition: this.form.data_mapping.data_condition,
                         primary_key: this.form.data_mapping.primary_key,
                         primary_key_index: this.form.data_mapping.primary_key_index,
                         fields: this.table.values.data
@@ -883,6 +896,7 @@
                         data_entry: this.form.data_mapping.data_entry,
                         is_customized_mapping: this.form.connection_setup.is_customized_mapping,
                         primary_table: this.form.data_mapping.primary_table,
+                        data_condition: this.form.data_mapping.data_condition,
                         primary_key: this.form.data_mapping.primary_key,
                         primary_key_index: this.form.data_mapping.primary_key_index,
                         fields: this.table.values.data

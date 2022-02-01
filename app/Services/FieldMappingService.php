@@ -53,6 +53,7 @@ class FieldMappingService
                 'status' => $fieldMapping['status'],
                 'data_entry' => $data['data_entry'],
                 'primary_table' => $data['primary_table'],
+                'data_condition' => $data['data_condition'],
                 'updated_by' => Auth::user()->bid
             ]);
 

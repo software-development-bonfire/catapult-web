@@ -27,4 +27,14 @@ class CDISProductBranchPrice extends BaseModel
         'created_by' => 'string',
         'updated_by' => 'string',
     ];
+
+    public function productPricingType()
+    {
+        return $this->belongsTo(CDISProductPricingType::class, 'product_pricing_type_bid', 'bid');
+    }
+
+    public function productAddonDetail()
+    {
+        return $this->hasMany(CDISProductAddonDetail::class, 'product_branch_price_bid', 'bid');
+    }
 }

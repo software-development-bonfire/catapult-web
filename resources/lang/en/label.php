@@ -53,6 +53,7 @@ return [
     'csv_file_name_identifier' => 'CSV File Name Identifier',
     'customized_mapping' => 'Customized mapping',
     'dashboard' => 'Dashboard',
+    'data_condition' => 'Data Condition',
     'data_entry' => 'Data Entry',
     'data_mapping' => 'Data Mapping',
     'data_type' => 'Data Type',

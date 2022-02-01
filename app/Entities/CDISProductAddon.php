@@ -37,7 +37,7 @@ class CDISProductAddon extends BaseModel
         return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_bid', 'bid');
     }
 
-    public function detail()
+    public function productAddonDetail()
     {
         return $this->hasMany(CDISProductAddonDetail::class, 'head_bid', 'bid');
     }

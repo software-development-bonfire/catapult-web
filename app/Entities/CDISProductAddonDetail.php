@@ -32,4 +32,19 @@ class CDISProductAddonDetail extends BaseModel
     {
         return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_bid', 'bid');
     }
+
+    public function productUomPackaging()
+    {
+        return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_bid', 'bid');
+    }
+
+    public function productBranchPrice()
+    {
+        return $this->belongsTo(CDISProductBranchPrice::class, 'product_branch_price_bid', 'bid');
+    }
+
+    public function productAddon()
+    {
+        return $this->belongsTo(CDISProductAddon::class, 'head_bid', 'bid');
+    }
 }
