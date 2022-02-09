@@ -69,4 +69,14 @@ class CDISProductUomPackaging extends BaseModel
     {
         return $this->hasMany(CDISProductAddonDetail::class, 'product_uom_bid', 'bid');
     }
+
+    public function productModifier()
+    {
+        return $this->hasMany(CDISProductModifier::class, 'product_uom_bid', 'bid');
+    }
+
+    public function productModifierDetail()
+    {
+        return $this->hasMany(CDISProductModifierDetail::class, 'product_uom_bid', 'bid');
+    }
 }

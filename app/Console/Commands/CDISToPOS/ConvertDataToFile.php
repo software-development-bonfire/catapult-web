@@ -502,7 +502,7 @@ class ConvertDataToFile extends Command
     {
         return $this->transaction(function() use($forSyncDatum, $fieldMappingDetails, $timeStamp) {
             if ($forSyncDatum) {
-                if ($forSyncDatum->group) {
+                if (! is_null($forSyncDatum->group)) {
                     $toSyncData = CDISSync::where([
                         'branch_bid' => $forSyncDatum->branch_bid,
                         'group' => $forSyncDatum->group,
@@ -542,6 +542,10 @@ class ConvertDataToFile extends Command
             $primaryTable = $fieldMappingDetail->primary_table;
             $entryName = $fieldMappingDetail->data_entry;
             $primaryColumnName = $fieldMappingDetail->dataMappings->where('is_primary_key', 1)->first()['column_name'];
+
+            if ($primaryTable !== $forSyncDatum->table_name) {
+                continue;
+            }
 
             if (is_null($primaryColumnName)) {
                 $this->createLog('Primary key not found. Please contact administrator',
@@ -809,7 +813,7 @@ class ConvertDataToFile extends Command
         return $data;
     }
 
-    public function checkDataCondition($dataMapping, $syncEntry = null, $entryTableName = null, $entryData = null)
+    public function checkDataCondition($dataMapping, $syncEntry = null, $entryTableName = null, $entryData = null, $entryName = null)
     {
         $condition = $dataMapping['field'];
 
@@ -825,8 +829,8 @@ class ConvertDataToFile extends Command
                 if (str_starts_with($matchesColumnString, $entryTableName.'.')) {
                     $matchesColumn = preg_split("/\.(?![^{]+\})/", $matchesColumnString);
 
-                    if (count($matchesColumn) >= 2) {
-                        $conditionColumnValue = $this->mappedSpecificData(['field' => $matchesColumnString], $syncEntry, $entryTableName, $entryData);
+                        if (count($matchesColumn) >= 2) {
+                        $conditionColumnValue = $this->mappedSpecificData(['field' => $matchesColumnString], $syncEntry, $entryTableName, $entryData, $entryName);
 
                         if (! is_null($conditionColumnValue)) {
                             $conditionColumnValue = '"'.$conditionColumnValue.'"';
@@ -859,7 +863,6 @@ class ConvertDataToFile extends Command
             eval("\$value = $function;");
             $value = json_encode($value);
             $condition = str_replace($functionCondition, (string) $value, $condition);
-
         }
 
         eval("\$isPassed = $condition;");
@@ -867,7 +870,7 @@ class ConvertDataToFile extends Command
         return $isPassed;
     }
 
-    public function mappedSpecificData($dataMapping, $syncEntry = null, $entryTableName = null, $entryData = null)
+    public function mappedSpecificData($dataMapping, $syncEntry = null, $entryTableName = null, $entryData = null, $entryName = null)
     {
         if ((! is_null($entryTableName) || ! is_null($entryData) && ! is_null($syncEntry))) {
             $relationString = str_replace($entryTableName.'.', '', $dataMapping['field']);
@@ -926,9 +929,13 @@ class ConvertDataToFile extends Command
 
                     $function = Str::camel(str_replace($conditionFound[0][0], '', $entity));
 
-                    $relationData = $relationData->{$function};
+                    $relationData = $relationData->{$function}();
 
                     foreach ($conditions as $key => $value) {
+                        if ($value === 'NULL') {
+                            $value = NULL;
+                        }
+
                         $relationData = $relationData->where($key, $value);
                     }
 
@@ -1007,6 +1014,11 @@ class ConvertDataToFile extends Command
             $primaryTable = $fieldMappingDetail->primary_table;
             $entryName = $fieldMappingDetail->data_entry;
             $condition = $fieldMappingDetail->data_condition;
+
+            if ($primaryTable !== $forSyncDatum->table_name) {
+                continue;
+            }
+
             $primaryColumnName = $fieldMappingDetail->dataMappings->where('is_primary_key', 1)->first()['column_name'];
 
             if (is_null($primaryColumnName)) {
@@ -1072,7 +1084,6 @@ class ConvertDataToFile extends Command
                 $entryData = $entity::where('bid', $forSyncDatum->table_bid);
 
                 if ($hasSoftDeleting) {
-
                     $entryData = $entryData->withTrashed();
                 }
 
@@ -1090,7 +1101,8 @@ class ConvertDataToFile extends Command
                 }
 
                 if (! is_null($condition) && $condition !== '') {
-                    $isConditionPassed = $this->checkDataCondition(['field' => $condition], $forSyncDatum, $primaryTable, $entryData);
+                    $isConditionPassed = $this->checkDataCondition(['field' => $condition], $forSyncDatum, $primaryTable, $entryData, $entryName);
+
                     if (! $isConditionPassed) {
                         continue;
                     }
