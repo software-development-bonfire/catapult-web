@@ -20,6 +20,8 @@ class CDISProductPricingType extends BaseModel
         'bid',
         'name',
         'alias',
+        'display_priority',
+        'status',
         'created_by',
         'updated_by',
     ];
