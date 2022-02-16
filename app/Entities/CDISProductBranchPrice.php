@@ -37,4 +37,9 @@ class CDISProductBranchPrice extends BaseModel
     {
         return $this->hasMany(CDISProductAddonDetail::class, 'product_branch_price_bid', 'bid');
     }
+
+    public function productModifierDetail()
+    {
+        return $this->hasMany(CDISProductModifierDetail::class, 'product_branch_price_bid', 'bid');
+    }
 }

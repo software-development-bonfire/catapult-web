@@ -502,7 +502,7 @@ class ConvertDataToFile extends Command
     {
         return $this->transaction(function() use($forSyncDatum, $fieldMappingDetails, $timeStamp) {
             if ($forSyncDatum) {
-                if (! is_null($forSyncDatum->group)) {
+                if ($forSyncDatum->group) {
                     $toSyncData = CDISSync::where([
                         'branch_bid' => $forSyncDatum->branch_bid,
                         'group' => $forSyncDatum->group,
@@ -542,10 +542,6 @@ class ConvertDataToFile extends Command
             $primaryTable = $fieldMappingDetail->primary_table;
             $entryName = $fieldMappingDetail->data_entry;
             $primaryColumnName = $fieldMappingDetail->dataMappings->where('is_primary_key', 1)->first()['column_name'];
-
-            if ($primaryTable !== $forSyncDatum->table_name) {
-                continue;
-            }
 
             if (is_null($primaryColumnName)) {
                 $this->createLog('Primary key not found. Please contact administrator',
@@ -643,6 +639,10 @@ class ConvertDataToFile extends Command
 
                     $relationData = $eagerLoadedData;
                     foreach ($relationCamelCase as $function) {
+                        if (! isset($relationData->{$function})) {
+                            break;
+                        }
+
                         $relationData = $relationData->{$function};
                     }
 
