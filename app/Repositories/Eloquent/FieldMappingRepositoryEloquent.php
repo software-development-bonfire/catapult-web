@@ -42,6 +42,7 @@ class FieldMappingRepositoryEloquent extends BaseRepository implements FieldMapp
                 'status',
                 'data_entry',
                 'primary_table',
+                'data_condition',
             ])
             ->orderBy('bid', 'ASC');
 

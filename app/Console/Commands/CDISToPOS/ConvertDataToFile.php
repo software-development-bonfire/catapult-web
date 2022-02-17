@@ -639,6 +639,10 @@ class ConvertDataToFile extends Command
 
                     $relationData = $eagerLoadedData;
                     foreach ($relationCamelCase as $function) {
+                        if (! isset($relationData->{$function})) {
+                            break;
+                        }
+
                         $relationData = $relationData->{$function};
                     }
 
@@ -809,7 +813,64 @@ class ConvertDataToFile extends Command
         return $data;
     }
 
-    public function mappedSpecificData($dataMapping, $syncEntry = null, $entryTableName = null, $entryData = null)
+    public function checkDataCondition($dataMapping, $syncEntry = null, $entryTableName = null, $entryData = null, $entryName = null)
+    {
+        $condition = $dataMapping['field'];
+
+        preg_match_all("/\\[(.*?)\\]/", $condition, $matches);
+
+        if ($matches[0] || preg_match_all("/\\((.*?)\\)/", $condition, $matches)) {
+            $matchesColumns = array_unique($matches[1]);
+            $bracketedMatchesColumns = $matches[0];
+
+            foreach ($matchesColumns as $index => $matchesColumnString) {
+                $matchesColumnString = str_replace(' ', '', $matchesColumnString);
+
+                if (str_starts_with($matchesColumnString, $entryTableName.'.')) {
+                    $matchesColumn = preg_split("/\.(?![^{]+\})/", $matchesColumnString);
+
+                        if (count($matchesColumn) >= 2) {
+                        $conditionColumnValue = $this->mappedSpecificData(['field' => $matchesColumnString], $syncEntry, $entryTableName, $entryData, $entryName);
+
+                        if (! is_null($conditionColumnValue)) {
+                            $conditionColumnValue = '"'.$conditionColumnValue.'"';
+                        }
+
+                        $condition =
+                            str_replace(
+                                $bracketedMatchesColumns[$index],
+                                $conditionColumnValue ?? 'NULL',
+                                $condition);
+                    } else {
+                        $columnName = $matchesColumn[count($matchesColumn) - 1];
+                        $condition =
+                            str_replace(
+                                $bracketedMatchesColumns[$index],
+                                $entryData[$columnName] ?? 'NULL',
+                                $condition);
+                    }
+                }
+            }
+        }
+
+        preg_match_all('/\\@(.*?)\\((.*?)\\)/', $condition, $functions);
+        $functionConditions = $functions[0];
+        $isPassed = false;
+
+        foreach ($functionConditions as $functionCondition) {
+            $value = null;
+            $function = str_replace('@', '', $functionCondition);
+            eval("\$value = $function;");
+            $value = json_encode($value);
+            $condition = str_replace($functionCondition, (string) $value, $condition);
+        }
+
+        eval("\$isPassed = $condition;");
+
+        return $isPassed;
+    }
+
+    public function mappedSpecificData($dataMapping, $syncEntry = null, $entryTableName = null, $entryData = null, $entryName = null)
     {
         if ((! is_null($entryTableName) || ! is_null($entryData) && ! is_null($syncEntry))) {
             $relationString = str_replace($entryTableName.'.', '', $dataMapping['field']);
@@ -868,9 +929,13 @@ class ConvertDataToFile extends Command
 
                     $function = Str::camel(str_replace($conditionFound[0][0], '', $entity));
 
-                    $relationData = $relationData->{$function};
+                    $relationData = $relationData->{$function}();
 
                     foreach ($conditions as $key => $value) {
+                        if ($value === 'NULL') {
+                            $value = NULL;
+                        }
+
                         $relationData = $relationData->where($key, $value);
                     }
 
@@ -948,6 +1013,12 @@ class ConvertDataToFile extends Command
         foreach ($fieldMappingDetails as $fieldMappingDetail) {
             $primaryTable = $fieldMappingDetail->primary_table;
             $entryName = $fieldMappingDetail->data_entry;
+            $condition = $fieldMappingDetail->data_condition;
+
+            if ($primaryTable !== $forSyncDatum->table_name) {
+                continue;
+            }
+
             $primaryColumnName = $fieldMappingDetail->dataMappings->where('is_primary_key', 1)->first()['column_name'];
 
             if (is_null($primaryColumnName)) {
@@ -1027,6 +1098,14 @@ class ConvertDataToFile extends Command
                         [$forSyncDatum->table_name]
                     );
                     continue;
+                }
+
+                if (! is_null($condition) && $condition !== '') {
+                    $isConditionPassed = $this->checkDataCondition(['field' => $condition], $forSyncDatum, $primaryTable, $entryData, $entryName);
+
+                    if (! $isConditionPassed) {
+                        continue;
+                    }
                 }
 
                 $entryTableName = str_replace('cdis_', '', $entryData->tableName());

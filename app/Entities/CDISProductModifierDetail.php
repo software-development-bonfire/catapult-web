@@ -2,9 +2,11 @@
 
 namespace App\Entities;
 
-class CDISProductAddonDetail extends BaseModel
+class CDISProductModifierDetail extends BaseModel
 {
-    protected $table = 'cdis_product_addon_detail';
+    protected $table = 'cdis_product_modifier_detail';
+
+    protected $primaryKey = 'bid';
 
     public $timestamps = false;
 
@@ -23,14 +25,9 @@ class CDISProductAddonDetail extends BaseModel
         'product_uom_bid' => 'string',
     ];
 
-    public function head()
+    public function productModifier()
     {
-        return $this->belongsTo(CDISProductAddon::class, 'head_bid', 'bid');
-    }
-
-    public function uomPackaging()
-    {
-        return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_bid', 'bid');
+        return $this->belongsTo(CDISProductModifier::class, 'head_bid', 'bid');
     }
 
     public function productUomPackaging()
@@ -41,10 +38,5 @@ class CDISProductAddonDetail extends BaseModel
     public function productBranchPrice()
     {
         return $this->belongsTo(CDISProductBranchPrice::class, 'product_branch_price_bid', 'bid');
-    }
-
-    public function productAddon()
-    {
-        return $this->belongsTo(CDISProductAddon::class, 'head_bid', 'bid');
     }
 }

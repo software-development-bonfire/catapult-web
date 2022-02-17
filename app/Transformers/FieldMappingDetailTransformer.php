@@ -53,6 +53,7 @@ class FieldMappingDetailTransformer extends TransformerAbstract
             $data['is_customized_mapping'] = (int) $model->is_customized_mapping;
             $data['data_entry'] = $model->data_entry;
             $data['primary_table'] = $model->primary_table;
+            $data['data_condition'] = $model->data_condition;
             $data['primary_key'] = $primaryKey;
             $data['primary_key_index'] = $primaryKeyIndex;
             $data['preset_name'] = $model->preset_name;
