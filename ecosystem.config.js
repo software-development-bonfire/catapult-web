@@ -34,6 +34,17 @@ module.exports = {
         //     autorestart: true,
         // },
         {
+            name : "CPLT-CDIS-EL",
+            script: "artisan",
+            args: ["cdis:event-listen"],
+            exec_interpreter: "php",
+            exec_mode : "fork",
+            max_memory_restart : "5G",
+            watch: false,
+            merge_logs: true,
+            autorestart: true,
+        },
+        {
             name : "CPLT-POS-SDF",
             script: "artisan",
             args: ["pos:sync-data-file"],
