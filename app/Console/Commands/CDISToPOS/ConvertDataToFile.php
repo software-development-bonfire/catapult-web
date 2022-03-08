@@ -14,6 +14,7 @@ use App\Repositories\Contracts\FieldMappingRepository;
 use App\Repositories\Contracts\SyncEntryRepository;
 use App\Traits\DatabaseTransaction;
 use App\Traits\GenericHelper;
+use App\Traits\PusherTrait;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
@@ -25,7 +26,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ConvertDataToFile extends Command
 {
-    use DatabaseTransaction, GenericHelper;
+    use DatabaseTransaction, GenericHelper, PusherTrait;
 
     public $extension = 'csv';
     /**
@@ -33,7 +34,7 @@ class ConvertDataToFile extends Command
      *
      * @var string
      */
-    protected $signature = 'cdis:convert-data-to-file {--interval=true}{--limit=true}';
+    protected $signature = 'cdis:convert-data-to-file {--interval=true}{--limit=true}{--broadcast=false}';
 
     /**
      * The console command description.
@@ -42,6 +43,7 @@ class ConvertDataToFile extends Command
      */
     protected $description = 'Convert CDIS data to specific file';
 
+    public $broadcast = false;
     /**
      * Create a new command instance.
      *
@@ -60,6 +62,8 @@ class ConvertDataToFile extends Command
      */
     public function handle()
     {
+        $branchCode = config('configuration.branch_code');
+
         $interval = $this->option('interval');
         $interval =
             filter_var($interval, FILTER_VALIDATE_BOOLEAN)
@@ -79,6 +83,9 @@ class ConvertDataToFile extends Command
                         ? filter_var($limit, FILTER_VALIDATE_INT)
                         : false
                     );
+
+        $broadcast = $this->option('broadcast');
+        $broadcast = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
 
         Cache::forget('excludedEntries');
         Cache::forget('excludedSyncBids');
@@ -164,6 +171,11 @@ class ConvertDataToFile extends Command
 
             foreach ($forSyncData as $forSyncDatum) {
                 $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp);
+            }
+
+            if ($broadcast) {
+                $this->initializePusher();
+                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', '{}', null);
             }
 
             if (is_int($interval)) {

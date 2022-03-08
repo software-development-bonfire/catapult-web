@@ -287,4 +287,11 @@ trait GenericHelper
             Cache::put($key, $savedValue, $ttl);
         }
     }
+
+    public function cdisAndCatapultSyncChannel($branchCode)
+    {
+        $cdisHost = str_replace(':', '_', parse_url(config()->get('app.cdis_url'), PHP_URL_HOST));
+
+        return $cdisHost.'_catapult_sync.'.$branchCode;
+    }
 }
