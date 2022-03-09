@@ -954,7 +954,9 @@ class ConvertDataToFile extends Command
                     $relationData = $relationData->first();
                 } else {
                     $function = Str::camel($entity);
-                    $relationData = $relationData->{$function};
+                    if (isset($relationData->{$function})) {
+                        $relationData = $relationData->{$function};
+                    }
                 }
             }
         } else {
