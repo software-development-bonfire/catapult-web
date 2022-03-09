@@ -22,6 +22,7 @@
         "prettus/l5-repository": "^2.6",
         "pusher/pusher-php-server": "4.0",
         "ratchet/pawl": "^0.4.1",
+        "react/socket": "^1.11",
         "spatie/laravel-fractal": "^5.8"
     },
     "require-dev": {

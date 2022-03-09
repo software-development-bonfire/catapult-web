@@ -55,13 +55,12 @@ class Listen extends Command
 
     public function connect()
     {
-        $branchCode = config('configuration.branch_code');
         $pusherAppKey = config('broadcasting.connections.pusher.key');
-        $reactConnector = new \React\Socket\Connector(['dns' => '8.8.8.8', 'timeout' => 10]);
+        $branchCode = config('configuration.branch_code');
         $loop = Loop::get();
-        $connector = new Connector($loop, $reactConnector);
-        $connector('wss://ws-eu.pusher.com/app/'.$pusherAppKey.'?protocol=7&client=js&version=7.0.6&flash=false')
-            ->then(function(\Ratchet\Client\WebSocket $connection) use($loop, &$socketConnection, $branchCode) {
+
+        \Ratchet\Client\connect('wss://ws-eu.pusher.com/app/'.$pusherAppKey.'?protocol=7&client=js&version=7.0.6&flash=false')
+            ->then(function($connection) use($loop, &$socketConnection, $branchCode) {
                 $connection->send('{"event":"pusher:subscribe","data":{"auth":"","channel":"'.$this->cdisAndCatapultSyncChannel($branchCode).'"}}');
 
                 $pingTimer = $this->getPingTimer($loop, $connection);
@@ -76,9 +75,10 @@ class Listen extends Command
                     $this->createLog($reason, 'warn', true, ['CONNECTION CLOSED'], [$code]);
                     $loop->cancelTimer($pingTimer);
                     $loop->stop();
+
                     gc_collect_cycles();
                 });
-            }, function(\Exception $e, $a) use ($loop) {
+            }, function ($e) use ($loop) {
                 $this->error("Could not connect: {$e->getMessage()}");
                 $loop->stop();
                 throw new \Exception();
