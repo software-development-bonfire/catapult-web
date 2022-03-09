@@ -6,8 +6,6 @@ use App\Traits\GenericHelper;
 use App\Traits\PusherTrait;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
-use Pusher\Pusher;
-use Ratchet\Client\Connector;
 use Ratchet\RFC6455\Messaging\MessageInterface;
 use React\EventLoop\Loop;
 

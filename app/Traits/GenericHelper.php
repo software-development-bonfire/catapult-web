@@ -290,8 +290,11 @@ trait GenericHelper
 
     public function cdisAndCatapultSyncChannel($branchCode)
     {
-        $cdisHost = str_replace(':', '_', parse_url(config()->get('app.cdis_url'), PHP_URL_HOST));
+        $cdisUrl = config()->get('app.cdis_url');
+        $host = str_replace(':', '_', parse_url($cdisUrl, PHP_URL_HOST));
+        $port = parse_url($cdisUrl, PHP_URL_PORT);
 
-        return $cdisHost.'_catapult_sync.'.$branchCode;
+        var_dump($host.(! is_null($port) ? '_'.$port : '').'_catapult_sync.'.$branchCode); die();
+        return $host.(! is_null($port) ? '_'.$port : '').'_catapult_sync.'.$branchCode;
     }
 }
