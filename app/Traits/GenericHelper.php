@@ -291,9 +291,10 @@ trait GenericHelper
     public function cdisAndCatapultSyncChannel($branchCode)
     {
         $cdisUrl = config()->get('app.cdis_url');
+        $clientId = config()->get('configuration.client_id');
         $host = str_replace(':', '_', parse_url($cdisUrl, PHP_URL_HOST));
         $port = parse_url($cdisUrl, PHP_URL_PORT);
 
-        return $host.(! is_null($port) ? '_'.$port : '').'_catapult_sync.'.$branchCode;
+        return $host.(! is_null($port) ? '_'.$port : '').'_catapult_sync.'.$clientId.'_'.$branchCode;
     }
 }
