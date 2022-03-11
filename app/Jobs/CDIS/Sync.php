@@ -14,16 +14,18 @@ class Sync implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $bids;
+    public $bids, $branchCode, $broadcast;
     /**
      * Create a new job instance.
      *
      * @param array $bids
      * @return void
      */
-    public function __construct($bids)
+    public function __construct($bids, $branchCode, $broadcast)
     {
         $this->bids = $bids;
+        $this->branchCode = $branchCode;
+        $this->broadcast = $broadcast;
     }
 
     /**
@@ -35,7 +37,7 @@ class Sync implements ShouldQueue
     {
         $syncService = app()->make(SyncService::class);
 
-        $syncedDetails = $syncService->sync($this->bids);
+        $syncedDetails = $syncService->sync($this->bids, $this->branchCode, $this->broadcast);
 
         return $syncedDetails;
     }

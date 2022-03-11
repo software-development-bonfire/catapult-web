@@ -25,6 +25,7 @@
     },
     "dependencies": {
         "font-awesome": "^4.7.0",
+        "laravel-echo": "^1.11.3",
         "moment": "^2.29.1",
         "moment-timezone": "^0.5.33",
         "pm2-windows-startup": "^1.0.3",

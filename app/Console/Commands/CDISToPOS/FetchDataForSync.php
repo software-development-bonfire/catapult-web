@@ -16,7 +16,7 @@ class FetchDataForSync extends Command
      *
      * @var string
      */
-    protected $signature = 'cdis:fetch-data-for-sync {--interval=true}{--limit=true}{--table=all}';
+    protected $signature = 'cdis:fetch-data-for-sync {--interval=true}{--limit=true}{--table=all}{--broadcast=false}';
 
     /**
      * The console command description.
@@ -62,6 +62,16 @@ class FetchDataForSync extends Command
                 : false
             );
 
+        $broadcast = $this->option('broadcast');
+        $broadcast =
+            filter_var($broadcast, FILTER_VALIDATE_BOOLEAN)
+                ? config('sync.cdis.to_catapult.broadcast')
+                : (
+            (int) $broadcast
+                ? filter_var($broadcast, FILTER_VALIDATE_INT)
+                : false
+            );
+
         $table = $this->option('table');
 
         $syncService = app()->make(SyncService::class);
@@ -75,7 +85,7 @@ class FetchDataForSync extends Command
         Cache::forget('cdis_fetching_data_for_sync');
 
         do {
-            $forSync = $syncService->forSync($limit, $table);
+            $forSync = $syncService->forSync($limit, $table, $broadcast);
 
             if (! isset($forSync->bidsChunks)) {
                 Cache::forget('cdis_fetching_data_for_sync');

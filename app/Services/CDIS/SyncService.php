@@ -23,9 +23,13 @@ class SyncService
      * @param string $table
      * @return \Illuminate\Http\Response
      */
-    public function forSync($limit = 100, $table = 'all')
+    public function forSync($limit = 100, $table = 'all', $broadcast = false)
     {
-        return $this->transaction(function () use($limit, $table) {
+        return $this->transaction(function () use($limit, $table, $broadcast) {
+            if ($broadcast) {
+                CDISSync::delete();
+            }
+
             $client = [
                 'verify' => false,
                 'http_errors' => false,
@@ -37,8 +41,10 @@ class SyncService
 
             $limit = $limit ? $limit : config('sync.cdis.to_catapult.limit');
 
+            $senderDetails = $this->getSenderDetails();
+
             $options = [
-                'json' => ['sender_details' => $this->getSenderDetails(), 'limit' => $limit, 'table' => $table],
+                'json' => ['sender_details' => $senderDetails, 'limit' => $limit, 'table' => $table],
                 'headers' => [
                     'Accept' => 'application/json',
                 ]
@@ -67,7 +73,7 @@ class SyncService
             $bidsChunks = array_chunk($bids, $limit);
 
             foreach ($bidsChunks as $bidsChunk) {
-                Sync::dispatch($bidsChunk);
+                Sync::dispatch($bidsChunk, $senderDetails['branch_code'], $broadcast);
             }
 
             return (object) [
@@ -82,11 +88,12 @@ class SyncService
      * Sync details and data.
      *
      * @param array $data
+     * @param bool $broadcast
      * @return \Illuminate\Http\Response
      */
-    public function sync($bids = [])
+    public function sync($bids = [], $branchCode, $broadcast = false)
     {
-        return $this->transaction(function () use ($bids) {
+        return $this->transaction(function () use ($bids, $branchCode, $broadcast) {
             $client = [
                 'verify' => false,
                 'http_errors' => false,
@@ -170,7 +177,7 @@ class SyncService
             }
 
             if (count($bids) > 0) {
-                DeleteSynced::dispatch($bids);
+                DeleteSynced::dispatch($bids, $branchCode, $broadcast);
             }
 
             return (object) [

@@ -55,7 +55,7 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
-
+    'cdis_url' => env('CDIS_URL', 'http://localhost'),
     'asset_url' => env('ASSET_URL', null),
 
     /*
