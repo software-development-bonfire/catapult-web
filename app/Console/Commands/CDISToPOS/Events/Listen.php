@@ -60,7 +60,7 @@ class Listen extends Command
 
         \Ratchet\Client\connect('wss://ws-eu.pusher.com/app/'.$pusherAppKey.'?protocol=7&client=js&version=7.0.6&flash=false')
             ->then(function($connection) use($loop, &$socketConnection, $clientId, $branchCode) {
-                $connection->send('{"event":"pusher:subscribe","data":{"auth":"","channel":"'.$this->cdisAndCatapultSyncChannel($clientId, $branchCode).'"}}');
+                $connection->send('{"event":"pusher:subscribe","data":{"auth":"","channel":"'.$this->cdisAndCatapultSyncChannel($branchCode).'"}}');
 
                 $pingTimer = $this->getPingTimer($loop, $connection);
 
@@ -110,7 +110,7 @@ class Listen extends Command
                 case "pusher_internal:subscription_succeeded":
                     $this->createLog($payload->channel, 'info', true, ['CHANNEL']);
                     $this->createLog('Listening to events...', 'info', true, ['LOG']);
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($clientId, $branchCode), 'PongCatapult', '{}', $this->socketId, true);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'PongCatapult', '{}', $this->socketId, true);
                     break;
 
                 case "pusher:error":
@@ -119,19 +119,19 @@ class Listen extends Command
 
                 case "App\Events\Catapult\Ping":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($clientId, $branchCode), 'PongCatapult', '{}', $this->socketId, true);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'PongCatapult', '{}', $this->socketId, true);
                     $this->createLog(json_encode($payload), 'warn', true, ['EVENT', 'PongCatapult']);
                     break;
 
                 case "App\Events\Catapult\TriggerCDISFetchDataForSync":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENTS', $payload->event]);
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($clientId, $branchCode), 'Syncing', '{}', $this->socketId, true);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', '{}', $this->socketId, true);
                     Artisan::queue('cdis:fetch-data-for-sync', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true']);
                     break;
 
                 case "App\Events\Catapult\TriggerCDISDataConversion":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENTS', $payload->event]);
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($clientId, $branchCode), 'Converting', '{}', $this->socketId, true);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', '{}', $this->socketId, true);
                     Artisan::queue('cdis:convert-data-to-file', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true']);
                     break;
 
