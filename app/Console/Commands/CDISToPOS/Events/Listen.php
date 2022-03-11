@@ -64,10 +64,10 @@ class Listen extends Command
 
                 $pingTimer = $this->getPingTimer($loop, $connection);
 
-                $connection->on('message', function(MessageInterface $message) use ($loop, $connection, &$pingTimer, $branchCode) {
+                $connection->on('message', function(MessageInterface $message) use ($loop, $connection, &$pingTimer, $clientId, $branchCode) {
                     $loop->cancelTimer($pingTimer);
                     $pingTimer = $this->getPingTimer($loop, $connection);
-                    $this->eventListener($message, $connection, $branchCode);
+                    $this->eventListener($message, $connection, $clientId, $branchCode);
                 });
 
                 $connection->on('close', function($code = null, $reason = null) use($loop, &$pingTimer) {
@@ -95,7 +95,7 @@ class Listen extends Command
         });
     }
 
-    public function eventListener($message, $connection, $branchCode)
+    public function eventListener($message, $connection, $clientId, $branchCode)
     {
         $payload = json_decode($message);
 
@@ -110,7 +110,7 @@ class Listen extends Command
                 case "pusher_internal:subscription_succeeded":
                     $this->createLog($payload->channel, 'info', true, ['CHANNEL']);
                     $this->createLog('Listening to events...', 'info', true, ['LOG']);
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'PongCatapult', '{}', $this->socketId, true);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($clientId, $branchCode), 'PongCatapult', '{}', $this->socketId, true);
                     break;
 
                 case "pusher:error":
@@ -119,19 +119,19 @@ class Listen extends Command
 
                 case "App\Events\Catapult\Ping":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'PongCatapult', '{}', $this->socketId, true);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($clientId, $branchCode), 'PongCatapult', '{}', $this->socketId, true);
                     $this->createLog(json_encode($payload), 'warn', true, ['EVENT', 'PongCatapult']);
                     break;
 
                 case "App\Events\Catapult\TriggerCDISFetchDataForSync":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENTS', $payload->event]);
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', '{}', $this->socketId, true);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($clientId, $branchCode), 'Syncing', '{}', $this->socketId, true);
                     Artisan::queue('cdis:fetch-data-for-sync', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true']);
                     break;
 
                 case "App\Events\Catapult\TriggerCDISDataConversion":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENTS', $payload->event]);
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', '{}', $this->socketId, true);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($clientId, $branchCode), 'Converting', '{}', $this->socketId, true);
                     Artisan::queue('cdis:convert-data-to-file', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true']);
                     break;
 

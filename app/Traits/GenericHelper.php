@@ -288,10 +288,9 @@ trait GenericHelper
         }
     }
 
-    public function cdisAndCatapultSyncChannel($branchCode)
+    public function cdisAndCatapultSyncChannel($clientId, $branchCode)
     {
         $cdisUrl = config()->get('app.cdis_url');
-        $clientId = config()->get('configuration.client_id');
         $host = str_replace(':', '_', parse_url($cdisUrl, PHP_URL_HOST));
         $port = parse_url($cdisUrl, PHP_URL_PORT);
 
