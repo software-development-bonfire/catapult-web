@@ -954,9 +954,11 @@ class ConvertDataToFile extends Command
                     $relationData = $relationData->first();
                 } else {
                     $function = Str::camel($entity);
-                    if (isset($relationData->{$function})) {
-                        $relationData = $relationData->{$function};
+                    if (! isset($relationData->{$function})) {
+                        return null;
                     }
+
+                    $relationData = $relationData->{$function};
                 }
             }
         } else {
@@ -1159,7 +1161,7 @@ class ConvertDataToFile extends Command
                 }
 
                 foreach ($mappedData as $mappedDatum) {
-                    $mappedHeaders = array_keys($mappedDatum);
+                    $mappedHeaders = array_values(array_keys($mappedDatum));
                     $mappedValues = array_values($mappedDatum);
 
                     $filePath = '/'.$forSyncDatum->branch_bid.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;

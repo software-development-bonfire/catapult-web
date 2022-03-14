@@ -4,7 +4,7 @@ namespace App\Entities;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class CDISOrderingDeviceSetup extends Base
+class CDISOrderingDeviceSetup extends BaseModel
 {
     use SoftDeletes;
 
