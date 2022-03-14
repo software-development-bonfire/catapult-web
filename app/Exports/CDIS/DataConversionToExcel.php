@@ -28,9 +28,7 @@ class DataConversionToExcel implements WithEvents, ShouldAutoSize
                 foreach ($this->header as $index => $header) {
                     $columnIndex = $index + 1;
 
-                    if ($header == "" || $header == null) {
-                        $delegate->setCellValueByColumnAndRow($columnIndex, $row,  '');
-                    } else {
+                    if (! ($header == "" || $header == null)) {
                         $delegate->setCellValueExplicitByColumnAndRow($columnIndex, $row, $header, DataType::TYPE_STRING);
                     }
                 }
@@ -54,10 +52,19 @@ class DataConversionToExcel implements WithEvents, ShouldAutoSize
                         foreach ($entry as $entryIndex => $value) {
                             $columnIndex = $entryIndex + 1;
 
-                            $delegate->setCellValueByColumnAndRow(
-                                $columnIndex,
-                                $row,
-                                $value);
+                            if (strpos($value, ',') !== false) {
+                                $value = '"'.$value.'"';
+                                $delegate->setCellValueExplicitByColumnAndRow(
+                                    $columnIndex,
+                                    $row,
+                                    $value,
+                                    DataType::TYPE_STRING);
+                            } else {
+                                $delegate->setCellValueByColumnAndRow(
+                                    $columnIndex,
+                                    $row,
+                                    $value);
+                            }
                         }
 
                         $row++;

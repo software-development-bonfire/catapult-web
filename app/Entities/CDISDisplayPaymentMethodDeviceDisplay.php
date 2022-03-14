@@ -2,7 +2,7 @@
 
 namespace App\Entities;
 
-class CDISDisplayPaymentMethodDeviceDisplay extends Base
+class CDISDisplayPaymentMethodDeviceDisplay extends BaseModel
 {
     protected $table = 'cdis_display_payment_method_device_display';
 

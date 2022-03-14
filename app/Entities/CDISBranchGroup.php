@@ -4,7 +4,7 @@ namespace App\Entities;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class CDISBranchGroup extends Base
+class CDISBranchGroup extends BaseModel
 {
     use SoftDeletes;
 

@@ -2,7 +2,7 @@
 
 namespace App\Entities;
 
-class CDISBranchGroupTag extends Base
+class CDISBranchGroupTag extends BaseModel
 {
     protected $table = 'cdis_branch_group_tag';
 

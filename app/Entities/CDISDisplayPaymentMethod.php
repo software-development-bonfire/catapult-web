@@ -4,7 +4,7 @@ namespace App\Entities;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class CDISDisplayPaymentMethod extends Base
+class CDISDisplayPaymentMethod extends BaseModel
 {
     use SoftDeletes;
 

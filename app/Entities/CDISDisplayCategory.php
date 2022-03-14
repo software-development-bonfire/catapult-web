@@ -4,7 +4,7 @@ namespace App\Entities;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class CDISDisplayCategory extends Base
+class CDISDisplayCategory extends BaseModel
 {
     use SoftDeletes;
 
