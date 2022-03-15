@@ -46,7 +46,12 @@ class Listen extends Command
     public function handle()
     {
         while (true) {
-            $this->connect();
+            if ($this->hasInternetConnection()) {
+                $this->connect();
+            } else {
+                $this->createLog("Could not connect: No internet connection.", 'warn', true, ['CONNECTION ERROR']);
+            }
+
             sleep(5);
         }
     }
