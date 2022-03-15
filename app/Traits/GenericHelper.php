@@ -297,4 +297,18 @@ trait GenericHelper
 
         return $host.(! is_null($port) ? '_'.$port : '').'_catapult_sync.'.$clientId.'_'.$branchCode;
     }
+
+    public function hasInternetConnection($hostname = "www.example.com", $port = 80)
+    {
+        $connected = @fsockopen($hostname, $port);
+
+        if ($connected) {
+            $hasConnection = true;
+            fclose($connected);
+        } else {
+            $hasConnection = false;
+        }
+
+        return $hasConnection;
+    }
 }
