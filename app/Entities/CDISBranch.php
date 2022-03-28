@@ -38,4 +38,9 @@ class CDISBranch extends BaseModel
     {
         return $this->hasMany(CDISTerminal::class, 'branch_bid', 'bid');
     }
+
+    public function kitchenItemSetup()
+    {
+        return $this->hasMany(CDISBranch::class, 'bid', 'branch_bid');
+    }
 }
