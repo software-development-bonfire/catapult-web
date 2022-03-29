@@ -35,4 +35,9 @@ class CDISKitchenItemSetup extends BaseModel
     {
         return $this->hasOne(CDISKitchenDevicePrinter::class, 'bid', 'device_type_bid');
     }
+
+    public function branch()
+    {
+        return $this->hasOne(CDISBranch::class, 'bid', 'branch_bid');
+    }
 }

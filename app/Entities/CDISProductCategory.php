@@ -32,4 +32,9 @@ class CDISProductCategory extends BaseModel
     {
         return $this->hasMany(CDISProduct::class, 'category_bid', 'bid');
     }
+
+    public function parent()
+    {
+        return $this->hasMany(CDISProductCategory::class, 'parent_bid', 'bid');
+    }
 }

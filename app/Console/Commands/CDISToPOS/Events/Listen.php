@@ -129,13 +129,13 @@ class Listen extends Command
                     break;
 
                 case "App\Events\Catapult\TriggerCDISFetchDataForSync":
-                    $this->createLog(json_encode($payload), 'info', true, ['EVENTS', $payload->event]);
+                    $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', '{}', $this->socketId, true);
                     Artisan::queue('cdis:fetch-data-for-sync', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true']);
                     break;
 
                 case "App\Events\Catapult\TriggerCDISDataConversion":
-                    $this->createLog(json_encode($payload), 'info', true, ['EVENTS', $payload->event]);
+                    $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', '{}', $this->socketId, true);
                     Artisan::queue('cdis:convert-data-to-file', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true']);
                     break;
