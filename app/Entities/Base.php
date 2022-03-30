@@ -28,4 +28,9 @@ class Base extends Model
     {
         return with(new static)->getTable();
     }
+
+    public function getTableColumns()
+    {
+        return $this->getConnection()->getSchemaBuilder()->getColumnListing($this->getTable());
+    }
 }
