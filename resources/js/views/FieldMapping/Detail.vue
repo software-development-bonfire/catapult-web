@@ -162,7 +162,7 @@
                         </tr>
                         <tr v-if="form.connection_setup.is_customized_mapping === 1">
                             <td align="right">{{ $t('message.set_the_file_name_to_be_generated') }}</td>
-                            <td width="200px">
+                            <td width="300px">
                                 <input type="text" class="form-control" v-model="form.data_mapping.data_entry">
                                 <label
                                     class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('data_entry')">
@@ -172,7 +172,7 @@
                         </tr>
                         <tr v-if="form.connection_setup.is_customized_mapping === 1">
                             <td align="right">{{ $t('label.primary_table') }}</td>
-                            <td width="200px">
+                            <td width="300px">
                                 <input type="text" class="form-control" v-model="form.data_mapping.primary_table">
                                 <label
                                     class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('primary_table')">
@@ -182,8 +182,8 @@
                         </tr>
                         <tr v-if="form.connection_setup.is_customized_mapping === 1">
                             <td align="right">{{ $t('label.data_condition') }}</td>
-                            <td width="200px">
-                                <input type="text" class="form-control" v-model="form.data_mapping.data_condition">
+                            <td width="300px">
+                                <textarea class="form-control" v-model="form.data_mapping.data_condition"/>
                                 <label
                                     class="text-danger error-message mb-0" v-if="errors.hasOwnProperty('data_condition')">
                                     {{ errors.data_condition[0] }}
@@ -251,12 +251,11 @@
                         <table-data
                             align="center"
                             valign="center">
-                            <input
+                            <textarea
                                 :disabled="! tableData.required"
-                                type="text"
                                 class="form-control"
                                 v-model="tableData.field"
-                            >
+                            />
                         </table-data>
                         <table-data
                             align="center"
@@ -293,7 +292,7 @@
                         <table-data
                             valign="center"
                             v-if="form.connection_setup.mapping_type === 2 || (form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 1)">
-                            <input type="text" class="form-control" v-model="tableData.default_value">
+                            <textarea class="form-control" v-model="tableData.default_value"/>
                         </table-data>
                         <table-data
                             align="center"
@@ -357,11 +356,10 @@
                         <table-data
                             align="center"
                             valign="center">
-                            <input
-                                type="text"
+                            <textarea
                                 class="form-control"
                                 v-model="form.data_mapping.add.field"
-                            >
+                            />
                         </table-data>
                         <table-data
                             align="center"
@@ -386,7 +384,7 @@
                         <table-data
                             valign="center"
                             v-if="form.connection_setup.mapping_type === 2 || (form.connection_setup.mapping_type === 1 && form.connection_setup.is_customized_mapping === 1)">
-                            <input type="text" class="form-control" v-model="form.data_mapping.add.default_value">
+                            <textarea class="form-control" v-model="form.data_mapping.add.default_value" />
                         </table-data>
                         <table-data
                             align="center"

@@ -842,25 +842,25 @@ class ConvertDataToFile extends Command
                     $matchesColumn = preg_split("/\.(?![^{]+\})/", $matchesColumnString);
 
                         if (count($matchesColumn) >= 2) {
-                        $conditionColumnValue = $this->mappedSpecificData(['field' => $matchesColumnString], $syncEntry, $entryTableName, $entryData, $entryName);
+                            $conditionColumnValue = $this->mappedSpecificData(['field' => $matchesColumnString], $syncEntry, $entryTableName, $entryData, $entryName);
 
-                        if (! is_null($conditionColumnValue)) {
-                            $conditionColumnValue = '"'.$conditionColumnValue.'"';
+                            if (! is_null($conditionColumnValue)) {
+                                $conditionColumnValue = '"'.$conditionColumnValue.'"';
+                            }
+
+                            $condition =
+                                str_replace(
+                                    $bracketedMatchesColumns[$index],
+                                    $conditionColumnValue ?? 'NULL',
+                                    $condition);
+                        } else {
+                            $columnName = $matchesColumn[count($matchesColumn) - 1];
+                            $condition =
+                                str_replace(
+                                    $bracketedMatchesColumns[$index],
+                                    $entryData[$columnName] ?? 'NULL',
+                                    $condition);
                         }
-
-                        $condition =
-                            str_replace(
-                                $bracketedMatchesColumns[$index],
-                                $conditionColumnValue ?? 'NULL',
-                                $condition);
-                    } else {
-                        $columnName = $matchesColumn[count($matchesColumn) - 1];
-                        $condition =
-                            str_replace(
-                                $bracketedMatchesColumns[$index],
-                                $entryData[$columnName] ?? 'NULL',
-                                $condition);
-                    }
                 }
             }
         }

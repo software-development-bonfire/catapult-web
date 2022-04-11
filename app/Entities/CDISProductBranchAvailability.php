@@ -33,4 +33,9 @@ class CDISProductBranchAvailability extends BaseModel
     {
         return $this->hasMany(CDISProductBranchPrice::class, 'product_branch_availability_bid', 'bid');
     }
+
+    public function productUomPackaging()
+    {
+        return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_bid', 'bid');
+    }
 }
