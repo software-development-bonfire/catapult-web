@@ -146,7 +146,21 @@ class SyncService
                 $entityName = str_replace('_', '', Str::title($value->sync->table_name));
                 $entity = "App\\Entities\\CDIS".$entityName;
 
-                $detail = app($entity)::where('bid', $value->sync->table_bid);
+                $entityInstance = app($entity);
+                $entityInstance->getTableColumns();
+
+                unset($value->detail->id);
+                $syncData = (array) $value->detail;
+
+                $data = [];
+
+                foreach ($entityInstance->getTableColumns() as $tableColumnIndex => $tableColumn) {
+                    if (isset($syncData[$tableColumn])) {
+                        $data[$tableColumn] = $syncData[$tableColumn];
+                    }
+                }
+
+                $detail = $entityInstance::where('bid', $value->sync->table_bid);
 
                 $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($entity));
 
@@ -156,13 +170,11 @@ class SyncService
 
                 $isExists = $detail->count() > 0;
 
-                unset($value->detail->id);
-
                 if ($isExists) {
                     if ($value->sync->action == 'delete' && $value->detail) {
                         $detail->delete();
                     } else if ($value->sync->action == 'update' || $value->sync->action == 'create') {
-                        $data = (array) $value->detail;
+
                         if (count($data) > 0) {
                             $detail->update($data);
                         }
@@ -171,7 +183,7 @@ class SyncService
                     if ($value->detail
                         && ($value->sync->action == 'create' || $value->sync->action == 'update')
                     ) {
-                        $detail->create((array) $value->detail);
+                        $detail->create($data);
                     }
                 }
             }
