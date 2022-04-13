@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CDISTerminal extends BaseModel
 {
-    use SoftDeletes;
-
     protected $table = 'cdis_terminal';
 
     protected $fillable = [

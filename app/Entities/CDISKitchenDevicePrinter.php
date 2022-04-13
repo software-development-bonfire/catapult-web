@@ -7,8 +7,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CDISKitchenDevicePrinter extends BaseModel
 {
-    use SoftDeletes;
-
     protected $table = 'cdis_kitchen_device_printer';
 
     protected $primaryKey = 'bid';

@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CDISDiscountSettings extends BaseModel
 {
-    use SoftDeletes;
-
     protected $table = 'cdis_discount_settings';
 
     protected $primaryKey = 'bid';

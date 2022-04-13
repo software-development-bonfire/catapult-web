@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CDISBranchGroup extends BaseModel
 {
-    use SoftDeletes;
-
     protected $table = 'cdis_branch_group';
 
     protected $primaryKey = 'bid';

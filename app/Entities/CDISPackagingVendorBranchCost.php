@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CDISPackagingVendorBranchCost extends BaseModel
 {
-    use SoftDeletes;
-
     protected $table = 'cdis_packaging_vendor_branch_cost';
 
     protected $fillable = [

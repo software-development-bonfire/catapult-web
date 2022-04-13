@@ -10,8 +10,6 @@ use Illuminate\Support\Facades\DB;
 
 class CDISProductBranchPrice extends BaseModel
 {
-    use SoftDeletes;
-
     protected $table = 'cdis_product_branch_price';
 
     protected $fillable = [

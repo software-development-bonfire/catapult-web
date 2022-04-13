@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CDISInventoryLocation extends BaseModel
 {
-    use SoftDeletes;
-
     protected $table = 'cdis_inventory_location';
 
     protected $primaryKey = 'bid';

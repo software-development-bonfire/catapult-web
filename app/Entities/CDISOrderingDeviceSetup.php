@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CDISOrderingDeviceSetup extends BaseModel
 {
-    use SoftDeletes;
-
     protected $table = 'cdis_ordering_device_setup';
 
     protected $primaryKey = 'bid';

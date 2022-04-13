@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CDISBranch extends BaseModel
 {
-    use SoftDeletes;
-
     protected $table = 'cdis_branch';
 
     protected $fillable = [
