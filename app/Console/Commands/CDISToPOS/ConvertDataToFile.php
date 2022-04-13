@@ -1019,7 +1019,7 @@ class ConvertDataToFile extends Command
 
     public function sync($columnName = 'bid', $syncEntry)
     {
-        return $syncEntry[$columnName];
+        return (string) $syncEntry[$columnName];
     }
 
     public function generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails, $timeStamp)
@@ -1161,8 +1161,8 @@ class ConvertDataToFile extends Command
                 }
 
                 foreach ($mappedData as $mappedDatum) {
-                    $mappedHeaders = array_values(array_keys($mappedDatum));
-                    $mappedValues = array_values($mappedDatum);
+                    $mappedHeaders = array_keys($mappedDatum);
+                    $mappedValues = $mappedDatum;
 
                     $filePath = '/'.$forSyncDatum->branch_bid.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
 
