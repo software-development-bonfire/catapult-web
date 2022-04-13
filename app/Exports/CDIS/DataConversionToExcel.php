@@ -44,7 +44,6 @@ class DataConversionToExcel implements WithEvents, ShouldAutoSize
 
                         if (strpos($value, ',') !== false) {
                             $value = '"'.$value.'"';
-                            $value = str_replace(',', '|', $value);
                         }
 
                         $delegate->setCellValueByColumnAndRow(
@@ -59,7 +58,6 @@ class DataConversionToExcel implements WithEvents, ShouldAutoSize
 
                             if (strpos($value, ',') !== false) {
                                 $value = '"'.$value.'"';
-                                $value = str_replace(',', '|', $value);
                                 $delegate->setCellValueExplicitByColumnAndRow(
                                     $columnIndex,
                                     $row,
