@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CDISProductStructure extends BaseModel
 {
-    use SoftDeletes;
-
     protected $table = 'cdis_product_structure';
 
     protected $fillable = [

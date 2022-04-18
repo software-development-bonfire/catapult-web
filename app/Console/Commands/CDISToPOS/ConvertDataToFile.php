@@ -842,25 +842,25 @@ class ConvertDataToFile extends Command
                     $matchesColumn = preg_split("/\.(?![^{]+\})/", $matchesColumnString);
 
                         if (count($matchesColumn) >= 2) {
-                        $conditionColumnValue = $this->mappedSpecificData(['field' => $matchesColumnString], $syncEntry, $entryTableName, $entryData, $entryName);
+                            $conditionColumnValue = $this->mappedSpecificData(['field' => $matchesColumnString], $syncEntry, $entryTableName, $entryData, $entryName);
 
-                        if (! is_null($conditionColumnValue)) {
-                            $conditionColumnValue = '"'.$conditionColumnValue.'"';
+                            if (! is_null($conditionColumnValue)) {
+                                $conditionColumnValue = '"'.$conditionColumnValue.'"';
+                            }
+
+                            $condition =
+                                str_replace(
+                                    $bracketedMatchesColumns[$index],
+                                    $conditionColumnValue ?? 'NULL',
+                                    $condition);
+                        } else {
+                            $columnName = $matchesColumn[count($matchesColumn) - 1];
+                            $condition =
+                                str_replace(
+                                    $bracketedMatchesColumns[$index],
+                                    $entryData[$columnName] ?? 'NULL',
+                                    $condition);
                         }
-
-                        $condition =
-                            str_replace(
-                                $bracketedMatchesColumns[$index],
-                                $conditionColumnValue ?? 'NULL',
-                                $condition);
-                    } else {
-                        $columnName = $matchesColumn[count($matchesColumn) - 1];
-                        $condition =
-                            str_replace(
-                                $bracketedMatchesColumns[$index],
-                                $entryData[$columnName] ?? 'NULL',
-                                $condition);
-                    }
                 }
             }
         }
@@ -1019,7 +1019,7 @@ class ConvertDataToFile extends Command
 
     public function sync($columnName = 'bid', $syncEntry)
     {
-        return $syncEntry[$columnName];
+        return (string) $syncEntry[$columnName];
     }
 
     public function generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails, $timeStamp)
@@ -1161,8 +1161,8 @@ class ConvertDataToFile extends Command
                 }
 
                 foreach ($mappedData as $mappedDatum) {
-                    $mappedHeaders = array_values(array_keys($mappedDatum));
-                    $mappedValues = array_values($mappedDatum);
+                    $mappedHeaders = array_keys($mappedDatum);
+                    $mappedValues = $mappedDatum;
 
                     $filePath = '/'.$forSyncDatum->branch_bid.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
 

@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CDISDisplayPaymentMethodDetail extends Base
 {
-    use SoftDeletes;
-
     protected $table = 'cdis_display_payment_method_detail';
 
     protected $primaryKey = 'bid';

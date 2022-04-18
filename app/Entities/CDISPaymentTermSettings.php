@@ -2,11 +2,9 @@
 
 namespace App\Entities;
 
-use Illuminate\Database\Eloquent\SoftDeletes;
-
-class CDISBrand extends BaseModel
+class CDISPaymentTermSettings extends BaseModel
 {
-    protected $table = 'cdis_brand';
+    protected $table = 'cdis_payment_term_settings';
 
     protected $fillable = [
         'bid',
@@ -20,12 +18,5 @@ class CDISBrand extends BaseModel
         'bid' => 'string',
         'created_by' => 'string',
         'updated_by' => 'string',
-    ];
-
-    protected $auditExclude = [
-        'id',
-        'bid',
-        'created_by',
-        'updated_by',
     ];
 }

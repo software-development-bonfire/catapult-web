@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CDISProductBranchAvailability extends BaseModel
 {
-    use SoftDeletes;
-
     protected $table = 'cdis_product_branch_availability';
 
     protected $fillable = [
@@ -32,5 +30,10 @@ class CDISProductBranchAvailability extends BaseModel
     public function productBranchPrice()
     {
         return $this->hasMany(CDISProductBranchPrice::class, 'product_branch_availability_bid', 'bid');
+    }
+
+    public function productUomPackaging()
+    {
+        return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_bid', 'bid');
     }
 }

@@ -172,7 +172,13 @@ class SyncService
 
                 if ($isExists) {
                     if ($value->sync->action == 'delete' && $value->detail) {
-                        $detail->delete();
+                        if ($detail->getConnection()
+                            ->getSchemaBuilder()
+                            ->hasColumn($detail->getTable(), 'deleted_at')) {
+                            $detail->delete();
+                        } else {
+                            $detail->update(['deleted_at' => null]);
+                        }
                     } else if ($value->sync->action == 'update' || $value->sync->action == 'create') {
 
                         if (count($data) > 0) {

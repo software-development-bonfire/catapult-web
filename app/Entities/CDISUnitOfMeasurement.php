@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CDISUnitOfMeasurement extends BaseModel
 {
-    use SoftDeletes;
-
     protected $table = 'cdis_unit_of_measurement';
 
     protected $primaryKey = 'bid';

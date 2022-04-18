@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CDISDisplayCategory extends BaseModel
 {
-    use SoftDeletes;
-
     protected $table = 'cdis_display_category';
 
     protected $primaryKey = 'bid';

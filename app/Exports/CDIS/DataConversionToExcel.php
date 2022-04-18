@@ -42,6 +42,10 @@ class DataConversionToExcel implements WithEvents, ShouldAutoSize
                     foreach ($this->value as $index => $value) {
                         $columnIndex = $index + 1;
 
+                        if (strpos($value, ',') !== false) {
+                            $value = '"'.$value.'"';
+                        }
+
                         $delegate->setCellValueByColumnAndRow(
                             $columnIndex,
                             $row,
