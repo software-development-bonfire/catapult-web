@@ -1162,7 +1162,7 @@ class ConvertDataToFile extends Command
 
                 foreach ($mappedData as $mappedDatum) {
                     $mappedHeaders = array_keys($mappedDatum);
-                    $mappedValues = $mappedDatum;
+                    $mappedValues = array_values($mappedDatum);
 
                     $filePath = '/'.$forSyncDatum->branch_bid.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
 
