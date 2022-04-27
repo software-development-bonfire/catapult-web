@@ -40,7 +40,7 @@ class CDISProductUomPackaging extends BaseModel
 
     public function kitchenItemSetupDetail()
     {
-        return $this->hasMany(CDISKitchenItemSetupDetail::class, 'product_uom_packaging_bid', 'bid');
+        return $this->belongsTo(CDISKitchenItemSetupDetail::class, 'bid', 'product_uom_packaging_bid');
     }
 
     public function kitchenItemSetup()

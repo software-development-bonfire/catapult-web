@@ -25,6 +25,6 @@ class CDISKitchenItemSetupDetail extends BaseModel
 
     public function kitchenItemSetup()
     {
-        return $this->hasMany(CDISKitchenItemSetup::class, 'head_bid', 'bid');
+        return $this->belongsTo(CDISKitchenItemSetup::class, 'head_bid', 'bid');
     }
 }

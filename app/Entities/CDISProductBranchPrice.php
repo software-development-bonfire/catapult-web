@@ -5,7 +5,6 @@ namespace App\Entities;
 use App\Enums\CDIS\ApprovalStatus;
 use App\Enums\CDIS\CostAndPriceChangePricingType;
 use App\Enums\CDIS\CostAndPriceChangeType;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 
 class CDISProductBranchPrice extends BaseModel
@@ -55,7 +54,7 @@ class CDISProductBranchPrice extends BaseModel
         $model =
             DB::table("cdis_product_branch_price")
                 ->select(
-                    DB::raw('COALESCE(GROUP_CONCAT(DISTINCT CPDP.new_value ORDER BY CPDP.assessed_at DESC), cdis_product_branch_price.price) AS selling_price')
+                    DB::raw("IF(COUNT(CPDP.bid) > 0, COALESCE(GROUP_CONCAT(IFNULL(CPDP.new_value, 'NULL') ORDER BY CPDP.assessed_at DESC), cdis_product_branch_price.price), cdis_product_branch_price.price) AS selling_price")
                 )
                 ->leftJoin(
                     'cdis_product_branch_availability',
