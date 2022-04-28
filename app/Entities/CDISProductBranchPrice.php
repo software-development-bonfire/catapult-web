@@ -54,7 +54,7 @@ class CDISProductBranchPrice extends BaseModel
         $model =
             DB::table("cdis_product_branch_price")
                 ->select(
-                    DB::raw("IF(COUNT(CPDP.bid) > 0, COALESCE(GROUP_CONCAT(IFNULL(CPDP.new_value, 'NULL') ORDER BY CPDP.assessed_at DESC), cdis_product_branch_price.price), cdis_product_branch_price.price) AS selling_price")
+                    DB::raw("IF(COUNT(CPDP.bid) > 0, COALESCE(GROUP_CONCAT(DISTINCT IFNULL(CPDP.new_value, 'NULL') ORDER BY CPDP.assessed_at DESC), cdis_product_branch_price.price), cdis_product_branch_price.price) AS selling_price")
                 )
                 ->leftJoin(
                     'cdis_product_branch_availability',
@@ -66,6 +66,7 @@ class CDISProductBranchPrice extends BaseModel
                         ->select([
                             'cdis_cost_and_price_change_detail.bid',
                             'cdis_cost_and_price_change_detail.product_uom_bid',
+                            'cdis_cost_and_price_change_detail.branch_bid',
                             'cdis_cost_and_price_change_detail.product_pricing_type_bid',
                             'cdis_cost_and_price_change_detail.new_value',
                             'cdis_cost_and_price_change.assessed_at'
@@ -97,6 +98,7 @@ class CDISProductBranchPrice extends BaseModel
                     'CPDP',
                     function($join) {
                         $join->on('CPDP.product_uom_bid', 'cdis_product_branch_availability.product_uom_bid')
+                            ->on('CPDP.branch_bid', 'cdis_product_branch_availability.branch_bid')
                             ->on('CPDP.product_pricing_type_bid', 'cdis_product_branch_price.product_pricing_type_bid');
                     }
                 )

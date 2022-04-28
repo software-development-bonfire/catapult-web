@@ -39,7 +39,7 @@ class CDISPackagingVendorBranchCost extends BaseModel
                     DB::raw('cdis_product_branch_availability.bid as product_branch_availability_bid'),
                     DB::raw('cdis_packaging_vendor.bid as packaging_vendor_bid'),
                     DB::raw('cdis_packaging_vendor_branch_cost.bid as packaging_vendor_branch_cost_bid'),
-                    DB::raw("IF(COUNT(CPDU.bid) > 0, COALESCE(GROUP_CONCAT(IFNULL(CPDU.new_value, 'NULL') ORDER BY CPDU.assessed_at DESC), cdis_packaging_vendor_branch_cost.cost), cdis_packaging_vendor_branch_cost.cost) AS cost"),
+                    DB::raw("IF(COUNT(CPDU.bid) > 0, COALESCE(GROUP_CONCAT(DISTINCT IFNULL(CPDU.new_value, 'NULL') ORDER BY CPDU.assessed_at DESC), cdis_packaging_vendor_branch_cost.cost), cdis_packaging_vendor_branch_cost.cost) AS cost"),
                 ])
                 ->rightJoin('cdis_product_branch_availability', 'cdis_product_branch_availability.bid', '=', 'cdis_packaging_vendor_branch_cost.product_branch_availability_bid')
                 ->rightJoin('cdis_packaging_vendor', function ($join) {
@@ -59,6 +59,7 @@ class CDISPackagingVendorBranchCost extends BaseModel
                         ->select([
                             'cdis_cost_and_price_change_detail.bid',
                             'cdis_cost_and_price_change_detail.product_uom_bid',
+                            'cdis_cost_and_price_change_detail.branch_bid',
                             'cdis_cost_and_price_change.vendor_bid',
                             'cdis_cost_and_price_change_detail.new_value',
                             'cdis_cost_and_price_change.assessed_at',
@@ -90,6 +91,7 @@ class CDISPackagingVendorBranchCost extends BaseModel
                     'CPDU',
                     function ($join) {
                         $join->on('CPDU.product_uom_bid', 'cdis_product_uom_packaging.bid')
+                            ->on('CPDU.branch_bid', 'cdis_branch.bid')
                             ->on('CPDU.vendor_bid', 'cdis_vendor.bid');
                     }
                 )
