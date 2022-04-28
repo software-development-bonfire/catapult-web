@@ -100,7 +100,7 @@ class CDISProductBranchPrice extends BaseModel
                             ->on('CPDP.product_pricing_type_bid', 'cdis_product_branch_price.product_pricing_type_bid');
                     }
                 )
-                ->where('cdis_product_branch_price.bid', '=', $this->bid);
+                ->where('product_branch_price.bid', '=', $this->bid);
 
         $price = null;
 
