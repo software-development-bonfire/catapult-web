@@ -102,7 +102,7 @@ class CDISProductBranchPrice extends BaseModel
                             ->on('CPDP.product_pricing_type_bid', 'cdis_product_branch_price.product_pricing_type_bid');
                     }
                 )
-                ->where('product_branch_price.bid', '=', $this->bid);
+                ->where('cdis_product_branch_price.bid', '=', $this->bid);
 
         $price = null;
 
@@ -114,7 +114,7 @@ class CDISProductBranchPrice extends BaseModel
                     : $price;
 
             $price = is_numeric($price) && (! is_null($price) || $price !== 'NULL')
-                ? number_format($price, 2)
+                ? $price
                 : null;
         }
 

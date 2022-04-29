@@ -108,7 +108,7 @@ class CDISPackagingVendorBranchCost extends BaseModel
                     : $cost;
 
             $cost = is_numeric($cost) && (! is_null($cost) || $cost !== 'NULL')
-                ? number_format($cost, 2)
+                ? $cost
                 : null;
         }
 

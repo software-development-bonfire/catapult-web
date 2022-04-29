@@ -995,13 +995,13 @@ class ConvertDataToFile extends Command
         }
 
         if ($relationData) {
-            $relationData = $relationData->toArray();
-
             $datum = null;
 
-            if (isset($relationData[$columnName])) {
-                return $relationData[$columnName];
+            if (isset($relationData->{$columnName})) {
+                return $relationData->{$columnName};
             } else {
+                $relationData = $relationData->toArray();
+
                 $data = array_filter(collect($relationData)->pluck($columnName)->toArray());
 
                 if (count($data) == 1) {
