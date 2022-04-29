@@ -112,6 +112,10 @@ class CDISProductBranchPrice extends BaseModel
                 (strpos($price, ',') !== false)
                     ? explode(',', $price)[0]
                     : $price;
+
+            $price = is_numeric($price) && (! is_null($price) || $price !== 'NULL')
+                ? number_format($price, 2)
+                : null;
         }
 
         return $price;
