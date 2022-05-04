@@ -42,7 +42,7 @@ return [
         |
         */
         'csv'                    => [
-            'delimiter'              => ',',
+            'delimiter'              => env('CSV_DELIMITER', ','),
             'enclosure'              => '',
             'line_ending'            => PHP_EOL,
             'use_bom'                => false,
@@ -121,7 +121,7 @@ return [
         |
         */
         'csv'         => [
-            'delimiter'        => ',',
+            'delimiter'        => env('CSV_DELIMITER', ','),
             'enclosure'        => '"',
             'escape_character' => '\\',
             'contiguous'       => false,

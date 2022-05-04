@@ -21,6 +21,8 @@ class DataConversionToExcel implements WithEvents, ShouldAutoSize
     {
         return [
             BeforeSheet::class => function(BeforeSheet $event) {
+                $delimiter = config('excel.exports.csv.delimiter');
+
                 $delegate = $event->sheet->getDelegate();
 
                 $row = 1;
@@ -42,7 +44,7 @@ class DataConversionToExcel implements WithEvents, ShouldAutoSize
                     foreach ($this->value as $index => $value) {
                         $columnIndex = $index + 1;
 
-                        if (strpos($value, ',') !== false) {
+                        if (strpos($value, $delimiter) !== false) {
                             $value = '"'.$value.'"';
                         }
 
@@ -56,7 +58,7 @@ class DataConversionToExcel implements WithEvents, ShouldAutoSize
                         foreach ($entry as $entryIndex => $value) {
                             $columnIndex = $entryIndex + 1;
 
-                            if (strpos($value, ',') !== false) {
+                            if (strpos($value, $delimiter) !== false) {
                                 $value = '"'.$value.'"';
                                 $delegate->setCellValueExplicitByColumnAndRow(
                                     $columnIndex,
