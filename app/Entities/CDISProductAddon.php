@@ -30,7 +30,7 @@ class CDISProductAddon extends BaseModel
         'updated_by',
     ];
 
-    public function uomPackaging()
+    public function productUomPackaging()
     {
         return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_bid', 'bid');
     }

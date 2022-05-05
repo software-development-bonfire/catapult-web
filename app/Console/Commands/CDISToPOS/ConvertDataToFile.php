@@ -170,8 +170,17 @@ class ConvertDataToFile extends Command
                 continue;
             }
 
+            $excelDataCollection = [];
+
             foreach ($forSyncData as $forSyncDatum) {
-                $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp);
+                $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $excelDataCollection);
+            }
+
+            foreach ($excelDataCollection as $filePath => $detail) {
+                Excel::store(
+                    new DataConversionToExcel($detail['headers'], $detail['data'], $this->extension),
+                    $filePath,
+                    $detail['disk_name']);
             }
 
             if ($broadcast) {
@@ -511,9 +520,9 @@ class ConvertDataToFile extends Command
      *
      * @return mixed
      */
-    public function processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp)
+    public function processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, &$excelDataCollection)
     {
-        return $this->transaction(function() use($forSyncDatum, $fieldMappingDetails, $timeStamp) {
+        return $this->transaction(function() use($forSyncDatum, $fieldMappingDetails, $timeStamp, &$excelDataCollection) {
             if ($forSyncDatum) {
                 if ($forSyncDatum->group) {
                     $toSyncData = CDISSync::where([
@@ -522,7 +531,7 @@ class ConvertDataToFile extends Command
                         'code' => $forSyncDatum->code,
                     ])->get();
 
-                    $result = $this->generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails, $timeStamp);
+                    $result = $this->generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails, $timeStamp, $excelDataCollection);
 
                     if ($result) {
                         CDISSync::whereIn('bid', $toSyncData->pluck('bid'))->delete();
@@ -530,7 +539,7 @@ class ConvertDataToFile extends Command
 
                     return $result;
                 } else {
-                    $result = $this->generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails, $timeStamp);
+                    $result = $this->generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails, $timeStamp, $excelDataCollection);
 
                     if ($result) {
                         CDISSync::where([
@@ -549,7 +558,7 @@ class ConvertDataToFile extends Command
         });
     }
 
-    public function generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails, $timeStamp)
+    public function generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails, $timeStamp, &$excelDataCollection)
     {
         foreach ($fieldMappingDetails as $fieldMappingDetail) {
             $primaryTable = $fieldMappingDetail->primary_table;
@@ -671,74 +680,51 @@ class ConvertDataToFile extends Command
 
                     $filePath = '/'.$forSyncDatum->branch_bid.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
 
-                    $localDisk = Storage::disk($localDiskName);
+                    if (! isset($excelDataCollection[$filePath])) {
+                        $excelDataCollection[$filePath] = [
+                            'headers' => $mappedHeaders,
+                            'disk_name' => $localDiskName,
+                            'data' => []
+                        ];
+                    }
 
-                    if ($localDisk->exists($filePath)) {
-                        $contents = Excel::toArray(new DataConversionToExcel($mappedHeaders, $mappedValues, $this->extension), $filePath, $localDiskName);
-
-                        $foundHeader = $contents[0][0];
-
-                        unset($contents[0][0]);
+                    if (isset($excelDataCollection[$filePath])) {
+                        $foundHeader = $excelDataCollection[$filePath]['headers'];
 
                         $primaryColumnNameIndex = array_search($primaryColumnName, $foundHeader);
 
-                        $contents[0] = array_values($contents[0]);
+                        if ($primaryColumnNameIndex === false) {
+                            continue;
+                        }
+
                         $primaryColumnNameValue = $mappedValues[$primaryColumnNameIndex];
 
-                        $rowIndex = array_search($primaryColumnNameValue, array_column($contents[0], $primaryColumnNameIndex));
+                        $rowIndex = array_search($primaryColumnNameValue, array_column($excelDataCollection[$filePath]['data'], $primaryColumnNameIndex));
 
                         if ($rowIndex !== false) {
-                            $contents[0][$rowIndex] = $mappedValues;
+                            $excelDataCollection[$filePath]['data'][$rowIndex] = $mappedValues;
                         } else {
-                            $contents[0][] = $mappedValues;
+                            $excelDataCollection[$filePath]['data'][] = $mappedValues;
                         }
 
-                        $localDisk->delete($filePath);
+                        $excelDataCollection[$filePath]['data'][] = $mappedValues;
 
-                        $mappedValues = $contents[0];
-
-                        $isExcelCreated = Excel::store(
-                            new DataConversionToExcel($mappedHeaders, $mappedValues, $this->extension),
-                            $filePath,
-                            $localDiskName);
-
-                        if ($isExcelCreated) {
-                            $this->createLog(
-                                $filePath .' updated',
-                                'info',
-                                true,
-                                [],
-                                ['Row: '.($rowIndex + 2).' | '.$primaryColumnName.': '.$primaryColumnNameValue]
-                            );
-                        } else {
-                            $this->createLog(
-                                'Failed to create '.$this->extension.'. Please contact administrator',
-                                'error',
-                                true,
-                                []
-                            );
-                        }
+                        $this->createLog(
+                            $filePath .' updated',
+                            'info',
+                            true,
+                            [],
+                            ['Row: '.($rowIndex + 2).' | '.$primaryColumnName.': '.$primaryColumnNameValue]
+                        );
                     } else {
-                        $isExcelCreated = Excel::store(
-                            new DataConversionToExcel($mappedHeaders, $mappedValues, $this->extension),
-                            $filePath,
-                            $localDiskName);
+                        $excelDataCollection[$filePath]['data'][] = $mappedValues;
 
-                        if ($isExcelCreated) {
-                            $this->createLog(
-                                $filePath .' created',
-                                'info',
-                                true,
-                                []
-                            );
-                        } else {
-                            $this->createLog(
-                                'Failed to create '. $this->extension. '. Please contact administrator',
-                                'error',
-                                true,
-                                []
-                            );
-                        }
+                        $this->createLog(
+                            $filePath .' created',
+                            'info',
+                            true,
+                            []
+                        );
                     }
                 }
             }
@@ -1050,7 +1036,7 @@ class ConvertDataToFile extends Command
         return (string) $syncEntry[$columnName];
     }
 
-    public function generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails, $timeStamp)
+    public function generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails, $timeStamp, &$excelDataCollection)
     {
         $noPrimaryKeyDetected = true;
 
@@ -1246,14 +1232,18 @@ class ConvertDataToFile extends Command
 
                     $filePath = '/'.$forSyncDatum->branch_bid.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
 
+                    if (! isset($excelDataCollection[$filePath])) {
+                        $excelDataCollection[$filePath] = [
+                            'headers' => $mappedHeaders,
+                            'disk_name' => $localDiskName,
+                            'data' => []
+                        ];
+                    }
+
                     $localDisk = Storage::disk($localDiskName);
 
-                    if ($localDisk->exists($filePath)) {
-                        $contents = Excel::toArray(new DataConversionToExcel($mappedHeaders, $mappedValues, $this->extension), $filePath, $localDiskName);
-
-                        $foundHeader = $contents[0][0];
-
-                        unset($contents[0][0]);
+                    if (isset($excelDataCollection[$filePath])) {
+                        $foundHeader = $excelDataCollection[$filePath]['headers'];
 
                         $primaryColumnNameIndex = array_search($primaryColumnName, $foundHeader);
 
@@ -1261,66 +1251,33 @@ class ConvertDataToFile extends Command
                             continue;
                         }
 
-                        $contents[0] = array_values($contents[0]);
                         $primaryColumnNameValue = $mappedValues[$primaryColumnNameIndex];
 
-                        $rowIndex = array_search($primaryColumnNameValue, array_column($contents[0], $primaryColumnNameIndex));
+                        $rowIndex = array_search($primaryColumnNameValue, array_column($excelDataCollection[$filePath]['data'], $primaryColumnNameIndex));
 
                         if ($rowIndex !== false) {
-                            $contents[0][$rowIndex] = $mappedValues;
+                            $excelDataCollection[$filePath]['data'][$rowIndex] = $mappedValues;
                         } else {
-                            $contents[0][] = $mappedValues;
+                            $excelDataCollection[$filePath]['data'][] = $mappedValues;
                         }
 
-                        $localDisk->delete($filePath);
-
-                        $mappedValues = $contents[0];
-
-                        $isExcelCreated = Excel::store(
-                            new DataConversionToExcel($mappedHeaders, $mappedValues, $this->extension),
-                            $filePath,
-                            $localDiskName);
-
-                        if ($isExcelCreated) {
-                            $this->createLog(
-                                $filePath .' updated',
-                                'info',
-                                true,
-                                [],
-                                ['Row: '.($rowIndex + 2).' | '.$primaryColumnName.': '.$primaryColumnNameValue]
-                            );
-                        } else {
-                            $this->createLog(
-                                'Failed to create '. $this->extension. '. Please contact administrator',
-                                'error',
-                                true,
-                                []
-                            );
-                        }
+                        $this->createLog(
+                            $filePath .' updated',
+                            'info',
+                            true,
+                            [],
+                            ['Row: '.($rowIndex + 2).' | '.$primaryColumnName.': '.$primaryColumnNameValue]
+                        );
                     } else {
-                        $isExcelCreated = Excel::store(
-                            new DataConversionToExcel($mappedHeaders, $mappedValues, $this->extension),
-                            $filePath,
-                            $localDiskName);
+                        $excelDataCollection[$filePath]['data'][] = $mappedValues;
 
-                        if ($isExcelCreated) {
-                            $this->createLog(
-                                $filePath .' created',
-                                'info',
-                                true,
-                                []
-                            );
-                        } else {
-                            $this->createLog(
-                                'Failed to create '. $this->extension. '. Please contact administrator',
-                                'error',
-                                true,
-                                []
-                            );
-                        }
+                        $this->createLog(
+                            $filePath .' created',
+                            'info',
+                            true,
+                            []
+                        );
                     }
-
-
                 }
             }
         }
