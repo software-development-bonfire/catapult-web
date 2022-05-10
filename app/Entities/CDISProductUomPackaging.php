@@ -3,6 +3,7 @@
 namespace App\Entities;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class CDISProductUomPackaging extends BaseModel
 {
@@ -46,6 +47,22 @@ class CDISProductUomPackaging extends BaseModel
     public function kitchenItemSetup()
     {
         return $this->hasManyThrough(CDISKitchenItemSetup::class, CDISKitchenItemSetupDetail::class, 'product_uom_packaging_bid', 'bid','bid', 'head_bid');
+    }
+
+    public function kitchenItemSetupSearchByBranch()
+    {
+        $kitchenItemSetup = DB::table('cdis_kitchen_item_setup')
+            ->select('cdis_kitchen_item_setup.*')
+            ->leftJoin('cdis_kitchen_item_setup_detail', function($join) {
+                $join->on('cdis_kitchen_item_setup_detail.head_bid', '=', 'cdis_kitchen_item_setup.bid');
+                return $join;
+            })
+            ->where('cdis_kitchen_item_setup.status', 1)
+            ->whereNull('cdis_kitchen_item_setup.deleted_at')
+            ->where('cdis_kitchen_item_setup_detail.product_uom_packaging_bid', $this->bid)
+            ->orderBy('created_at', 'DESC');
+
+        return $kitchenItemSetup;
     }
 
     public function product()
