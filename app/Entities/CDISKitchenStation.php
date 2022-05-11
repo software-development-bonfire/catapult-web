@@ -14,4 +14,9 @@ class CDISKitchenStation extends BaseModel
         'screen_prioritization',
         'status'
     ];
+
+    public function kitchenUserStation()
+    {
+        return $this->hasMany(CDISKitchenUserStation::class, 'kitchen_station_bid', 'bid');
+    }
 }

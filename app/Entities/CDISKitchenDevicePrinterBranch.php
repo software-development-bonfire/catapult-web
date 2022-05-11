@@ -21,4 +21,14 @@ class CDISKitchenDevicePrinterBranch extends BaseModel
         'kitchen_device_printer_bid' => 'string',
         'branch_bid' => 'string',
     ];
+
+    public function kitchenDevicePrinter()
+    {
+        return $this->belongsTo(CDISKitchenDevicePrinter::class, 'kitchen_device_printer_bid', 'bid');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(CDISBranch::class, 'branch_bid', 'bid');
+    }
 }

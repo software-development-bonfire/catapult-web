@@ -27,4 +27,14 @@ class CDISKitchenItemSetupDetail extends BaseModel
     {
         return $this->belongsTo(CDISKitchenItemSetup::class, 'head_bid', 'bid');
     }
+
+    public function kitchenStationProcess()
+    {
+        return $this->belongsTo(CDISKitchenStationProcess::class, 'kitchen_station_process_bid', 'bid');
+    }
+
+    public function productUomPackaging()
+    {
+        return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_packaging_bid', 'bid');
+    }
 }

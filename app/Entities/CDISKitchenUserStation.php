@@ -23,4 +23,14 @@ class CDISKitchenUserStation extends BaseModel
         'kitchen_station_bid',
         'kitchen_user_bid'
     ];
+
+    public function kitchenStation()
+    {
+        return $this->belongsTo(CDISKitchenStation::class, 'kitchen_station_bid', 'bid');
+    }
+
+    public function kitchenUser()
+    {
+        return $this->belongsTo(CDISKitchenUser::class, 'kitchen_user_bid', 'bid');
+    }
 }

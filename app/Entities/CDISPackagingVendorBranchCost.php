@@ -31,6 +31,16 @@ class CDISPackagingVendorBranchCost extends BaseModel
         'updated_by' => 'string',
     ];
 
+    public function packagingVendor()
+    {
+        return $this->belongsTo(CDISPackagingVendor::class, 'packaging_vendor_bid', 'bid');
+    }
+
+    public function productBranchAvailability()
+    {
+        return $this->belongsTo(CDISProductBranchAvailability::class, 'product_branch_availability_bid', 'bid');
+    }
+
     public function getCurrentCostAttribute()
     {
         $model =
