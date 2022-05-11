@@ -36,4 +36,9 @@ class CDISProductStructureDetail extends BaseModel
     {
         return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_bid', 'bid');
     }
+
+    public function productStructure()
+    {
+        return $this->belongsTo(CDISProductStructure::class, 'head_bid', 'bid');
+    }
 }

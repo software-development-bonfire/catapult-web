@@ -22,7 +22,7 @@ class CDISProductVariant extends BaseModel
         'bid' => 'string',
     ];
 
-    public function options()
+    public function productVariantOption()
     {
         return $this->hasMany(CDISProductVariantOption::class, 'head_bid','bid');
     }

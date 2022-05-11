@@ -35,4 +35,14 @@ class CDISCostAndPriceChange extends BaseModel
         'created_by' => 'string',
         'updated_by' => 'string',
     ];
+
+    public function vendor()
+    {
+        return $this->belongsTo(CDISVendor::class, 'vendor_bid', 'bid');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(CDISProductCategory::class, 'category_bid', 'bid');
+    }
 }

@@ -31,4 +31,9 @@ class CDISDisplayPaymentMethodDetail extends Base
     {
         return $this->belongsTo(CDISDisplayPaymentMethod::class, 'head_bid', 'bid');
     }
+
+    public function paymentMethodSettings()
+    {
+        return $this->belongsTo(CDISPaymentMethodSettings::class, 'payment_method_settings_bid', 'bid');
+    }
 }

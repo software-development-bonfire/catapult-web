@@ -40,4 +40,9 @@ class CDISKitchenItemSetup extends BaseModel
     {
         return $this->hasOne(CDISBranch::class, 'bid', 'branch_bid');
     }
+
+    public function kitchenItemSetupDetail()
+    {
+        return $this->hasMany(CDISKitchenItemSetupDetail::class, 'head_bid', 'bid');
+    }
 }

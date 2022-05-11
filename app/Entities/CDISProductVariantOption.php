@@ -30,22 +30,7 @@ class CDISProductVariantOption extends BaseModel
         'updated_by',
     ];
 
-    public function syncDetails()
-    {
-        $code = '';
-        $group = $this->head()->first()->getTable();
-        $headBid = $this->head()->first()->bid;
-        $level = 2;
-
-        return (object) array(
-            'code' => $code,
-            'group' => $group,
-            'head_bid' => $headBid,
-            'level' => $level,
-        );
-    }
-
-    public function head()
+    public function productVariant()
     {
         return $this->belongsTo(CDISProductVariant::class, 'head_bid','bid');
     }

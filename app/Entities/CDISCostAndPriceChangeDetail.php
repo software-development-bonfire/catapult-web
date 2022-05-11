@@ -32,4 +32,19 @@ class CDISCostAndPriceChangeDetail extends BaseModel
         'product_pricing_type_bid' => 'string',
         'pricing_head_bid' => 'string',
     ];
+
+    public function costAndPriceChange()
+    {
+        return $this->belongsTo(CDISCostAndPriceChange::class, 'head_bid', 'bid');
+    }
+
+    public function productUomPackaging()
+    {
+        return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_bid', 'bid');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(CDISBranch::class, 'branch_bid', 'bid');
+    }
 }

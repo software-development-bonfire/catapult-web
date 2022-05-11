@@ -26,4 +26,9 @@ class CDISDisplayPaymentMethodDeviceDisplay extends BaseModel
     {
         return $this->belongsTo(CDISDisplayPaymentMethod::class, 'head_bid', 'bid');
     }
+
+    public function orderingDeviceSetup()
+    {
+        return $this->belongsTo(CDISOrderingDeviceSetup::class, 'ordering_device_setup_bid', 'bid');
+    }
 }

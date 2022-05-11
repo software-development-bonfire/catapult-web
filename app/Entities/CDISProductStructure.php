@@ -22,4 +22,14 @@ class CDISProductStructure extends BaseModel
         'created_by' => 'string',
         'updated_by' => 'string',
     ];
+
+    public function productUomPackaging()
+    {
+        return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_bid', 'bid');
+    }
+
+    public function productStructureDetail()
+    {
+        return $this->hasMany(CDISProductStructureDetail::class, 'head_bid', 'bid');
+    }
 }
