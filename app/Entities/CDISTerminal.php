@@ -39,4 +39,14 @@ class CDISTerminal extends BaseModel
     {
         return $this->hasMany(CDISTerminalTransaction::class, 'terminal_bid', 'bid');
     }
+
+    public function branch()
+    {
+        return $this->belongsTo(CDISBranch::class, 'branch_bid','bid');
+    }
+
+    public function product()
+    {
+        return $this->hasMany(CDISProduct::class, 'terminal_bid','bid');
+    }
 }

@@ -23,4 +23,14 @@ class CDISKitchenUserBranch extends BaseModel
         'branch_bid',
         'kitchen_user_bid'
     ];
+
+    public function branch()
+    {
+        return $this->belongsTo(CDISBranch::class, 'branch_bid', 'bid');
+    }
+
+    public function kitchenUser()
+    {
+        return $this->belongsTo(CDISKitchenUser::class, 'kitchen_user_bid', 'bid');
+    }
 }

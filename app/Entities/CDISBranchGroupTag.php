@@ -24,8 +24,13 @@ class CDISBranchGroupTag extends BaseModel
         'branch_bid' => 'string',
     ];
 
-    public function head()
+    public function branchGroup()
     {
         return $this->belongsTo(CDISBranchGroupTag::class, 'branch_group_bid', 'bid');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(CDISBranch::class, 'branch_bid', 'bid');
     }
 }

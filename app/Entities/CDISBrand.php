@@ -28,4 +28,9 @@ class CDISBrand extends BaseModel
         'created_by',
         'updated_by',
     ];
+
+    public function productUomPackaging()
+    {
+        return $this->hasMany(CDISProductUomPackaging::class, 'brand_bid', 'bid');
+    }
 }

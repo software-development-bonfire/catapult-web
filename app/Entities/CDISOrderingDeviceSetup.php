@@ -30,7 +30,7 @@ class CDISOrderingDeviceSetup extends BaseModel
         'updated_by',
     ];
 
-    public function orderDeviceSetupBranch()
+    public function orderingDeviceSetupBranch()
     {
         return $this->hasMany(CDISOrderingDeviceSetupBranch::class, 'head_bid', 'bid');
     }

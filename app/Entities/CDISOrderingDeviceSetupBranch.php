@@ -22,7 +22,7 @@ class CDISOrderingDeviceSetupBranch extends Base
         'branch_bid' => 'string',
     ];
 
-    public function orderDeviceSetup()
+    public function orderingDeviceSetup()
     {
         return $this->belongsTo(CDISOrderingDeviceSetup::class, 'head_bid', 'bid');
     }

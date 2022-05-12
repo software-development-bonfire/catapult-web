@@ -33,4 +33,9 @@ class CDISDisplayPaymentMethod extends BaseModel
     {
         return $this->hasMany(CDISDisplayPaymentMethodDetail::class, 'head_bid', 'bid');
     }
+
+    public function branch()
+    {
+        return $this->hasMany(CDISBranch::class, 'branch_bid', 'bid');
+    }
 }

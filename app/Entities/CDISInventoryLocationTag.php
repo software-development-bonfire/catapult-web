@@ -20,4 +20,9 @@ class CDISInventoryLocationTag extends BaseModel
         'head_bid' => 'string',
         'inventory_location_bid' => 'string',
     ];
+
+    public function inventoryLocation()
+    {
+        return $this->belongsTo(CDISInventoryLocation::class, 'head_bid', 'bid');
+    }
 }

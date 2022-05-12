@@ -33,7 +33,7 @@ class CDISPaymentMethodSettings extends BaseModel
         'updated_by',
     ];
 
-    public function detail()
+    public function paymentMethodSettingsDetail()
     {
         return $this->hasMany(CDISPaymentMethodSettingsDetail::class, 'head_bid', 'bid');
     }

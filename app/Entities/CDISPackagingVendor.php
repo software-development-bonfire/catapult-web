@@ -24,4 +24,19 @@ class CDISPackagingVendor extends BaseModel
         'created_by' => 'string',
         'updated_by' => 'string',
     ];
+
+    public function vendor()
+    {
+        return $this->belongsTo(CDISVendor::class, 'vendor_bid', 'bid');
+    }
+
+    public function productUomPackaging()
+    {
+        return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_bid', 'bid');
+    }
+
+    public function packagingVendorBranchCost()
+    {
+        return $this->hasMany(CDISPackagingVendorBranchCost::class, 'packaging_vendor_bid', 'bid');
+    }
 }

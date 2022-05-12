@@ -32,4 +32,9 @@ class CDISKitchenDevicePrinter extends BaseModel
     {
         return $this->hasMany(CDISKitchenItemSetup::class, 'device_type_bid', 'bid')->where('device_type', DeviceType::KITCHEN_PRINTER);
     }
+
+    public function kitchenDevicePrinterBranch()
+    {
+        return $this->hasMany(CDISKitchenDevicePrinterBranch::class, 'device_type_bid', 'bid');
+    }
 }

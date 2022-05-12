@@ -29,4 +29,9 @@ class CDISVendor extends BaseModel
         'created_by' => 'string',
         'updated_by' => 'string',
     ];
+
+    public function vendorBranch()
+    {
+        return $this->hasMany(CDISVendorBranch::class, 'vendor_bid','bid');
+    }
 }

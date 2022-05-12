@@ -54,4 +54,9 @@ class CDISKitchenUser extends BaseModel
     protected $casts = [
         'bid' => 'string'
     ];
+
+    public function kitchenUserBranch()
+    {
+        return $this->hasMany(CDISKitchenUserBranch::class, 'kitchen_user_bid', 'bid');
+    }
 }

@@ -24,7 +24,7 @@ class CDISPaymentMethodSettingsDetail extends BaseModel
         'is_required' => 'boolean'
     ];
 
-    public function head()
+    public function paymentMethodSettings()
     {
         return $this->belongsTo(CDISPaymentMethodSettings::class, 'head_bid', 'bid');
     }

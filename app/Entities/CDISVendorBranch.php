@@ -23,4 +23,14 @@ class CDISVendorBranch extends BaseModel
         'branch_bid',
         'vendor_bid'
     ];
+
+    public function branch()
+    {
+        return $this->belongsTo(CDISBranch::class, 'branch_bid','bid');
+    }
+
+    public function vendor()
+    {
+        return $this->belongsTo(CDISVendor::class, 'vendor_bid','bid');
+    }
 }

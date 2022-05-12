@@ -42,7 +42,7 @@ return [
         |
         */
         'csv'                    => [
-            'delimiter'              => ',',
+            'delimiter'              => env('CSV_DELIMITER', ','),
             'enclosure'              => '',
             'line_ending'            => PHP_EOL,
             'use_bom'                => false,
@@ -97,7 +97,7 @@ return [
         | ignored by enabling the setting ignore_empty to true.
         |
         */
-        'ignore_empty' => false,
+        'ignore_empty' => true,
 
         /*
         |--------------------------------------------------------------------------
@@ -121,7 +121,7 @@ return [
         |
         */
         'csv'         => [
-            'delimiter'        => ',',
+            'delimiter'        => env('CSV_DELIMITER', ','),
             'enclosure'        => '"',
             'escape_character' => '\\',
             'contiguous'       => false,

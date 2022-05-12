@@ -40,15 +40,6 @@ class FieldMappingService
         return $this->transaction(function() use($data) {
             $fieldMapping = FieldMapping::find($data['field_mapping_bid']);
 
-            if ($fieldMapping['status'] == Status::ACTIVE || ! $fieldMapping['is_customized_mapping']) {
-                FieldMapping::where([
-                    'status' => Status::ACTIVE,
-                    'data_entry' => $data['data_entry'],
-                    'type' => $fieldMapping['type']
-                ])->where('bid', '!=', $data['field_mapping_bid'])
-                    ->update(['status' => Status::INACTIVE]);
-            }
-
             $fieldMapping->update([
                 'status' => $fieldMapping['status'],
                 'data_entry' => $data['data_entry'],
@@ -95,13 +86,6 @@ class FieldMappingService
             $data['updated_by'] = Auth::user()->bid;
             
             if ($data['status'] == Status::ACTIVE && array_key_exists('data_entry', $data)) {
-                FieldMapping::where([
-                    'status' => Status::ACTIVE,
-                    'data_entry' => $data['data_entry'],
-                    'type' => $data['type']])
-                    ->update(['status' => Status::INACTIVE
-                ]);
-
                 FieldMapping::find($bid)->update([
                     'file_storage_setup_bid' => $data['file_storage_setup_bid'],
                     'catapult_db_setup_bid' => $data['catapult_db_setup_bid'],

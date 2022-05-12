@@ -2,8 +2,6 @@
 
 namespace App\Entities;
 
-use Illuminate\Database\Eloquent\SoftDeletes;
-
 class CDISInventoryLocation extends BaseModel
 {
     protected $table = 'cdis_inventory_location';
@@ -20,4 +18,9 @@ class CDISInventoryLocation extends BaseModel
     protected $casts = [
         'bid' => 'string'
     ];
+
+    public function inventoryLocationTag()
+    {
+        return $this->hasMany(CDISInventoryLocationTag::class, 'head_bid', 'bid');
+    }
 }
