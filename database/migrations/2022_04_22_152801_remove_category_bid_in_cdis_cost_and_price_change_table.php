@@ -29,7 +29,7 @@ class RemoveCategoryBidInCdisCostAndPriceChangeTable extends Migration
         Schema::table('cdis_cost_and_price_change', function (Blueprint $table) {
             $table->unsignedBigInteger('category_bid')->nullable()->after('vendor_bid');
 
-            $table->foreign('cdis_category_bid')
+            $table->foreign('category_bid')
                 ->references('bid')
                 ->on('cdis_product_category')
                 ->onUpdate('restrict')
