@@ -27,7 +27,8 @@ class TerminalTransactionService
                             return $query;
                         }])
                         ->findWhere([
-                            'code' => $datum->branch_code
+                            'code' => $datum->branch_code,
+                            'deleted_at' => null
                         ])
                         ->first();
 
