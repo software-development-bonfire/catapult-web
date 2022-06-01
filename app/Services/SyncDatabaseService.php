@@ -151,6 +151,7 @@ class SyncDatabaseService
                                         'original_price' => $addon['addon_original_price'],
                                         'price' => $addon['addon_price'],
                                         'total_amount' => $addon['addon_total_amount'],
+                                        'usage_type' => isset($addon['usage_type']) ? $addon['usage_type'] : \App\Enums\UsageType::ADDON ,
                                     ];
                                     CDISTerminalTransactionAddon::create($ad);
                                 }
