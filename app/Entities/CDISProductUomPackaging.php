@@ -19,6 +19,7 @@ class CDISProductUomPackaging extends BaseModel
         'pack_content',
         'is_finished_good',
         'is_display_structure',
+        'is_include_on_reports',
         'is_menu_item',
         'is_raw_material',
         'is_addon',

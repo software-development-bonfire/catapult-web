@@ -13,6 +13,8 @@ class CDISProductStructureDetail extends BaseModel
         'head_bid',
         'product_uom_bid',
         'quantity',
+        'is_display_structure',
+        'is_include_on_reports',
     ];
 
     protected $casts = [
