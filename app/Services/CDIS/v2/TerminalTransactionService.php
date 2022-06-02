@@ -317,6 +317,7 @@ class TerminalTransactionService
                                                 'zero_rated_sales' => $addon->zero_rated_sales,
                                                 'tax' => $addon->tax,
                                                 'vat_exempt' => $addon->vat_exempt,
+                                                'usage_type' => $addon->usage_type,
                                             ];
 
                                             $terminalTransactionDetailAddon = $terminalTransactionDetailProduct->addons()->create($addonData);

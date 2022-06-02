@@ -20,6 +20,7 @@ class CDISTerminalTransactionAddon extends Base
         'tax',
         'vat_exempt',
         'remarks',
+        'usage_type'
     ];
 
     protected $casts = [

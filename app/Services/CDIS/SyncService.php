@@ -114,9 +114,9 @@ class SyncService
 
             $bodyContent = json_decode($request->getBody()->getContents());
 
-            $count = $bodyContent->data->count;
-            $total = $bodyContent->data->total;
-            $values = $bodyContent->data->values;
+            $count = $bodyContent->data !== null && isset($bodyContent->data->count) ? $bodyContent->data->count : 0;
+            $total = $bodyContent->data !== null && isset($bodyContent->data->total) ? $bodyContent->data->total : 0;
+            $values = $bodyContent->data  !== null && isset($bodyContent->data->values) ? $bodyContent->data->values: array();
 
             if ($count == 0) {
                 return (object) [

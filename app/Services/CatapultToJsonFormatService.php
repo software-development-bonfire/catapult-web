@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Entities\CDISTerminal;
+use Illuminate\Support\Facades\App;
 
 class CatapultToJsonFormatService
 {
@@ -113,6 +114,7 @@ class CatapultToJsonFormatService
                                         'original_price' => $addon['addon_original_price'],
                                         'price' => $addon['addon_price'],
                                         'total_amount' => $addon['addon_total_amount'],
+                                        'usage_type' => isset($addon['usage_type']) ? $addon['usage_type'] : \App\Enums\UsageType::ADDON ,
                                     ];
                                 })
                             ],
