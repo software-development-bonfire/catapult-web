@@ -25,6 +25,7 @@ class CDISTerminalTransactionProduct extends Base
         'price',
         'total_addon',
         'total_amount',
+        'total_discount',
         'amount_discount',
         'vatable_sales',
         'zero_rated_sales',

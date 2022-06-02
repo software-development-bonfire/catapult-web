@@ -17,6 +17,7 @@ class CDISTerminalTransactionDiscount extends Base
         'eligible_amount_to_earn_points',
         'mandated',
         'remarks',
+        'usage_type',
     ];
 
     protected $casts = [

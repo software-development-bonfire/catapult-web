@@ -7,3 +7,11 @@ if (! function_exists('moneyToFloat')) {
         return floatval(str_replace(',' , '', $value));
     }
 }
+
+if (! function_exists('toSafeValue')) {
+
+    function toSafeValue($value, $defaultValue)
+    {
+        return isset($value) ? $value : $defaultValue;
+    }
+}
