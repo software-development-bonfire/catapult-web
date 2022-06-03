@@ -248,6 +248,8 @@ class TerminalTransactionService
                                         'vat_deduct' => $product->vat_deduct,
                                         'vat_exempt' => $product->vat_exempt,
                                         'split_number' => $product->split_number,
+                                        'supervisor_bid' => $product->supervisor_bid,
+                                        'supervisor_name' => $product->supervisor_name,
                                     ];
 
                                     $terminalTransactionDetailProduct = $terminalTransactionDetail->products()->create($productData);

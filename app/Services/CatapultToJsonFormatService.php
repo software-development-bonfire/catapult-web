@@ -98,7 +98,9 @@ class CatapultToJsonFormatService
                             'tax' => $product['product_tax'],
                             'vat_exempt' => $product['product_vat_exempt'],
                             'vat_deduct' => $product['product_vat_deduct'],
-                            'split_number' => $product['product_vat_deduct'],
+                            'split_number' => $product['product_split_number'],
+                            "supervisor_bid" => $product['product_supervisor_bid'],
+                            "supervisor_name" => $product['product_supervisor_name'],
                             'order_type' => [
                                 'id' => $product['order_type_id'],
                                 'name' => $product['order_type_name']

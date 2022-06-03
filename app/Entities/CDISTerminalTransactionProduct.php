@@ -34,6 +34,8 @@ class CDISTerminalTransactionProduct extends Base
         'vat_exempt',
         'split_number',
         'remarks',
+        'supervisor_bid',
+        'supervisor_name'
     ];
 
     protected $casts = [

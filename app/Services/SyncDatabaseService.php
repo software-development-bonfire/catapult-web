@@ -138,6 +138,8 @@ class SyncDatabaseService
                             "vat_deduct" => $product['product_vat_deduct'],
                             "vat_exempt" => $product['product_vat_exempt'],
                             "split_number" => $product['product_split_number'],
+                            "supervisor_bid" => $product['product_supervisor_bid'],
+                            "supervisor_name" => $product['product_supervisor_name'],
                         ];
         
                         $saveProduct = CDISTerminalTransactionProduct::create($pr);
