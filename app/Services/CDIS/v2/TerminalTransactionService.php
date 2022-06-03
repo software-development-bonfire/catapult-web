@@ -240,6 +240,7 @@ class TerminalTransactionService
                                         'price' => $product->price,
                                         'total_addon' => $product->total_addon,
                                         'total_amount' => $product->total_amount,
+                                        'entire_discount' => $product->entire_discount,
                                         'amount_discount' => $product->amount_discount,
                                         'vatable_sales' => $product->vatable_sales,
                                         'zero_rated_sales' => $product->zero_rated_sales,
@@ -247,6 +248,8 @@ class TerminalTransactionService
                                         'vat_deduct' => $product->vat_deduct,
                                         'vat_exempt' => $product->vat_exempt,
                                         'split_number' => $product->split_number,
+                                        'supervisor_bid' => $product->supervisor_bid,
+                                        'supervisor_name' => $product->supervisor_name,
                                     ];
 
                                     $terminalTransactionDetailProduct = $terminalTransactionDetail->products()->create($productData);
@@ -308,16 +311,31 @@ class TerminalTransactionService
                                                 'transaction_detail_bid' => $terminalTransactionDetailProduct->bid,
                                                 'product_bid' => $addon->product_bid,
                                                 'name' => $addon->name,
+                                                'description' => $addon->description,
+                                                'long_description' => $addon->long_description,
+                                                'menu_code' => $addon->menu_code,
+                                                'category_bid' => $addon->category_bid,
+                                                'category_name' => $addon->category_name,
                                                 'quantity' => $addon->quantity,
                                                 'tax_percentage' => $addon->tax_percentage,
+                                                'order_type_id' => $addon->order_type_id,
+                                                'order_type_name' => $addon->order_type_name,
+                                                'is_free' => $addon->is_free,
+                                                'is_vatable' => $addon->is_vatable,
                                                 'original_price' => $addon->original_price,
                                                 'price' => $addon->price,
                                                 'total_amount' => $addon->total_amount,
                                                 'vatable_sales' => $addon->vatable_sales,
                                                 'zero_rated_sales' => $addon->zero_rated_sales,
+                                                'amount_discount' => $addon->amount_discount,
                                                 'tax' => $addon->tax,
+                                                'vat_deduct' => $addon->vat_deduct,
                                                 'vat_exempt' => $addon->vat_exempt,
+                                                'split_number' => $addon->split_number,
+                                                'remarks' => isset($addon->remarks) ? $addon->remarks : null,
                                                 'usage_type' => $addon->usage_type,
+                                                'supervisor_bid' => $addon->supervisor_bid,
+                                                'supervisor_name' => $addon->supervisor_name,
                                             ];
 
                                             $terminalTransactionDetailAddon = $terminalTransactionDetailProduct->addons()->create($addonData);
@@ -356,7 +374,8 @@ class TerminalTransactionService
                                                 'amount_discount' => $discount->amount_discount,
                                                 'vat_deduct' => $discount->vat_deduct,
                                                 'vat_exempt' => $discount->vat_exempt,
-                                                'mandated' => (int) $discount->mandated
+                                                'mandated' => (int) $discount->mandated,                                                
+                                                'usage_type' => $discount->usage_type
                                             ];
 
                                             $terminalTransactionDiscount = $terminalTransactionDetailProduct->discounts()->create($discountData);

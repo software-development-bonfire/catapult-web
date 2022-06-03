@@ -25,6 +25,7 @@ class CDISTerminalTransactionProduct extends Base
         'price',
         'total_addon',
         'total_amount',
+        'entire_discount',
         'amount_discount',
         'vatable_sales',
         'zero_rated_sales',
@@ -33,6 +34,8 @@ class CDISTerminalTransactionProduct extends Base
         'vat_exempt',
         'split_number',
         'remarks',
+        'supervisor_bid',
+        'supervisor_name'
     ];
 
     protected $casts = [
