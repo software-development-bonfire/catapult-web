@@ -14,7 +14,7 @@ class AddSomeColumnsInCdisTerminalTransactionProductTable extends Migration
     public function up()
     {
         Schema::table('cdis_terminal_transaction_product', function (Blueprint $table) {
-            $table->decimal('total_discount', 23, 6)->default(0.000000)->after('total_amount');
+            $table->decimal('entire_discount', 23, 6)->default(0.000000)->after('total_amount');
         });
     }
 
@@ -26,7 +26,7 @@ class AddSomeColumnsInCdisTerminalTransactionProductTable extends Migration
     public function down()
     {
         Schema::table('cdis_terminal_transaction_product', function (Blueprint $table) {
-            $table->dropColumn('total_discount');
+            $table->dropColumn('entire_discount');
         });
     }
 }

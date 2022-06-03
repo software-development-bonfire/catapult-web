@@ -91,7 +91,7 @@ class CatapultToJsonFormatService
                             'original_price' => $product['product_original_price'],
                             'total_addon' => $product['product_total_addon'],
                             'total_amount' => $product['product_total_amount'],
-                            'total_discount' => $product['product_total_discount'],
+                            'entire_discount' => $product['product_entire_discount'],
                             'amount_discount' => $product['product_amount_discount'],
                             'vatable_sales' => $product['product_vatable_sales'],
                             'zero_rated_sales' => $product['product_zero_rated_sales'],

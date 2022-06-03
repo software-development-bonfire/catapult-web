@@ -130,7 +130,7 @@ class SyncDatabaseService
                             "price" => $product['product_price'],
                             "total_addon" => $product['product_total_addon'],
                             "total_amount" => $product['product_total_amount'],
-                            "total_discount" => $product['product_total_discount'],
+                            "entire_discount" => $product['product_entire_discount'],
                             "vatable_sales" => $product['product_vatable_sales'],
                             "zero_rated_sales" => $product['product_zero_rated_sales'],
                             "amount_discount" => $product['product_amount_discount'],

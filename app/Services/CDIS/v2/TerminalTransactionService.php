@@ -240,7 +240,7 @@ class TerminalTransactionService
                                         'price' => $product->price,
                                         'total_addon' => $product->total_addon,
                                         'total_amount' => $product->total_amount,
-                                        'total_discount' => $product->total_discount,
+                                        'entire_discount' => $product->entire_discount,
                                         'amount_discount' => $product->amount_discount,
                                         'vatable_sales' => $product->vatable_sales,
                                         'zero_rated_sales' => $product->zero_rated_sales,
