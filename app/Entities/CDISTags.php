@@ -28,4 +28,9 @@ class CDISTags extends BaseModel
         'updated_by',
     ];
 
+    public function productUomPackagingTag()
+    {
+        return $this->hasMany(CDISProductUomPackagingTag::class, 'tag_bid', 'bid');
+    }
+
 }

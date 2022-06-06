@@ -100,4 +100,9 @@ class CDISProductUomPackaging extends BaseModel
     {
         return $this->belongsTo(CDISUnitOfMeasurement::class, 'uom_bid', 'bid');
     }
+
+    public function productUomPackagingTag()
+    {
+        return $this->hasMany(CDISProductUomPackagingTag::class, 'product_uom_packaging_bid', 'bid');
+    }
 }
