@@ -5,6 +5,7 @@ namespace App\Console\Commands\POSToCDIS;
 use App\Enums\MappingType;
 use App\Enums\Status;
 use App\Enums\StorageType;
+use App\Enums\UsageType;
 use App\Exports\PosToCdisExport;
 use App\Repositories\Contracts\FieldMappingRepository;
 use App\Repositories\Contracts\SyncEntryRepository;
@@ -255,17 +256,26 @@ class ConvertDataFile extends Command
                                         $headReferenceEntry = explode('.', $mapping['head_reference']);
                                         $headReferenceEntryAcronym = $headReferenceEntry[0];
                                         $headReferenceEntryFieldName = $headReferenceEntry[1];
+
+                                        $discountAddon = false;
+                                        if(trim($objectName.'.'.$mapping['column_name']) === 'discount.usage_type' && $entryDatum->{$mapping['column_name']} === UsageType::ADDON){
+                                            $headReferenceEntryAcronym = 'AD';
+                                            $headReferenceEntryFieldName = 'id';
+
+                                            $discountAddon = true;
+                                        }
+
                                         $headReferenceIndex =
                                             array_search(
                                                 $referenceValue,
                                                 array_column($entriesData->{$headReferenceEntryAcronym},
                                                     $headReferenceEntryFieldName));
 
-                                        if ($headReferenceIndex === false) {
+                                        if ($headReferenceIndex === false && $discountAddon) {
                                             $mappingErrors[$entryAcronym][] = array(
                                                 'error_type' => 'Reference error',
                                                 'description' => $mapping['head_reference'].' with a value of '.$referenceValue.' not found.',
-                                                'meta' => [$mapping['file_name'].'.'.$mapping['reference_column_name'], $folderName]
+                                                'meta' => [$mapping['file_name'].'.'.$mapping['reference_column_name'],  $objectName.'.'.$mapping['column_name'], $folderName]
                                             );
                                         }
                                     }

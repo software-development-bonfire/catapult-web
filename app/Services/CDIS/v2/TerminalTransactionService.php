@@ -357,6 +357,45 @@ class TerminalTransactionService
                                                 ! is_null($terminalTransactionDetailAddon->deleted_at)
                                                     ? Carbon::parse($terminalTransactionDetailAddon->deleted_at)->format('Y-m-d H:i:s')
                                                     : null;
+
+                                            //Added to include discount addon
+                                            if (isset($addon->discount)) {
+                                                foreach ($addon->discount as $discountIndex => $discount) {
+                                                    $discount = (object) $discount;
+        
+                                                    $discountData = [
+                                                        'transaction_product_bid' => $terminalTransactionDetailProduct->bid,
+                                                        'discount_bid' => $discount->discount_bid,
+                                                        'title' => $discount->title,
+                                                        'total' => $discount->total,
+                                                        'amount_discount' => $discount->amount_discount,
+                                                        'vat_deduct' => $discount->vat_deduct,
+                                                        'vat_exempt' => $discount->vat_exempt,
+                                                        'mandated' => (int) $discount->mandated,                                                
+                                                        'usage_type' => $discount->usage_type
+                                                    ];
+        
+                                                    $terminalTransactionDiscount = $terminalTransactionDetailProduct->discounts()->create($discountData);
+        
+                                                    foreach ($discountData as $discountDatumKey => $discountDatum) {
+                                                        $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'][$discountIndex][$discountDatumKey] = $discountDatum;
+                                                    }
+        
+                                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'][$discountIndex]['bid'] = $terminalTransactionDiscount->bid;
+                                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'][$discountIndex]['created_at'] =
+                                                        ! is_null($terminalTransactionDiscount->created_at)
+                                                            ? Carbon::parse($terminalTransactionDiscount->created_at)->format('Y-m-d H:i:s')
+                                                            : null;
+                                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'][$discountIndex]['updated_at'] =
+                                                        ! is_null($terminalTransactionDiscount->updated_at)
+                                                            ? Carbon::parse($terminalTransactionDiscount->updated_at)->format('Y-m-d H:i:s')
+                                                            : null;
+                                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'][$discountIndex]['deleted_at'] =
+                                                        ! is_null($terminalTransactionDiscount->deleted_at)
+                                                            ? Carbon::parse($terminalTransactionDiscount->deleted_at)->format('Y-m-d H:i:s')
+                                                            : null;
+                                                }
+                                            }
                                         }
                                     } else {
                                         $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'] = [];
