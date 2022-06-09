@@ -3,10 +3,10 @@
 namespace App\Traits;
 
 use App\Entities\Base;
-use DB;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\DB;
 
 trait QueryHelper
 {
@@ -65,5 +65,15 @@ trait QueryHelper
         }
 
         return $paginator->setCollection($class::hydrate($items));
+    }
+
+    protected function disableForeignKeyChecks()
+    {
+        DB::connection()->statement('SET GLOBAL FOREIGN_KEY_CHECKS=0');
+    }
+
+    protected function enableForeignKeyChecks()
+    {
+        DB::connection()->statement('SET GLOBAL FOREIGN_KEY_CHECKS=1');
     }
 }

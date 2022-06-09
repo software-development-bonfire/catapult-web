@@ -2,6 +2,8 @@
 
 namespace App\Entities;
 
+use App\Enums\UsageType;
+
 class CDISTerminalTransactionDiscount extends Base
 {
     protected $table = 'cdis_terminal_transaction_discount';
@@ -28,6 +30,11 @@ class CDISTerminalTransactionDiscount extends Base
 
     public function product()
     {
-        return $this->belongsTo(CDISTerminalTransactionProduct::class, 'transaction_product_bid', 'bid');
+        return $this->belongsTo(CDISTerminalTransactionProduct::class, 'transaction_product_bid', 'bid')->where('usage_type', '=', UsageType::PRODUCT);
+    }
+
+    public function addon()
+    {
+        return $this->belongsTo(CDISTerminalTransactionAddon::class, 'transaction_product_bid', 'bid')->where('usage_type', '=', UsageType::ADDON);
     }
 }

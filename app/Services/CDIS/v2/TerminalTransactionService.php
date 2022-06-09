@@ -6,12 +6,15 @@ use App\Entities\CDISTerminalTransaction;
 use App\Repositories\Contracts\CDIS\BranchRepository;
 use App\Repositories\Contracts\CDIS\TerminalTransactionRepository;
 use App\Traits\DatabaseTransaction;
+use App\Traits\QueryHelper;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
 
 class TerminalTransactionService
 {
     use DatabaseTransaction;
+    use QueryHelper;
 
     public function store($data)
     {
@@ -359,12 +362,14 @@ class TerminalTransactionService
                                                     : null;
 
                                             //Added to include discount addon
+                                            $this->disableForeignKeyChecks();
+
                                             if (isset($addon->discount)) {
                                                 foreach ($addon->discount as $discountIndex => $discount) {
                                                     $discount = (object) $discount;
         
                                                     $discountData = [
-                                                        'transaction_product_bid' => $terminalTransactionDetailProduct->bid,
+                                                        'transaction_product_bid' => $terminalTransactionDetailAddon->bid,
                                                         'discount_bid' => $discount->discount_bid,
                                                         'title' => $discount->title,
                                                         'total' => $discount->total,
@@ -376,6 +381,11 @@ class TerminalTransactionService
                                                     ];
         
                                                     $terminalTransactionDiscount = $terminalTransactionDetailProduct->discounts()->create($discountData);
+
+                                                    if($terminalTransactionDiscount){
+                                                        $terminalTransactionDiscount->transaction_product_bid = $terminalTransactionDetailAddon->bid;
+                                                        $terminalTransactionDiscount->save();
+                                                    }
         
                                                     foreach ($discountData as $discountDatumKey => $discountDatum) {
                                                         $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'][$discountIndex][$discountDatumKey] = $discountDatum;
@@ -396,12 +406,14 @@ class TerminalTransactionService
                                                             : null;
                                                 }
                                             }
+                                            $this->enableForeignKeyChecks();
                                         }
                                     } else {
                                         $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'] = [];
                                     }
 
                                     if (isset($product->discount)) {
+                                        $this->disableForeignKeyChecks();
                                         foreach ($product->discount as $discountIndex => $discount) {
                                             $discount = (object) $discount;
 
@@ -437,6 +449,7 @@ class TerminalTransactionService
                                                     ? Carbon::parse($terminalTransactionDiscount->deleted_at)->format('Y-m-d H:i:s')
                                                     : null;
                                         }
+                                        $this->enableForeignKeyChecks();
                                     } else {
                                         $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'] = [];
                                     }
