@@ -309,57 +309,59 @@ class TerminalTransactionService
                                     if (isset($product->addon)) {
                                         foreach ($product->addon as $addonIndex => $addon) {
                                             $addon = (object) $addon;
-
-                                            $addonData = [
-                                                'transaction_detail_bid' => $terminalTransactionDetailProduct->bid,
-                                                'product_bid' => $addon->product_bid,
-                                                'name' => $addon->name,
-                                                'description' => $addon->description,
-                                                'long_description' => $addon->long_description,
-                                                'menu_code' => $addon->menu_code,
-                                                'category_bid' => $addon->category_bid,
-                                                'category_name' => $addon->category_name,
-                                                'quantity' => $addon->quantity,
-                                                'tax_percentage' => $addon->tax_percentage,
-                                                'order_type_id' => $addon->order_type_id,
-                                                'order_type_name' => $addon->order_type_name,
-                                                'is_free' => $addon->is_free,
-                                                'is_vatable' => $addon->is_vatable,
-                                                'original_price' => $addon->original_price,
-                                                'price' => $addon->price,
-                                                'total_amount' => $addon->total_amount,
-                                                'vatable_sales' => $addon->vatable_sales,
-                                                'zero_rated_sales' => $addon->zero_rated_sales,
-                                                'amount_discount' => $addon->amount_discount,
-                                                'tax' => $addon->tax,
-                                                'vat_deduct' => $addon->vat_deduct,
-                                                'vat_exempt' => $addon->vat_exempt,
-                                                'split_number' => $addon->split_number,
-                                                'remarks' => isset($addon->remarks) ? $addon->remarks : null,
-                                                'usage_type' => $addon->usage_type,
-                                                'supervisor_bid' => $addon->supervisor_bid,
-                                                'supervisor_name' => $addon->supervisor_name,
-                                            ];
-
-                                            $terminalTransactionDetailAddon = $terminalTransactionDetailProduct->addons()->create($addonData);
-
-                                            foreach ($addonData as $addonDatumKey => $addonDatum) {
-                                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex][$addonDatumKey] = $addonDatum;
+                                          
+                                            if (isset($addon->name)) {
+                                                $addonData = [
+                                                    'transaction_detail_bid' => $terminalTransactionDetailProduct->bid,
+                                                    'product_bid' =>  isset($addon->product_bid) ? $addon->product_bid : null,
+                                                    'name' => $addon->name,
+                                                    'description' => $addon->description,
+                                                    'long_description' => $addon->long_description,
+                                                    'menu_code' => $addon->menu_code,
+                                                    'category_bid' => $addon->category_bid,
+                                                    'category_name' => $addon->category_name,
+                                                    'quantity' => $addon->quantity,
+                                                    'tax_percentage' => $addon->tax_percentage,
+                                                    'order_type_id' => $addon->order_type_id,
+                                                    'order_type_name' => $addon->order_type_name,
+                                                    'is_free' => $addon->is_free,
+                                                    'is_vatable' => $addon->is_vatable,
+                                                    'original_price' => $addon->original_price,
+                                                    'price' => $addon->price,
+                                                    'total_amount' => $addon->total_amount,
+                                                    'vatable_sales' => $addon->vatable_sales,
+                                                    'zero_rated_sales' => $addon->zero_rated_sales,
+                                                    'amount_discount' => $addon->amount_discount,
+                                                    'tax' => $addon->tax,
+                                                    'vat_deduct' => $addon->vat_deduct,
+                                                    'vat_exempt' => $addon->vat_exempt,
+                                                    'split_number' => $addon->split_number,
+                                                    'remarks' => isset($addon->remarks) ? $addon->remarks : null,
+                                                    'usage_type' => $addon->usage_type,
+                                                    'supervisor_bid' => $addon->supervisor_bid,
+                                                    'supervisor_name' => $addon->supervisor_name,
+                                                ];
+    
+                                                $terminalTransactionDetailAddon = $terminalTransactionDetailProduct->addons()->create($addonData);
+    
+                                                foreach ($addonData as $addonDatumKey => $addonDatum) {
+                                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex][$addonDatumKey] = $addonDatum;
+                                                }
+    
+                                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['bid'] = $terminalTransactionDetailAddon->bid;
+                                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['created_at'] =
+                                                    ! is_null($terminalTransactionDetailAddon->created_at)
+                                                        ? Carbon::parse($terminalTransactionDetailAddon->created_at)->format('Y-m-d H:i:s')
+                                                        : null;
+                                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['updated_at'] =
+                                                    ! is_null($terminalTransactionDetailAddon->updated_at)
+                                                        ? Carbon::parse($terminalTransactionDetailAddon->updated_at)->format('Y-m-d H:i:s')
+                                                        : null;
+                                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['deleted_at'] =
+                                                    ! is_null($terminalTransactionDetailAddon->deleted_at)
+                                                        ? Carbon::parse($terminalTransactionDetailAddon->deleted_at)->format('Y-m-d H:i:s')
+                                                        : null;
                                             }
-
-                                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['bid'] = $terminalTransactionDetailAddon->bid;
-                                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['created_at'] =
-                                                ! is_null($terminalTransactionDetailAddon->created_at)
-                                                    ? Carbon::parse($terminalTransactionDetailAddon->created_at)->format('Y-m-d H:i:s')
-                                                    : null;
-                                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['updated_at'] =
-                                                ! is_null($terminalTransactionDetailAddon->updated_at)
-                                                    ? Carbon::parse($terminalTransactionDetailAddon->updated_at)->format('Y-m-d H:i:s')
-                                                    : null;
-                                            $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['deleted_at'] =
-                                                ! is_null($terminalTransactionDetailAddon->deleted_at)
-                                                    ? Carbon::parse($terminalTransactionDetailAddon->deleted_at)->format('Y-m-d H:i:s')
-                                                    : null;
 
                                             //Added to include discount addon
                                             $this->disableForeignKeyChecks();

@@ -258,7 +258,9 @@ class ConvertDataFile extends Command
                                         $headReferenceEntryFieldName = $headReferenceEntry[1];
 
                                         $discountAddon = false;
-                                        if(trim($objectName.'.'.$mapping['column_name']) === 'discount.usage_type' && $entryDatum->{$mapping['column_name']} === UsageType::ADDON){
+                                        if(trim($objectName.'.'.$mapping['column_name']) === 'discount.usage_type' 
+                                        && ($entryDatum->{$mapping['column_name']} === UsageType::ADDON || $entryDatum->{$mapping['column_name']} === UsageType::BUNDLE)
+                                        ){
                                             $headReferenceEntryAcronym = 'AD';
                                             $headReferenceEntryFieldName = 'id';
 
