@@ -15,3 +15,15 @@ if (! function_exists('toSafeValue')) {
         return isset($value) ? $value : $defaultValue;
     }
 }
+
+if (! function_exists('')) {
+    function genericGroupBy($array, $key) {
+        $return = array();
+        
+        foreach($array as $val) {
+            $return[$val->$key][] = $val; 
+        //  $return[$val[$key]][] = $val; 
+        }
+        return $return;
+    }
+}

@@ -18,7 +18,9 @@ use App\Traits\GenericHelper;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -198,7 +200,7 @@ class ConvertDataFile extends Command
                     }
 
                     $entryHierarchy = [];
-                    $levels = [];
+                    $levels = []; // expected output should be {"TH":0,"TD":1,"TDD":2,"PM":2,"PR":2,"AD":3,"PD":3}
                     foreach ($dataMappings as $dataMapping) {
                         $field = explode('.*.', $dataMapping->field);
 
@@ -288,6 +290,7 @@ class ConvertDataFile extends Command
                                         'entry_acronym' => $entryAcronym,
                                         'reference_key_name' => $entryDetail['key'],
                                         'reference_column' => $mapping['reference_column_name'],
+                                        'id' =>  $entryDatum->id,
                                         'reference_value' => $referenceValue,
                                         'head_reference_entry_acronym' => $headReferenceEntryAcronym,
                                         'head_reference_entry_index' => $headReferenceIndex,
@@ -452,6 +455,9 @@ class ConvertDataFile extends Command
                     $headReference = $hierarchyReferences[$reference['entry_acronym']][$reference['index']];
                 }
 
+                Arr::set($data, 'headReference', $headReference); //Added to include some additional information during debugging
+                Arr::set($data, 'index', $index); //Added to include current index during debugging
+              
                 $path = array();
                 $fileContent = $this->setValue($hierarchyReferences, $headReference, $fileContent, $data, $path, $index);
             }
@@ -531,16 +537,28 @@ class ConvertDataFile extends Command
             }
 
             $pathArray = explode('.', $actualPath);
+             
+            $addonKeyPath = array();
+            for($index = 0; $index < count($pathArray) - 2 ; $index++){
+                $addonKeyPath[] = $pathArray[$index];		
+            }
+
+            $lastKeyPath = $pathArray[count($pathArray) - 2];
+
             unset($pathArray[count($pathArray) - 1]);
-            $pathArray = implode('.', $pathArray);
-
-            $objectContent = Arr::get($fileContent, $pathArray);
-
+            $pathArrayDotNotation = implode('.', $pathArray);
+           
+            $objectContent = Arr::get($fileContent, $pathArrayDotNotation);
+            
             if (is_null($objectContent)) {
-                $finalPath = $pathArray.'.0';
+                $finalPath = $pathArrayDotNotation.'.0';
             } else {
                 $index = count((array) $objectContent);
-                $finalPath = $pathArray.'.'.$index;
+                $finalPath = $pathArrayDotNotation.'.'.$index;
+            }
+
+            if( $lastKeyPath === 'discount') {
+                $finalPath = $this->resolveAddonDiscountKeyIndexPath($fileContent, $data, $addonKeyPath, $lastKeyPath, $finalPath);               
             }
 
             Arr::set($fileContent, $finalPath, $data);
@@ -557,6 +575,76 @@ class ConvertDataFile extends Command
                 $path,
                 $headReferenceEntryIndex);
         }
+    }
+
+    private function getFieldValue($mapping, $entryAcronym, $entryDatumIndex, $entryDatum){
+        $entryDatum = (array) $entryDatum;
+        
+        if ($mapping['required']) {
+            $isFieldExists = array_key_exists($mapping['column_name'], $entryDatum);
+
+            if ($isFieldExists) {
+                $fieldValue = $entryDatum[$mapping['column_name']];
+
+                if (is_null($fieldValue) || $fieldValue === '') {
+                    $defaultValue = $mapping['default_value'];
+
+                    if ((is_null($defaultValue) || $defaultValue === '') && ! $mapping['nullable']) {
+                        $mappingErrors[$entryAcronym][] = array(
+                            'error_type' => 'No value was set even the default value. This is required.',
+                            'description' => $mapping['column_name'],
+                            'meta' => ['Row: '. ($entryDatumIndex + 2)]
+                        );
+                    } else {
+                        $fieldValue = $mapping['default_value'];
+                    }
+                }
+            } else if ($mapping['nullable']) {
+                $fieldValue = NULL;
+            } else {
+                $mappingErrors[$entryAcronym][] = array(
+                    'error_type' => 'Column not found',
+                    'description' => $mapping['column_name'],
+                    'meta' => ['Row: '. ($entryDatumIndex + 2)]
+                );
+                $fieldValue = '####BREAK####';
+                //break;
+            }
+        } else {
+            $fieldValue = $mapping['default_value'];
+        }
+
+        return $fieldValue;
+    }
+
+    private function resolveAddonDiscountKeyIndexPath($fileContent, $data, $addonKeyPath, $lastKeyPath, $finalPath){
+       
+        $addonKeyPathDotNotation = implode('.', $addonKeyPath);
+
+        $referenceValue = Arr::get($data,'headReference.reference_value');
+        $referenceAcronym = Arr::get($data,'headReference.head_reference_entry_acronym');
+
+        $resolvedAddonDiscountKeyPath = $finalPath;
+        if ($referenceAcronym === 'AD') {
+            $addonDiscountKeyPath = Str::substr($addonKeyPathDotNotation, 0, -2);
+            $dataArrayAddon =  Arr::get($fileContent, $addonDiscountKeyPath);
+
+            if (isset($dataArrayAddon)) {
+                $addonIndex = array_search( $referenceValue, array_column($dataArrayAddon,'id'));
+
+                $finalPathAddonDiscount = $addonDiscountKeyPath.'.'.$addonIndex.'.'.$lastKeyPath;
+
+                $objectContent = Arr::get($fileContent, $finalPathAddonDiscount);
+
+                if (is_null($objectContent)) {
+                    $resolvedAddonDiscountKeyPath = $finalPathAddonDiscount.'.0';
+                } else {
+                    $index = count((array) $objectContent);
+                    $resolvedAddonDiscountKeyPath = $finalPathAddonDiscount.'.'.$index;
+                }
+            }
+        }
+        return $resolvedAddonDiscountKeyPath;
     }
 
     /**
