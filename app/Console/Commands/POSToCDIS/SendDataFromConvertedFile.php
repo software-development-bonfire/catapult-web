@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -190,7 +191,7 @@ class SendDataFromConvertedFile extends Command
                         } else {
                             $errors = isset($responseBodyContent->errors) ? (array) $responseBodyContent->errors : [];
 
-                            if ((isset($responseBodyContent->success) && $responseBodyContent->success) || $responseBodyContent->message == 'Duplicate Entry.') {
+                            if ((isset($responseBodyContent->success) && $responseBodyContent->success) || (isset($responseBodyContent->message) && $responseBodyContent->message == 'Duplicate Entry.')) {
                                 $this->createLog($responseBodyContent->message,
                                     ($responseBodyContent->message == 'Duplicate Entry.' ? 'warn' : 'info'),
                                     true,
@@ -207,7 +208,7 @@ class SendDataFromConvertedFile extends Command
                                 }
 
                                 $destinationPath = $failedSyncBadRequestPath.'/'.$fileName;
-                            } else if (isset($responseBodyContent->success) && ! $responseBodyContent->success || $responseBodyContent->message == 'Request failed.') {
+                            } else if (isset($responseBodyContent->success) && ! $responseBodyContent->success || (isset($responseBodyContent->message) && $responseBodyContent->message == 'Request failed.')) {
                                 $this->createLog(__('error.failed_to_send_data'), 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
                                 $this->createLog('    Cause: '. $responseBodyContent->message, 'error', false);
 
