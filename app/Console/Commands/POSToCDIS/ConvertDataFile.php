@@ -455,8 +455,8 @@ class ConvertDataFile extends Command
                     $headReference = $hierarchyReferences[$reference['entry_acronym']][$reference['index']];
                 }
 
-                Arr::set($data, 'headReference', $headReference); //Added to include some additional information during debugging
-                Arr::set($data, 'index', $index); //Added to include current index during debugging
+                //Arr::set($data, 'headReference', $headReference); //Added to include some additional information during debugging
+                //Arr::set($data, 'index', $index); //Added to include current index during debugging
               
                 $path = array();
                 $fileContent = $this->setValue($hierarchyReferences, $headReference, $fileContent, $data, $path, $index);
