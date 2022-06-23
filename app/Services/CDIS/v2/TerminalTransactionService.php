@@ -7,6 +7,7 @@ use App\Repositories\Contracts\CDIS\BranchRepository;
 use App\Repositories\Contracts\CDIS\TerminalTransactionRepository;
 use App\Traits\DatabaseTransaction;
 use App\Traits\QueryHelper;
+use App\Traits\TerminalTransactionDiscountTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,7 @@ class TerminalTransactionService
 {
     use DatabaseTransaction;
     use QueryHelper;
+    use TerminalTransactionDiscountTrait;
 
     public function store($data)
     {
@@ -49,6 +51,7 @@ class TerminalTransactionService
                         ->where($primaryHeadData);
 
                     if ($terminalTransaction->count() > 0 ?? false) {
+                        $this->deleteRelatedDiscounts($terminalTransaction);
                         $terminalTransaction->forceDelete();
                     }
 
