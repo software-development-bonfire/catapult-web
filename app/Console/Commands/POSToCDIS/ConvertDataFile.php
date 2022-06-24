@@ -260,9 +260,9 @@ class ConvertDataFile extends Command
                                         $headReferenceEntryFieldName = $headReferenceEntry[1];
 
                                         $discountAddon = false;
-                                        if(trim($objectName.'.'.$mapping['column_name']) === 'discount.usage_type' 
+                                        if (trim($objectName.'.'.$mapping['column_name']) === 'discount.usage_type' 
                                         && ($entryDatum->{$mapping['column_name']} === UsageType::ADDON || $entryDatum->{$mapping['column_name']} === UsageType::BUNDLE)
-                                        ){
+                                        ) {
                                             $headReferenceEntryAcronym = 'AD';
                                             $headReferenceEntryFieldName = 'id';
 
@@ -539,7 +539,7 @@ class ConvertDataFile extends Command
             $pathArray = explode('.', $actualPath);
              
             $addonKeyPath = array();
-            for($index = 0; $index < count($pathArray) - 2 ; $index++){
+            for ($index = 0; $index < count($pathArray) - 2; $index++) {
                 $addonKeyPath[] = $pathArray[$index];		
             }
 
@@ -557,7 +557,7 @@ class ConvertDataFile extends Command
                 $finalPath = $pathArrayDotNotation.'.'.$index;
             }
 
-            if( $lastKeyPath === 'discount') {
+            if ($lastKeyPath === 'discount') {
                 $finalPath = $this->resolveAddonDiscountKeyIndexPath($fileContent, $data, $addonKeyPath, $lastKeyPath, $finalPath);               
             }
 
@@ -577,7 +577,8 @@ class ConvertDataFile extends Command
         }
     }
 
-    private function getFieldValue($mapping, $entryAcronym, $entryDatumIndex, $entryDatum){
+    private function getFieldValue($mapping, $entryAcronym, $entryDatumIndex, $entryDatum)
+    {
         $entryDatum = (array) $entryDatum;
         
         if ($mapping['required']) {
@@ -593,7 +594,7 @@ class ConvertDataFile extends Command
                         $mappingErrors[$entryAcronym][] = array(
                             'error_type' => 'No value was set even the default value. This is required.',
                             'description' => $mapping['column_name'],
-                            'meta' => ['Row: '. ($entryDatumIndex + 2)]
+                            'meta' => ['Row: '.($entryDatumIndex + 2)]
                         );
                     } else {
                         $fieldValue = $mapping['default_value'];
