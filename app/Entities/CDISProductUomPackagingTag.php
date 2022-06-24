@@ -25,7 +25,7 @@ class CDISProductUomPackagingTag extends BaseModel
 
     public function tags()
     {
-        return $this->belongsTo(CDISTag::class, 'tag_bid', 'bid');
+        return $this->belongsTo(CDISTags::class, 'tag_bid', 'bid');
     }
 
 }

@@ -47,4 +47,9 @@ class CDISTerminalTransactionAddon extends Base
     {
         return $this->belongsTo(CDISTerminalTransactionProduct::class, 'transaction_product_bid', 'bid');
     }
+
+    public function transactionDiscount()
+    {
+        return $this->hasMany(CDISTerminalTransactionDiscount::class, 'transaction_product_bid', 'bid');
+    }
 }

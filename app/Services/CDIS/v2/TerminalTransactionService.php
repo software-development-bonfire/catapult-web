@@ -6,12 +6,17 @@ use App\Entities\CDISTerminalTransaction;
 use App\Repositories\Contracts\CDIS\BranchRepository;
 use App\Repositories\Contracts\CDIS\TerminalTransactionRepository;
 use App\Traits\DatabaseTransaction;
+use App\Traits\QueryHelper;
+use App\Traits\TerminalTransactionDiscountTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
 
 class TerminalTransactionService
 {
     use DatabaseTransaction;
+    use QueryHelper;
+    use TerminalTransactionDiscountTrait;
 
     public function store($data)
     {
@@ -46,6 +51,7 @@ class TerminalTransactionService
                         ->where($primaryHeadData);
 
                     if ($terminalTransaction->count() > 0 ?? false) {
+                        $this->deleteRelatedDiscounts($terminalTransaction);
                         $terminalTransaction->forceDelete();
                     }
 
@@ -309,7 +315,7 @@ class TerminalTransactionService
 
                                             $addonData = [
                                                 'transaction_detail_bid' => $terminalTransactionDetailProduct->bid,
-                                                'product_bid' => $addon->product_bid,
+                                                'product_bid' =>  isset($addon->product_bid) ? $addon->product_bid : null,
                                                 'name' => $addon->name,
                                                 'description' => $addon->description,
                                                 'long_description' => $addon->long_description,
@@ -357,12 +363,63 @@ class TerminalTransactionService
                                                 ! is_null($terminalTransactionDetailAddon->deleted_at)
                                                     ? Carbon::parse($terminalTransactionDetailAddon->deleted_at)->format('Y-m-d H:i:s')
                                                     : null;
+                                         
+
+                                            //Added to include discount addon
+                                            $this->disableForeignKeyChecks();
+
+                                            if (isset($addon->discount)) {
+                                                foreach ($addon->discount as $discountIndex => $discount) {
+                                                    $discount = (object) $discount;
+        
+                                                    $discountData = [
+                                                        'transaction_product_bid' => $terminalTransactionDetailAddon->bid,
+                                                        'discount_bid' => $discount->discount_bid,
+                                                        'title' => $discount->title,
+                                                        'total' => $discount->total,
+                                                        'amount_discount' => $discount->amount_discount,
+                                                        'vat_deduct' => $discount->vat_deduct,
+                                                        'vat_exempt' => $discount->vat_exempt,
+                                                        'mandated' => (int) $discount->mandated,                                                
+                                                        'usage_type' => $discount->usage_type
+                                                    ];
+        
+                                                    $terminalTransactionDiscount = $terminalTransactionDetailProduct->discounts()->create($discountData);
+
+                                                    if($terminalTransactionDiscount){
+                                                        $terminalTransactionDiscount->transaction_product_bid = $terminalTransactionDetailAddon->bid;
+                                                        $terminalTransactionDiscount->save();
+                                                    }
+        
+                                                    foreach ($discountData as $discountDatumKey => $discountDatum) {
+                                                        $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['discount'][$discountIndex][$discountDatumKey] = $discountDatum;
+                                                    }
+        
+                                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['discount'][$discountIndex]['bid'] = $terminalTransactionDiscount->bid;
+                                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['discount'][$discountIndex]['created_at'] =
+                                                        ! is_null($terminalTransactionDiscount->created_at)
+                                                            ? Carbon::parse($terminalTransactionDiscount->created_at)->format('Y-m-d H:i:s')
+                                                            : null;
+                                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['discount'][$discountIndex]['updated_at'] =
+                                                        ! is_null($terminalTransactionDiscount->updated_at)
+                                                            ? Carbon::parse($terminalTransactionDiscount->updated_at)->format('Y-m-d H:i:s')
+                                                            : null;
+                                                    $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['discount'][$discountIndex]['deleted_at'] =
+                                                        ! is_null($terminalTransactionDiscount->deleted_at)
+                                                            ? Carbon::parse($terminalTransactionDiscount->deleted_at)->format('Y-m-d H:i:s')
+                                                            : null;
+                                                }
+                                            }else{
+                                                $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'][$addonIndex]['discount'] = [];
+                                            }
+                                            $this->enableForeignKeyChecks();
                                         }
                                     } else {
                                         $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['addon'] = [];
                                     }
 
                                     if (isset($product->discount)) {
+                                        $this->disableForeignKeyChecks();
                                         foreach ($product->discount as $discountIndex => $discount) {
                                             $discount = (object) $discount;
 
@@ -398,6 +455,7 @@ class TerminalTransactionService
                                                     ? Carbon::parse($terminalTransactionDiscount->deleted_at)->format('Y-m-d H:i:s')
                                                     : null;
                                         }
+                                        $this->enableForeignKeyChecks();
                                     } else {
                                         $data[$headIndex][$datumIndex]['official_receipt'][$officialReceiptIndex]['product'][$productIndex]['discount'] = [];
                                     }
