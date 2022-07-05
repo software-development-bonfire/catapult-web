@@ -15,6 +15,7 @@ use App\Services\CDIS\v2\ZReadService;
 use App\Services\CDIS\v2\POSAuditTrailService;
 use App\Services\CDIS\v2\CashDrawerService;
 use App\Traits\GenericHelper;
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
@@ -260,14 +261,27 @@ class ConvertDataFile extends Command
                                         $headReferenceEntryFieldName = $headReferenceEntry[1];
 
                                         $discountAddon = false;
-                                        if (trim($objectName.'.'.$mapping['column_name']) === 'discount.usage_type' 
-                                        && ($entryDatum->{$mapping['column_name']} === UsageType::ADDON || $entryDatum->{$mapping['column_name']} === UsageType::BUNDLE)
-                                        ) {
-                                            $headReferenceEntryAcronym = 'AD';
-                                            $headReferenceEntryFieldName = 'id';
-
-                                            $discountAddon = true;
+                                        try {
+                                            if 
+                                            (trim($objectName.'.'.$mapping['column_name']) === 'discount.usage_type' 
+                                            && (isset($entryDatum->{$mapping['column_name']}) 
+                                            && ($entryDatum->{$mapping['column_name']} === UsageType::ADDON 
+                                            || $entryDatum->{$mapping['column_name']} === UsageType::BUNDLE))
+                                            ) {
+                                                $headReferenceEntryAcronym = 'AD';
+                                                $headReferenceEntryFieldName = 'id';
+    
+                                                $discountAddon = true;
+                                            }
+                                        } catch(Exception $exception) {
+                                            $mappingErrors[$entryAcronym][] = array(
+                                                'error_type' => 'Reference error',
+                                                'description' => $mapping['column_name'].' not found in CSV file',
+                                                'meta' => [$mapping['file_name'].'.'.$mapping['reference_column_name'],  $objectName.'.'.$mapping['column_name'], $folderName]
+                                            );
+                                            continue;
                                         }
+                                        
 
                                         $headReferenceIndex =
                                             array_search(
