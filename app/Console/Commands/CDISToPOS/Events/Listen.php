@@ -130,14 +130,37 @@ class Listen extends Command
 
                 case "App\Events\Catapult\TriggerCDISFetchDataForSync":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', '{}', $this->socketId, true);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', 'Syncing...', $this->socketId, true);
                     Artisan::queue('cdis:fetch-data-for-sync', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true']);
+                    break;
+					
+                case "App\Events\Catapult\TriggerCDISFetchDataForSyncManual":
+                    $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', 'Syncing...', $this->socketId, true);
+                    Artisan::queue('cdis:fetch-data-for-sync-event', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true']);
+                    break;
+
+                case "App\Events\Catapult\TriggerCDISFetchDataForSyncPerEvent":
+                    $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
+                    Artisan::queue('cdis:fetch-data-for-sync-event', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'false']);
                     break;
 
                 case "App\Events\Catapult\TriggerCDISDataConversion":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', '{}', $this->socketId, true);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', 'Converting...', $this->socketId, true);
                     Artisan::queue('cdis:convert-data-to-file', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true']);
+                    break;
+
+                case "App\Events\Catapult\TriggerCDISDataConversionPerEvent":
+                    $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', 'Converting...', $this->socketId, true);
+                    Artisan::queue('cdis:convert-data-to-file-event', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true']);
+                    break;
+
+                case "App\Events\Catapult\TriggerCDISDataConversionAll":
+                    $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', 'Converting...', $this->socketId, true);
+                    Artisan::queue('cdis:convert-data-to-file-all', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true']);
                     break;
 
                 default:

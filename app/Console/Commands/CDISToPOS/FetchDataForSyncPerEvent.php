@@ -4,20 +4,20 @@ namespace App\Console\Commands\CDISToPOS;
 
 use App\Services\CDIS\SyncService;
 use App\Traits\GenericHelper;
-use App\Traits\PusherTrait;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
-class FetchDataForSync extends Command
+class FetchDataForSyncPerEvent extends Command
 {
-    use GenericHelper, PusherTrait;
+    use GenericHelper;
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'cdis:fetch-data-for-sync {--interval=true}{--limit=true}{--table=all}{--broadcast=false}';
+    protected $signature = 'cdis:fetch-data-for-sync-event {--interval=true}{--limit=true}{--table=all}{--broadcast=false}';
 
     /**
      * The console command description.
@@ -43,8 +43,6 @@ class FetchDataForSync extends Command
      */
     public function handle()
     {
-		$branchCode = config('configuration.branch_code');
-
         $interval = $this->option('interval');
         $interval =
             filter_var($interval, FILTER_VALIDATE_BOOLEAN)
@@ -74,7 +72,7 @@ class FetchDataForSync extends Command
                 ? filter_var($broadcast, FILTER_VALIDATE_INT)
                 : false
             );
-
+     
         $table = $this->option('table');
 
         $syncService = app()->make(SyncService::class);
@@ -85,37 +83,25 @@ class FetchDataForSync extends Command
             true
         );
 
-		if ($broadcast) {
-			$this->initializePusher();
-			$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Progress', __('info.syncing_started'), null);
-		}
-        
         Cache::forget('cdis_fetching_data_for_sync');
 
+       
         do {
-			
-            $forSync = $syncService->forSync($limit, $table, $broadcast, false);
+            $forSync = $syncService->forSync($limit, $table, $broadcast, true);
 
             if (! isset($forSync->bidsChunks)) {
                 Cache::forget('cdis_fetching_data_for_sync');
                 $this->createLog(__('message.no_data_to_sync'), 'info', true);
-				if ($broadcast) {
-					$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', __('message.no_data_to_sync'), null);
-				}
             } else if (isset($forSync->bidsChunks) && $forSync->bidsChunks > 0) {
                 Cache::forever('cdis_fetching_data_for_sync', true);
                 $this->createLog('---------------------------------------------------------', 'info', false);
                 $this->createLog('Action count: '.$forSync->action_count.' | Entry count: '.$forSync->entry_count, 'info', true);
-				$progress = 0;
+                $progress = 1;
                 foreach ($forSync->bidsChunks as $bidsChunk) {
                     foreach ($bidsChunk as $bid) {
-                        $this->createLog(__('success.queued_to_sync'), 'info', true, [$bid]);
+                        $this->createLog(__('success.queued_to_sync'). $progress.' of '.$forSync->action_count, 'info', true, [$bid]);
+                        $progress++;
                     }
-
-					if ($broadcast) {
-						$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', 'Syncing...'. $progress.' of '. count($forSync->bidsChunks), null);
-					}
-					$progress++;
                 }
             }
 
@@ -126,9 +112,5 @@ class FetchDataForSync extends Command
             }
         }
         while (true);
-        
-        if ($broadcast) {
-            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', 'Sync Success...', null);
-        }
     }
 }
