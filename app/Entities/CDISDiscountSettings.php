@@ -25,4 +25,19 @@ class CDISDiscountSettings extends BaseModel
     protected $casts = [
         'bid' => 'string',
     ];
+
+    public function syncDetails()
+    {
+        $code = '';
+        $group = $this->getTable();
+        $headBid = $this->bid;
+        $level = 1;
+
+        return (object) array(
+            'code' => $code,
+            'group' => $group,
+            'head_bid' => $headBid,
+            'level' => $level,
+        );
+    }
 }

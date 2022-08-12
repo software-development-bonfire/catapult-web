@@ -33,4 +33,9 @@ class CDISSync extends Model
         'branch_bid' => 'string',
         'table_bid' => 'string',
     ];
+
+    public function branch()
+    {
+        return $this->belongsTo(CDISBranch::class, 'branch_bid', 'bid');
+    }
 }

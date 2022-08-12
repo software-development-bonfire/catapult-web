@@ -3,6 +3,7 @@
 namespace App\Entities;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Route;
 
 class CDISProduct extends BaseModel
 {
@@ -32,6 +33,11 @@ class CDISProduct extends BaseModel
         'updated_by' => 'string',
     ];
 
+    public function brand()
+    {
+        return $this->belongsTo(CDISBrand::class, 'brand_bid', 'bid');
+    }
+
     public function productUomPackaging()
     {
         return $this->hasMany(CDISProductUomPackaging::class, 'product_bid', 'bid');
@@ -40,5 +46,34 @@ class CDISProduct extends BaseModel
     public function productCategory()
     {
         return $this->belongsTo(CDISProductCategory::class, 'category_bid', 'bid');
+    }
+
+    public function syncDetails()
+    {
+        $syncDetails = (object) array(
+            'code' => null,
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => null, 
+            'reference_table' => null,
+        );
+
+        $routeName = Route::currentRouteName();
+
+        if ($routeName == 'create_product' || $routeName == 'destroy_product') {
+            $syncDetails->group = $this->getTable();
+            $syncDetails->head_bid = $this->bid;
+        }
+
+        $productCategoryTableName = "cdis_product_category";
+        if ($this->productCategory !== null) {
+            $productCategoryTableName = $this->productCategory->getTable();
+        }
+
+        $syncDetails->reference_bid = json_encode([$this->category_bid, $this->brand_bid]);
+        $syncDetails->reference_table = json_encode([$productCategoryTableName, $this->brand->getTable()]);
+
+        return $syncDetails;
     }
 }

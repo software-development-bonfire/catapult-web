@@ -28,4 +28,21 @@ class CDISProductUomPackagingTag extends BaseModel
         return $this->belongsTo(CDISTags::class, 'tag_bid', 'bid');
     }
 
+    public function syncDetails()
+    {
+        $code = '';
+        $group = $this->getTable();
+        $headBid = $this->product_uom_packaging_bid;
+        $level = 1;
+
+        return (object) array(
+            'code' => $code,
+            'group' => $group,
+            'head_bid' => $headBid,
+            'level' => $level,
+            'reference_bid' => json_encode([$this->product_uom_packaging_bid, $this->tag_bid]),
+            'reference_table' => json_encode(['cdis_product_uom_packaging', 'cdis_tags'])
+        );
+    }
+
 }

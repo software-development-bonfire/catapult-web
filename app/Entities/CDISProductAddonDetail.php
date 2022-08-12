@@ -37,4 +37,16 @@ class CDISProductAddonDetail extends BaseModel
     {
         return $this->belongsTo(CDISProductAddon::class, 'head_bid', 'bid');
     }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => '',
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => json_encode([$this->head_bid, $this->product_pricing_type_bid, $this->product_uom_bid]),
+            'reference_table' => json_encode(['cdis_product_addon', 'cdis_product_pricing_type', 'cdis_product_uom_packaging'])
+        );
+    }
 }

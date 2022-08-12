@@ -33,4 +33,14 @@ class CDISBranchGroup extends BaseModel
     {
         return $this->hasMany(CDISBranchGroupTag::class, 'branch_group_bid', 'bid');
     }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => null,
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+        );
+    }
 }

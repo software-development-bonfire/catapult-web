@@ -6,6 +6,7 @@ use App\Enums\CDIS\ApprovalStatus;
 use App\Enums\CDIS\CostAndPriceChangePricingType;
 use App\Enums\CDIS\CostAndPriceChangeType;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 
 class CDISPackagingVendorBranchCost extends BaseModel
 {
@@ -123,5 +124,33 @@ class CDISPackagingVendorBranchCost extends BaseModel
         }
 
         return $cost;
+    }
+
+    public function syncDetails()
+    {
+        $syncDetails = (object) array(
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => null,
+            'reference_table' => null,
+        );
+
+        $routeName = Route::currentRouteName();
+
+        if ($routeName == 'create_product') {
+            $syncDetails->group = $this->packagingVendor->productUomPackaging->product->getTable();
+            $syncDetails->head_bid =  $this->packagingVendor->productUomPackaging->product_bid;
+            $syncDetails->level = 4;
+        } else if ($routeName == 'store_uom_packaging') {
+            $syncDetails->group = $this->packagingVendor->productUomPackaging->getTable();
+            $syncDetails->head_bid = $this->packagingVendor->product_uom_bid;
+            $syncDetails->level = 3;
+        }
+
+        $syncDetails->reference_bid = json_encode([$this->packaging_vendor_bid, $this->product_branch_availability_bid]);
+        $syncDetails->reference_table = json_encode(['cdis_packaging_vendor', 'cdis_product_branch_availability']);
+
+        return $syncDetails;
     }
 }

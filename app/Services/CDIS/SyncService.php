@@ -244,19 +244,6 @@ class SyncService
 		}	
 	}
 
-    private function getTableName($model) {
-        $tableName = "";
-        try {
-            $tableName = $model->getTable();
-        } catch (Exception $e) {
-            try {
-                $tableName = $model->tableName();
-            } catch (Exception $ex) {
-
-            }
-        }
-    }
-
     public function getArrangedSyncableEntities()
     {
         return [

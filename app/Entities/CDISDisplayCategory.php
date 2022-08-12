@@ -30,4 +30,16 @@ class CDISDisplayCategory extends BaseModel
         'created_by',
         'updated_by',
     ];
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => null,
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => null,
+            'reference_table' => null,
+        );
+    }
 }

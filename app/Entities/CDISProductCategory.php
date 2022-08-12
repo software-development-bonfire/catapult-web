@@ -3,6 +3,7 @@
 namespace App\Entities;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Route;
 
 class CDISProductCategory extends BaseModel
 {
@@ -34,5 +35,26 @@ class CDISProductCategory extends BaseModel
     public function parent()
     {
         return $this->hasMany(CDISProductCategory::class, 'parent_bid', 'bid');
+    }
+
+    public function syncDetails()
+    {
+        $syncDetails = (object) array(
+            'code' => null,
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => null,
+            'reference_table' => null,
+        );
+
+        $routeName = Route::currentRouteName();
+
+        if ($routeName == 'store_product_sub_category') {
+            $syncDetails->reference_bid = $this->parent_bid;
+            $syncDetails->reference_table = $this->getTable();
+        }
+
+        return $syncDetails;
     }
 }

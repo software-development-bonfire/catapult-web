@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use DateInterval;
 use DatePeriod;
 use DB;
+use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
@@ -345,12 +346,47 @@ trait GenericHelper
         return $key;
     }
 
-    function secondsToHumanReadableTime($seconds) 
+    public function secondsToHumanReadableTime($seconds) 
     {
         $hours = floor($seconds / 3600);
         $minutes = floor(($seconds / 60) % 60);
         $seconds = $seconds % 60;
         
-        return $hours > 0 ? "$hours hours, $minutes minutes" : ($minutes > 0 ? "$minutes minutes, $seconds seconds" : "$seconds seconds");;
+        return $hours > 0 ? "$hours hrs, $minutes mins" : ($minutes > 0 ? "$minutes mins, $seconds secs" : "$seconds seconds");;
     }
+
+    protected function modelHasColumn($model, $tableName = '', $columnName = '') 
+    {
+        if ($model === null) {
+            return false;
+        }
+    
+        if (empty($tableName)) {
+            $tableName = $this->getTableName($model);
+            if (empty($tableName)) {
+                return false;
+            }
+        }
+        
+        return $model->getConnection()
+        ->getSchemaBuilder()
+        ->hasColumn($tableName , $columnName);
+    }
+
+    
+    public function getTableName($model) {
+        $tableName = "";
+        try {
+            $tableName = $model->getTable();
+        } catch (Exception $e) {
+            try {
+                $tableName = $model->tableName();
+            } catch (Exception $ex) {
+
+            }
+        }
+        return $tableName;
+    }
+
+
 }

@@ -36,4 +36,16 @@ class CDISDisplayPaymentMethodDetail extends Base
     {
         return $this->belongsTo(CDISPaymentMethodSettings::class, 'payment_method_settings_bid', 'bid');
     }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => null,
+            'group' => null,
+            'head_bid' => $this->head_bid,
+            'level' => 1,
+            'reference_bid' => json_encode([$this->head_bid, $this->payment_method_settings_bid]),
+            'reference_table' => json_encode([$this->displayPaymentMethod->getTable(), $this->paymentMethodSettings->getTable()])
+        );
+    }
 }

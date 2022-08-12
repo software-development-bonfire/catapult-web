@@ -38,7 +38,7 @@ class ConvertDataToFileAll extends Command
      *
      * @var string
      */
-    protected $signature = 'cdis:convert-data-to-file-all {--interval=true}{--limit=true}{--broadcast=false}';
+    protected $signature = 'cdis:convert-data-to-file-all {--interval=true}{--limit=true}{--broadcast=false}{--progress=false}';
 
     /**
      * The console command description.
@@ -97,6 +97,9 @@ class ConvertDataToFileAll extends Command
         $broadcast = $this->option('broadcast');
         $broadcast = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
 
+        $showProgress = $this->option('progress');
+        $showProgress = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
+
         Cache::forget('excludedEntries');
         Cache::forget('excludedSyncBids');
 
@@ -109,7 +112,6 @@ class ConvertDataToFileAll extends Command
         $this->mappingVariable = [];
 		$timeStart = microtime(true);
 
-        $broadcast = false; //************************************REMOVEd */
 		if ($broadcast) {
 			$this->initializePusher();
 		}
@@ -165,25 +167,57 @@ class ConvertDataToFileAll extends Command
                 $progress = 0;
 
                 foreach ($entityData as $entityDatum) {
-                    //$syncDetail = $entityDatum->syncDetails();                  
+                    $syncDetails = $entityDatum->syncDetails();
                 
+                    
+                    $code = $this->generateRandomKey(10, 1, '');
+
+                    $level = $syncDetails->level;
+                    $group = $syncDetails->group;
+                    $headBid = $syncDetails->head_bid;
+                    $referenceBid = $syncDetails->reference_bid ?? null;
+                    $referenceTable = $syncDetails->reference_table ?? null;
+
+                    if ($level > 1) {
+                        $parent =CDISSync::where('level', '=', 1)
+                            ->where('branch_bid', '=', $branch->bid)
+                            ->where('group', '=', $group)
+                            ->where('table_bid', '=', $headBid)
+                            ->first();
+
+                        if ($parent) {
+                            $code = $parent->code;
+                        }
+                    }
+
+                    $action = 'create';
+                    if ($this->modelHasColumn($entityDatum, $tableName, 'deleted_at')) {
+                        $action = 'delete';
+                    } else {
+                        if (
+                            $this->modelHasColumn($entityDatum, $tableName, 'created_at') && 
+                            $this->modelHasColumn($entityDatum, $tableName, 'updated_at')
+                        ) {
+                            if ($entityDatum->created_at !== $entityDatum->updated_at) {
+                                $action = 'update';
+                            }
+                        }
+                    }
+                    
                     $entityRow =  array(
                         'branch_bid' => $branch->bid,
                         'table_bid' => $entityDatum->bid,
                         'table_name' =>  $tableName,
-                        'reference_bid' => null, // $syncDetail->reference_bid ?? null,
-                        'reference_table' => null, // $syncDetail->reference_table ?? null,
-                        'level' => 1,
-                        'group' => $tableName ,
-                        'code' => $this->generateRandomKey(10, 1, ''),
-                        'action' => 'create',
+                        'reference_bid' => $referenceBid,
+                        'reference_table' => $referenceTable,
+                        'level' => $level,
+                        'group' => $group,
+                        'code' => $code,
+                        'action' => $action,
                     );
 
                     CDISSync::create($entityRow);
 
-                    if($progress > 100) {
-                        break;
-                    }
                     $progress++;
                 }
                 $this->createLog('Constructing data for sync table: '.$tableName.' contains '. count($entityData).' records');
@@ -212,25 +246,32 @@ class ConvertDataToFileAll extends Command
             $excelDataCollection = [];
 
             $progress = 0;
+            $totalCount = count($forSyncData);
             foreach ( $forSyncData as $forSyncDatum) {
                 $progress++;
-                $this->createLog('Processing table: '.$forSyncDatum->table_name, 'info', true, [$progress.'/'. count($forSyncData)],);
+                $this->createLog('Processing table: '.$forSyncDatum->table_name, 'info', true, [$progress.'/'. $totalCount],);
                 $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $excelDataCollection);
+
+                if ($showProgress) {
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', 'Converting...'.$progress.'/'.$totalCount, null);
+                }
             }
            
             $progress = 0;
+            $totalCount = count($excelDataCollection);
             foreach ($excelDataCollection as $filePath => $detail) {
                 Excel::store(
                     new DataConversionToExcel($detail['headers'], $detail['data'], $this->extension),
                     $filePath,
                     $detail['disk_name']);
                     $progress++;
-                $this->createLog('Creating .CSV file '.$filePath, 'info', true, [$progress.'/'. count($excelDataCollection)]);
+                $this->createLog('Creating .CSV file '.$filePath, 'info', true, [$progress.'/'.$totalCount ]);
+
+                if ($showProgress) {
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', 'Creating file...'.$progress.'/'.$totalCount, null);
+                }
             }
 
-            if ($broadcast) {
-                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', 'Conversion Success!', null);
-            }
 
             if (is_int($interval)) {
                 sleep($interval);
@@ -240,11 +281,13 @@ class ConvertDataToFileAll extends Command
         }
 
         $timeEnd = microtime(true);
-
         $executionTime = ($timeEnd - $timeStart);
 
-
         $this->createLog('Finished converting at '. $this->secondsToHumanReadableTime($executionTime));
+
+        if ($broadcast) {
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', 'Conversion Success! @ '. $this->secondsToHumanReadableTime($executionTime), null);
+        }
     }
 
     public function processNonCustomizedMapping($entryName, $forSyncDatum, $timeStamp)
@@ -726,7 +769,7 @@ class ConvertDataToFileAll extends Command
                             if (!empty($relationDatum)) {
                                 if (is_array($relationDatum)) {
                                     $tableName = $this->getTableName($relationDatum);
-                                    //$tableName = str_replace('cdis_', '', $relationDatum->tableName());
+                                    $tableName = str_replace('cdis_', '',$tableName);
                                     
                                     $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $syncEntry, $entryName);
                                 }
@@ -739,9 +782,6 @@ class ConvertDataToFileAll extends Command
                     $mappedHeaders = array_keys($mappedDatum);
                     $mappedValues = array_values($mappedDatum);
 
-                    //$mappedValues = array_map("unserialize", array_unique(array_map("serialize", $mappedValues)));
-
-                   
                     $filePath = '/'.$forSyncDatum->branch_bid.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
 
                     if (! isset($excelDataCollection[$filePath])) {
@@ -868,10 +908,6 @@ class ConvertDataToFileAll extends Command
                             }
                         }
 
-                        if($entryName === 'Extras') {
-                            Log::alert($defaultValueCondition);
-                        }
-
                         eval("\$defaultValueCondition = $defaultValueCondition;");
                     } else if ((strpos($defaultValueCondition, '$') !== false)) {
                         eval("\$defaultValueCondition = $defaultValueCondition;");
@@ -888,8 +924,6 @@ class ConvertDataToFileAll extends Command
                 true,
                 []
             );
-            Log::info('ERROR in ConvertDataToFileAll.php');
-            Log::alert($throwable);
 
             $this->createLog($throwable->getMessage(). ' at line '. $throwable->getLine(), 'error', true, ['Mapping'], [$defaultValue, $mappingField, $entryName]);
         }
@@ -1377,33 +1411,5 @@ class ConvertDataToFileAll extends Command
         $entries = $this->syncEntries;
 
         return is_null($name) ? $entries : $entries[$name];
-    }
-
-    private function showLog($method = '', $message = '', $level = 'info')
-    {
-        $content = $method.'->'.$message;
-        $this->createLog(
-            $content,
-            $level,
-            true
-        );
-        if ($level==='info') {
-            Log::info($content);
-        } else {
-            Log::alert($content); 
-        }
-    }
-
-    private function getTableName($model) {
-        $tableName = "";
-        try {
-            $tableName = $model->getTable();
-        } catch (Exception $e) {
-            try {
-                $tableName = $model->tableName();
-            } catch (Exception $ex) {
-
-            }
-        }
     }
 }

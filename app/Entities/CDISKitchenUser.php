@@ -3,6 +3,7 @@
 namespace App\Entities;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Route;
 use Laravel\Passport\HasApiTokens;
 
 class CDISKitchenUser extends BaseModel
@@ -59,4 +60,51 @@ class CDISKitchenUser extends BaseModel
     {
         return $this->hasMany(CDISKitchenUserBranch::class, 'kitchen_user_bid', 'bid');
     }
+
+    public function accessibleBranches()
+    {
+        return $this->belongsToMany(
+            CDISBranch::class,
+            CDISKitchenUserBranch::class,
+            'kitchen_user_bid',
+            'branch_bid'
+        );
+    }
+
+    public function allowedStations()
+    {
+        return $this->belongsToMany(
+            CDISKitchenStation::class,
+            CDISKitchenUserStation::class,
+            'kitchen_user_bid',
+            'kitchen_station_bid'
+        );
+    }
+
+    public function syncDetails()
+    {
+        $syncDetails = (object) array(
+            'code' => '',
+            'group' => '',
+            'head_bid' => '',
+            'level' => 0,
+            'reference_bid' => null,
+            'reference_table' => null,
+        );
+
+        $routeName = Route::currentRouteName();
+
+        if (
+            $routeName == 'store_kitchen_user_account'
+            || $routeName == 'update_kitchen_user_account'
+        ) {
+            $syncDetails->code = null;
+            $syncDetails->group = $this->getTable();
+            $syncDetails->head_bid = $this->bid;
+            $syncDetails->level = 1;
+        }
+
+        return $syncDetails;
+    }
+
 }

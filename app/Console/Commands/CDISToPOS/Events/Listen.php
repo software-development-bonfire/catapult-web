@@ -131,13 +131,13 @@ class Listen extends Command
                 case "App\Events\Catapult\TriggerCDISFetchDataForSync":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', 'Syncing...', $this->socketId, true);
-                    Artisan::queue('cdis:fetch-data-for-sync', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true']);
+                    Artisan::queue('cdis:fetch-data-for-sync', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false']);
                     break;
 					
                 case "App\Events\Catapult\TriggerCDISFetchDataForSyncManual":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', 'Syncing...', $this->socketId, true);
-                    Artisan::queue('cdis:fetch-data-for-sync-event', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true']);
+                    Artisan::queue('cdis:fetch-data-for-sync-event', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false']);
                     break;
 
                 case "App\Events\Catapult\TriggerCDISFetchDataForSyncPerEvent":
@@ -159,8 +159,8 @@ class Listen extends Command
 
                 case "App\Events\Catapult\TriggerCDISDataConversionAll":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', 'Converting...', $this->socketId, true);
-                    Artisan::queue('cdis:convert-data-to-file-all', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true']);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', 'Conversion triggered...', $this->socketId, true);
+                    Artisan::queue('cdis:convert-data-to-file-all', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false']);
                     break;
 
                 default:

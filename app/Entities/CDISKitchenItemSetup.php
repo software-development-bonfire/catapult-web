@@ -45,4 +45,16 @@ class CDISKitchenItemSetup extends BaseModel
     {
         return $this->hasMany(CDISKitchenItemSetupDetail::class, 'head_bid', 'bid');
     }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => null,
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => null,
+            'reference_table' => null,
+        );
+    }
 }

@@ -33,4 +33,14 @@ class CDISBrand extends BaseModel
     {
         return $this->hasMany(CDISProductUomPackaging::class, 'brand_bid', 'bid');
     }
+    
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => null,
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+        );
+    }
 }

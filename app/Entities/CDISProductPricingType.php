@@ -21,4 +21,14 @@ class CDISProductPricingType extends BaseModel
         'created_by',
         'updated_by',
     ];
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => null,
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+        );
+    }
 }

@@ -32,4 +32,16 @@ class CDISProductStructure extends BaseModel
     {
         return $this->hasMany(CDISProductStructureDetail::class, 'head_bid', 'bid');
     }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => '',
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => null,
+            'reference_table' => null,
+        );
+    }
 }

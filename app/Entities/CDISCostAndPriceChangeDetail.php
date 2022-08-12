@@ -47,4 +47,16 @@ class CDISCostAndPriceChangeDetail extends BaseModel
     {
         return $this->belongsTo(CDISBranch::class, 'branch_bid', 'bid');
     }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => '',
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => json_encode([$this->product_uom_bid, $this->branch_bid, $this->product_pricing_type_bid, $this->product_pricing_type_bid]),
+            'reference_table' => json_encode(['cdis_product_uom_packaging', 'cdis_branch', 'cdis_product_pricing_type', 'cdis_pricing_head'])
+        );
+    }
 }

@@ -17,7 +17,7 @@ class FetchDataForSync extends Command
      *
      * @var string
      */
-    protected $signature = 'cdis:fetch-data-for-sync {--interval=true}{--limit=true}{--table=all}{--broadcast=false}';
+    protected $signature = 'cdis:fetch-data-for-sync {--interval=true}{--limit=true}{--table=all}{--broadcast=false}{--progress=false}';
 
     /**
      * The console command description.
@@ -75,6 +75,9 @@ class FetchDataForSync extends Command
                 : false
             );
 
+        $showProgress = $this->option('progress');
+        $showProgress = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
+
         $table = $this->option('table');
 
         $syncService = app()->make(SyncService::class);
@@ -112,7 +115,7 @@ class FetchDataForSync extends Command
                         $this->createLog(__('success.queued_to_sync'), 'info', true, [$bid]);
                     }
 
-					if ($broadcast) {
+					if ($showProgress) {
 						$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', 'Syncing...'. $progress.' of '. count($forSync->bidsChunks), null);
 					}
 					$progress++;

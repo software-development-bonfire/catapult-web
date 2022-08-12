@@ -36,4 +36,16 @@ class CDISProductModifier extends BaseModel
     {
         return $this->hasMany(CDISProductModifierDetail::class, 'head_bid', 'bid');
     }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => '',
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => json_encode([$this->product_uom_bid]),
+            'reference_table' => json_encode(['cdis_product_uom_packaging'])
+        );
+    }
 }

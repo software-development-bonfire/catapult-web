@@ -38,4 +38,16 @@ class CDISDisplayPaymentMethod extends BaseModel
     {
         return $this->hasMany(CDISBranch::class, 'branch_bid', 'bid');
     }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => null,
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => null,
+            'reference_table' => null,
+        );
+    }
 }

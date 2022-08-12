@@ -2,6 +2,8 @@
 
 namespace App\Entities;
 
+use Illuminate\Support\Facades\Route;
+
 class CDISVendorBranch extends BaseModel
 {
     protected $table = 'cdis_vendor_branch';
@@ -32,5 +34,36 @@ class CDISVendorBranch extends BaseModel
     public function vendor()
     {
         return $this->belongsTo(CDISVendor::class, 'vendor_bid','bid');
+    }
+
+    public function syncDetails()
+    {
+        $syncDetails = (object) array(
+            'code' => '',
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => null,
+            'reference_table' => null,
+        );
+
+        $routeName = Route::currentRouteName();
+
+        if (
+            $routeName == 'store_vendor'
+            || $routeName == 'update_vendor'
+        ) {
+            $referenceTable = $this->vendor->getTable();
+
+            $syncDetails->code = null;
+            $syncDetails->group = $referenceTable;
+            $syncDetails->head_bid = $this->vendor_bid;
+            $syncDetails->level = 2;
+        }
+
+        $syncDetails->reference_bid = $this->vendor_bid;
+        $syncDetails->reference_table = $this->getTable();
+
+        return $syncDetails;
     }
 }

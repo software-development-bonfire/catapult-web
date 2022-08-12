@@ -40,4 +40,9 @@ class CDISPOSAuditTrail extends BaseModel implements Transformable
         'receipt_no' => 'string',
     ];
 
+    public function terminal()
+    {
+        return $this->belongsTo(CDISTerminal::class, 'terminal_bid', 'bid');
+    }
+
 }

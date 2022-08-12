@@ -39,4 +39,9 @@ class CDISCashDrawer extends BaseModel implements Transformable
         'cashier_bid' => 'string',
         'approver_bid' => 'string',
     ];
+
+    public function terminal()
+    {
+        return $this->belongsTo(CDISTerminal::class, 'terminal_bid', 'bid');
+    }
 }

@@ -37,4 +37,16 @@ class CDISKitchenItemSetupDetail extends BaseModel
     {
         return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_packaging_bid', 'bid');
     }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => null,
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => json_encode([$this->head_bid, $this->kitchen_station_process_bid, $this->product_uom_packaging_bid]),
+            'reference_table' => json_encode(['cdis_kitchen_item_setup', 'cdis_kitchen_station_process', 'cdis_product_uom_packaging']),
+        );
+    }
 }

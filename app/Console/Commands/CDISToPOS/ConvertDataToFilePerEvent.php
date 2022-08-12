@@ -35,7 +35,7 @@ class ConvertDataToFilePerEvent extends Command
      *
      * @var string
      */
-    protected $signature = 'cdis:convert-data-to-file-event {--interval=true}{--limit=true}{--broadcast=false}';
+    protected $signature = 'cdis:convert-data-to-file-event {--interval=true}{--limit=true}{--broadcast=false}{--progress=false}';
 
     /**
      * The console command description.
@@ -89,6 +89,9 @@ class ConvertDataToFilePerEvent extends Command
         $broadcast = $this->option('broadcast');
         $broadcast = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
 
+        $showProgress = $this->option('progress');
+        $showProgress = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
+
         Cache::forget('excludedEntries');
         Cache::forget('excludedSyncBids');
 
@@ -99,6 +102,8 @@ class ConvertDataToFilePerEvent extends Command
         );
 
         $this->mappingVariable = [];
+
+		$timeStart = microtime(true);
 		
 		if ($broadcast) {
 			$this->initializePusher();
@@ -183,8 +188,16 @@ class ConvertDataToFilePerEvent extends Command
 
             $excelDataCollection = [];
 
+            $progress = 0;
+            $totalCount = count($forSyncData);
+
             foreach ($forSyncData as $forSyncDatum) {
+                $progress++;
                 $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $excelDataCollection);
+
+                if ($showProgress) {
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', 'Converting...'.$progress.'/'.$totalCount, null);
+                }
             }
             
             $progress = 0;
@@ -194,21 +207,24 @@ class ConvertDataToFilePerEvent extends Command
                     $filePath,
                     $detail['disk_name']);
                 $progress++;
-                if ($broadcast) {
-
+                if ($showProgress) {
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', 'Converting...'. $progress.' of '. count($excelDataCollection), null);
                 }
             }
 
-            if ($broadcast) {
-                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', count($excelDataCollection). ' files converted.', null);
-            }
-		
             if (is_int($interval)) {
                 sleep($interval);
             } else {
                 break;
             }
+        }
+        $timeEnd = microtime(true);
+        $executionTime = ($timeEnd - $timeStart);
+
+        $this->createLog('Finished converting at '. $this->secondsToHumanReadableTime($executionTime));
+
+        if ($broadcast) {
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', 'Conversion Success! @ '. $this->secondsToHumanReadableTime($executionTime), null);
         }
     }
 
