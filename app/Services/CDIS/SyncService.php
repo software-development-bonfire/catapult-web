@@ -19,6 +19,15 @@ class SyncService
 {
     use DatabaseTransaction, GenericHelper, PusherTrait;
 
+    
+
+    /**
+     * Set to TRUE if you want to enable the previous syncing capability
+     * By default, it's defined to FALSE to include deleted_at value
+     * in syncing from CDIS database to Catapult database
+     */
+    private $validateDeletedToHardReset = false;
+
     /**
      * Get for sync bids.
      *
@@ -180,26 +189,36 @@ class SyncService
                 $isExists = $detail->count() > 0;
 
                 if ($isExists) {
-                    if ($value->sync->action == 'delete' && $value->detail) {
-                        $tableName = $this->getTableName($detail);
-                        if ($detail->getConnection()
-                            ->getSchemaBuilder()
-                            ->hasColumn($tableName, 'deleted_at')) {
-                            $detail->delete();
-                        } else {
-                            $detail->update(['deleted_at' => null]);
+                    if ($this->validateDeletedToHardReset) {
+                        if ($value->sync->action == 'delete' && $value->detail) {
+                            $tableName = $this->getTableName($detail);
+                            if ($this->modelHasColumn($detail, $tableName, 'deleted_at')) {
+                                $detail->delete();
+                            } else {
+                                $detail->update(['deleted_at' => null]);
+                            }
+                        } else if ($value->sync->action == 'update' || $value->sync->action == 'create') {
+                            if (count($data) > 0) {
+                                $detail->update($data);
+                            }
                         }
-                    } else if ($value->sync->action == 'update' || $value->sync->action == 'create') {
-
+                    } else {
                         if (count($data) > 0) {
                             $detail->update($data);
                         }
                     }
+                    
                 } else {
-                    if ($value->detail
-                        && ($value->sync->action == 'create' || $value->sync->action == 'update')
-                    ) {
-                        $detail->create($data);
+                    if ($this->validateDeletedToHardReset) {
+                        if ($value->detail
+                            && ($value->sync->action == 'create' || $value->sync->action == 'update')
+                        ) {
+                            $detail->create($data);
+                        }
+                    } else {
+                        if ($value->detail) {
+                            $detail->create($data);
+                        }
                     }
                 }
 

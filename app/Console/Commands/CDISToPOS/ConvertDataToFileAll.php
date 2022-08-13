@@ -114,9 +114,8 @@ class ConvertDataToFileAll extends Command
 
 		if ($broadcast) {
 			$this->initializePusher();
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.conversion_started'), null);
 		}
-
-
 
         $syncEntries = app()->make(SyncEntryRepository::class)
             ->list((object) array('type' => MappingType::CDIS_TO_POS));
@@ -168,8 +167,7 @@ class ConvertDataToFileAll extends Command
 
                 foreach ($entityData as $entityDatum) {
                     $syncDetails = $entityDatum->syncDetails();
-                
-                    
+
                     $code = $this->generateRandomKey(10, 1, '');
 
                     $level = $syncDetails->level;
@@ -225,8 +223,6 @@ class ConvertDataToFileAll extends Command
 
             $forSyncData = CDISSync::orderBy('created_at', 'ASC')->get();
 
-         
-            
             if (count($forSyncData) <= 0) {
                 $this->createLog(
                     __('message.no_data_to_convert_to_value', ['value' => $this->extension]),

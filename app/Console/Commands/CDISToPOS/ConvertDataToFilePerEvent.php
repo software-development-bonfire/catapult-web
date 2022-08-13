@@ -667,7 +667,12 @@ class ConvertDataToFilePerEvent extends Command
                
                 $entryData = $entryData->first();
 
-                $entryTableName = str_replace('cdis_', '', $entryData->tableName());
+                $entryTableName = $syncEntry->table_name;
+
+                if (isset($entryData)) {
+                    $tableName = $this->getTableName($entryData);
+                    $entryTableName = str_replace('cdis_', '',$tableName);
+                }
 
                 $mappedData = [];
                 if ($primaryTable == $entryTableName) {
@@ -691,20 +696,22 @@ class ConvertDataToFilePerEvent extends Command
 
                     $referenceFoundRelation = implode('.', array_reverse($relationCamelCase));
 
-                    $eagerLoadedData = $entryData->load($referenceFoundRelation);
+                    if (!empty($referenceFoundRelation)) {
+                        $eagerLoadedData = $entryData->load($referenceFoundRelation);
 
-                    $relationData = $eagerLoadedData;
-                    foreach ($relationCamelCase as $function) {
-                        if (! isset($relationData->{$function})) {
-                            break;
+                        $relationData = $eagerLoadedData;
+                        foreach ($relationCamelCase as $function) {
+                            if (! isset($relationData->{$function})) {
+                                break;
+                            }
+
+                            $relationData = $relationData->{$function};
                         }
 
-                        $relationData = $relationData->{$function};
-                    }
-
-                    foreach ($relationData as $relationDatum) {
-                        $tableName = str_replace('cdis_', '', $relationDatum->tableName());
-                        $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $syncEntry, $entryName);
+                        foreach ($relationData as $relationDatum) {
+                            $tableName = str_replace('cdis_', '', $relationDatum->tableName());
+                            $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $syncEntry, $entryName);
+                        }
                     }
                 }
                 

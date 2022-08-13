@@ -130,7 +130,7 @@ class Listen extends Command
 
                 case "App\Events\Catapult\TriggerCDISFetchDataForSync":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', 'Syncing...', $this->socketId, true);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', 'Syncing triggered...', $this->socketId, true);
                     Artisan::queue('cdis:fetch-data-for-sync', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false']);
                     break;
 					

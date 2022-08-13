@@ -26,6 +26,11 @@ class FetchDataForSync extends Command
      */
     protected $description = 'Fetch, listen, get and validate "for sync" row data in CDIS sync table';
 
+
+    /**
+     * Set to true if you want to show syncing progress to CDIS activity
+     */
+    private $showSyncStatus = false;
     /**
      * Create a new command instance.
      *
@@ -88,9 +93,11 @@ class FetchDataForSync extends Command
             true
         );
 
-		if ($broadcast) {
+        $timeStart = microtime(true);
+
+		if ($this->showSyncStatus) {
 			$this->initializePusher();
-			$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Progress', __('info.syncing_started'), null);
+			$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', __('info.syncing_started'), null);
 		}
         
         Cache::forget('cdis_fetching_data_for_sync');
@@ -102,7 +109,7 @@ class FetchDataForSync extends Command
             if (! isset($forSync->bidsChunks)) {
                 Cache::forget('cdis_fetching_data_for_sync');
                 $this->createLog(__('message.no_data_to_sync'), 'info', true);
-				if ($broadcast) {
+				if ($this->showSyncStatus) {
 					$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', __('message.no_data_to_sync'), null);
 				}
             } else if (isset($forSync->bidsChunks) && $forSync->bidsChunks > 0) {
@@ -115,7 +122,7 @@ class FetchDataForSync extends Command
                         $this->createLog(__('success.queued_to_sync'), 'info', true, [$bid]);
                     }
 
-					if ($showProgress) {
+					if ($showProgress && $this->showSyncStatus) {
 						$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', 'Syncing...'. $progress.' of '. count($forSync->bidsChunks), null);
 					}
 					$progress++;
@@ -130,8 +137,11 @@ class FetchDataForSync extends Command
         }
         while (true);
         
-        if ($broadcast) {
-            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', 'Sync Success...', null);
+        $timeEnd = microtime(true);
+        $executionTime = ($timeEnd - $timeStart);
+
+        if ($this->showSyncStatus) {
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', 'Sync Success! @ '. $this->secondsToHumanReadableTime($executionTime), null);
         }
     }
 }
