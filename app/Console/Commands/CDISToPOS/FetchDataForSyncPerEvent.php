@@ -17,7 +17,7 @@ class FetchDataForSyncPerEvent extends Command
      *
      * @var string
      */
-    protected $signature = 'cdis:fetch-data-for-sync-event {--interval=true}{--limit=true}{--table=all}{--broadcast=false}';
+    protected $signature = 'cdis:fetch-data-for-sync-event {--interval=true}{--limit=true}{--table=all}{--broadcast=false}{--progress=false}';
 
     /**
      * The console command description.
@@ -72,6 +72,9 @@ class FetchDataForSyncPerEvent extends Command
                 ? filter_var($broadcast, FILTER_VALIDATE_INT)
                 : false
             );
+		
+		$showProgress = $this->option('progress');
+        $showProgress = filter_var($showProgress, FILTER_VALIDATE_BOOLEAN);
      
         $table = $this->option('table');
 

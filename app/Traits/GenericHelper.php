@@ -352,7 +352,7 @@ trait GenericHelper
         $minutes = floor(($seconds / 60) % 60);
         $seconds = $seconds % 60;
         
-        return $hours > 0 ? "$hours hrs, $minutes mins" : ($minutes > 0 ? "$minutes mins, $seconds secs" : "$seconds seconds");;
+        return $hours > 0 ? "$hours hrs, $minutes mins" : ($minutes > 0 ? "$minutes mins, $seconds secs" : "$seconds seconds");
     }
 
     protected function modelHasColumn($model, $tableName = '', $columnName = '') 
@@ -388,5 +388,25 @@ trait GenericHelper
         return $tableName;
     }
 
+
+    public function hasBeenCancelledConversion() 
+    {
+        $hasBeenCancelled = false;
+        if (Cache::has('conversion_cancelled')) {
+            $value = Cache::get('conversion_cancelled');
+            $hasBeenCancelled = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? true: false;
+        }
+        return $hasBeenCancelled;
+    }
+
+    public function clearCancelledConversion()
+    {
+        Cache::forget('conversion_cancelled');
+    }
+
+    public function setCancelledConversion()
+    {
+        Cache::put('conversion_cancelled', 'true', now()->addHour(1));
+    }
 
 }

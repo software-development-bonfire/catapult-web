@@ -34,7 +34,7 @@ class ConvertDataToFile extends Command
      *
      * @var string
      */
-    protected $signature = 'cdis:convert-data-to-file {--interval=true}{--limit=true}{--broadcast=false}';
+    protected $signature = 'cdis:convert-data-to-file {--interval=true}{--limit=true}{--broadcast=false}{--progress=false}';
 
     /**
      * The console command description.

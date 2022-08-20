@@ -81,7 +81,7 @@ class FetchDataForSync extends Command
             );
 
         $showProgress = $this->option('progress');
-        $showProgress = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
+        $showProgress = filter_var($showProgress, FILTER_VALIDATE_BOOLEAN);
 
         $table = $this->option('table');
 

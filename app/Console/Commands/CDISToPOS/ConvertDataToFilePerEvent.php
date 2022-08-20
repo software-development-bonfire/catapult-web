@@ -90,7 +90,7 @@ class ConvertDataToFilePerEvent extends Command
         $broadcast = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
 
         $showProgress = $this->option('progress');
-        $showProgress = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
+        $showProgress = filter_var($showProgress, FILTER_VALIDATE_BOOLEAN);
 
         Cache::forget('excludedEntries');
         Cache::forget('excludedSyncBids');
@@ -128,6 +128,8 @@ class ConvertDataToFilePerEvent extends Command
                 false,
                 ['fileStorageSetup', 'dataMappings']
             );
+
+        $hasBeenCancelled = false;
 
         while (true) {
             $timeStamp = Carbon::now()->format('mdY_His_v');
@@ -192,24 +194,34 @@ class ConvertDataToFilePerEvent extends Command
             $totalCount = count($forSyncData);
 
             foreach ($forSyncData as $forSyncDatum) {
+                $hasBeenCancelled = $this->hasBeenCancelledConversion();
+                if ($hasBeenCancelled) {
+                    break;
+                }
+
                 $progress++;
                 $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $excelDataCollection);
 
-                if ($showProgress) {
+                if ($broadcast && $showProgress) {
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', 'Converting...'.$progress.'/'.$totalCount, null);
                 }
             }
             
             $progress = 0;
+            $totalCount = count($excelDataCollection);
             foreach ($excelDataCollection as $filePath => $detail) {
+                $hasBeenCancelled = $this->hasBeenCancelledConversion();
+                if ($hasBeenCancelled) {
+                    break;
+                }
                 Excel::store(
                     new DataConversionToExcel($detail['headers'], $detail['data'], $this->extension),
                     $filePath,
                     $detail['disk_name']);
                 $progress++;
-                if ($showProgress) {
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', 'Converting...'. $progress.' of '. count($excelDataCollection), null);
-                }
+                if ($broadcast && $showProgress) {
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', 'Converting...'. $progress.' of '. $totalCount, null);
+                }                
             }
 
             if (is_int($interval)) {
@@ -217,15 +229,28 @@ class ConvertDataToFilePerEvent extends Command
             } else {
                 break;
             }
+
+            if ($hasBeenCancelled) {
+                break;
+            }
         }
         $timeEnd = microtime(true);
         $executionTime = ($timeEnd - $timeStart);
 
-        $this->createLog('Finished converting at '. $this->secondsToHumanReadableTime($executionTime));
+        if ($hasBeenCancelled) {
+            $this->createLog('Conversion cancelled at '. $this->secondsToHumanReadableTime($executionTime));
+        } else {
+            $this->createLog('Finished converting at '. $this->secondsToHumanReadableTime($executionTime));
+        }
 
         if ($broadcast) {
-            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', 'Conversion Success! @ '. $this->secondsToHumanReadableTime($executionTime), null);
+            if ($hasBeenCancelled) {
+                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', 'Generate CSV cancelled! @ '. $this->secondsToHumanReadableTime($executionTime), null);
+            } else {
+                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', 'Conversion Success! @ '. $this->secondsToHumanReadableTime($executionTime), null);
+            }
         }
+        $this->clearCancelledConversion();
     }
 
     public function processNonCustomizedMapping($entryName, $forSyncDatum, $timeStamp)
