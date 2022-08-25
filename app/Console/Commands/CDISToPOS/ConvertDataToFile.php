@@ -14,6 +14,7 @@ use App\Repositories\Contracts\FieldMappingRepository;
 use App\Repositories\Contracts\SyncEntryRepository;
 use App\Traits\DatabaseTransaction;
 use App\Traits\GenericHelper;
+use App\Traits\JobCancellationTrait;
 use App\Traits\PusherTrait;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -26,7 +27,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ConvertDataToFile extends Command
 {
-    use DatabaseTransaction, GenericHelper, PusherTrait;
+    use DatabaseTransaction, GenericHelper, PusherTrait, JobCancellationTrait;
 
     public $extension = 'csv';
     /**
@@ -185,7 +186,7 @@ class ConvertDataToFile extends Command
 
             if ($broadcast) {
                 $this->initializePusher();
-                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone',  'Conversion Success!', null);
+                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone',  __('info.create_csv_for_new_branch_success'), null);
             }
 
             if (is_int($interval)) {

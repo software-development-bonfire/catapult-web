@@ -14,6 +14,7 @@ use App\Repositories\Contracts\FieldMappingRepository;
 use App\Repositories\Contracts\SyncEntryRepository;
 use App\Traits\DatabaseTransaction;
 use App\Traits\GenericHelper;
+use App\Traits\JobCancellationTrait;
 use App\Traits\PusherTrait;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -27,7 +28,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ConvertDataToFilePerEvent extends Command
 {
-    use DatabaseTransaction, GenericHelper, PusherTrait;
+    use DatabaseTransaction, GenericHelper, PusherTrait, JobCancellationTrait;
 
     public $extension = 'csv';
     /**
@@ -64,6 +65,11 @@ class ConvertDataToFilePerEvent extends Command
      */
     public function handle()
     {
+		$timeStart = microtime(true);
+		
+		ini_set('max_execution_time', '-1');
+        ini_set('memory_limit', '-1');
+		
         $branchCode = config('configuration.branch_code');
 
         $interval = $this->option('interval');
@@ -100,13 +106,15 @@ class ConvertDataToFilePerEvent extends Command
             'info',
             true
         );
+		
+		// Conversion already been executed
+		$this->setConverting();
 
         $this->mappingVariable = [];
-
-		$timeStart = microtime(true);
 		
 		if ($broadcast) {
 			$this->initializePusher();
+			$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.converting_changes_only'), null);
         }
 		
         $syncEntries = app()->make(SyncEntryRepository::class)
@@ -129,9 +137,11 @@ class ConvertDataToFilePerEvent extends Command
                 ['fileStorageSetup', 'dataMappings']
             );
 
-        $hasBeenCancelled = false;
+        $hasNoDataToConvert = false;
 
-        while (true) {
+        $hasBeenCancelled = $this->hasBeenCancelledConversion();;
+
+        while (true && !$hasBeenCancelled ) {
             $timeStamp = Carbon::now()->format('mdY_His_v');
 
             if (Cache::forget('cdis_fetching_data_for_sync')) {
@@ -175,6 +185,7 @@ class ConvertDataToFilePerEvent extends Command
                     true
                 );
 				
+                $hasNoDataToConvert = true;
 				if ($broadcast) {
 					$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('message.no_data_to_convert_to_value', ['value' => $this->extension]), null);
 				}
@@ -203,7 +214,11 @@ class ConvertDataToFilePerEvent extends Command
                 $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $excelDataCollection);
 
                 if ($broadcast && $showProgress) {
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', 'Converting...'.$progress.'/'.$totalCount, null);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.converting_changes_only').$progress.'/'.$totalCount, null);
+                 } else {
+                    if ($broadcast && ($progress % 100 == 0)) {
+                        $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.converting_changes_only').$progress.'/'.$totalCount, null);
+                    }
                 }
             }
             
@@ -220,7 +235,7 @@ class ConvertDataToFilePerEvent extends Command
                     $detail['disk_name']);
                 $progress++;
                 if ($broadcast && $showProgress) {
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', 'Converting...'. $progress.' of '. $totalCount, null);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.creating_file'). $progress.' of '. $totalCount, null);
                 }                
             }
 
@@ -245,12 +260,17 @@ class ConvertDataToFilePerEvent extends Command
 
         if ($broadcast) {
             if ($hasBeenCancelled) {
-                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', 'Generate CSV cancelled! @ '. $this->secondsToHumanReadableTime($executionTime), null);
+                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.generate_csv_changes_only_cancelled').' @ '. $this->secondsToHumanReadableTime($executionTime), null);
             } else {
-                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', 'Conversion Success! @ '. $this->secondsToHumanReadableTime($executionTime), null);
+                if ($hasNoDataToConvert) {
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('message.no_data_to_convert_to_value', ['value' => $this->extension]), null);
+                } else {
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.generate_csv_changes_only_success'). ' @ '. $this->secondsToHumanReadableTime($executionTime), null);
+                }
             }
         }
         $this->clearCancelledConversion();
+        $this->clearConverting();
     }
 
     public function processNonCustomizedMapping($entryName, $forSyncDatum, $timeStamp)

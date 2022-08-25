@@ -3,6 +3,7 @@
 namespace App\Jobs\CDIS;
 
 use App\Services\CDIS\SyncService;
+use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
@@ -14,19 +15,20 @@ class Sync implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $bids, $branchCode, $broadcast, $perEvent;
+    public $bids, $branchCode, $broadcast, $perEvent, $showProgress;
     /**
      * Create a new job instance.
      *
      * @param array $bids
      * @return void
      */
-    public function __construct($bids, $branchCode, $broadcast, $perEvent = false)
+    public function __construct($bids, $branchCode, $broadcast, $perEvent = false, $showProgress = false)
     {
         $this->bids = $bids;
         $this->branchCode = $branchCode;
         $this->broadcast = $broadcast;
         $this->perEvent = $perEvent;
+        $this->showProgress = $showProgress;
     }
 
     /**
@@ -38,8 +40,19 @@ class Sync implements ShouldQueue
     {
         $syncService = app()->make(SyncService::class);
 
-        $syncedDetails = $syncService->sync($this->bids, $this->branchCode, $this->broadcast, $this->perEvent);
+        $syncedDetails = $syncService->sync($this->bids, $this->branchCode, $this->broadcast, $this->perEvent, $this->showProgress);
 
         return $syncedDetails;
+    }
+	
+	/**
+     * The job failed to process.
+     *
+     * @param  Exception  $exception
+     * @return void
+     */
+    public function failed(Exception $exception)
+    {
+        // Send user notification of failure, etc...
     }
 }

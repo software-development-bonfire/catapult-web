@@ -10,7 +10,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class CancelConvertDataToFile extends Command
+class CancelConvertDataToFileAll extends Command
 {
     use DatabaseTransaction, GenericHelper, PusherTrait, JobCancellationTrait;
 
@@ -19,7 +19,7 @@ class CancelConvertDataToFile extends Command
      *
      * @var string
      */
-    protected $signature = 'cdis:cancel-convert {--retry=5}{--broadcast=false}{--progress=false}';
+    protected $signature = 'cdis:cancel-convert-all {--retry=5}{--broadcast=false}{--progress=false}';
 
     /**
      * The console command description.
@@ -47,7 +47,7 @@ class CancelConvertDataToFile extends Command
     public function handle()
     {
 		$timeStart = microtime(true);
-		
+	
         $branchCode = config('configuration.branch_code');
 
         $retryCount = $this->option('retry');
@@ -83,28 +83,28 @@ class CancelConvertDataToFile extends Command
         while ($hasPendingJobs);
 
         $this->setCancelledConversion();
-        $attemptsCount = 0;
+        $attempt = 0;
         while(! $this->hasBeenCancelledConversion()) {
             $this->setCancelledConversion();
-            if ($attemptsCount <= $retryCount) {
-                $attemptsCount++;
+            if ($attempt <= $retryCount) {
+                $attempt++;
             } else {
                 break;
             }
             $hasBeenCancelled = $this->hasBeenCancelledConversion();
             $this->createLog('Has been cancelled? '.$hasBeenCancelled, 'info', true);
-            $this->createLog('Cancelling attempt @ '.$attemptsCount, 'info', true);
+            $this->createLog('Cancelling attempt @ '.$attempt, 'info', true);
         }
 
         $timeEnd = microtime(true);
         $executionTime = ($timeEnd - $timeStart);
 
         $this->createLog('Cancelling takes @ '.$this->secondsToHumanReadableTime($executionTime), 'info', true);
-		
-		// If conversion is not yet executed, then we must
+
+        // If conversion is not yet executed, then we must
 		// send to CDIS that conversion been cancelled
         if ($broadcast && !$isConverting) {
-			$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.generate_csv_changes_only_cancelled'), null);
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.generate_csv_all_data_cancelled'), null);
 			$this->clearCancelledConversion();
 			$this->clearConverting();
         }

@@ -8,6 +8,7 @@ use App\Jobs\CDIS\Sync;
 use App\Services\ConfigurationService;
 use App\Traits\DatabaseTransaction;
 use App\Traits\GenericHelper;
+use App\Traits\JobCancellationTrait;
 use App\Traits\PusherTrait;
 use Carbon\Carbon;
 use Exception;
@@ -17,7 +18,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SyncService
 {
-    use DatabaseTransaction, GenericHelper, PusherTrait;
+    use DatabaseTransaction, GenericHelper, PusherTrait, JobCancellationTrait;
 
     
 
@@ -35,9 +36,9 @@ class SyncService
      * @param string $table
      * @return \Illuminate\Http\Response
      */
-    public function forSync($limit = 100, $table = 'all', $broadcast = false, $perEvent = false)
+    public function forSync($limit = 100, $table = 'all', $broadcast = false, $perEvent = false, $showProgress = false)
     {
-        return $this->transaction(function () use($limit, $table, $broadcast, $perEvent) {
+        return $this->transaction(function () use($limit, $table, $broadcast, $perEvent, $showProgress) {
             if ($broadcast) {
                 CDISSync::truncate();
             }
@@ -85,7 +86,7 @@ class SyncService
             $bidsChunks = array_chunk($bids, $limit);
 
             foreach ($bidsChunks as $bidsChunk) {
-                Sync::dispatch($bidsChunk, $senderDetails['branch_code'], $broadcast, $perEvent);
+                Sync::dispatch($bidsChunk, $senderDetails['branch_code'], $broadcast, $perEvent, $showProgress);
             }
 
             return (object) [
@@ -103,14 +104,15 @@ class SyncService
      * @param bool $broadcast
      * @return \Illuminate\Http\Response
      */
-    public function sync($bids = [], $branchCode, $broadcast = false, $perEvent = false)
+    public function sync($bids = [], $branchCode, $broadcast = false, $perEvent = false, $showProgress = false)
     {
         if ($broadcast) {
             $this->initializePusher();
-            $this->pushSyncStatus($branchCode, $broadcast,  __('info.syncing_started'));
         }
+		
+		$this->setSyncing();
 
-        return $this->transaction(function () use ($bids, $branchCode, $broadcast, $perEvent) {
+        return $this->transaction(function () use ($bids, $branchCode, $broadcast, $perEvent, $showProgress) {
             $client = [
                 'verify' => false,
                 'http_errors' => false,
@@ -142,10 +144,16 @@ class SyncService
                 ];
             }
 
+            $hasBeenCancelled = false;
+
             $bids = [];
 
 			$progress = 0;
             foreach ($values as $value) {
+				$hasBeenCancelled = $this->hasBeenCancelledSyncing();
+                if ($hasBeenCancelled) {
+                    break;
+                }
                 array_push($bids, $value->sync->bid);
 
                 unset($value->sync->id);
@@ -223,15 +231,26 @@ class SyncService
                 }
 
                 $progress++;
-				if ($broadcast) {
-					$this->pushSyncStatus($branchCode, $broadcast, 'Syncing...'. $progress.' of '. $total);
-				}
+				if ($broadcast && $showProgress) {
+					$this->pushSyncStatus($branchCode, $broadcast, __('info.syncing'). $progress.' of '. $total);
+				} else {
+                    if ($broadcast && ($progress % 100 == 0)) {
+                        $this->pushSyncStatus($branchCode,  $broadcast, __('info.syncing'). $progress.' of '. $total);
+                    }
+                }
             }
-
-			if (count($bids) > 0) {
-				DeleteSynced::dispatch($bids, $branchCode, $broadcast, $perEvent);
-			}
-
+            if ($hasBeenCancelled) {
+                if ($broadcast) {
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', __('info.syncing_cancelled'), null);
+                }
+            } else {
+                if (count($bids) > 0) {
+                    DeleteSynced::dispatch($bids, $branchCode, $broadcast, $perEvent, $hasBeenCancelled);
+                }
+            }
+			$this->clearCancelledSyncing();
+			$this->clearSyncing();
+            
             return (object) [
                 'count' => $count,
                 'total' => $total,

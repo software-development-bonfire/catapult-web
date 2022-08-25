@@ -5,13 +5,15 @@ namespace App\Console\Commands\CDISToPOS;
 use App\Services\CDIS\SyncService;
 use App\Traits\GenericHelper;
 use App\Traits\PusherTrait;
+use App\Traits\JobCancellationTrait;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class FetchDataForSync extends Command
 {
-    use GenericHelper, PusherTrait;
+    use GenericHelper, PusherTrait, JobCancellationTrait;
     /**
      * The name and signature of the console command.
      *
@@ -48,6 +50,8 @@ class FetchDataForSync extends Command
      */
     public function handle()
     {
+		$timeStart = microtime(true);
+	
 		$branchCode = config('configuration.branch_code');
 
         $interval = $this->option('interval');
@@ -71,14 +75,7 @@ class FetchDataForSync extends Command
             );
 
         $broadcast = $this->option('broadcast');
-        $broadcast =
-            filter_var($broadcast, FILTER_VALIDATE_BOOLEAN)
-                ? config('sync.cdis.to_catapult.broadcast')
-                : (
-            (int) $broadcast
-                ? filter_var($broadcast, FILTER_VALIDATE_INT)
-                : false
-            );
+        $broadcast = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
 
         $showProgress = $this->option('progress');
         $showProgress = filter_var($showProgress, FILTER_VALIDATE_BOOLEAN);
@@ -92,24 +89,29 @@ class FetchDataForSync extends Command
             'info',
             true
         );
+		
+		$this->setSyncing();
 
-        $timeStart = microtime(true);
-
-		if ($this->showSyncStatus) {
+		if ($broadcast) {
 			$this->initializePusher();
-			$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', __('info.syncing_started'), null);
 		}
         
         Cache::forget('cdis_fetching_data_for_sync');
-
+		
+		$hasBeenCancelled = $this->hasBeenCancelledSyncing();
+       
         do {
+			if ($hasBeenCancelled) {
+				break;
+			}
 			
-            $forSync = $syncService->forSync($limit, $table, $broadcast, false);
-
+            $forSync = $syncService->forSync($limit, $table, $broadcast, false, $showProgress);
+			
             if (! isset($forSync->bidsChunks)) {
                 Cache::forget('cdis_fetching_data_for_sync');
                 $this->createLog(__('message.no_data_to_sync'), 'info', true);
-				if ($this->showSyncStatus) {
+				if ($broadcast) {
+                    Log::alert(__('message.no_data_to_sync'));
 					$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', __('message.no_data_to_sync'), null);
 				}
             } else if (isset($forSync->bidsChunks) && $forSync->bidsChunks > 0) {
@@ -118,14 +120,22 @@ class FetchDataForSync extends Command
                 $this->createLog('Action count: '.$forSync->action_count.' | Entry count: '.$forSync->entry_count, 'info', true);
 				$progress = 0;
                 foreach ($forSync->bidsChunks as $bidsChunk) {
+					$progress++;
                     foreach ($bidsChunk as $bid) {
                         $this->createLog(__('success.queued_to_sync'), 'info', true, [$bid]);
+						$hasBeenCancelled = $this->hasBeenCancelledSyncing();
+						if ($hasBeenCancelled) {
+							break;
+						}
                     }
-
-					if ($showProgress && $this->showSyncStatus) {
-						$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', 'Syncing...'. $progress.' of '. count($forSync->bidsChunks), null);
+					
+					if ($showProgress && $broadcast) {
+						$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', __('info.fetching'). $progress.' of '. count($forSync->bidsChunks), null);
 					}
-					$progress++;
+					
+					if( $hasBeenCancelled ) {
+						break;
+					}
                 }
             }
 
@@ -139,9 +149,16 @@ class FetchDataForSync extends Command
         
         $timeEnd = microtime(true);
         $executionTime = ($timeEnd - $timeStart);
-
-        if ($this->showSyncStatus) {
-            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', 'Sync Success! @ '. $this->secondsToHumanReadableTime($executionTime), null);
+		
+        Log::alert(__('info.fetch_success'). ' @ '. $this->secondsToHumanReadableTime($executionTime));
+		$this->createLog(__('info.fetch_success'). ' @ '. $this->secondsToHumanReadableTime($executionTime), 'info', true);
+		
+		// If syncing is not yet executed, then we must
+		// send to CDIS that syncing been cancelled
+        if ($broadcast && $hasBeenCancelled) {
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', __('info.syncing_cancelled'), null);
+			$this->clearCancelledSyncing();
+			$this->clearSyncing();
         }
     }
 }
