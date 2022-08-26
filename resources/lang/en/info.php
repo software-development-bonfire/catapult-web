@@ -7,6 +7,7 @@ return [
     'converting_all_data' => 'Converting (All Data)...',
     'converting_changes_only' => 'Converting (Changes Only)...',
     'checking_for_sync' => 'Checking for sync...',
+    'create_csv_for_new_branch_cancelled' => 'Create CSV for New Branch cancelled!',
     'create_csv_for_new_branch_failed' => 'Create CSV for New Branch failed!',
     'create_csv_for_new_branch_success' => 'Create CSV for New Branch success!',
     'creating_file' => 'Creating file...',

@@ -93,6 +93,8 @@ class FetchDataForSyncPerEvent extends Command
         );
 		
 		$this->setSyncing();
+		$this->clearCancelledConversion();
+		$this->clearConverting();
 		
 		if ($broadcast) {
 			$this->initializePusher();

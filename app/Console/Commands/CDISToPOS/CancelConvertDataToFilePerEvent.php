@@ -10,7 +10,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class CancelConvertDataToFile extends Command
+class CancelConvertDataToFilePerEvent extends Command
 {
     use DatabaseTransaction, GenericHelper, PusherTrait, JobCancellationTrait;
 
@@ -19,7 +19,7 @@ class CancelConvertDataToFile extends Command
      *
      * @var string
      */
-    protected $signature = 'cdis:cancel-convert {--retry=5}{--broadcast=false}{--progress=false}';
+    protected $signature = 'cdis:cancel-convert-event {--retry=5}{--broadcast=false}{--progress=false}';
 
     /**
      * The console command description.
@@ -96,7 +96,7 @@ class CancelConvertDataToFile extends Command
             $this->createLog('Cancelling attempt @ '.$attemptsCount, 'info', true);
         }
 
-        $timeEnd = microtime(true);
+		$timeEnd = microtime(true);
         $executionTime = ($timeEnd - $timeStart);
 
         $this->createLog('Cancelling takes @ '.$this->secondsToHumanReadableTime($executionTime), 'info', true);
@@ -104,7 +104,7 @@ class CancelConvertDataToFile extends Command
 		// If conversion is not yet executed, then we must
 		// send to CDIS that conversion been cancelled
         if ($broadcast && !$isConverting) {
-			$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.create_csv_for_new_branch_cancelled'), null);
+			$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.generate_csv_changes_only_cancelled'), null);
 			$this->clearCancelledConversion();
 			$this->clearConverting();
         }
