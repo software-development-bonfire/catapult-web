@@ -27,11 +27,12 @@ use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\CDIS\SyncService;
 use App\Traits\JobCancellationTrait;
+use App\Traits\StorageTrait;
 use Exception;
 
 class ConvertDataToFileAll extends Command
 {
-    use DatabaseTransaction, GenericHelper, PusherTrait, JobCancellationTrait;
+    use DatabaseTransaction, GenericHelper, PusherTrait, JobCancellationTrait, StorageTrait;
 
     public $extension = 'csv';
     /**
@@ -151,6 +152,7 @@ class ConvertDataToFileAll extends Command
 
         while (true && !$hasBeenCancelled ) {
             $timeStamp = Carbon::now()->format('mdY_His_v');
+            $targetFolder = '/'. $branch->bid.'/'. Carbon::now()->format('Ymd_His');
 
             if (Cache::forget('cdis_fetching_data_for_sync')) {
                 sleep(1);
@@ -272,7 +274,7 @@ class ConvertDataToFileAll extends Command
                 }
                 $progress++;
                 $this->createLog('Processing table: '.$forSyncDatum->table_name, 'info', true, [$progress.'/'. $totalCount],);
-                $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $excelDataCollection);
+                $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, $excelDataCollection);
 
                 if ($broadcast &&  $showProgress) {
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.converting_all_data').$progress.'/'.$totalCount, null);
@@ -659,9 +661,9 @@ class ConvertDataToFileAll extends Command
      *
      * @return mixed
      */
-    public function processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, &$excelDataCollection)
+    public function processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, &$excelDataCollection)
     {
-        return $this->transaction(function() use($forSyncDatum, $fieldMappingDetails, $timeStamp, &$excelDataCollection) {
+        return $this->transaction(function() use($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, &$excelDataCollection) {
             if ($forSyncDatum) {
                 if (isset($forSyncDatum->group)) {
                     $toSyncData = CDISSync::where([
@@ -670,7 +672,7 @@ class ConvertDataToFileAll extends Command
                         'code' => $forSyncDatum->code,
                     ])->get();
                    
-                    $result = $this->generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails, $timeStamp, $excelDataCollection);
+                    $result = $this->generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, $excelDataCollection);
 
                     if ($result) {
                         CDISSync::whereIn('bid', $toSyncData->pluck('bid'))->delete();
@@ -679,7 +681,7 @@ class ConvertDataToFileAll extends Command
                     return $result;
                 } else {
                    
-                    $result = $this->generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails, $timeStamp, $excelDataCollection);
+                    $result = $this->generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, $excelDataCollection);
 
                     if ($result) {                    
                         CDISSync::where([
@@ -698,7 +700,7 @@ class ConvertDataToFileAll extends Command
         });
     }
 
-    public function generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails, $timeStamp, &$excelDataCollection)
+    public function generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, &$excelDataCollection)
     {
         foreach ($fieldMappingDetails as $fieldMappingDetail) {
             $primaryTable = $fieldMappingDetail->primary_table;
@@ -748,6 +750,8 @@ class ConvertDataToFileAll extends Command
             } else {
                 break;
             }
+
+            $this->checkDirectory($remoteDiskName, $targetFolder);
 
             foreach ($toSyncData as $syncEntry) {
                 $entityName = $syncEntry->table_name;
@@ -827,7 +831,7 @@ class ConvertDataToFileAll extends Command
                     $mappedHeaders = array_keys($mappedDatum);
                     $mappedValues = array_values($mappedDatum);
 
-                    $filePath = '/'.$forSyncDatum->branch_bid.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
+                    $filePath = $targetFolder.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
 
                     if (! isset($excelDataCollection[$filePath])) {
                         $excelDataCollection[$filePath] = [
@@ -1190,7 +1194,7 @@ class ConvertDataToFileAll extends Command
         return (string) $syncEntry[$columnName];
     }
 
-    public function generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails, $timeStamp, &$excelDataCollection)
+    public function generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder,  &$excelDataCollection)
     {
         $noPrimaryKeyDetected = true;
 
@@ -1288,6 +1292,11 @@ class ConvertDataToFileAll extends Command
             }
 
             $entityName = $forSyncDatum->table_name;
+
+            $this->checkDirectory($remoteDiskName, $targetFolder);
+
+            $filePath = $targetFolder.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
+
             $mappingFound = array_values(array_filter($dataMappings, function($value) use($entityName) {
                 return preg_match('%\b('.$entityName.'.)\b%i', $value['field'])
                     || preg_match('%\b('.$entityName.'.)\b%i', $value['default_value']);
@@ -1388,8 +1397,6 @@ class ConvertDataToFileAll extends Command
                 foreach ($mappedData as $mappedDatum) {
                     $mappedHeaders = array_keys($mappedDatum);
                     $mappedValues = array_values($mappedDatum);
-
-                    $filePath = '/'.$forSyncDatum->branch_bid.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
 
                     if (! isset($excelDataCollection[$filePath])) {
                         $excelDataCollection[$filePath] = [

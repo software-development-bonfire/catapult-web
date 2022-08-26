@@ -16,6 +16,7 @@ use App\Traits\DatabaseTransaction;
 use App\Traits\GenericHelper;
 use App\Traits\JobCancellationTrait;
 use App\Traits\PusherTrait;
+use App\Traits\StorageTrait;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
@@ -28,7 +29,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ConvertDataToFilePerEvent extends Command
 {
-    use DatabaseTransaction, GenericHelper, PusherTrait, JobCancellationTrait;
+    use DatabaseTransaction, GenericHelper, PusherTrait, JobCancellationTrait, StorageTrait;
 
     public $extension = 'csv';
     /**
@@ -143,6 +144,7 @@ class ConvertDataToFilePerEvent extends Command
 
         while (true && !$hasBeenCancelled ) {
             $timeStamp = Carbon::now()->format('mdY_His_v');
+            $folderName = Carbon::now()->format('Ymd_His');
 
             if (Cache::forget('cdis_fetching_data_for_sync')) {
                 sleep(1);
@@ -211,7 +213,8 @@ class ConvertDataToFilePerEvent extends Command
                 }
 
                 $progress++;
-                $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $excelDataCollection);
+                $targetFolder =  $targetFolder = '/'. $forSyncDatum->branch_bid.'/'. $folderName;
+                $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, $excelDataCollection);
 
                 if ($broadcast && $showProgress) {
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.converting_changes_only').$progress.'/'.$totalCount, null);
@@ -597,9 +600,9 @@ class ConvertDataToFilePerEvent extends Command
      *
      * @return mixed
      */
-    public function processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, &$excelDataCollection)
+    public function processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, &$excelDataCollection)
     {
-        return $this->transaction(function() use($forSyncDatum, $fieldMappingDetails, $timeStamp, &$excelDataCollection) {
+        return $this->transaction(function() use($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, &$excelDataCollection) {
             if ($forSyncDatum) {
                 if ($forSyncDatum->group) {
                     $toSyncData = CDISSync::where([
@@ -608,7 +611,7 @@ class ConvertDataToFilePerEvent extends Command
                         'code' => $forSyncDatum->code,
                     ])->get();
                    
-                    $result = $this->generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails, $timeStamp, $excelDataCollection);
+                    $result = $this->generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder,  $excelDataCollection);
 
                     if ($result) {
                         CDISSync::whereIn('bid', $toSyncData->pluck('bid'))->delete();
@@ -617,7 +620,7 @@ class ConvertDataToFilePerEvent extends Command
                     return $result;
                 } else {
                    
-                    $result = $this->generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails, $timeStamp, $excelDataCollection);
+                    $result = $this->generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, $excelDataCollection);
 
                     if ($result) {                    
                         CDISSync::where([
@@ -636,7 +639,7 @@ class ConvertDataToFilePerEvent extends Command
         });
     }
 
-    public function generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails, $timeStamp, &$excelDataCollection)
+    public function generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, &$excelDataCollection)
     {
         foreach ($fieldMappingDetails as $fieldMappingDetail) {
             $primaryTable = $fieldMappingDetail->primary_table;
@@ -686,6 +689,8 @@ class ConvertDataToFilePerEvent extends Command
             } else {
                 break;
             }
+
+            $this->checkDirectory($remoteDiskName, $targetFolder);
 
             foreach ($toSyncData as $syncEntry) {
                 $entityName = $syncEntry->table_name;
@@ -767,7 +772,7 @@ class ConvertDataToFilePerEvent extends Command
                     $mappedValues = array_map("unserialize", array_unique(array_map("serialize", $mappedValues)));
 
                    
-                    $filePath = '/'.$forSyncDatum->branch_bid.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
+                    $filePath = $targetFolder.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
 
                     if (! isset($excelDataCollection[$filePath])) {
                         $excelDataCollection[$filePath] = [
@@ -1129,7 +1134,7 @@ class ConvertDataToFilePerEvent extends Command
         return (string) $syncEntry[$columnName];
     }
 
-    public function generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails, $timeStamp, &$excelDataCollection)
+    public function generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, &$excelDataCollection)
     {
         $noPrimaryKeyDetected = true;
 
@@ -1226,7 +1231,11 @@ class ConvertDataToFilePerEvent extends Command
                 break;
             }
 
+            $this->checkDirectory($remoteDiskName, $targetFolder);
+
             $entityName = $forSyncDatum->table_name;
+            $filePath = $targetFolder.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
+
             $mappingFound = array_values(array_filter($dataMappings, function($value) use($entityName) {
                 return preg_match('%\b('.$entityName.'.)\b%i', $value['field'])
                     || preg_match('%\b('.$entityName.'.)\b%i', $value['default_value']);
@@ -1321,8 +1330,6 @@ class ConvertDataToFilePerEvent extends Command
                 foreach ($mappedData as $mappedDatum) {
                     $mappedHeaders = array_keys($mappedDatum);
                     $mappedValues = array_values($mappedDatum);
-
-                    $filePath = '/'.$forSyncDatum->branch_bid.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
 
                     if (! isset($excelDataCollection[$filePath])) {
                         $excelDataCollection[$filePath] = [
