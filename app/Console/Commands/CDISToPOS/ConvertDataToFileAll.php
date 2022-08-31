@@ -1433,7 +1433,7 @@ class ConvertDataToFileAll extends Command
                         }
 
                         $this->createLog(
-                            $filePath .' updated',
+                            $filePath.' updated',
                             'info',
                             true,
                             [],
