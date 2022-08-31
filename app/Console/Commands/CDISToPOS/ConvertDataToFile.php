@@ -65,39 +65,37 @@ class ConvertDataToFile extends Command
      */
     public function handle()
     {
-		$timeStart = microtime(true);
-		
+        $timeStart = microtime(true);
+
         ini_set('max_execution_time', '-1');
         ini_set('memory_limit', '-1');
-		
+
         $branchCode = config('configuration.branch_code');
 
         $interval = $this->option('interval');
         $interval =
             filter_var($interval, FILTER_VALIDATE_BOOLEAN)
-                ? config('sync.cdis.to_catapult.interval')
-                : (
-                    (int) $interval
-                        ? filter_var($interval, FILTER_VALIDATE_INT)
-                        : false
-                );
+            ? config('sync.cdis.to_catapult.interval')
+            : ((int) $interval
+                ? filter_var($interval, FILTER_VALIDATE_INT)
+                : false
+            );
 
         $limit = $this->option('limit');
         $limit =
             filter_var($limit, FILTER_VALIDATE_BOOLEAN)
-                ? config('sync.cdis.to_catapult.limit')
-                : (
-                    (int) $limit
-                        ? filter_var($limit, FILTER_VALIDATE_INT)
-                        : false
-                    );
+            ? config('sync.cdis.to_catapult.limit')
+            : ((int) $limit
+                ? filter_var($limit, FILTER_VALIDATE_INT)
+                : false
+            );
 
         $broadcast = $this->option('broadcast');
         $broadcast = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
 
-		$showProgress = $this->option('progress');
+        $showProgress = $this->option('progress');
         $showProgress = filter_var($showProgress, FILTER_VALIDATE_BOOLEAN);
-		
+
         Cache::forget('excludedEntries');
         Cache::forget('excludedSyncBids');
 
@@ -107,14 +105,14 @@ class ConvertDataToFile extends Command
             true
         );
 
-		// Conversion already been executed
-		$this->setConverting();
-		
-		if ($broadcast) {
-			$this->initializePusher();
+        // Conversion already been executed
+        $this->setConverting();
+
+        if ($broadcast) {
+            $this->initializePusher();
             $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.converting'), null);
-		}
-		
+        }
+
         $syncEntries = app()->make(SyncEntryRepository::class)
             ->list((object) array('type' => MappingType::CDIS_TO_POS));
 
@@ -134,10 +132,10 @@ class ConvertDataToFile extends Command
                 false,
                 ['fileStorageSetup', 'dataMappings']
             );
-			
-		$hasBeenCancelled = $this->hasBeenCancelledConversion();;
 
-        while (true && !$hasBeenCancelled ) {
+        $hasBeenCancelled = $this->hasBeenCancelledConversion();;
+
+        while (true && ! $hasBeenCancelled) {
             $timeStamp = Carbon::now()->format('mdY_His_v');
             $folderName = Carbon::now()->format('Ymd_His');
 
@@ -194,15 +192,15 @@ class ConvertDataToFile extends Command
             $excelDataCollection = [];
             $progress = 0;
             $totalCount = count($forSyncData);
-			
-            foreach ( $forSyncData as $forSyncDatum) {
+
+            foreach ($forSyncData as $forSyncDatum) {
                 $hasBeenCancelled = $this->hasBeenCancelledConversion();
                 if ($hasBeenCancelled) {
                     break;
                 }
                 $progress++;
-                $targetFolder = '/'. $forSyncDatum->branch_bid.'/'. $folderName;
-                $this->createLog('Processing table: '.$forSyncDatum->table_name, 'info', true, [$progress.'/'. $totalCount],);
+                $targetFolder = '/'.$forSyncDatum->branch_bid.'/'.$folderName;
+                $this->createLog('Processing table: '.$forSyncDatum->table_name, 'info', true, [$progress.'/'.$totalCount],);
                 $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder,  $excelDataCollection);
 
                 if ($broadcast &&  $showProgress) {
@@ -214,7 +212,7 @@ class ConvertDataToFile extends Command
                 }
             }
 
-			$progress = 0;
+            $progress = 0;
             $totalCount = count($excelDataCollection);
             foreach ($excelDataCollection as $filePath => $detail) {
                 $hasBeenCancelled = $this->hasBeenCancelledConversion();
@@ -224,10 +222,11 @@ class ConvertDataToFile extends Command
                 Excel::store(
                     new DataConversionToExcel($detail['headers'], $detail['data'], $this->extension),
                     $filePath,
-                    $detail['disk_name']);
-					
+                    $detail['disk_name']
+                );
+
                 $progress++;
-                $this->createLog('Creating .CSV file '.$filePath, 'info', true, [$progress.'/'.$totalCount ]);
+                $this->createLog('Creating .CSV file '.$filePath, 'info', true, [$progress.'/'.$totalCount]);
 
                 if ($broadcast && $showProgress) {
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.creating_file').$progress.'/'.$totalCount, null);
@@ -239,32 +238,41 @@ class ConvertDataToFile extends Command
             } else {
                 break;
             }
-			if ($hasBeenCancelled) {
+            if ($hasBeenCancelled) {
                 break;
             }
         }
-		
-		$timeEnd = microtime(true);
+
+        $timeEnd = microtime(true);
         $executionTime = ($timeEnd - $timeStart);
 
-        if ($hasBeenCancelled) { 
+        if ($hasBeenCancelled) {
             $this->clearCancelledConversion();
-            $this->createLog('Conversion cancelled at '. $this->secondsToHumanReadableTime($executionTime));            
+            $this->createLog('Conversion cancelled at '.$this->secondsToHumanReadableTime($executionTime));
         } else {
-            $this->createLog('Finished converting at '. $this->secondsToHumanReadableTime($executionTime));
+            $this->createLog('Finished converting at '.$this->secondsToHumanReadableTime($executionTime));
         }
 
         if ($broadcast) {
             if ($hasBeenCancelled) {
-                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.create_csv_for_new_branch_cancelled').' @ '. $this->secondsToHumanReadableTime($executionTime), null);
+                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.create_csv_for_new_branch_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime), null);
             } else {
-                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone',  __('info.create_csv_for_new_branch_success'). ' @ '. $this->secondsToHumanReadableTime($executionTime), null);
+                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone',  __('info.create_csv_for_new_branch_success').' @ '.$this->secondsToHumanReadableTime($executionTime), null);
             }
         }
         $this->clearCancelledConversion();
-		$this->clearConverting();
+        $this->clearConverting();
     }
 
+    /**
+     * Process non-customized mapping conversion of CDIS data to excel file
+     *
+     * @param string  $entryName
+     * @param object  $forSyncDatum
+     * @param object  $timeStamp
+     *
+     * @return mixed
+     */
     public function processNonCustomizedMapping($entryName, $forSyncDatum, $timeStamp)
     {
         $remoteDiskName = '';

@@ -20,8 +20,6 @@ class SyncService
 {
     use DatabaseTransaction, GenericHelper, PusherTrait, JobCancellationTrait;
 
-    
-
     /**
      * Set to TRUE if you want to enable the previous syncing capability
      * By default, it's defined to FALSE to include deleted_at value
@@ -38,7 +36,7 @@ class SyncService
      */
     public function forSync($limit = 100, $table = 'all', $broadcast = false, $perEvent = false, $showProgress = false)
     {
-        return $this->transaction(function () use($limit, $table, $broadcast, $perEvent, $showProgress) {
+        return $this->transaction(function () use ($limit, $table, $broadcast, $perEvent, $showProgress) {
             if ($broadcast) {
                 CDISSync::truncate();
             }
@@ -109,8 +107,8 @@ class SyncService
         if ($broadcast) {
             $this->initializePusher();
         }
-		
-		$this->setSyncing();
+
+        $this->setSyncing();
 
         return $this->transaction(function () use ($bids, $branchCode, $broadcast, $perEvent, $showProgress) {
             $client = [
@@ -135,7 +133,7 @@ class SyncService
 
             $count = $bodyContent->data !== null && isset($bodyContent->data->count) ? $bodyContent->data->count : 0;
             $total = $bodyContent->data !== null && isset($bodyContent->data->total) ? $bodyContent->data->total : 0;
-            $values = $bodyContent->data  !== null && isset($bodyContent->data->values) ? $bodyContent->data->values: array();
+            $values = $bodyContent->data  !== null && isset($bodyContent->data->values) ? $bodyContent->data->values : array();
 
             if ($count == 0) {
                 return (object) [
@@ -148,9 +146,9 @@ class SyncService
 
             $bids = [];
 
-			$progress = 0;
+            $progress = 0;
             foreach ($values as $value) {
-				$hasBeenCancelled = $this->hasBeenCancelledSyncing();
+                $hasBeenCancelled = $this->hasBeenCancelledSyncing();
                 if ($hasBeenCancelled) {
                     break;
                 }
@@ -231,11 +229,11 @@ class SyncService
                 }
 
                 $progress++;
-				if ($broadcast && $showProgress) {
-					$this->pushSyncStatus($branchCode, $broadcast, __('info.syncing'). $progress.' of '. $total);
-				} else {
+                if ($broadcast && $showProgress) {
+                    $this->pushSyncStatus($branchCode, $broadcast, __('info.syncing').$progress.' of '.$total);
+                } else {
                     if ($broadcast && ($progress % 100 == 0)) {
-                        $this->pushSyncStatus($branchCode,  $broadcast, __('info.syncing'). $progress.' of '. $total);
+                        $this->pushSyncStatus($branchCode,  $broadcast, __('info.syncing').$progress.' of '.$total);
                     }
                 }
             }
@@ -248,9 +246,9 @@ class SyncService
                     DeleteSynced::dispatch($bids, $branchCode, $broadcast, $perEvent, $hasBeenCancelled);
                 }
             }
-			$this->clearCancelledSyncing();
-			$this->clearSyncing();
-            
+            $this->clearCancelledSyncing();
+            $this->clearSyncing();
+
             return (object) [
                 'count' => $count,
                 'total' => $total,
@@ -267,7 +265,8 @@ class SyncService
         return $response;
     }
 
-    private function getSenderDetails() {
+    private function getSenderDetails()
+    {
         return [
             'client_id' => config('configuration.client_id'),
             'product_key' => config('configuration.product_key'),
@@ -275,12 +274,13 @@ class SyncService
             'system_datetime' => Carbon::now()->format('Y-m-d h:i:s'),
         ];
     }
-	
-	private function pushSyncStatus($branchCode, $broadcast, $message){
-		if ($broadcast) {
-			$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', $message, null);
-		}	
-	}
+
+    private function pushSyncStatus($branchCode, $broadcast, $message)
+    {
+        if ($broadcast) {
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', $message, null);
+        }
+    }
 
     public function getArrangedSyncableEntities()
     {
@@ -337,5 +337,3 @@ class SyncService
         ];
     }
 }
-
-

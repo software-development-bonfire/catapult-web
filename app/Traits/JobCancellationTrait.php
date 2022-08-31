@@ -5,13 +5,13 @@ namespace App\Traits;
 use Illuminate\Support\Facades\Cache;
 
 trait JobCancellationTrait
-{    
-    public function hasBeenCancelledConversion() 
+{
+    public function hasBeenCancelledConversion()
     {
         $hasBeenCancelled = false;
         if (Cache::has('conversion_cancelled')) {
             $value = Cache::get('conversion_cancelled');
-            $hasBeenCancelled = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? true: false;
+            $hasBeenCancelled = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? true : false;
         }
         return $hasBeenCancelled;
     }
@@ -25,13 +25,13 @@ trait JobCancellationTrait
     {
         Cache::put('conversion_cancelled', 'true', now()->addHour(1));
     }
-    
-    public function hasBeenCancelledSyncing() 
+
+    public function hasBeenCancelledSyncing()
     {
         $hasBeenCancelled = false;
         if (Cache::has('syncing_cancelled')) {
             $value = Cache::get('syncing_cancelled');
-            $hasBeenCancelled = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? true: false;
+            $hasBeenCancelled = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? true : false;
         }
         return $hasBeenCancelled;
     }
@@ -45,17 +45,17 @@ trait JobCancellationTrait
     {
         Cache::put('syncing_cancelled', 'true', now()->addHour(1));
     }
-	
-    public function isSyncing() 
+
+    public function isSyncing()
     {
         $isSyncing = false;
         if (Cache::has('syncing')) {
             $value = Cache::get('syncing');
-            $isSyncing = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? true: false;
+            $isSyncing = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? true : false;
         }
         return $isSyncing;
     }
-	
+
     public function clearSyncing()
     {
         Cache::forget('syncing');
@@ -65,17 +65,17 @@ trait JobCancellationTrait
     {
         Cache::put('syncing', 'true', now()->addHour(1));
     }
-	
-    public function isConverting() 
+
+    public function isConverting()
     {
         $isConverting = false;
         if (Cache::has('converting')) {
             $value = Cache::get('converting');
-            $isConverting = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? true: false;
+            $isConverting = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? true : false;
         }
         return $isConverting;
     }
-	
+
     public function clearConverting()
     {
         Cache::forget('converting');
@@ -85,6 +85,4 @@ trait JobCancellationTrait
     {
         Cache::put('converting', 'true', now()->addHour(1));
     }
-
-
 }

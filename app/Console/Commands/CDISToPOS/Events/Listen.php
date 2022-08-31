@@ -148,7 +148,7 @@ class Listen extends Command
 
                 case "App\Events\Catapult\TriggerCDISDataConversion":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting',  __('info.converting') , $this->socketId, true);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting',  __('info.converting'), $this->socketId, true);
                     Artisan::queue('cdis:convert-data-to-file', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false']);
                     break;
 
@@ -163,37 +163,37 @@ class Listen extends Command
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.converting'), $this->socketId, true);
                     Artisan::queue('cdis:convert-data-to-file-all', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false']);
                     break;
-					
+
                 case "App\Events\Catapult\CancelCDISDataConversion":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting',  __('info.cancelling') , $this->socketId, true);
-					Artisan::call('cdis:cancel-convert', ['--retry' => '10', '--broadcast' => 'true', '--progress' => 'false']);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting',  __('info.cancelling'), $this->socketId, true);
+                    Artisan::call('cdis:cancel-convert', ['--retry' => '10', '--broadcast' => 'true', '--progress' => 'false']);
                     break;
-					
+
                 case "App\Events\Catapult\CancelCDISDataConversionEvent":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting',  __('info.cancelling') , $this->socketId, true);
-					Artisan::call('cdis:cancel-convert-event', ['--retry' => '10', '--broadcast' => 'true', '--progress' => 'false']);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting',  __('info.cancelling'), $this->socketId, true);
+                    Artisan::call('cdis:cancel-convert-event', ['--retry' => '10', '--broadcast' => 'true', '--progress' => 'false']);
                     break;
-					
+
                 case "App\Events\Catapult\CancelCDISDataConversionAll":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting',  __('info.cancelling') , $this->socketId, true);
-					Artisan::call('cdis:cancel-convert-all', ['--retry' => '10', '--broadcast' => 'true', '--progress' => 'false']);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting',  __('info.cancelling'), $this->socketId, true);
+                    Artisan::call('cdis:cancel-convert-all', ['--retry' => '10', '--broadcast' => 'true', '--progress' => 'false']);
                     break;
-					
+
                 case "App\Events\Catapult\CancelCDISFetchDataForSync":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing',  __('info.cancelling'), $this->socketId, true);
-					Artisan::call('cdis:cancel-sync', ['--retry' => '10', '--broadcast' => 'true', '--progress' => 'false']);
+                    Artisan::call('cdis:cancel-sync', ['--retry' => '10', '--broadcast' => 'true', '--progress' => 'false']);
                     break;
-					
+
                 case "App\Events\Catapult\TriggerCDISFetchDataForSyncManualDone":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', __('info.syncing_to_catapult_success'), $this->socketId, true);
                     break;
 
-                default:                    
+                default:
                     $this->createLog(json_encode($payload->data), 'info', true, ['EVENT', $payload->event]);
             }
         }

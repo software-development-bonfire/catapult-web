@@ -66,32 +66,30 @@ class ConvertDataToFilePerEvent extends Command
      */
     public function handle()
     {
-		$timeStart = microtime(true);
-		
-		ini_set('max_execution_time', '-1');
+        $timeStart = microtime(true);
+
+        ini_set('max_execution_time', '-1');
         ini_set('memory_limit', '-1');
-		
+
         $branchCode = config('configuration.branch_code');
 
         $interval = $this->option('interval');
         $interval =
             filter_var($interval, FILTER_VALIDATE_BOOLEAN)
-                ? config('sync.cdis.to_catapult.interval')
-                : (
-                    (int) $interval
-                        ? filter_var($interval, FILTER_VALIDATE_INT)
-                        : false
-                );
+            ? config('sync.cdis.to_catapult.interval')
+            : ((int) $interval
+                ? filter_var($interval, FILTER_VALIDATE_INT)
+                : false
+            );
 
         $limit = $this->option('limit');
         $limit =
             filter_var($limit, FILTER_VALIDATE_BOOLEAN)
-                ? config('sync.cdis.to_catapult.limit')
-                : (
-                    (int) $limit
-                        ? filter_var($limit, FILTER_VALIDATE_INT)
-                        : false
-                    );
+            ? config('sync.cdis.to_catapult.limit')
+            : ((int) $limit
+                ? filter_var($limit, FILTER_VALIDATE_INT)
+                : false
+            );
 
         $broadcast = $this->option('broadcast');
         $broadcast = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
@@ -107,23 +105,23 @@ class ConvertDataToFilePerEvent extends Command
             'info',
             true
         );
-		
-		// Conversion already been executed
-		$this->setConverting();
+
+        // Conversion already been executed
+        $this->setConverting();
 
         $this->mappingVariable = [];
-		
-		if ($broadcast) {
-			$this->initializePusher();
-			$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.converting_changes_only'), null);
+
+        if ($broadcast) {
+            $this->initializePusher();
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.converting_changes_only'), null);
         }
-		
+
         $syncEntries = app()->make(SyncEntryRepository::class)
             ->list((object) array('type' => MappingType::CDIS_TO_POS));
 
         foreach ($syncEntries as $syncEntry) {
             $this->syncEntries[$syncEntry->name] = $syncEntry->alias;
-            Cache::forget('file_storage_setup_'.$syncEntry->name);
+            Cache::forget('file_storage_setup_' . $syncEntry->name);
         }
 
         $fieldMappingDetails = app()
@@ -142,7 +140,7 @@ class ConvertDataToFilePerEvent extends Command
 
         $hasBeenCancelled = $this->hasBeenCancelledConversion();;
 
-        while (true && !$hasBeenCancelled ) {
+        while (true && ! $hasBeenCancelled) {
             $timeStamp = Carbon::now()->format('mdY_His_v');
             $folderName = Carbon::now()->format('Ymd_His');
 
@@ -169,7 +167,7 @@ class ConvertDataToFilePerEvent extends Command
             }
 
             $forSyncData = $forSyncData->get();
-            
+
             if ($forSyncData->count() <= 0) {
                 foreach ($excludedEntries as $excludedEntry) {
                     $this->createLog(
@@ -186,11 +184,11 @@ class ConvertDataToFilePerEvent extends Command
                     'info',
                     true
                 );
-				
+
                 $hasNoDataToConvert = true;
-				if ($broadcast) {
-					$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('message.no_data_to_convert_to_value', ['value' => $this->extension]), null);
-				}
+                if ($broadcast) {
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('message.no_data_to_convert_to_value', ['value' => $this->extension]), null);
+                }
 
                 if (is_int($interval)) {
                     sleep($interval);
@@ -213,18 +211,18 @@ class ConvertDataToFilePerEvent extends Command
                 }
 
                 $progress++;
-                $targetFolder =  $targetFolder = '/'. $forSyncDatum->branch_bid.'/'. $folderName;
+                $targetFolder =  $targetFolder = '/'.$forSyncDatum->branch_bid.'/' .$folderName;
                 $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, $excelDataCollection);
 
                 if ($broadcast && $showProgress) {
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.converting_changes_only').$progress.'/'.$totalCount, null);
-                 } else {
+                } else {
                     if ($broadcast && ($progress % 100 == 0)) {
                         $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.converting_changes_only').$progress.'/'.$totalCount, null);
                     }
                 }
             }
-            
+
             $progress = 0;
             $totalCount = count($excelDataCollection);
             foreach ($excelDataCollection as $filePath => $detail) {
@@ -235,11 +233,12 @@ class ConvertDataToFilePerEvent extends Command
                 Excel::store(
                     new DataConversionToExcel($detail['headers'], $detail['data'], $this->extension),
                     $filePath,
-                    $detail['disk_name']);
+                    $detail['disk_name']
+                );
                 $progress++;
                 if ($broadcast && $showProgress) {
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.creating_file'). $progress.' of '. $totalCount, null);
-                }                
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.creating_file').$progress.' of '.$totalCount, null);
+                }
             }
 
             if (is_int($interval)) {
@@ -256,19 +255,19 @@ class ConvertDataToFilePerEvent extends Command
         $executionTime = ($timeEnd - $timeStart);
 
         if ($hasBeenCancelled) {
-            $this->createLog('Conversion cancelled at '. $this->secondsToHumanReadableTime($executionTime));
+            $this->createLog('Conversion cancelled at '.$this->secondsToHumanReadableTime($executionTime));
         } else {
-            $this->createLog('Finished converting at '. $this->secondsToHumanReadableTime($executionTime));
+            $this->createLog('Finished converting at '.$this->secondsToHumanReadableTime($executionTime));
         }
 
         if ($broadcast) {
             if ($hasBeenCancelled) {
-                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.generate_csv_changes_only_cancelled').' @ '. $this->secondsToHumanReadableTime($executionTime), null);
+                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.generate_csv_changes_only_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime), null);
             } else {
                 if ($hasNoDataToConvert) {
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('message.no_data_to_convert_to_value', ['value' => $this->extension]), null);
                 } else {
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.generate_csv_changes_only_success'). ' @ '. $this->secondsToHumanReadableTime($executionTime), null);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.generate_csv_changes_only_success').' @ '.$this->secondsToHumanReadableTime($executionTime), null);
                 }
             }
         }

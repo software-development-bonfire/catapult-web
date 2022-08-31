@@ -26,7 +26,7 @@ class CancelConvertDataToFilePerEvent extends Command
      *
      * @var string
      */
-    protected $description = 'Cancel conversion process.';
+    protected $description = 'Cancel conversion process for Generate CSV (Changes Only).';
 
     /**
      * Create a new command instance.
@@ -36,7 +36,6 @@ class CancelConvertDataToFilePerEvent extends Command
     public function __construct()
     {
         parent::__construct();
-
     }
 
     /**
@@ -46,45 +45,44 @@ class CancelConvertDataToFilePerEvent extends Command
      */
     public function handle()
     {
-		$timeStart = microtime(true);
-		
+        $timeStart = microtime(true);
+
         $branchCode = config('configuration.branch_code');
 
         $retryCount = $this->option('retry');
-        $retryCount = filter_var($retryCount, FILTER_VALIDATE_INT) ? (int) $retryCount: 0;
+        $retryCount = filter_var($retryCount, FILTER_VALIDATE_INT) ? (int) $retryCount : 0;
 
         $broadcast = $this->option('broadcast');
         $broadcast = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
 
-		if ($broadcast) {
-			$this->initializePusher();
-		}
-		
-		// We need to check if conversion is already executed
-		$isConverting = $this->isConverting();
-		
-		$attemptsCount = 0;
+        if ($broadcast) {
+            $this->initializePusher();
+        }
+
+        // We need to check if conversion is already executed
+        $isConverting = $this->isConverting();
+
+        $attemptsCount = 0;
         $hasPendingJobs = true;
         do {
-            $jobs           = DB::table('jobs')->get();
-            $failed_jobs    = DB::table('failed_jobs')->get();
-			
-			DB::table('jobs')->delete();
-			DB::table('failed_jobs')->delete();
-			
+            $jobs = DB::table('jobs')->get();
+            $failed_jobs = DB::table('failed_jobs')->get();
+
+            DB::table('jobs')->delete();
+            DB::table('failed_jobs')->delete();
+
             $hasPendingJobs = (count($jobs) > 0 || count($failed_jobs) > 0);
-            
+
             if ($attemptsCount <= $retryCount) {
                 $attemptsCount++;
             } else {
                 break;
             }
-        }
-        while ($hasPendingJobs);
+        } while ($hasPendingJobs);
 
         $this->setCancelledConversion();
         $attemptsCount = 0;
-        while(! $this->hasBeenCancelledConversion()) {
+        while (! $this->hasBeenCancelledConversion()) {
             $this->setCancelledConversion();
             if ($attemptsCount <= $retryCount) {
                 $attemptsCount++;
@@ -96,17 +94,17 @@ class CancelConvertDataToFilePerEvent extends Command
             $this->createLog('Cancelling attempt @ '.$attemptsCount, 'info', true);
         }
 
-		$timeEnd = microtime(true);
+        $timeEnd = microtime(true);
         $executionTime = ($timeEnd - $timeStart);
 
         $this->createLog('Cancelling takes @ '.$this->secondsToHumanReadableTime($executionTime), 'info', true);
-		
-		// If conversion is not yet executed, then we must
-		// send to CDIS that conversion been cancelled
+
+        // If conversion is not yet executed, then we must
+        // send to CDIS that conversion been cancelled
         if ($broadcast && !$isConverting) {
-			$this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.generate_csv_changes_only_cancelled'), null);
-			$this->clearCancelledConversion();
-			$this->clearConverting();
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.generate_csv_changes_only_cancelled'), null);
+            $this->clearCancelledConversion();
+            $this->clearConverting();
         }
     }
 }

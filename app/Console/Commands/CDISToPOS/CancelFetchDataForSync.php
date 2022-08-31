@@ -25,7 +25,7 @@ class CancelFetchDataForSync extends Command
      *
      * @var string
      */
-    protected $description = 'Fetch, listen, get and validate "for sync" row data in CDIS sync table';
+    protected $description = 'Cancel Fetching, listening, get and validating "for sync" row data in CDIS sync table';
 
     /**
      * Create a new command instance.
@@ -44,12 +44,12 @@ class CancelFetchDataForSync extends Command
      */
     public function handle()
     {
-		$timeStart = microtime(true);
-	
-		$branchCode = config('configuration.branch_code');
+        $timeStart = microtime(true);
+
+        $branchCode = config('configuration.branch_code');
 
         $retryCount = $this->option('retry');
-        $retryCount = filter_var($retryCount, FILTER_VALIDATE_INT) ? (int) $retryCount: 0;
+        $retryCount = filter_var($retryCount, FILTER_VALIDATE_INT) ? (int) $retryCount : 0;
 
         $broadcast = $this->option('broadcast');
         $broadcast = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
@@ -62,69 +62,64 @@ class CancelFetchDataForSync extends Command
             'info',
             true
         );
-		
-		if ($broadcast) {
-			$this->initializePusher();
-		}
-		// We need to check if syncing is already executed
-		$isSyncing = $this->isSyncing();
-		
-		
+
+        if ($broadcast) {
+            $this->initializePusher();
+        }
+        // We need to check if syncing is already executed
+        $isSyncing = $this->isSyncing();
+
         $attemptsCount = 0;
         $hasPendingJobs = true;
         do {
-            $jobs           = DB::table('jobs')->get();
-            $failed_jobs    = DB::table('failed_jobs')->get();
+            $jobs = DB::table('jobs')->get();
+            $failed_jobs = DB::table('failed_jobs')->get();
 
-            Log::alert('Cancelling...'. $attemptsCount.' Jobs: '.count($jobs). ', Failed Jobs: '.count($failed_jobs));
+            DB::table('jobs')->truncate();
+            DB::table('failed_jobs')->truncate();
 
-			DB::table('jobs')->truncate();
-			DB::table('failed_jobs')->truncate();
-			
-			foreach ($jobs as $job) {
-				DB::table('jobs')->delete($job->id);
-			}
+            foreach ($jobs as $job) {
+                DB::table('jobs')->delete($job->id);
+            }
             $hasPendingJobs = (count($jobs) > 0 || count($failed_jobs) > 0);
-            
+
             if ($attemptsCount <= $retryCount) {
                 $attemptsCount++;
             } else {
                 break;
             }
-        }
-        while ($hasPendingJobs);
+        } while ($hasPendingJobs);
 
         $hasBeenCancelled = false;
         $attemptsCount = 0;
         do {
             $this->setCancelledSyncing();
             $hasBeenCancelled = $this->hasBeenCancelledSyncing();
-            $this->createLog('Has been cancelled? '.$hasBeenCancelled, 'info', true);            
+            $this->createLog('Has been cancelled? '.$hasBeenCancelled, 'info', true);
             $this->createLog('Cancelling attempt @ '.$attemptsCount, 'info', true);
 
-            Log::alert('Has been cancelled? '.$hasBeenCancelled);
-            Log::alert('Cancelling attempt @ '.$attemptsCount);
-            
+            Log::alert('Has been cancelled? ' . $hasBeenCancelled);
+            Log::alert('Cancelling attempt @ ' . $attemptsCount);
+
             if ($attemptsCount <= $retryCount) {
                 $attemptsCount++;
             } else {
                 break;
             }
-        }
-        while(! $hasBeenCancelled);
-        
+        } while (! $hasBeenCancelled);
+
         $timeEnd = microtime(true);
         $executionTime = ($timeEnd - $timeStart);
-		
+
         $this->createLog('Sync Cancelled! @ '.$this->secondsToHumanReadableTime($executionTime), 'info', true);
         Log::alert('Sync Cancelled! @ '.$this->secondsToHumanReadableTime($executionTime));
 
         // If syncing is not yet executed, then we must
-		// send to CDIS that syncing been cancelled
+        // send to CDIS that syncing been cancelled
         if ($broadcast && !$isSyncing) {
             $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', __('info.syncing_cancelled'), null);
-			$this->clearCancelledSyncing();
-			$this->clearSyncing();
+            $this->clearCancelledSyncing();
+            $this->clearSyncing();
         }
     }
 }

@@ -47,7 +47,7 @@ class ConvertDataToFileAll extends Command
      *
      * @var string
      */
-    protected $description = 'Convert CDIS data to specific file';
+    protected $description = 'Convert CDIS data (Generate CSV (All Data)) to specific file ';
 
     public $broadcast = false;
     private $mappingVariable = [];
@@ -69,8 +69,8 @@ class ConvertDataToFileAll extends Command
      */
     public function handle()
     {
-		$timeStart = microtime(true);
-		
+        $timeStart = microtime(true);
+
         ini_set('max_execution_time', '-1');
         ini_set('memory_limit', '-1');
 
@@ -81,22 +81,20 @@ class ConvertDataToFileAll extends Command
         $interval = $this->option('interval');
         $interval =
             filter_var($interval, FILTER_VALIDATE_BOOLEAN)
-                ? config('sync.cdis.to_catapult.interval')
-                : (
-                    (int) $interval
-                        ? filter_var($interval, FILTER_VALIDATE_INT)
-                        : false
-                );
+            ? config('sync.cdis.to_catapult.interval')
+            : ((int) $interval
+                ? filter_var($interval, FILTER_VALIDATE_INT)
+                : false
+            );
 
         $limit = $this->option('limit');
         $limit =
             filter_var($limit, FILTER_VALIDATE_BOOLEAN)
-                ? config('sync.cdis.to_catapult.limit')
-                : (
-                    (int) $limit
-                        ? filter_var($limit, FILTER_VALIDATE_INT)
-                        : false
-                    );
+            ? config('sync.cdis.to_catapult.limit')
+            : ((int) $limit
+                ? filter_var($limit, FILTER_VALIDATE_INT)
+                : false
+            );
 
         $broadcast = $this->option('broadcast');
         $broadcast = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
@@ -112,23 +110,23 @@ class ConvertDataToFileAll extends Command
             'info',
             true
         );
-		
-		// Conversion already been executed
-		$this->setConverting();
-		
+
+        // Conversion already been executed
+        $this->setConverting();
+
         $this->mappingVariable = [];
 
-		if ($broadcast) {
-			$this->initializePusher();
+        if ($broadcast) {
+            $this->initializePusher();
             $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.converting_all_data'), null);
-		}
+        }
 
         $syncEntries = app()->make(SyncEntryRepository::class)
             ->list((object) array('type' => MappingType::CDIS_TO_POS));
 
         foreach ($syncEntries as $syncEntry) {
             $this->syncEntries[$syncEntry->name] = $syncEntry->alias;
-            Cache::forget('file_storage_setup_'.$syncEntry->name);
+            Cache::forget('file_storage_setup_' . $syncEntry->name);
         }
 
         $fieldMappingDetails = app()
@@ -150,9 +148,9 @@ class ConvertDataToFileAll extends Command
 
         $hasBeenCancelled = $this->hasBeenCancelledConversion();;
 
-        while (true && !$hasBeenCancelled ) {
+        while (true && ! $hasBeenCancelled) {
             $timeStamp = Carbon::now()->format('mdY_His_v');
-            $targetFolder = '/'. $branch->bid.'/'. Carbon::now()->format('Ymd_His');
+            $targetFolder = '/'.$branch->bid.'/'.Carbon::now()->format('Ymd_His');
 
             if (Cache::forget('cdis_fetching_data_for_sync')) {
                 sleep(1);
@@ -161,7 +159,7 @@ class ConvertDataToFileAll extends Command
             if ($broadcast) {
                 $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', 'Constructing...'.count($convertableEntities).' syncable tables', null);
             }
-            
+
             foreach ($convertableEntities as $syncableEntity) {
                 $hasBeenCancelled = $this->hasBeenCancelledConversion();
                 if ($hasBeenCancelled) {
@@ -178,12 +176,10 @@ class ConvertDataToFileAll extends Command
                 $entityName = str_replace('App\\Entities\\CDIS', '', $syncableEntity);
 
                 $tableName =  Str::snake($entityName);
-                
-                $entityData = $entityData->get();             
-               
-                $progress = 0;
 
-               
+                $entityData = $entityData->get();
+
+                $progress = 0;
 
                 foreach ($entityData as $entityDatum) {
                     $hasBeenCancelled = $this->hasBeenCancelledConversion();
@@ -201,8 +197,8 @@ class ConvertDataToFileAll extends Command
                     $referenceTable = $syncDetails->reference_table ?? null;
 
                     if ($level > 1) {
-                        $parent =CDISSync::where('level', '=', 1)
-                            ->where('branch_bid', '=', $branch->bid)
+                        $parent = CDISSync::where('level', '=', 1)
+                        ->where('branch_bid', '=', $branch->bid)
                             ->where('group', '=', $group)
                             ->where('table_bid', '=', $headBid)
                             ->first();
@@ -217,7 +213,7 @@ class ConvertDataToFileAll extends Command
                         $action = 'delete';
                     } else {
                         if (
-                            $this->modelHasColumn($entityDatum, $tableName, 'created_at') && 
+                            $this->modelHasColumn($entityDatum, $tableName, 'created_at') &&
                             $this->modelHasColumn($entityDatum, $tableName, 'updated_at')
                         ) {
                             if ($entityDatum->created_at !== $entityDatum->updated_at) {
@@ -225,7 +221,7 @@ class ConvertDataToFileAll extends Command
                             }
                         }
                     }
-                    
+
                     $entityRow =  array(
                         'branch_bid' => $branch->bid,
                         'table_bid' => $entityDatum->bid,
@@ -242,7 +238,7 @@ class ConvertDataToFileAll extends Command
 
                     $progress++;
                 }
-                $this->createLog('Constructing data for sync table: '.$tableName.' contains '. count($entityData).' records');
+                $this->createLog('Constructing data for sync table: '.$tableName.' contains '.count($entityData).' records');
             }
 
             $forSyncData = CDISSync::orderBy('created_at', 'ASC')->get();
@@ -267,13 +263,13 @@ class ConvertDataToFileAll extends Command
 
             $progress = 0;
             $totalCount = count($forSyncData);
-            foreach ( $forSyncData as $forSyncDatum) {
+            foreach ($forSyncData as $forSyncDatum) {
                 $hasBeenCancelled = $this->hasBeenCancelledConversion();
                 if ($hasBeenCancelled) {
                     break;
                 }
                 $progress++;
-                $this->createLog('Processing table: '.$forSyncDatum->table_name, 'info', true, [$progress.'/'. $totalCount],);
+                $this->createLog('Processing table: '.$forSyncDatum->table_name, 'info', true, [$progress.'/'.$totalCount],);
                 $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, $excelDataCollection);
 
                 if ($broadcast &&  $showProgress) {
@@ -284,7 +280,7 @@ class ConvertDataToFileAll extends Command
                     }
                 }
             }
-           
+
             $progress = 0;
             $totalCount = count($excelDataCollection);
             foreach ($excelDataCollection as $filePath => $detail) {
@@ -295,9 +291,10 @@ class ConvertDataToFileAll extends Command
                 Excel::store(
                     new DataConversionToExcel($detail['headers'], $detail['data'], $this->extension),
                     $filePath,
-                    $detail['disk_name']);
-                    $progress++;
-                $this->createLog('Creating .CSV file '.$filePath, 'info', true, [$progress.'/'.$totalCount ]);
+                    $detail['disk_name']
+                );
+                $progress++;
+                $this->createLog('Creating .CSV file '.$filePath, 'info', true, [$progress.'/'.$totalCount]);
 
                 if ($broadcast && $showProgress) {
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.creating_file').$progress.'/'.$totalCount, null);
@@ -310,7 +307,7 @@ class ConvertDataToFileAll extends Command
             } else {
                 break;
             }
-            
+
             if ($hasBeenCancelled) {
                 break;
             }
@@ -319,24 +316,33 @@ class ConvertDataToFileAll extends Command
         $timeEnd = microtime(true);
         $executionTime = ($timeEnd - $timeStart);
 
-        if ($hasBeenCancelled) { 
+        if ($hasBeenCancelled) {
             $this->clearCancelledConversion();
-            $this->createLog('Conversion cancelled at '. $this->secondsToHumanReadableTime($executionTime));            
+            $this->createLog('Conversion cancelled at '.$this->secondsToHumanReadableTime($executionTime));
         } else {
-            $this->createLog('Finished converting at '. $this->secondsToHumanReadableTime($executionTime));
+            $this->createLog('Finished converting at '.$this->secondsToHumanReadableTime($executionTime));
         }
 
         if ($broadcast) {
             if ($hasBeenCancelled) {
-                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.generate_csv_all_data_cancelled').' @ '. $this->secondsToHumanReadableTime($executionTime), null);
+                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.generate_csv_all_data_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime), null);
             } else {
-                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone',  __('info.generate_csv_all_data_success'). ' @ '. $this->secondsToHumanReadableTime($executionTime), null);
+                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone',  __('info.generate_csv_all_data_success').' @ '.$this->secondsToHumanReadableTime($executionTime), null);
             }
         }
         $this->clearCancelledConversion();
-		$this->clearConverting();
+        $this->clearConverting();
     }
-
+ 
+    /**
+     * Process non-customized mapping conversion of CDIS data to excel file
+     *
+     * @param string  $entryName
+     * @param object  $forSyncDatum
+     * @param object  $timeStamp
+     *
+     * @return mixed
+     */
     public function processNonCustomizedMapping($entryName, $forSyncDatum, $timeStamp)
     {
         $remoteDiskName = '';
@@ -587,7 +593,6 @@ class ConvertDataToFileAll extends Command
         foreach ($toSyncData as $key => $data) {
             $entityName = str_replace('_', '', Str::title($data->table_name));
             $entity = "App\\Entities\\CDIS".$entityName;
-
 
             $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($entity));
 
@@ -862,7 +867,7 @@ class ConvertDataToFileAll extends Command
                         }
 
                         $this->createLog(
-                            $filePath .' updated',
+                            $filePath.' updated',
                             'line',
                             true,
                             [],
@@ -968,13 +973,13 @@ class ConvertDataToFileAll extends Command
             }
         } catch (\Throwable $throwable) {
             $this->createLog(
-                'Failed to create '. $this->extension. '. Please contact administrator',
+                'Failed to create '.$this->extension.'. Please contact administrator',
                 'error',
                 true,
                 []
             );
 
-            $this->createLog($throwable->getMessage(). ' at line '. $throwable->getLine(), 'error', true, ['Mapping'], [$defaultValue, $mappingField, $entryName]);
+            $this->createLog($throwable->getMessage().' at line '.$throwable->getLine(), 'error', true, ['Mapping'], [$defaultValue, $mappingField, $entryName]);
         }
 
         return $data;

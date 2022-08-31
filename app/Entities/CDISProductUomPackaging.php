@@ -119,8 +119,6 @@ class CDISProductUomPackaging extends BaseModel
 
         $routeName = Route::currentRouteName();
 
-        //$product = $this->product()->withTrashed()->first();
-
         if ($routeName == 'create_product' || $routeName == 'destroy_product') {
             $syncDetails->group = 'cdis_product';
             $syncDetails->head_bid = $this->product_bid;
