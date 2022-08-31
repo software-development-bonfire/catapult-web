@@ -541,7 +541,7 @@ class ConvertDataToFileAll extends Command
                     $groupEntrySymbol = $groupedEntrySymbol;
                     $folderName = $action.$groupEntrySymbol.'_'.$timeStamp;
 
-                    $this->createLog($folderName .' created', 'info', true, [], [$forSyncDatum->table_name]);
+                    $this->createLog($folderName.' created', 'info', true, [], [$forSyncDatum->table_name]);
 
                     foreach ($result->headers as $key => $header) {
                         $tableName = $toSyncData[$key]->table_name;
@@ -561,7 +561,7 @@ class ConvertDataToFileAll extends Command
 
                             CDISSync::whereIn('bid', array_column($toSyncData->toArray(), 'bid'))->delete();
                         } else {
-                            $this->warn($folderName .' failed to create. (Grouped)');
+                            $this->warn($folderName.' failed to create. (Grouped)');
                         }
                     }
 
@@ -820,7 +820,7 @@ class ConvertDataToFileAll extends Command
                         }
 
                         foreach ($relationData as $relationDatum) {
-                            if (!empty($relationDatum)) {
+                            if (! empty($relationDatum)) {
                                 if (is_array($relationDatum)) {
                                     $tableName = $this->getTableName($relationDatum);
                                     $tableName = str_replace('cdis_', '',$tableName);
@@ -877,7 +877,7 @@ class ConvertDataToFileAll extends Command
                         $excelDataCollection[$filePath]['data'][] = $mappedValues;
 
                         $this->createLog(
-                            $filePath .' created',
+                            $filePath.' created',
                             'info',
                             true,
                             []
