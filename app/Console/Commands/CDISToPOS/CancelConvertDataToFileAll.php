@@ -90,14 +90,13 @@ class CancelConvertDataToFileAll extends Command
                 break;
             }
             $hasBeenCancelled = $this->hasBeenCancelledConversion();
-            $this->createLog('Has been cancelled? '.$hasBeenCancelled, 'info', true);
-            $this->createLog('Cancelling attempt @ '.$attempt, 'info', true);
+            $this->createLog(__('info.cancelled_attempt', ['value' => $hasBeenCancelled, 'attempt' => $attempt]), 'info', true);
         }
 
         $timeEnd = microtime(true);
         $executionTime = ($timeEnd - $timeStart);
 
-        $this->createLog('Cancelling takes @ ' . $this->secondsToHumanReadableTime($executionTime), 'info', true);
+        $this->createLog(__('info.generate_csv_all_data_cancelled').' @ ' . $this->secondsToHumanReadableTime($executionTime), 'info', true);
 
         // If conversion is not yet executed, then we must
         // send to CDIS that conversion been cancelled

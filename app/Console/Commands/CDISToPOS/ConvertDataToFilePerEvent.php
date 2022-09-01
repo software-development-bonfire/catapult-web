@@ -237,7 +237,7 @@ class ConvertDataToFilePerEvent extends Command
                 );
                 $progress++;
                 if ($broadcast && $showProgress) {
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.creating_file').$progress.' of '.$totalCount, null);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.creating_file').$progress.'/'.$totalCount, null);
                 }
             }
 
@@ -255,9 +255,9 @@ class ConvertDataToFilePerEvent extends Command
         $executionTime = ($timeEnd - $timeStart);
 
         if ($hasBeenCancelled) {
-            $this->createLog('Conversion cancelled at '.$this->secondsToHumanReadableTime($executionTime));
+            $this->createLog(__('info.generate_csv_changes_only_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime));
         } else {
-            $this->createLog('Finished converting at '.$this->secondsToHumanReadableTime($executionTime));
+            $this->createLog(__('info.generate_csv_changes_only_success').' @ '.$this->secondsToHumanReadableTime($executionTime));
         }
 
         if ($broadcast) {

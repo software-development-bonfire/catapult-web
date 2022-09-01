@@ -130,7 +130,7 @@ class FetchDataForSync extends Command
                     }
 
                     if ($showProgress && $broadcast) {
-                        $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', __('info.fetching').$progress.' of '.count($forSync->bidsChunks), null);
+                        $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', __('info.fetching').$progress.'/'.count($forSync->bidsChunks), null);
                     }
 
                     if ($hasBeenCancelled) {
@@ -149,7 +149,6 @@ class FetchDataForSync extends Command
         $timeEnd = microtime(true);
         $executionTime = ($timeEnd - $timeStart);
 
-        Log::alert(__('info.fetch_success').' @ '.$this->secondsToHumanReadableTime($executionTime));
         $this->createLog(__('info.fetch_success').' @ '.$this->secondsToHumanReadableTime($executionTime), 'info', true);
 
         // If syncing is not yet executed, then we must

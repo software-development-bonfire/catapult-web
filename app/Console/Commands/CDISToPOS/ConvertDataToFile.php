@@ -200,7 +200,7 @@ class ConvertDataToFile extends Command
                 }
                 $progress++;
                 $targetFolder = '/'.$forSyncDatum->branch_bid.'/'.$folderName;
-                $this->createLog('Processing table: '.$forSyncDatum->table_name, 'info', true, [$progress.'/'.$totalCount],);
+                $this->createLog(__('info.processing').$forSyncDatum->table_name, 'info', true, [$progress.'/'.$totalCount],);
                 $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder,  $excelDataCollection);
 
                 if ($broadcast &&  $showProgress) {
@@ -226,7 +226,7 @@ class ConvertDataToFile extends Command
                 );
 
                 $progress++;
-                $this->createLog('Creating .CSV file '.$filePath, 'info', true, [$progress.'/'.$totalCount]);
+                $this->createLog(__('info.creating_file').$filePath, 'info', true, [$progress.'/'.$totalCount]);
 
                 if ($broadcast && $showProgress) {
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.creating_file').$progress.'/'.$totalCount, null);
@@ -248,9 +248,9 @@ class ConvertDataToFile extends Command
 
         if ($hasBeenCancelled) {
             $this->clearCancelledConversion();
-            $this->createLog('Conversion cancelled at '.$this->secondsToHumanReadableTime($executionTime));
+            $this->createLog(__('info.create_csv_for_new_branch_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime));
         } else {
-            $this->createLog('Finished converting at '.$this->secondsToHumanReadableTime($executionTime));
+            $this->createLog(__('info.create_csv_for_new_branch_success').' @ '.$this->secondsToHumanReadableTime($executionTime));
         }
 
         if ($broadcast) {

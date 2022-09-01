@@ -58,7 +58,7 @@ class CancelFetchDataForSync extends Command
         $showProgress = filter_var($showProgress, FILTER_VALIDATE_BOOLEAN);
 
         $this->createLog(
-            'Canceling...',
+            __('info.cancelling'),
             'info',
             true
         );
@@ -95,11 +95,7 @@ class CancelFetchDataForSync extends Command
         do {
             $this->setCancelledSyncing();
             $hasBeenCancelled = $this->hasBeenCancelledSyncing();
-            $this->createLog('Has been cancelled? '.$hasBeenCancelled, 'info', true);
-            $this->createLog('Cancelling attempt @ '.$attemptsCount, 'info', true);
-
-            Log::alert('Has been cancelled? ' . $hasBeenCancelled);
-            Log::alert('Cancelling attempt @ ' . $attemptsCount);
+            $this->createLog(__('info.cancelled_attempt', ['value' => $hasBeenCancelled, 'attempt' => $attemptsCount]), 'info', true);
 
             if ($attemptsCount <= $retryCount) {
                 $attemptsCount++;
@@ -111,8 +107,7 @@ class CancelFetchDataForSync extends Command
         $timeEnd = microtime(true);
         $executionTime = ($timeEnd - $timeStart);
 
-        $this->createLog('Sync Cancelled! @ '.$this->secondsToHumanReadableTime($executionTime), 'info', true);
-        Log::alert('Sync Cancelled! @ '.$this->secondsToHumanReadableTime($executionTime));
+        $this->createLog(__('info.syncing_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime), 'info', true);
 
         // If syncing is not yet executed, then we must
         // send to CDIS that syncing been cancelled

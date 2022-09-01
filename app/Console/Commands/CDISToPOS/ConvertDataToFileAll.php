@@ -126,7 +126,7 @@ class ConvertDataToFileAll extends Command
 
         foreach ($syncEntries as $syncEntry) {
             $this->syncEntries[$syncEntry->name] = $syncEntry->alias;
-            Cache::forget('file_storage_setup_' . $syncEntry->name);
+            Cache::forget('file_storage_setup_'.$syncEntry->name);
         }
 
         $fieldMappingDetails = app()
@@ -157,7 +157,7 @@ class ConvertDataToFileAll extends Command
             }
 
             if ($broadcast) {
-                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', 'Constructing...'.count($convertableEntities).' syncable tables', null);
+                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.constructing_tables', ['table_count' => count($convertableEntities)]), null);
             }
 
             foreach ($convertableEntities as $syncableEntity) {
@@ -238,7 +238,7 @@ class ConvertDataToFileAll extends Command
 
                     $progress++;
                 }
-                $this->createLog('Constructing data for sync table: '.$tableName.' contains '.count($entityData).' records');
+                $this->createLog( __('info.constructing_tables', ['table' => count($convertableEntities), 'count' => count($entityData)]));
             }
 
             $forSyncData = CDISSync::orderBy('created_at', 'ASC')->get();
@@ -269,7 +269,7 @@ class ConvertDataToFileAll extends Command
                     break;
                 }
                 $progress++;
-                $this->createLog('Processing table: '.$forSyncDatum->table_name, 'info', true, [$progress.'/'.$totalCount],);
+                $this->createLog( __('info.processing').$forSyncDatum->table_name, 'info', true, [$progress.'/'.$totalCount],);
                 $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, $excelDataCollection);
 
                 if ($broadcast &&  $showProgress) {
@@ -294,7 +294,7 @@ class ConvertDataToFileAll extends Command
                     $detail['disk_name']
                 );
                 $progress++;
-                $this->createLog('Creating .CSV file '.$filePath, 'info', true, [$progress.'/'.$totalCount]);
+                $this->createLog(__('info.creating_file').$filePath, 'info', true, [$progress.'/'.$totalCount]);
 
                 if ($broadcast && $showProgress) {
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.creating_file').$progress.'/'.$totalCount, null);
@@ -318,9 +318,9 @@ class ConvertDataToFileAll extends Command
 
         if ($hasBeenCancelled) {
             $this->clearCancelledConversion();
-            $this->createLog('Conversion cancelled at '.$this->secondsToHumanReadableTime($executionTime));
+            $this->createLog(__('info.generate_csv_all_data_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime));
         } else {
-            $this->createLog('Finished converting at '.$this->secondsToHumanReadableTime($executionTime));
+            $this->createLog( __('info.generate_csv_all_data_success').' @ '.$this->secondsToHumanReadableTime($executionTime));
         }
 
         if ($broadcast) {
