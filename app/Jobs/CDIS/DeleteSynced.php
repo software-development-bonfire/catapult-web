@@ -13,18 +13,20 @@ class DeleteSynced implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $bids, $branchCode, $broadcast;
+    public $bids, $branchCode, $broadcast, $perEvent,  $cancelled;
     /**
      * Create a new job instance.
      *
      * @param array $bids
      * @return void
      */
-    public function __construct($bids, $branchCode, $broadcast)
+    public function __construct($bids, $branchCode, $broadcast, $perEvent = false, $cancelled = false)
     {
         $this->bids = $bids;
         $this->branchCode = $branchCode;
         $this->broadcast = $broadcast;
+        $this->perEvent = $perEvent;
+        $this->cancelled = $cancelled;
     }
 
     /**
@@ -45,7 +47,9 @@ class DeleteSynced implements ShouldQueue
             'json' => [
                 'bid' => $this->bids,
                 'branch_code' => $this->branchCode,
-                'broadcast' => $this->broadcast
+                'broadcast' => $this->broadcast,
+				'event' => $this->perEvent,
+				'cancelled' => $this->cancelled,
             ],
             'headers' => [
                 'Accept' => 'application/json',

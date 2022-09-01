@@ -45,4 +45,16 @@ class CDISCostAndPriceChange extends BaseModel
     {
         return $this->belongsTo(CDISProductCategory::class, 'category_bid', 'bid');
     }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => '',
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => json_encode([$this->vendor_bid, $this->category_bid]),
+            'reference_table' => json_encode(['cdis_vendor', 'cdis_product_category'])
+        );
+    }
 }

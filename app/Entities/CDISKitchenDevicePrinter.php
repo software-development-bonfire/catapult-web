@@ -37,4 +37,17 @@ class CDISKitchenDevicePrinter extends BaseModel
     {
         return $this->hasMany(CDISKitchenDevicePrinterBranch::class, 'device_type_bid', 'bid');
     }
+    public function branches()
+    {
+        return $this->hasMany(CDISKitchenDevicePrinterBranch::class, 'kitchen_device_printer_bid','bid');
+    }
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => null,
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+        );
+    }
 }

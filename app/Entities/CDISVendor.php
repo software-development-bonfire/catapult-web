@@ -3,6 +3,7 @@
 namespace App\Entities;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Route;
 
 class CDISVendor extends BaseModel
 {
@@ -34,4 +35,36 @@ class CDISVendor extends BaseModel
     {
         return $this->hasMany(CDISVendorBranch::class, 'vendor_bid','bid');
     }
+
+    public function paymentTermsSettings()
+    {
+        return $this->hasOne(CDISPaymentTermSettings::class, 'bid','payment_term_settings_bid');
+    }
+
+    public function syncDetails()
+    {
+        $syncDetails = (object) array(
+            'code' => '',
+            'group' => '',
+            'head_bid' => '',
+            'level' => 0,
+            'reference_bid' => null,
+            'reference_table' => null,
+        );
+
+        $routeName = Route::currentRouteName();
+
+        if (
+            $routeName == 'store_vendor'
+            || $routeName == 'update_vendor'
+        ) {
+            $syncDetails->code = null;
+            $syncDetails->group = $this->getTable();
+            $syncDetails->head_bid = $this->bid;
+            $syncDetails->level = 1;
+        }
+
+        return $syncDetails;
+    }
+
 }

@@ -3,6 +3,7 @@
 namespace App\Entities;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Route;
 
 class CDISTerminal extends BaseModel
 {
@@ -48,5 +49,33 @@ class CDISTerminal extends BaseModel
     public function product()
     {
         return $this->hasMany(CDISProduct::class, 'terminal_bid','bid');
+    }
+
+    public function syncDetails()
+    {
+        $syncDetails = (object) array(
+            'code' => '',
+            'group' => null,
+            'head_bid' => null,
+            'level' => 0,
+            'reference_bid' => null,
+            'reference_table' => null,
+        );
+
+        $routeName = Route::currentRouteName();
+
+        if (
+            $routeName == 'store_terminal'
+            || $routeName == 'update_terminal'
+        ) {
+            $syncDetails->group = $this->getTable();
+            $syncDetails->head_bid =$this->branch_bid;
+        }
+
+        $syncDetails->reference_bid = $this->branch_bid;
+        $syncDetails->reference_table = $this->branch->getTable();
+        $syncDetails->level = 1;
+
+        return $syncDetails;
     }
 }

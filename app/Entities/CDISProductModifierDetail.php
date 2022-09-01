@@ -39,4 +39,16 @@ class CDISProductModifierDetail extends BaseModel
     {
         return $this->belongsTo(CDISProductBranchPrice::class, 'product_branch_price_bid', 'bid');
     }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => '',
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => json_encode([$this->head_bid, $this->product_uom_bid, $this->product_branch_price_bid]),
+            'reference_table' => json_encode(['cdis_product_modifier', 'cdis_product_uom_packaging', 'cdis_product_branch_price'])
+        );
+    }
 }

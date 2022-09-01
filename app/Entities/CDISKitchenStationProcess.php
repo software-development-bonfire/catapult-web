@@ -24,4 +24,24 @@ class CDISKitchenStationProcess extends BaseModel
         'kitchen_station_bid_3' => 'string',
         'kitchen_station_bid_4' => 'string',
     ];
+
+    
+    public function syncDetails()
+    {
+        $referenceBids = array_filter([
+            $this->kitchen_station_bid_1,
+            $this->kitchen_station_bid_2,
+            $this->kitchen_station_bid_3,
+            $this->kitchen_station_bid_4
+        ]);
+
+        return (object) array(
+            'code' => '',
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => json_encode($referenceBids),
+            'reference_table' => 'cdis_kitchen_station',
+        );
+    }
 }

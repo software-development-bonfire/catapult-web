@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use DateInterval;
 use DatePeriod;
 use DB;
+use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
@@ -310,5 +311,80 @@ trait GenericHelper
         }
 
         return $hasConnection;
+    }
+
+    /**
+     * Generate code for sync table entries
+     *
+     * @param integer $length
+     * @param integer $partition
+     * @param string $delimiter
+     * @return string $key
+     */
+    public function generateRandomKey($length = 25, $partition = 5, $delimiter = "-")
+    {
+        $characters = "X9";
+        $characterLength = strlen($characters);
+        $randomString = "";
+
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $characterLength - 1)];
+        }
+
+        $format = rtrim(chunk_split($randomString, $partition, $delimiter), $delimiter);
+        $formatLength = strlen($format);
+
+        $key = "";
+        for ($i = 0; $i < $formatLength; $i++) {
+            switch ($format[$i]) {
+                case "X": $key .= chr(rand(65, 90)); break;
+                case "9": $key .= rand(0, 9); break;
+                case $delimiter: $key .= $delimiter;  break;
+            }
+        }
+
+        return $key;
+    }
+
+    public function secondsToHumanReadableTime($seconds) 
+    {
+        $hours = floor($seconds / 3600);
+        $minutes = floor(($seconds / 60) % 60);
+        $seconds = $seconds % 60;
+        
+        return $hours > 0 ? "$hours hrs, $minutes mins" : ($minutes > 0 ? "$minutes mins, $seconds secs" : "$seconds seconds");
+    }
+
+    protected function modelHasColumn($model, $tableName = '', $columnName = '') 
+    {
+        if ($model === null) {
+            return false;
+        }
+    
+        if (empty($tableName)) {
+            $tableName = $this->getTableName($model);
+            if (empty($tableName)) {
+                return false;
+            }
+        }
+        
+        return $model->getConnection()
+        ->getSchemaBuilder()
+        ->hasColumn($tableName , $columnName);
+    }
+
+    
+    public function getTableName($model) {
+        $tableName = "";
+        try {
+            $tableName = $model->getTable();
+        } catch (Exception $e) {
+            try {
+                $tableName = $model->tableName();
+            } catch (Exception $ex) {
+
+            }
+        }
+        return $tableName;
     }
 }

@@ -7,14 +7,25 @@ use App\Jobs\CDIS\DeleteSynced;
 use App\Jobs\CDIS\Sync;
 use App\Services\ConfigurationService;
 use App\Traits\DatabaseTransaction;
+use App\Traits\GenericHelper;
+use App\Traits\JobCancellationTrait;
+use App\Traits\PusherTrait;
 use Carbon\Carbon;
+use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class SyncService
 {
-    use DatabaseTransaction;
+    use DatabaseTransaction, GenericHelper, PusherTrait, JobCancellationTrait;
+
+    /**
+     * Set to TRUE if you want to enable the previous syncing capability
+     * By default, it's defined to FALSE to include deleted_at value
+     * in syncing from CDIS database to Catapult database
+     */
+    private $validateDeletedToHardReset = false;
 
     /**
      * Get for sync bids.
@@ -23,11 +34,11 @@ class SyncService
      * @param string $table
      * @return \Illuminate\Http\Response
      */
-    public function forSync($limit = 100, $table = 'all', $broadcast = false)
+    public function forSync($limit = 100, $table = 'all', $broadcast = false, $perEvent = false, $showProgress = false)
     {
-        return $this->transaction(function () use($limit, $table, $broadcast) {
+        return $this->transaction(function () use ($limit, $table, $broadcast, $perEvent, $showProgress) {
             if ($broadcast) {
-                CDISSync::delete();
+                CDISSync::truncate();
             }
 
             $client = [
@@ -73,7 +84,7 @@ class SyncService
             $bidsChunks = array_chunk($bids, $limit);
 
             foreach ($bidsChunks as $bidsChunk) {
-                Sync::dispatch($bidsChunk, $senderDetails['branch_code'], $broadcast);
+                Sync::dispatch($bidsChunk, $senderDetails['branch_code'], $broadcast, $perEvent, $showProgress);
             }
 
             return (object) [
@@ -91,9 +102,15 @@ class SyncService
      * @param bool $broadcast
      * @return \Illuminate\Http\Response
      */
-    public function sync($bids = [], $branchCode, $broadcast = false)
+    public function sync($bids = [], $branchCode, $broadcast = false, $perEvent = false, $showProgress = false)
     {
-        return $this->transaction(function () use ($bids, $branchCode, $broadcast) {
+        if ($broadcast) {
+            $this->initializePusher();
+        }
+
+        $this->setSyncing();
+
+        return $this->transaction(function () use ($bids, $branchCode, $broadcast, $perEvent, $showProgress) {
             $client = [
                 'verify' => false,
                 'http_errors' => false,
@@ -116,7 +133,7 @@ class SyncService
 
             $count = $bodyContent->data !== null && isset($bodyContent->data->count) ? $bodyContent->data->count : 0;
             $total = $bodyContent->data !== null && isset($bodyContent->data->total) ? $bodyContent->data->total : 0;
-            $values = $bodyContent->data  !== null && isset($bodyContent->data->values) ? $bodyContent->data->values: array();
+            $values = $bodyContent->data  !== null && isset($bodyContent->data->values) ? $bodyContent->data->values : array();
 
             if ($count == 0) {
                 return (object) [
@@ -125,9 +142,16 @@ class SyncService
                 ];
             }
 
+            $hasBeenCancelled = false;
+
             $bids = [];
 
+            $progress = 0;
             foreach ($values as $value) {
+                $hasBeenCancelled = $this->hasBeenCancelledSyncing();
+                if ($hasBeenCancelled) {
+                    break;
+                }
                 array_push($bids, $value->sync->bid);
 
                 unset($value->sync->id);
@@ -171,32 +195,59 @@ class SyncService
                 $isExists = $detail->count() > 0;
 
                 if ($isExists) {
-                    if ($value->sync->action == 'delete' && $value->detail) {
-                        if ($detail->getConnection()
-                            ->getSchemaBuilder()
-                            ->hasColumn($detail->getTable(), 'deleted_at')) {
-                            $detail->delete();
-                        } else {
-                            $detail->update(['deleted_at' => null]);
+                    if ($this->validateDeletedToHardReset) {
+                        if ($value->sync->action == 'delete' && $value->detail) {
+                            $tableName = $this->getTableName($detail);
+                            if ($this->modelHasColumn($detail, $tableName, 'deleted_at')) {
+                                $detail->delete();
+                            } else {
+                                $detail->update(['deleted_at' => null]);
+                            }
+                        } else if ($value->sync->action == 'update' || $value->sync->action == 'create') {
+                            if (count($data) > 0) {
+                                $detail->update($data);
+                            }
                         }
-                    } else if ($value->sync->action == 'update' || $value->sync->action == 'create') {
-
+                    } else {
                         if (count($data) > 0) {
                             $detail->update($data);
                         }
                     }
+                    
                 } else {
-                    if ($value->detail
-                        && ($value->sync->action == 'create' || $value->sync->action == 'update')
-                    ) {
-                        $detail->create($data);
+                    if ($this->validateDeletedToHardReset) {
+                        if ($value->detail
+                            && ($value->sync->action == 'create' || $value->sync->action == 'update')
+                        ) {
+                            $detail->create($data);
+                        }
+                    } else {
+                        if ($value->detail) {
+                            $detail->create($data);
+                        }
+                    }
+                }
+
+                $progress++;
+                if ($broadcast && $showProgress) {
+                    $this->pushSyncStatus($branchCode, $broadcast, __('info.syncing').$progress.' of '.$total);
+                } else {
+                    if ($broadcast && ($progress % 100 == 0)) {
+                        $this->pushSyncStatus($branchCode,  $broadcast, __('info.syncing').$progress.' of '.$total);
                     }
                 }
             }
-
-            if (count($bids) > 0) {
-                DeleteSynced::dispatch($bids, $branchCode, $broadcast);
+            if ($hasBeenCancelled) {
+                if ($broadcast) {
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', __('info.syncing_cancelled'), null);
+                }
+            } else {
+                if (count($bids) > 0) {
+                    DeleteSynced::dispatch($bids, $branchCode, $broadcast, $perEvent, $hasBeenCancelled);
+                }
             }
+            $this->clearCancelledSyncing();
+            $this->clearSyncing();
 
             return (object) [
                 'count' => $count,
@@ -214,7 +265,8 @@ class SyncService
         return $response;
     }
 
-    private function getSenderDetails() {
+    private function getSenderDetails()
+    {
         return [
             'client_id' => config('configuration.client_id'),
             'product_key' => config('configuration.product_key'),
@@ -222,6 +274,66 @@ class SyncService
             'system_datetime' => Carbon::now()->format('Y-m-d h:i:s'),
         ];
     }
+
+    private function pushSyncStatus($branchCode, $broadcast, $message)
+    {
+        if ($broadcast) {
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', $message, null);
+        }
+    }
+
+    public function getArrangedSyncableEntities()
+    {
+        return [
+            \App\Entities\CDISBranch::class,
+            \App\Entities\CDISTerminal::class,
+            \App\Entities\CDISInventoryLocation::class,
+            \App\Entities\CDISInventoryLocationTag::class,
+            \App\Entities\CDISBranchGroup::class,
+            \App\Entities\CDISBranchGroupTag::class,
+            \App\Entities\CDISPaymentTermSettings::class,
+            \App\Entities\CDISVendor::class,
+            \App\Entities\CDISVendorBranch::class,
+            \App\Entities\CDISBrand::class,
+            \App\Entities\CDISUnitOfMeasurement::class,
+            \App\Entities\CDISDiscountSettings::class,
+            \App\Entities\CDISProductPricingType::class,
+            \App\Entities\CDISProductVariant::class,
+            \App\Entities\CDISProductVariantOption::class,
+            \App\Entities\CDISPaymentMethodSettings::class,
+            \App\Entities\CDISPaymentMethodSettingsDetail::class,
+            \App\Entities\CDISOrderingDeviceSetup::class,
+            \App\Entities\CDISOrderingDeviceSetupBranch::class,
+            \App\Entities\CDISDisplayCategory::class,
+            \App\Entities\CDISDisplayPaymentMethod::class,
+            \App\Entities\CDISDisplayPaymentMethodDetail::class,
+            \App\Entities\CDISDisplayPaymentMethodDeviceDisplay::class,
+            \App\Entities\CDISKitchenDevicePrinter::class,
+            \App\Entities\CDISKitchenDevicePrinterBranch::class,
+            \App\Entities\CDISKitchenStation::class,
+            \App\Entities\CDISKitchenStationProcess::class,
+            \App\Entities\CDISKitchenUser::class,
+            \App\Entities\CDISKitchenUserBranch::class,
+            \App\Entities\CDISKitchenUserStation::class,
+            \App\Entities\CDISKitchenItemSetup::class,
+            \App\Entities\CDISKitchenItemSetupDetail::class,
+            \App\Entities\CDISProductCategory::class,
+            \App\Entities\CDISProduct::class,
+            \App\Entities\CDISProductUomPackaging::class,
+            \App\Entities\CDISProductBranchAvailability::class,
+            \App\Entities\CDISPackagingVendor::class,
+            \App\Entities\CDISCostAndPriceChange::class,
+            \App\Entities\CDISCostAndPriceChangeDetail::class,
+            \App\Entities\CDISProductBranchPrice::class,
+            \App\Entities\CDISPackagingVendorBranchCost::class,
+            \App\Entities\CDISProductAddon::class,
+            \App\Entities\CDISProductAddonDetail::class,
+            \App\Entities\CDISProductStructure::class,
+            \App\Entities\CDISProductStructureDetail::class,
+            \App\Entities\CDISProductModifier::class,
+            \App\Entities\CDISProductModifierDetail::class,
+            \App\Entities\CDISTags::class,
+            \App\Entities\CDISProductUomPackagingTag::class,
+        ];
+    }
 }
-
-

@@ -6,6 +6,7 @@ use App\Enums\CDIS\ApprovalStatus;
 use App\Enums\CDIS\CostAndPriceChangePricingType;
 use App\Enums\CDIS\CostAndPriceChangeType;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 
 class CDISProductBranchPrice extends BaseModel
 {
@@ -119,5 +120,36 @@ class CDISProductBranchPrice extends BaseModel
         }
 
         return $price;
+    }
+
+    public function syncDetails()
+    {
+        $syncDetails = (object) array(
+            'group' => '',
+            'head_bid' => '',
+            'level' => 1,
+            'reference_bid' => null,
+            'reference_table' => null,
+        );
+
+        $routeName = Route::currentRouteName();
+
+        if ($routeName == 'create_product') {
+            $syncDetails->group = $this->productBranchAvailability->productUomPackaging->product->getTable();
+            $syncDetails->head_bid = $this->productBranchAvailability->productUomPackaging->product_bid;
+            $syncDetails->level = 4;
+        } else if ($routeName == 'store_uom_packaging') {
+            $syncDetails->group = $this->productBranchAvailability->productUomPackaging->getTable();
+            $syncDetails->head_bid = $this->productBranchAvailability->product_uom_bid;
+            $syncDetails->level = 3;
+        } else if ($routeName == 'save_selling_data') {
+            $syncDetails->group = null;
+            $syncDetails->level = 1;
+        }
+
+        $syncDetails->reference_bid = json_encode([$this->product_branch_availability_bid, $this->product_pricing_type_bid]);
+        $syncDetails->reference_table = json_encode([$this->productBranchAvailability->getTable(), $this->productPricingType->getTable()]);
+
+        return $syncDetails;
     }
 }

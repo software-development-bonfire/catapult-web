@@ -27,4 +27,9 @@ class CDISPriceOverride extends Base
         'transaction_detail_bid' => 'string',
         'transaction_product_bid' => 'string',
     ];
+
+    public function terminalTransactionDetail()
+    {
+        return $this->belongsTo(TerminalTransactionDetail::class, 'transaction_detail_bid', 'bid');
+    }
 }

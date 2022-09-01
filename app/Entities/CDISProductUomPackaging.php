@@ -4,6 +4,7 @@ namespace App\Entities;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 
 class CDISProductUomPackaging extends BaseModel
 {
@@ -104,5 +105,37 @@ class CDISProductUomPackaging extends BaseModel
     public function productUomPackagingTag()
     {
         return $this->hasMany(CDISProductUomPackagingTag::class, 'product_uom_packaging_bid', 'bid');
+    }
+
+    public function syncDetails()
+    {
+        $syncDetails = (object) array(
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => null,
+            'reference_table' => null,
+        );
+
+        $routeName = Route::currentRouteName();
+
+        if ($routeName == 'create_product' || $routeName == 'destroy_product') {
+            $syncDetails->group = 'cdis_product';
+            $syncDetails->head_bid = $this->product_bid;
+            $syncDetails->level = 2;
+        } else if ($routeName == 'store_uom_packaging') {
+            $syncDetails->group = $this->getTable();
+            $syncDetails->head_bid = $this->bid;
+            $syncDetails->level = 1;
+        } else if ($routeName == 'delete_uom_packaging') {
+            $syncDetails->group = $this->getTable();
+            $syncDetails->head_bid = $this->bid;
+            $syncDetails->level = 2;
+        }
+
+        $syncDetails->reference_bid = json_encode([$this->product_bid, $this->uom_bid, $this->parent_bid]);
+        $syncDetails->reference_table = json_encode(['cdis_product', 'cdis_unit_of_measurement', 'cdis_product_uom_packaging']);
+
+        return $syncDetails;
     }
 }

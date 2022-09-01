@@ -19,4 +19,14 @@ class CDISKitchenStation extends BaseModel
     {
         return $this->hasMany(CDISKitchenUserStation::class, 'kitchen_station_bid', 'bid');
     }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => null,
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+        );
+    }
 }

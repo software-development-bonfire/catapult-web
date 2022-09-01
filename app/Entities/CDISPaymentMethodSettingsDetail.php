@@ -28,4 +28,19 @@ class CDISPaymentMethodSettingsDetail extends BaseModel
     {
         return $this->belongsTo(CDISPaymentMethodSettings::class, 'head_bid', 'bid');
     }
+
+    public function syncDetails()
+    {
+        $code = '';
+        $group = $this->paymentMethodSettings()->first()->getTable();
+        $headBid = $this->paymentMethodSettings()->first()->bid;
+        $level = 2;
+
+        return (object) array(
+            'code' => $code,
+            'group' => $group,
+            'head_bid' => $headBid,
+            'level' => $level,
+        );
+    }
 }

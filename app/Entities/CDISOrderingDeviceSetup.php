@@ -34,4 +34,16 @@ class CDISOrderingDeviceSetup extends BaseModel
     {
         return $this->hasMany(CDISOrderingDeviceSetupBranch::class, 'head_bid', 'bid');
     }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => null,
+            'group' => $this->getTable(),
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => null,
+            'reference_table' => null,
+        );
+    }
 }
