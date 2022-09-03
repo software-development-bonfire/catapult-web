@@ -52,7 +52,7 @@ class CDISProductCategory extends BaseModel
 
         if ($routeName == 'store_product_sub_category') {
             $syncDetails->reference_bid = $this->parent_bid;
-            $syncDetails->reference_table = $this->getTable();
+            $syncDetails->reference_table = $this->getTable() ?? 'cdis_product_category';
         }
 
         return $syncDetails;

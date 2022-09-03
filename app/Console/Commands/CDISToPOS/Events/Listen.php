@@ -155,13 +155,29 @@ class Listen extends Command
                 case "App\Events\Catapult\TriggerCDISDataConversionPerEvent":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting',  __('info.converting'), $this->socketId, true);
-                    Artisan::queue('cdis:convert-data-to-file-event', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false']);
+
+                    if ($payload->data !== null) {
+                        $data = json_decode($payload->data);
+                        if (isset($data->refetchForSync) && $data->refetchForSync) {
+                            Artisan::queue('cdis:fetch-data-for-sync-again', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false', '--type' => 'changes']);
+                        } else {
+                            Artisan::queue('cdis:convert-data-to-file-event', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false']);
+                        }
+                    }
                     break;
 
                 case "App\Events\Catapult\TriggerCDISDataConversionAll":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.converting'), $this->socketId, true);
-                    Artisan::queue('cdis:convert-data-to-file-all', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false']);
+
+                    if ($payload->data !== null) {
+                        $data = json_decode($payload->data);
+                        if (isset($data->refetchForSync) && $data->refetchForSync) {
+                            Artisan::queue('cdis:fetch-data-for-sync-again', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false', '--type' => 'all']);
+                        } else {
+                            Artisan::queue('cdis:convert-data-to-file-all', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false']);
+                        }
+                    }
                     break;
 
                 case "App\Events\Catapult\CancelCDISDataConversion":

@@ -69,7 +69,7 @@ class CDISBranch extends BaseModel
             $routeName == 'store_branch'
             || $routeName == 'update_branch'
         ) {
-            $syncDetails->group = $this->getTable();
+            $syncDetails->group = $this->getTable() ?? 'cdis_branch';
             $syncDetails->head_bid = $this->bid;
             $syncDetails->level = 1;
         }

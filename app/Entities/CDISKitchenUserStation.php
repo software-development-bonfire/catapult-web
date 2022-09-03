@@ -55,10 +55,10 @@ class CDISKitchenUserStation extends BaseModel
         ) {
 
             $syncDetails->code = null;
-            $syncDetails->group = $this->kitchenUser->getTable();
+            $syncDetails->group = 'cdis_kitchen_user';
             $syncDetails->head_bid = $this->kitchen_user_bid;
             $syncDetails->reference_bid = $this->kitchen_user_bid;
-            $syncDetails->reference_table =  $this->kitchenUser->getTable();
+            $syncDetails->reference_table = 'cdis_kitchen_user';
             $syncDetails->level = 2;
         }
 

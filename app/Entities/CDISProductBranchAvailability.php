@@ -48,14 +48,29 @@ class CDISProductBranchAvailability extends BaseModel
             'reference_table' => null,
         );
 
+        $uomPackagingTableName = 'cdis_product_uom_packaging';
+        $productTableName = 'cdis_product';
+
+        $productBid = null;
+        
+        if ($this->productUomPackaging !== null) {
+
+            $uomPackagingTableName = $this->productUomPackaging->getTable();
+            $productBid = $this->productUomPackaging->product_bid;
+
+            if ($this->productUomPackaging->product !== null) {
+                $productTableName = $this->productUomPackaging->product->getTable();
+            }
+        }
+
         $routeName = Route::currentRouteName();
 
         if ($routeName == 'create_product') {
-            $syncDetails->group = $this->productUomPackaging->product->getTable();
-            $syncDetails->head_bid = $this->productUomPackaging->product_bid;
+            $syncDetails->group = $productTableName;
+            $syncDetails->head_bid = $productBid;
             $syncDetails->level = 3;
         } else if ($routeName == 'store_uom_packaging') {
-            $syncDetails->group = $this->productUomPackaging->getTable();
+            $syncDetails->group = $uomPackagingTableName;
             $syncDetails->head_bid = $this->product_uom_bid;
             $syncDetails->level = 2;
         }

@@ -4,6 +4,7 @@ return [
     'cancelled_attempt' => 'Cancelled :value with :attempt',
     'cancelling' => 'Cancelling...',
     'constructing_tables' => 'Constructing :table_count syncable tables...',
+    'constructing_tables_progress' => 'Constructing syncable tables [:progress/:table_count]...',
     'conversion_started' => 'Conversion started...',
     'converting' => 'Converting...',
     'converting_all_data' => 'Converting (All Data)...',
@@ -35,5 +36,5 @@ return [
     'syncing_to_catapult' => 'Syncing to Catapult...',
     'syncing_to_catapult_failed' => 'Syncing to Catapult failed!',
     'syncing_to_catapult_success' => 'Syncing to Catapult success!',
-    'table_constructed' => ':table constructed with :count records',
+    'table_constructed' => ':table constructed with :count records [:progress/:table_count]',
 ];

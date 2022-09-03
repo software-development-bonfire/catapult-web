@@ -99,7 +99,7 @@ class CDISKitchenUser extends BaseModel
             || $routeName == 'update_kitchen_user_account'
         ) {
             $syncDetails->code = null;
-            $syncDetails->group = $this->getTable();
+            $syncDetails->group = $this->getTable() ?? 'cdis_kitchen_user';
             $syncDetails->head_bid = $this->bid;
             $syncDetails->level = 1;
         }

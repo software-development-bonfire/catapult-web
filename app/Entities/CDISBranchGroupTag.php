@@ -37,7 +37,7 @@ class CDISBranchGroupTag extends BaseModel
     public function syncDetails()
     {
         $code = '';
-        $group = $this->getTable();
+        $group = $this->getTable() ?? 'cdis_branch_group_tag';
         $headBid = $this->branch_group_bid;
         $level = 1;
 

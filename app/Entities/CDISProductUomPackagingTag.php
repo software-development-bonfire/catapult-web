@@ -31,7 +31,7 @@ class CDISProductUomPackagingTag extends BaseModel
     public function syncDetails()
     {
         $code = '';
-        $group = $this->getTable();
+        $group = $this->getTable() ?? 'cdis_product_uom_packaging_tag';
         $headBid = $this->product_uom_packaging_bid;
         $level = 1;
 

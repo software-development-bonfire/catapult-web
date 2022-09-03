@@ -2,6 +2,7 @@
 
 namespace App\Jobs\CDIS;
 
+use App\Enums\DeleteSyncedAction;
 use App\Services\CDIS\SyncService;
 use Exception;
 use GuzzleHttp\Client;
@@ -15,19 +16,19 @@ class Sync implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $bids, $branchCode, $broadcast, $perEvent, $showProgress;
+    public $bids, $branchCode, $broadcast, $deleteSyncedAction, $showProgress;
     /**
      * Create a new job instance.
      *
      * @param array $bids
      * @return void
      */
-    public function __construct($bids, $branchCode, $broadcast, $perEvent = false, $showProgress = false)
+    public function __construct($bids, $branchCode, $broadcast, $deleteSyncedAction, $showProgress = false)
     {
         $this->bids = $bids;
         $this->branchCode = $branchCode;
         $this->broadcast = $broadcast;
-        $this->perEvent = $perEvent;
+        $this->deleteSyncedAction = $deleteSyncedAction;
         $this->showProgress = $showProgress;
     }
 
@@ -40,7 +41,7 @@ class Sync implements ShouldQueue
     {
         $syncService = app()->make(SyncService::class);
 
-        $syncedDetails = $syncService->sync($this->bids, $this->branchCode, $this->broadcast, $this->perEvent, $this->showProgress);
+        $syncedDetails = $syncService->sync($this->bids, $this->branchCode, $this->broadcast, $this->deleteSyncedAction, $this->showProgress);
 
         return $syncedDetails;
     }

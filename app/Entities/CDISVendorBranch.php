@@ -53,7 +53,7 @@ class CDISVendorBranch extends BaseModel
             $routeName == 'store_vendor'
             || $routeName == 'update_vendor'
         ) {
-            $referenceTable = $this->vendor->getTable();
+            $referenceTable = $this->vendor !== null ? $this->vendor->getTable() : null;
 
             $syncDetails->code = null;
             $syncDetails->group = $referenceTable;
@@ -62,7 +62,7 @@ class CDISVendorBranch extends BaseModel
         }
 
         $syncDetails->reference_bid = $this->vendor_bid;
-        $syncDetails->reference_table = $this->getTable();
+        $syncDetails->reference_table = $this->getTable() ?? 'cdis_vendor_branch';
 
         return $syncDetails;
     }

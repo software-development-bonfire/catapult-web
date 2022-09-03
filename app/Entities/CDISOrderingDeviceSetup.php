@@ -39,7 +39,7 @@ class CDISOrderingDeviceSetup extends BaseModel
     {
         return (object) array(
             'code' => null,
-            'group' => $this->getTable(),
+            'group' => $this->getTable() ?? 'cdis_ordering_device_setup',
             'head_bid' => null,
             'level' => 1,
             'reference_bid' => null,

@@ -59,7 +59,7 @@ class CDISVendor extends BaseModel
             || $routeName == 'update_vendor'
         ) {
             $syncDetails->code = null;
-            $syncDetails->group = $this->getTable();
+            $syncDetails->group = $this->getTable() ?? 'cdis_vendor';
             $syncDetails->head_bid = $this->bid;
             $syncDetails->level = 1;
         }

@@ -36,6 +36,11 @@ class CDISPackagingVendor extends BaseModel
         return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_bid', 'bid');
     }
 
+    public function uomPackaging()
+    {
+        return $this->belongsTo(CDISProductUomPackaging::class, 'product_uom_bid', 'bid');
+    }
+
     public function packagingVendorBranchCost()
     {
         return $this->hasMany(CDISPackagingVendorBranchCost::class, 'packaging_vendor_bid', 'bid');
@@ -63,11 +68,11 @@ class CDISPackagingVendor extends BaseModel
         $routeName = Route::currentRouteName();
 
         if ($routeName == 'create_product') {
-            $syncDetails->group = $this->productUomPackaging->product->getTable();
-            $syncDetails->head_bid = $this->productUomPackaging->product_bid;
+            $syncDetails->group = 'cdis_product';
+            $syncDetails->head_bid = $this->productUomPackaging !== null ? $this->productUomPackaging->product_bid : null;
             $syncDetails->level = 3;
         } else if ($routeName == 'store_uom_packaging') {
-            $syncDetails->group = $this->productUomPackaging->getTable();
+            $syncDetails->group = 'cdis_product_uom_packaging';
             $syncDetails->head_bid = $this->product_uom_bid;
             $syncDetails->level = 2;
         }

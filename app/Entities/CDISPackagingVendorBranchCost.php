@@ -136,15 +136,35 @@ class CDISPackagingVendorBranchCost extends BaseModel
             'reference_table' => null,
         );
 
+        $uomPackagingTableName = 'cdis_product_uom_packaging';
+        $productTableName = 'cdis_product';
+
+        $productBid = null;
+        $productUomBid = null;
+
+        if ($this->packagingVendor !== null) {
+            $productUomBid = $this->packagingVendor->product_uom_bid;
+
+            if ($this->packagingVendor->uomPackaging !== null) {
+
+                $uomPackagingTableName = $this->packagingVendor->uomPackaging->getTable();
+                $productBid = $this->packagingVendor->uomPackaging->product_bid;
+
+                if ($this->packagingVendor->uomPackaging->product !== null) {
+                    $productTableName = $this->packagingVendor->uomPackaging->product->getTable();
+                }
+            }
+        }
+
         $routeName = Route::currentRouteName();
 
         if ($routeName == 'create_product') {
-            $syncDetails->group = $this->packagingVendor->productUomPackaging->product->getTable();
-            $syncDetails->head_bid =  $this->packagingVendor->productUomPackaging->product_bid;
+            $syncDetails->group = $productTableName;
+            $syncDetails->head_bid = $productBid;
             $syncDetails->level = 4;
         } else if ($routeName == 'store_uom_packaging') {
-            $syncDetails->group = $this->packagingVendor->productUomPackaging->getTable();
-            $syncDetails->head_bid = $this->packagingVendor->product_uom_bid;
+            $syncDetails->group = $uomPackagingTableName;
+            $syncDetails->head_bid =  $productUomBid;
             $syncDetails->level = 3;
         }
 

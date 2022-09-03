@@ -124,11 +124,11 @@ class CDISProductUomPackaging extends BaseModel
             $syncDetails->head_bid = $this->product_bid;
             $syncDetails->level = 2;
         } else if ($routeName == 'store_uom_packaging') {
-            $syncDetails->group = $this->getTable();
+            $syncDetails->group = $this->getTable() ?? 'cdis_product_uom_packaging';
             $syncDetails->head_bid = $this->bid;
             $syncDetails->level = 1;
         } else if ($routeName == 'delete_uom_packaging') {
-            $syncDetails->group = $this->getTable();
+            $syncDetails->group = $this->getTable() ?? 'cdis_product_uom_packaging';
             $syncDetails->head_bid = $this->bid;
             $syncDetails->level = 2;
         }
