@@ -106,7 +106,7 @@ class ReFetchDataForSync extends Command
                 break;
             }
 
-            $forSync = $syncService->forSync($limit, $table, $broadcast, $deleteSyncedAction, $showProgress);
+            $forSync = $syncService->forSync($limit, $table, $broadcast, $deleteSyncedAction, $showProgress, true);
 
             if (!isset($forSync->bidsChunks)) {
                 $noDataToSync = true;

@@ -35,10 +35,10 @@ class SyncService
      * @param string $table
      * @return \Illuminate\Http\Response
      */
-    public function forSync($limit = 100, $table = 'all', $broadcast = false, $deleteSyncedDone = DeleteSyncedAction::CONVERT_ALL, $showProgress = false)
+    public function forSync($limit = 100, $table = 'all', $broadcast = false, $deleteSyncedDone = DeleteSyncedAction::CONVERT_ALL, $showProgress = false, $isRefetched = false)
     {
-        return $this->transaction(function () use ($limit, $table, $broadcast, $deleteSyncedDone, $showProgress) {
-            if ($broadcast) {
+        return $this->transaction(function () use ($limit, $table, $broadcast, $deleteSyncedDone, $showProgress, $isRefetched) {
+            if ($broadcast && $deleteSyncedDone === DeleteSyncedAction::CONVERT && ! $isRefetched) {
                 CDISSync::truncate();
             }
 
