@@ -62,7 +62,7 @@ class CDISProduct extends BaseModel
         $routeName = Route::currentRouteName();
 
         if ($routeName == 'create_product' || $routeName == 'destroy_product') {
-            $syncDetails->group = $this->getTable();
+            $syncDetails->group = $this->getTable() ?? 'cdis_product';
             $syncDetails->head_bid = $this->bid;
         }
 
@@ -71,8 +71,13 @@ class CDISProduct extends BaseModel
             $productCategoryTableName = $this->productCategory->getTable();
         }
 
+        $brandTableName = "cdis_brand";
+        if ($this->brand !== null) {
+            $brandTableName = $this->brand->getTable();
+        }
+
         $syncDetails->reference_bid = json_encode([$this->category_bid, $this->brand_bid]);
-        $syncDetails->reference_table = json_encode([$productCategoryTableName, $this->brand->getTable()]);
+        $syncDetails->reference_table = json_encode([$productCategoryTableName, $brandTableName]);
 
         return $syncDetails;
     }

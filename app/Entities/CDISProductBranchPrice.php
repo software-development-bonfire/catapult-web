@@ -132,15 +132,37 @@ class CDISProductBranchPrice extends BaseModel
             'reference_table' => null,
         );
 
+        $productBranchAvailabilityTableName = 'cdis_product_branch_availability';
+        $uomPackagingTableName = 'cdis_product_uom_packaging';
+        $productTableName = 'cdis_product';
+
+        $productBid = null;
+        $productUomBid = null;
+
+        if ($this->productBranchAvailability !== null) {
+            $productBranchAvailabilityTableName = $this->productBranchAvailability->getTable();
+            $productUomBid = $this->productBranchAvailability->product_uom_bid;
+
+            if ($this->productBranchAvailability->productUomPackaging !== null) {
+
+                $uomPackagingTableName = $this->productBranchAvailability->productUomPackaging->getTable();
+                $productBid = $this->productBranchAvailability->productUomPackaging->product_bid;
+
+                if ($this->productBranchAvailability->productUomPackaging->product !== null) {
+                    $productTableName = $this->productBranchAvailability->productUomPackaging->product->getTable();
+                }
+            }
+        }
+
         $routeName = Route::currentRouteName();
 
         if ($routeName == 'create_product') {
-            $syncDetails->group = $this->productBranchAvailability->productUomPackaging->product->getTable();
-            $syncDetails->head_bid = $this->productBranchAvailability->productUomPackaging->product_bid;
+            $syncDetails->group = $productTableName;
+            $syncDetails->head_bid = $productBid;
             $syncDetails->level = 4;
         } else if ($routeName == 'store_uom_packaging') {
-            $syncDetails->group = $this->productBranchAvailability->productUomPackaging->getTable();
-            $syncDetails->head_bid = $this->productBranchAvailability->product_uom_bid;
+            $syncDetails->group = $uomPackagingTableName;
+            $syncDetails->head_bid = $productUomBid;
             $syncDetails->level = 3;
         } else if ($routeName == 'save_selling_data') {
             $syncDetails->group = null;
@@ -148,7 +170,7 @@ class CDISProductBranchPrice extends BaseModel
         }
 
         $syncDetails->reference_bid = json_encode([$this->product_branch_availability_bid, $this->product_pricing_type_bid]);
-        $syncDetails->reference_table = json_encode([$this->productBranchAvailability->getTable(), $this->productPricingType->getTable()]);
+        $syncDetails->reference_table = json_encode([$productBranchAvailabilityTableName, 'cdis_product_pricing_type']);
 
         return $syncDetails;
     }

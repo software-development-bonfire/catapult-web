@@ -3,6 +3,7 @@
 namespace App\Services\CDIS;
 
 use App\Entities\CDISSync;
+use App\Enums\DeleteSyncedAction;
 use App\Jobs\CDIS\DeleteSynced;
 use App\Jobs\CDIS\Sync;
 use App\Services\ConfigurationService;
@@ -34,10 +35,10 @@ class SyncService
      * @param string $table
      * @return \Illuminate\Http\Response
      */
-    public function forSync($limit = 100, $table = 'all', $broadcast = false, $perEvent = false, $showProgress = false)
+    public function forSync($limit = 100, $table = 'all', $broadcast = false, $deleteSyncedDone = DeleteSyncedAction::CONVERT_ALL, $showProgress = false, $isRefetched = false)
     {
-        return $this->transaction(function () use ($limit, $table, $broadcast, $perEvent, $showProgress) {
-            if ($broadcast) {
+        return $this->transaction(function () use ($limit, $table, $broadcast, $deleteSyncedDone, $showProgress, $isRefetched) {
+            if ($broadcast && $deleteSyncedDone === DeleteSyncedAction::CONVERT && ! $isRefetched) {
                 CDISSync::truncate();
             }
 
@@ -84,7 +85,7 @@ class SyncService
             $bidsChunks = array_chunk($bids, $limit);
 
             foreach ($bidsChunks as $bidsChunk) {
-                Sync::dispatch($bidsChunk, $senderDetails['branch_code'], $broadcast, $perEvent, $showProgress);
+                Sync::dispatch($bidsChunk, $senderDetails['branch_code'], $broadcast, $deleteSyncedDone, $showProgress);
             }
 
             return (object) [
@@ -102,7 +103,7 @@ class SyncService
      * @param bool $broadcast
      * @return \Illuminate\Http\Response
      */
-    public function sync($bids = [], $branchCode, $broadcast = false, $perEvent = false, $showProgress = false)
+    public function sync($bids = [], $branchCode, $broadcast = false, $deleteSyncedDone, $showProgress = false)
     {
         if ($broadcast) {
             $this->initializePusher();
@@ -110,7 +111,7 @@ class SyncService
 
         $this->setSyncing();
 
-        return $this->transaction(function () use ($bids, $branchCode, $broadcast, $perEvent, $showProgress) {
+        return $this->transaction(function () use ($bids, $branchCode, $broadcast, $deleteSyncedDone, $showProgress) {
             $client = [
                 'verify' => false,
                 'http_errors' => false,
@@ -243,7 +244,7 @@ class SyncService
                 }
             } else {
                 if (count($bids) > 0) {
-                    DeleteSynced::dispatch($bids, $branchCode, $broadcast, $perEvent, $hasBeenCancelled);
+                    DeleteSynced::dispatch($bids, $branchCode, $broadcast, $deleteSyncedDone, $hasBeenCancelled);
                 }
             }
             $this->clearCancelledSyncing();

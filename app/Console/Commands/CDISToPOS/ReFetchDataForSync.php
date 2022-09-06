@@ -12,15 +12,15 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
-class FetchDataForSyncPerEvent extends Command
+class ReFetchDataForSync extends Command
 {
-    use GenericHelper,  PusherTrait, JobCancellationTrait;
+    use GenericHelper, PusherTrait, JobCancellationTrait;
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'cdis:fetch-data-for-sync-event {--interval=true}{--limit=true}{--table=all}{--broadcast=false}{--progress=false}';
+    protected $signature = 'cdis:fetch-data-for-sync-again {--interval=true}{--limit=true}{--table=all}{--broadcast=false}{--progress=false}{--type=all}';
 
     /**
      * The console command description.
@@ -29,6 +29,11 @@ class FetchDataForSyncPerEvent extends Command
      */
     protected $description = 'Fetch, listen, get and validate "for sync" row data in CDIS sync table';
 
+
+    /**
+     * Set to true if you want to show syncing progress to CDIS activity
+     */
+    private $showSyncStatus = false;
     /**
      * Create a new command instance.
      *
@@ -69,26 +74,18 @@ class FetchDataForSyncPerEvent extends Command
             );
 
         $broadcast = $this->option('broadcast');
-        $broadcast =
-            filter_var($broadcast, FILTER_VALIDATE_BOOLEAN)
-            ? config('sync.cdis.to_catapult.broadcast')
-            : ((int) $broadcast
-                ? filter_var($broadcast, FILTER_VALIDATE_INT)
-                : false
-            );
+        $broadcast = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
 
         $showProgress = $this->option('progress');
         $showProgress = filter_var($showProgress, FILTER_VALIDATE_BOOLEAN);
 
         $table = $this->option('table');
 
-        $syncService = app()->make(SyncService::class);
+        $generateType = $this->option('type');
 
-        $this->createLog(
-            __('info.syncing_started'),
-            'info',
-            true
-        );
+        $deleteSyncedAction = ($generateType === 'changes') ? DeleteSyncedAction::CONVERT_EVENT : DeleteSyncedAction::CONVERT_ALL;
+
+        $syncService = app()->make(SyncService::class);
 
         $this->setSyncing();
         $this->clearCancelledConversion();
@@ -102,36 +99,28 @@ class FetchDataForSyncPerEvent extends Command
 
         $hasBeenCancelled = $this->hasBeenCancelledSyncing();
 
+        $noDataToSync = false;
+
         do {
             if ($hasBeenCancelled) {
                 break;
             }
-            $forSync = $syncService->forSync($limit, $table, $broadcast, DeleteSyncedAction::SYNC_DONE, $showProgress);
 
-            if (!isset($forSync->bidsChunks)) {
-                Cache::forget('cdis_fetching_data_for_sync');
-                $this->createLog(__('message.no_data_to_sync'), 'info', true);
-                if ($broadcast) {
-                    Log::alert(__('message.no_data_to_sync'));
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', __('message.no_data_to_sync'), null);
-                }
+            $forSync = $syncService->forSync($limit, $table, $broadcast, $deleteSyncedAction, $showProgress, true);
+
+            if (! isset($forSync->bidsChunks)) {
+                $noDataToSync = true;
             } else if (isset($forSync->bidsChunks) && $forSync->bidsChunks > 0) {
                 Cache::forever('cdis_fetching_data_for_sync', true);
-                $this->createLog('---------------------------------------------------------', 'info', false);
-                $this->createLog('Action count: '.$forSync->action_count.' | Entry count: '.$forSync->entry_count, 'info', true);
                 $progress = 0;
                 foreach ($forSync->bidsChunks as $bidsChunk) {
                     $progress++;
                     foreach ($bidsChunk as $bid) {
-                        $this->createLog(__('success.queued_to_sync').$progress.' of '.$forSync->action_count, 'info', true, [$bid]);
+                        $this->createLog(__('success.queued_to_sync'), 'info', true, [$bid]);
                         $hasBeenCancelled = $this->hasBeenCancelledSyncing();
                         if ($hasBeenCancelled) {
                             break;
                         }
-                    }
-
-                    if ($showProgress && $broadcast) {
-                        $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', __('info.fetching').$progress.' of '.count($forSync->bidsChunks), null);
                     }
 
                     if ($hasBeenCancelled) {
@@ -147,18 +136,16 @@ class FetchDataForSyncPerEvent extends Command
             }
         } while (true);
 
-        $timeEnd = microtime(true);
-        $executionTime = ($timeEnd - $timeStart);
-
-        Log::alert(__('info.fetch_success').' @ '.$this->secondsToHumanReadableTime($executionTime));
-        $this->createLog(__('info.fetch_success').' @ '.$this->secondsToHumanReadableTime($executionTime), 'info', true);
-
-        // If syncing is not yet executed, then we must
-        // send to CDIS that syncing been cancelled
-        if ($broadcast && $hasBeenCancelled) {
-            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', __('info.syncing_cancelled'), null);
+        if ($noDataToSync) { 
             $this->clearCancelledSyncing();
             $this->clearSyncing();
+
+            if ($generateType === 'changes') {
+                Artisan::queue('cdis:convert-data-to-file-event', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false']);
+            } else {
+                Artisan::queue('cdis:convert-data-to-file-all', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false']);
+            }
+            
         }
     }
 }

@@ -45,7 +45,7 @@ class CDISDisplayPaymentMethodDetail extends Base
             'head_bid' => $this->head_bid,
             'level' => 1,
             'reference_bid' => json_encode([$this->head_bid, $this->payment_method_settings_bid]),
-            'reference_table' => json_encode([$this->displayPaymentMethod->getTable(), $this->paymentMethodSettings->getTable()])
+            'reference_table' => json_encode(['cdis_display_payment_method', 'cdis_payment_method_settings'])
         );
     }
 }

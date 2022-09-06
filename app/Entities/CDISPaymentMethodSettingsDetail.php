@@ -31,14 +31,23 @@ class CDISPaymentMethodSettingsDetail extends BaseModel
 
     public function syncDetails()
     {
+        $headTableName = 'cdis_payment_method_settings';
+        $headBid = null;
+
+        if ($this->head !== null) {
+            $headFirstData =  $this->paymentMethodSettings()->first();
+            if ($headFirstData !== null) {
+                $headTableName = $headFirstData->getTable();
+                $headBid = $headFirstData->bid;
+            }
+        }
+
         $code = '';
-        $group = $this->paymentMethodSettings()->first()->getTable();
-        $headBid = $this->paymentMethodSettings()->first()->bid;
         $level = 2;
 
         return (object) array(
             'code' => $code,
-            'group' => $group,
+            'group' => $headTableName,
             'head_bid' => $headBid,
             'level' => $level,
         );

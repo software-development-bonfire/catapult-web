@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\CDISToPOS;
 
+use App\Enums\DeleteSyncedAction;
 use App\Services\CDIS\SyncService;
 use App\Traits\GenericHelper;
 use App\Traits\PusherTrait;
@@ -105,7 +106,7 @@ class FetchDataForSync extends Command
                 break;
             }
 
-            $forSync = $syncService->forSync($limit, $table, $broadcast, false, $showProgress);
+            $forSync = $syncService->forSync($limit, $table, $broadcast, DeleteSyncedAction::CONVERT, $showProgress);
 
             if (!isset($forSync->bidsChunks)) {
                 Cache::forget('cdis_fetching_data_for_sync');

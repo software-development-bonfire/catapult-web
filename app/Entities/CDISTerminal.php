@@ -68,12 +68,12 @@ class CDISTerminal extends BaseModel
             $routeName == 'store_terminal'
             || $routeName == 'update_terminal'
         ) {
-            $syncDetails->group = $this->getTable();
+            $syncDetails->group = $this->getTable() ?? 'cdis_terminal';
             $syncDetails->head_bid =$this->branch_bid;
         }
 
         $syncDetails->reference_bid = $this->branch_bid;
-        $syncDetails->reference_table = $this->branch->getTable();
+        $syncDetails->reference_table = $this->branch !== null ? $this->branch->getTable() : 'cdis_branch';
         $syncDetails->level = 1;
 
         return $syncDetails;

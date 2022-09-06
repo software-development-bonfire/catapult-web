@@ -47,8 +47,8 @@ class CDISKitchenDevicePrinterBranch extends BaseModel
         $routeName = Route::currentRouteName();
 
         if ($routeName == 'store_kitchen_device_printer_setup' || $routeName == 'update_kitchen_device_printer_setup') {
-            $syncDetails->group = $this->head->getTable();
-            $syncDetails->head_bid =  $this->head->bid;
+            $syncDetails->group = 'cdis_kitchen_device_printer';
+            $syncDetails->head_bid =  $this->head !== null ? $this->head->bid : null;
             $syncDetails->level = 2;
         }
 

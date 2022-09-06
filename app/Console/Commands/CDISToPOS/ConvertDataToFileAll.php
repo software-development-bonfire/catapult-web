@@ -160,6 +160,7 @@ class ConvertDataToFileAll extends Command
                 $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.constructing_tables', ['table_count' => count($convertableEntities)]), null);
             }
 
+            $entityCountProgress = 0;
             foreach ($convertableEntities as $syncableEntity) {
                 $hasBeenCancelled = $this->hasBeenCancelledConversion();
                 if ($hasBeenCancelled) {
@@ -179,6 +180,7 @@ class ConvertDataToFileAll extends Command
 
                 $entityData = $entityData->get();
 
+                $entityCountProgress++;
                 $progress = 0;
 
                 foreach ($entityData as $entityDatum) {
@@ -237,8 +239,17 @@ class ConvertDataToFileAll extends Command
                     CDISSync::create($entityRow);
 
                     $progress++;
+
                 }
-                $this->createLog( __('info.constructing_tables', ['table' => count($convertableEntities), 'count' => count($entityData)]));
+                if ($broadcast) {
+                    $this->pusher->trigger(
+                        $this->cdisAndCatapultSyncChannel($branchCode), 
+                        'Converting',
+                        __('info.constructing_tables_progress', ['progress' => $entityCountProgress, 'table_count' => count($convertableEntities)]),
+                         null
+                    );
+                }
+                $this->createLog( __('info.table_constructed', ['table' => $entityName, 'count' => count($entityData), 'progress' => $entityCountProgress, 'table_count' => count($convertableEntities)]));
             }
 
             $forSyncData = CDISSync::orderBy('created_at', 'ASC')->get();

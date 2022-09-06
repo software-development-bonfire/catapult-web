@@ -36,11 +36,11 @@ class CDISOrderingDeviceSetupBranch extends Base
     {
         return (object) array(
             'code' => null,
-            'group' => $this->head->getTable(),
-            'head_bid' => $this->head->bid,
+            'group' => 'cdis_ordering_device_setup',
+            'head_bid' => $this->orderingDeviceSetup !== null ? $this->orderingDeviceSetup->bid : null,
             'level' => 2,
             'reference_bid' => json_encode([$this->head_bid, $this->branch_bid]),
-            'reference_table' => json_encode([$this->orderingDeviceSetup->getTable(), $this->branch->getTable()])
+            'reference_table' => json_encode(['cdis_ordering_device_setup', 'cdis_branch'])
         );
     }
 }
