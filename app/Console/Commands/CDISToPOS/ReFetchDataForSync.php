@@ -108,7 +108,7 @@ class ReFetchDataForSync extends Command
 
             $forSync = $syncService->forSync($limit, $table, $broadcast, $deleteSyncedAction, $showProgress, true);
 
-            if (!isset($forSync->bidsChunks)) {
+            if (! isset($forSync->bidsChunks)) {
                 $noDataToSync = true;
             } else if (isset($forSync->bidsChunks) && $forSync->bidsChunks > 0) {
                 Cache::forever('cdis_fetching_data_for_sync', true);
