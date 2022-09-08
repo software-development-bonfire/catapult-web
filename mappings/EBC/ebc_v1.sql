@@ -16,7 +16,7 @@
 CREATE DATABASE IF NOT EXISTS `catapult_web` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */;
 USE `catapult_web`;
 
--- Dumping structure for table field_mapping
+-- Dumping structure for table catapult_web.field_mapping
 CREATE TABLE IF NOT EXISTS `field_mapping` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `bid` bigint(20) unsigned NOT NULL,
@@ -43,9 +43,9 @@ CREATE TABLE IF NOT EXISTS `field_mapping` (
   CONSTRAINT `field_mapping_api_setup_bid_foreign` FOREIGN KEY (`api_setup_bid`) REFERENCES `api_setups` (`bid`) ON DELETE CASCADE,
   CONSTRAINT `field_mapping_catapult_db_setup_bid_foreign` FOREIGN KEY (`catapult_db_setup_bid`) REFERENCES `catapult_db_setups` (`bid`) ON DELETE CASCADE,
   CONSTRAINT `field_mapping_file_storage_setup_bid_foreign` FOREIGN KEY (`file_storage_setup_bid`) REFERENCES `file_storage_setup` (`bid`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table field_mapping: ~17 rows (approximately)
+-- Dumping data for table catapult_web.field_mapping: ~16 rows (approximately)
 DELETE FROM `field_mapping`;
 /*!40000 ALTER TABLE `field_mapping` DISABLE KEYS */;
 INSERT INTO `field_mapping` (`id`, `bid`, `file_storage_setup_bid`, `catapult_db_setup_bid`, `api_setup_bid`, `name`, `type`, `status`, `is_customized_mapping`, `data_entry`, `primary_table`, `data_condition`, `created_by`, `updated_by`, `created_at`, `updated_at`, `deleted_at`) VALUES
@@ -65,11 +65,10 @@ INSERT INTO `field_mapping` (`id`, `bid`, `file_storage_setup_bid`, `catapult_db
 	(60, 1000000000000000030, 1, 1, 1, 'VALUE MEAL (CUSTOMIZED)', 1, 1, 1, 'ValueMeals', 'product_modifier_detail', '@ends_with([product_modifier_detail.product_modifier.product_uom_packaging.product.product_category.name], ".") && ([product_modifier_detail.product_modifier.description] == "Value Meals") && ([product_modifier_detail.product_modifier.deleted_at] == NULL) && ([product_modifier_detail.product_uom_packaging.deleted_at] == NULL) && ([product_modifier_detail.product_uom_packaging.product_branch_availability{"branch_bid": sync("branch_bid",$syncEntry)}.bid] !== NULL) && ([product_modifier_detail.deleted_at] == NULL)', 1, 1, '2022-04-08 17:36:49', '2022-05-18 10:49:00', NULL),
 	(61, 1000000000000000031, 1, 1, 1, 'MENU (CUSTOMIZED)', 1, 1, 1, 'Menu', 'product_branch_price', '([product_branch_price.product_branch_availability.branch_bid] == $syncEntry->branch_bid) && ([product_branch_price.product_pricing_type.status] == 1) && ([product_branch_price.product_branch_availability.product_uom_packaging.deleted_at] == NULL)', 1, 1, '2022-04-11 09:16:34', '2022-05-18 10:49:00', NULL),
 	(62, 1000000000000000032, 1, 1, 1, 'MENU COMPOSITION HEAD (CUSTOMIZED)', 1, 1, 1, 'MenuCompositions', 'product_uom_packaging', NULL, 1, 1, '2022-04-27 12:20:19', '2022-05-25 13:40:43', NULL),
-	(63, 1112000000000000001, 1, 1, 1, 'COST AND PRICE CHANGE TEST (CUSTOMIZED)', 1, 1, 1, 'CostAndPriceChangeTest', 'cost_and_price_change', NULL, 1, 1, '2022-09-07 09:58:34', '2022-09-07 22:07:51', NULL),
-	(64, 1112000000000000002, 1, 1, 1, 'COST AND PRICE CHANGE (CUSTOMIZED)', 1, 1, 1, 'CostAndPriceChangeSettings', 'cost_and_price_change_detail', '([cost_and_price_change_detail.cost_and_price_change.status] == App\\Enums\\CDIS\\ApprovalStatus::REJECTED)', 1, 1, '2022-09-07 20:57:16', '2022-09-07 22:43:15', NULL);
+	(63, 1112000000000000001, 1, 1, 1, 'COST AND PRICE CHANGE (CUSTOMIZED)', 1, 1, 1, 'CostAndPriceChangeSettings', 'cost_and_price_change_detail', '([cost_and_price_change_detail.cost_and_price_change.status] == App\\Enums\\CDIS\\ApprovalStatus::APPROVED) && ([cost_and_price_change_detail.cost_and_price_change.pricing_type] == App\\Enums\\CDIS\\CostAndPriceChangePricingType::PRICE)', 1, 1, '2022-09-07 22:56:34', '2022-09-08 10:42:04', NULL);
 /*!40000 ALTER TABLE `field_mapping` ENABLE KEYS */;
 
--- Dumping structure for table field_mapping_detail
+-- Dumping structure for table catapult_web.field_mapping_detail
 CREATE TABLE IF NOT EXISTS `field_mapping_detail` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `bid` bigint(20) unsigned NOT NULL,
@@ -91,9 +90,9 @@ CREATE TABLE IF NOT EXISTS `field_mapping_detail` (
   UNIQUE KEY `field_mapping_detail_bid_unique` (`bid`),
   KEY `field_mapping_detail_field_mapping_bid_foreign` (`field_mapping_bid`),
   CONSTRAINT `field_mapping_detail_field_mapping_bid_foreign` FOREIGN KEY (`field_mapping_bid`) REFERENCES `field_mapping` (`bid`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=9933 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9840 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table field_mapping_detail: ~315 rows (approximately)
+-- Dumping data for table catapult_web.field_mapping_detail: ~299 rows (approximately)
 DELETE FROM `field_mapping_detail`;
 /*!40000 ALTER TABLE `field_mapping_detail` DISABLE KEYS */;
 INSERT INTO `field_mapping_detail` (`id`, `bid`, `field_mapping_bid`, `required`, `is_primary_key`, `nullable`, `field`, `description`, `mapping_type`, `file_name`, `default_value`, `column_name`, `reference_column_name`, `head_reference`, `created_at`, `updated_at`) VALUES
@@ -254,19 +253,6 @@ INSERT INTO `field_mapping_detail` (`id`, `bid`, `field_mapping_bid`, `required`
 	(9049, 1104000000000000361, 1000000000000000024, 1, 0, 0, 'product_structure_detail.quantity', '', '', '', '', 'Quantity', NULL, NULL, '2022-05-26 16:39:31', '2022-05-26 16:39:31'),
 	(9050, 1104000000000000362, 1000000000000000024, 1, 1, 0, '', '', '', '', '[product_structure_detail.bid]."D"', 'Bid', NULL, NULL, '2022-05-26 16:39:31', '2022-05-26 16:39:31'),
 	(9051, 1104000000000000363, 1000000000000000024, 1, 0, 0, '', '', '', '', 'Yes', 'Add to AD', NULL, NULL, '2022-05-26 16:39:31', '2022-05-26 16:39:31'),
-	(9636, 1104000000000000483, 1000000000000000031, 1, 1, 0, 'product_branch_price.bid', '', '', '', '', 'Bid', NULL, NULL, '2022-06-07 13:44:58', '2022-06-07 13:44:58'),
-	(9637, 1104000000000000484, 1000000000000000031, 1, 0, 0, 'product_branch_price.product_branch_availability.product_uom_packaging.bid', '', '', '', '', 'Menu ID', NULL, NULL, '2022-06-07 13:44:58', '2022-06-07 13:44:58'),
-	(9638, 1104000000000000485, 1000000000000000031, 1, 0, 0, 'product_branch_price.product_branch_availability.product_uom_packaging.product.category_bid', '', '', '', '', 'Category ID', NULL, NULL, '2022-06-07 13:44:58', '2022-06-07 13:44:58'),
-	(9639, 1104000000000000486, 1000000000000000031, 1, 0, 0, 'product_branch_price.product_branch_availability.product_uom_packaging.barcode', '', '', '', '', 'Menu Code', NULL, NULL, '2022-06-07 13:44:58', '2022-06-07 13:44:58'),
-	(9640, 1104000000000000487, 1000000000000000031, 1, 0, 0, 'product_branch_price.product_branch_availability.product_uom_packaging.description', '', '', '', '', 'Menu Short Description', NULL, NULL, '2022-06-07 13:44:58', '2022-06-07 13:44:58'),
-	(9641, 1104000000000000488, 1000000000000000031, 1, 0, 0, 'product_branch_price.product_branch_availability.product_uom_packaging.long_description', '', '', '', '', 'Menu Long Description', NULL, NULL, '2022-06-07 13:44:58', '2022-06-07 13:44:58'),
-	(9642, 1104000000000000489, 1000000000000000031, 1, 0, 0, '', '', '', '', '([product_branch_price.product_branch_availability.product_uom_packaging.product.status] == 1 ? "Yes" : "No")', 'Is Available', NULL, NULL, '2022-06-07 13:44:58', '2022-06-07 13:44:58'),
-	(9643, 1104000000000000490, 1000000000000000031, 1, 0, 0, '', '', '', '', '([product_branch_price.product_branch_availability.product_uom_packaging.product.tax_code] == 0 ? "Yes" : "No")', 'Is Taxable', NULL, NULL, '2022-06-07 13:44:58', '2022-06-07 13:44:58'),
-	(9644, 1104000000000000491, 1000000000000000031, 1, 0, 0, '', '', '', '', '12', 'Taxable Percentage', NULL, NULL, '2022-06-07 13:44:58', '2022-06-07 13:44:58'),
-	(9645, 1104000000000000492, 1000000000000000031, 1, 0, 0, '', '', '', '', 'No', 'Print Label Sticker', NULL, NULL, '2022-06-07 13:44:58', '2022-06-07 13:44:58'),
-	(9646, 1104000000000000493, 1000000000000000031, 1, 0, 0, '', '', '', '', '(([product_branch_price.product_branch_availability.product_uom_packaging.is_senior_item]  ||  [product_branch_price.product_branch_availabilityproduct_uom_packaging.is_pwd_item]) ? \'Yes\' : \'No\')', 'Allow Discount', NULL, NULL, '2022-06-07 13:44:58', '2022-06-07 13:44:58'),
-	(9647, 1104000000000000494, 1000000000000000031, 1, 0, 0, '', '', '', '', '([product_branch_price.product_pricing_type.name] == \'Selling Price\' ? \'Regular\' : [product_branch_price.product_pricing_type.name])', 'Price Mode', NULL, NULL, '2022-06-07 13:44:59', '2022-06-07 13:44:59'),
-	(9648, 1104000000000000495, 1000000000000000031, 1, 0, 0, 'product_branch_price.current_price', '', '', '', '', 'Selling Price', NULL, NULL, '2022-06-07 13:44:59', '2022-06-07 13:44:59'),
 	(9649, 1104000000000000496, 1000000000000000032, 1, 0, 0, 'product_uom_packaging.bid', '', '', '', '', 'Menu ID', NULL, NULL, '2022-06-07 13:45:33', '2022-06-07 13:45:33'),
 	(9650, 1104000000000000497, 1000000000000000032, 1, 0, 0, 'product_uom_packaging.barcode', '', '', '', '', 'Product Code', NULL, NULL, '2022-06-07 13:45:33', '2022-06-07 13:45:33'),
 	(9651, 1104000000000000498, 1000000000000000032, 1, 0, 0, '', '', '', '', 'in_array([product_uom_packaging.product_uom_packaging_tag.tag_bid],\n    [\n        "1000000000000000005",\n        "1000000000000000006",\n        "1000000000000000007",\n        "1000000000000000002",\n        "1000000000000000004"\n    ]) ? "Yes" : "No"', 'Display on Order', NULL, NULL, '2022-06-07 13:45:33', '2022-06-07 13:45:33'),
@@ -396,21 +382,26 @@ INSERT INTO `field_mapping_detail` (`id`, `bid`, `field_mapping_bid`, `required`
 	(9775, 1104000000000000622, 1000000000000000014, 1, 0, 1, 'official_receipt.*.product.*.supervisor_bid', '', 'VARCHAR', 'PR', '', 'supervisor_bid', 'transaction_detail_id', 'TD.id', '2022-06-07 14:30:21', '2022-06-07 14:30:21'),
 	(9776, 1104000000000000623, 1000000000000000014, 1, 0, 1, 'official_receipt.*.product.*.supervisor_name', '', 'VARCHAR', 'PR', '', 'supervisor_name', 'transaction_detail_id', 'TD.id', '2022-06-07 14:30:21', '2022-06-07 14:30:21'),
 	(9777, 1104000000000000624, 1000000000000000014, 1, 0, 0, 'transaction_id', '', 'VARCHAR', 'TH', '', 'transaction_id', NULL, NULL, '2022-06-07 14:30:21', '2022-06-07 14:30:21'),
-	(9897, 1112000000000000017, 1112000000000000001, 1, 1, 0, 'cost_and_price_change.bid', '', '', '', '', 'Bid', NULL, NULL, '2022-09-07 22:07:51', '2022-09-07 22:07:51'),
-	(9898, 1112000000000000018, 1112000000000000001, 1, 0, 0, 'cost_and_price_change.status', '', '', '', '', 'Status', NULL, NULL, '2022-09-07 22:07:51', '2022-09-07 22:07:51'),
-	(9899, 1112000000000000019, 1112000000000000001, 1, 0, 0, '', '', '', '', '([cost_and_price_change.type] == 1 ? "PERMANENT   " : "TIME TRIGGER")', 'Price Change', NULL, NULL, '2022-09-07 22:07:51', '2022-09-07 22:07:51'),
-	(9900, 1112000000000000020, 1112000000000000001, 1, 0, 0, 'cost_and_price_change.effective_at', '', '', '', '', 'Start Date Time', NULL, NULL, '2022-09-07 22:07:51', '2022-09-07 22:07:51'),
-	(9901, 1112000000000000021, 1112000000000000001, 1, 0, 0, '', '', '', '', '([cost_and_price_change.expires_at] == null ? "-" : [cost_and_price_change.expires_at])', 'End Date Time', NULL, NULL, '2022-09-07 22:07:51', '2022-09-07 22:07:51'),
-	(9902, 1112000000000000022, 1112000000000000001, 1, 0, 0, 'cost_and_price_change.cost_and_price_change_detail.product_uom_packaging.barcode', '', '', '', '', 'Menu Code', NULL, NULL, '2022-09-07 22:07:51', '2022-09-07 22:07:51'),
-	(9903, 1112000000000000023, 1112000000000000001, 1, 0, 0, '', '', '', '', '.', 'Price Mode', NULL, NULL, '2022-09-07 22:07:51', '2022-09-07 22:07:51'),
-	(9904, 1112000000000000024, 1112000000000000001, 1, 0, 0, 'cost_and_price_change.cost_and_price_change_detail.new_value', '', '', '', '', 'Scheduled Price', NULL, NULL, '2022-09-07 22:07:51', '2022-09-07 22:07:51'),
-	(9926, 1112000000000000025, 1112000000000000002, 1, 1, 0, 'cost_and_price_change_detail.bid', '', '', '', '', 'Bid', NULL, NULL, '2022-09-07 22:43:15', '2022-09-07 22:43:15'),
-	(9927, 1112000000000000026, 1112000000000000002, 1, 0, 0, '', '', '', '', '([cost_and_price_change_detail.cost_and_price_change.type] == 1 ? "PERMANENT   " : "TIME TRIGGER")', 'Price Change', NULL, NULL, '2022-09-07 22:43:15', '2022-09-07 22:43:15'),
-	(9928, 1112000000000000027, 1112000000000000002, 1, 0, 0, 'cost_and_price_change_detail.cost_and_price_change.effective_at', '', '', '', '', 'Start Date Time', NULL, NULL, '2022-09-07 22:43:15', '2022-09-07 22:43:15'),
-	(9929, 1112000000000000028, 1112000000000000002, 1, 0, 0, '', '', '', '', '([cost_and_price_change_detail.cost_and_price_change.expires_at] == null ? "-" : [cost_and_price_change_detail.cost_and_price_change.expires_at])', 'End Date Time', NULL, NULL, '2022-09-07 22:43:15', '2022-09-07 22:43:15'),
-	(9930, 1112000000000000029, 1112000000000000002, 1, 0, 0, 'cost_and_price_change_detail.product_uom_packaging.barcode', '', '', '', '', 'Menu Code', NULL, NULL, '2022-09-07 22:43:15', '2022-09-07 22:43:15'),
-	(9931, 1112000000000000030, 1112000000000000002, 1, 0, 0, 'cost_and_price_change_detail.product_pricing_type.name', '', '', '', '', 'Price Mode', NULL, NULL, '2022-09-07 22:43:15', '2022-09-07 22:43:15'),
-	(9932, 1112000000000000031, 1112000000000000002, 1, 0, 0, 'cost_and_price_change_detail.new_value', '', '', '', '', 'Scheduled Price', NULL, NULL, '2022-09-07 22:43:15', '2022-09-07 22:43:15');
+	(9799, 1112000000000000008, 1000000000000000031, 1, 1, 0, 'product_branch_price.bid', '', '', '', '', 'Bid', NULL, NULL, '2022-09-08 10:32:27', '2022-09-08 10:32:27'),
+	(9800, 1112000000000000009, 1000000000000000031, 1, 0, 0, 'product_branch_price.product_branch_availability.product_uom_packaging.bid', '', '', '', '', 'Menu ID', NULL, NULL, '2022-09-08 10:32:27', '2022-09-08 10:32:27'),
+	(9801, 1112000000000000010, 1000000000000000031, 1, 0, 0, 'product_branch_price.product_branch_availability.product_uom_packaging.product.category_bid', '', '', '', '', 'Category ID', NULL, NULL, '2022-09-08 10:32:27', '2022-09-08 10:32:27'),
+	(9802, 1112000000000000011, 1000000000000000031, 1, 0, 0, 'product_branch_price.product_branch_availability.product_uom_packaging.barcode', '', '', '', '', 'Menu Code', NULL, NULL, '2022-09-08 10:32:27', '2022-09-08 10:32:27'),
+	(9803, 1112000000000000012, 1000000000000000031, 1, 0, 0, 'product_branch_price.product_branch_availability.product_uom_packaging.description', '', '', '', '', 'Menu Short Description', NULL, NULL, '2022-09-08 10:32:27', '2022-09-08 10:32:27'),
+	(9804, 1112000000000000013, 1000000000000000031, 1, 0, 0, 'product_branch_price.product_branch_availability.product_uom_packaging.long_description', '', '', '', '', 'Menu Long Description', NULL, NULL, '2022-09-08 10:32:27', '2022-09-08 10:32:27'),
+	(9805, 1112000000000000014, 1000000000000000031, 1, 0, 0, '', '', '', '', '([product_branch_price.product_branch_availability.product_uom_packaging.product.status] == 1 ? "Yes" : "No")', 'Is Available', NULL, NULL, '2022-09-08 10:32:27', '2022-09-08 10:32:27'),
+	(9806, 1112000000000000015, 1000000000000000031, 1, 0, 0, '', '', '', '', '([product_branch_price.product_branch_availability.product_uom_packaging.product.tax_code] == 0 ? "Yes" : "No")', 'Is Taxable', NULL, NULL, '2022-09-08 10:32:27', '2022-09-08 10:32:27'),
+	(9807, 1112000000000000016, 1000000000000000031, 1, 0, 0, '', '', '', '', '12', 'Taxable Percentage', NULL, NULL, '2022-09-08 10:32:27', '2022-09-08 10:32:27'),
+	(9808, 1112000000000000017, 1000000000000000031, 1, 0, 0, '', '', '', '', 'No', 'Print Label Sticker', NULL, NULL, '2022-09-08 10:32:27', '2022-09-08 10:32:27'),
+	(9809, 1112000000000000018, 1000000000000000031, 1, 0, 0, '', '', '', '', '(([product_branch_price.product_branch_availability.product_uom_packaging.is_senior_item]  ||  [product_branch_price.product_branch_availabilityproduct_uom_packaging.is_pwd_item]) ? \'Yes\' : \'No\')', 'Allow Discount', NULL, NULL, '2022-09-08 10:32:27', '2022-09-08 10:32:27'),
+	(9810, 1112000000000000019, 1000000000000000031, 1, 0, 0, '', '', '', '', '([product_branch_price.product_pricing_type.name] == \'Selling Price\' ? \'Regular\' : [product_branch_price.product_pricing_type.name])', 'Price Mode', NULL, NULL, '2022-09-08 10:32:27', '2022-09-08 10:32:27'),
+	(9811, 1112000000000000020, 1000000000000000031, 1, 0, 0, 'product_branch_price.current_price', '', '', '', '', 'Selling Price', NULL, NULL, '2022-09-08 10:32:27', '2022-09-08 10:32:27'),
+	(9833, 1112000000000000021, 1112000000000000001, 1, 1, 0, 'cost_and_price_change_detail.bid', '', '', '', '', 'Bid', NULL, NULL, '2022-09-08 10:59:36', '2022-09-08 10:59:36'),
+	(9834, 1112000000000000022, 1112000000000000001, 1, 0, 0, '', '', '', '', '([cost_and_price_change_detail.cost_and_price_change.type] == App\\Enums\\CDIS\\CostAndPriceChangeType::PERMANENT ? "PERMANENT" : "TIME TRIGGER")', 'Price Change', NULL, NULL, '2022-09-08 10:59:36', '2022-09-08 10:59:36'),
+	(9835, 1112000000000000023, 1112000000000000001, 1, 0, 0, 'cost_and_price_change_detail.cost_and_price_change.effective_at', '', '', '', '', 'Start Date Time', NULL, NULL, '2022-09-08 10:59:36', '2022-09-08 10:59:36'),
+	(9836, 1112000000000000024, 1112000000000000001, 1, 0, 0, '', '', '', '', '([cost_and_price_change_detail.cost_and_price_change.expires_at] == null ? "-" : [cost_and_price_change_detail.cost_and_price_change.expires_at])', 'End Date Time', NULL, NULL, '2022-09-08 10:59:36', '2022-09-08 10:59:36'),
+	(9837, 1112000000000000025, 1112000000000000001, 1, 0, 0, 'cost_and_price_change_detail.product_uom_packaging.barcode', '', '', '', '', 'Menu Code', NULL, NULL, '2022-09-08 10:59:36', '2022-09-08 10:59:36'),
+	(9838, 1112000000000000026, 1112000000000000001, 1, 0, 0, '', '', '', '', '([cost_and_price_change_detail.product_pricing_type.name] == \'Selling Price\' ? \'Regular\' : [cost_and_price_change_detail.product_pricing_type.name])', 'Price Mode', NULL, NULL, '2022-09-08 10:59:36', '2022-09-08 10:59:36'),
+	(9839, 1112000000000000027, 1112000000000000001, 1, 0, 0, 'cost_and_price_change_detail.new_value', '', '', '', '', 'Scheduled Price', NULL, NULL, '2022-09-08 10:59:36', '2022-09-08 10:59:36');
 /*!40000 ALTER TABLE `field_mapping_detail` ENABLE KEYS */;
 
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
