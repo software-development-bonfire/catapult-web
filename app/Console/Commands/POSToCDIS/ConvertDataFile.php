@@ -4,6 +4,7 @@ namespace App\Console\Commands\POSToCDIS;
 
 use App\Entities\ErrorLog;
 use App\Entities\ErrorLogDetail;
+use App\Enums\ErrorStatus;
 use App\Enums\MappingType;
 use App\Enums\Status;
 use App\Enums\StorageType;
@@ -16,6 +17,7 @@ use App\Services\CDIS\v2\TerminalTransactionService;
 use App\Services\CDIS\v2\ZReadService;
 use App\Services\CDIS\v2\POSAuditTrailService;
 use App\Services\CDIS\v2\CashDrawerService;
+use App\Traits\ErrorLogTrait;
 use App\Traits\GenericHelper;
 use App\Traits\StorageTrait;
 use Exception;
@@ -32,7 +34,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ConvertDataFile extends Command
 {
-    use GenericHelper, StorageTrait;
+    use GenericHelper, StorageTrait, ErrorLogTrait;
 
     public $extension = 'json';
     /**
@@ -113,32 +115,11 @@ class ConvertDataFile extends Command
                 $fileStorageSetup = $fieldMappingDetails->fileStorageSetup;
                 $dataMappings = $fieldMappingDetails->dataMappings;
 
-                if ($fileStorageSetup->storage_type == StorageType::FTP) {
-                    $remoteDiskName = 'pos_ftp_remote_convert_data_file';
-                    $localDiskName = 'pos_ftp_local_convert_data_file';
+                $selectedDisk = $this->intializeDisk($fileStorageSetup);
 
-                    resolve('filesystem')->forgetDisk($remoteDiskName);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'ftp');
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.host', $fileStorageSetup->host);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.username', $fileStorageSetup->username);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.password', $fileStorageSetup->password);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.port', $fileStorageSetup->port);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
-
-                    resolve('filesystem')->forgetDisk($localDiskName);
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
-                } else if ($fileStorageSetup->storage_type == StorageType::LOCAL_NETWORK) {
-                    $remoteDiskName = 'pos_local_remote_convert_data_file';
-                    $localDiskName = 'pos_local_local_convert_data_file';
-
-                    resolve('filesystem')->forgetDisk($remoteDiskName);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
-
-                    resolve('filesystem')->forgetDisk($localDiskName);
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
+                if (isset($selectedDisk) && is_array($selectedDisk)) {
+                    $remoteDiskName = $selectedDisk['remoteDiskName'];
+                    $localDiskName = $selectedDisk['localDiskName'];
                 } else {
                     return false;
                 }
@@ -170,6 +151,7 @@ class ConvertDataFile extends Command
                             $entryLogLabel,
                             $folderName,
                             $directory,
+                            ErrorStatus::CONVERSION_ERROR,
                             '',
                             'Mismatched file count',
                             count($folderFileCount).' files found but '.intval($expectedFileCount).' expected file count inside this folder '.$folderName
@@ -427,7 +409,7 @@ class ConvertDataFile extends Command
                                     $error['meta']
                                 );
 
-                                $this->setErrorLog($entryLogLabel, $error['filename'], $directory, $key, $error['error_type'], $error['description']);
+                                $this->setErrorLog($entryLogLabel, $error['filename'], $directory, ErrorStatus::CONVERSION_ERROR, $key, $error['error_type'], $error['description']);
                             }
                         }
 
@@ -446,7 +428,7 @@ class ConvertDataFile extends Command
                             );
                         }
 
-                        $this->createErrorLogFile(null, $localDisk, $failedConversionFolderPathErrors, $folderName);
+                        $this->createErrorLogFile($localDisk, $failedConversionFolderPathErrors, ErrorStatus::CONVERSION_ERROR);
                     }
                 }
             }
@@ -524,7 +506,7 @@ class ConvertDataFile extends Command
                     $disk->move($directory, $processedFolderPath);
                 }
 
-                $this->createLog(__('label.converted'). '  :', 'info', true, [$entryLogLabel], [$fileName]);
+                $this->createLog(__('label.converted').'  :', 'info', true, [$entryLogLabel], [$fileName]);
             }
         } catch(\Throwable $exception) {
             $this->createLog(
@@ -539,9 +521,10 @@ class ConvertDataFile extends Command
                 $entryLogLabel, 
                 $fileName, 
                 $directory, 
+                ErrorStatus::CONVERSION_ERROR,
                 '', 
                 'Failed conversion',
-                $exception->getMessage().' in '.$exception->getFile(). ' at line '. $exception->getLine()
+                $exception->getMessage().' in '.$exception->getFile().' at line '.$exception->getLine()
             );
 
             if ($disk->exists($failedConversionFolderPath)) {
@@ -709,54 +692,5 @@ class ConvertDataFile extends Command
         $entries = $this->syncEntries;
 
         return is_null($name) ? $entries : $entries[$name];
-    }
-
-    private function setErrorLog($entryLogLabel, $filename, $path, $detailSheet, $detailErrorType, $detailDescription) {
-
-        $errorLog = ErrorLog::where('filename', '=', $filename)->first();
-        if ($errorLog === null) {
-            $errorLog = ErrorLog::create(array(
-                'pos_entry' => $entryLogLabel,
-                'filename' => $filename,
-                'path' => $path,
-                'status' => "ERROR",
-            ));
-        }
-
-        ErrorLogDetail::create(array(
-            'error_log_bid' => $errorLog->bid,
-            'sheet' =>  $detailSheet,
-            'error_type' => $detailErrorType,
-            'description' => $detailDescription,
-        ));
-    }
-
-    private function createErrorLogFile($bid, $localDisk, $failedConversionFolderPath, $entryFolderName) {
-        $errorLogs = ErrorLog::whereRaw('Date(created_at) = CURDATE()')->get();
-
-        if ($errorLogs !== null) {
-            $output = "";
-            foreach ($errorLogs as $errorLog) {
-                $details = $errorLog->details;
-                $spaces = (50 - strlen($errorLog->filename)) / 2;
-                $filenameLog = str_repeat(' ', ceil($spaces)).$errorLog->filename.str_repeat(' ', floor($spaces));
-
-                if ($details !== null) {
-                    foreach ($details as $detail) {
-                        $output .= '[CONVERSION ERROR]['.$detail->created_at.']['.$errorLog->pos_entry.']['.$filenameLog.']['.$detail->error_type.': '.$detail->description.']';
-                        $output .= "\n";
-                    }
-                } else {
-                    $output .= '[CONVERSION ERROR]['.$errorLog->created_at.']['.$errorLog->pos_entry.']['.$filenameLog.']';
-                }
-            }
-            $today =  Carbon::now()->format('Y-m-d');
-            $logFile = $failedConversionFolderPath.'/catapult-'.$today.'.log';
-
-            if ($localDisk->exists($logFile)) {
-                $localDisk->delete($logFile);
-            }
-            $localDisk->put($logFile, $output );
-        }
     }
 }

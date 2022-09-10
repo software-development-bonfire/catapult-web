@@ -2,13 +2,21 @@
 
 namespace App\Console\Commands\POSToCDIS;
 
+use App\Entities\ErrorLog;
+use App\Entities\ErrorLogDetail;
+use App\Enums\ErrorStatus;
 use App\Enums\Status;
 use App\Enums\StorageType;
 use App\Repositories\Contracts\FieldMappingRepository;
+use App\Traits\ErrorLogTrait;
+use App\Traits\FilenameRetryCounterTrait;
 use App\Traits\GenericHelper;
+use App\Traits\OutputBufferTrait;
+use App\Traits\StorageTrait;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Console\Command;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -16,8 +24,9 @@ use Illuminate\Support\Str;
 
 class SendDataFromConvertedFile extends Command
 {
-    use GenericHelper;
+    use GenericHelper, StorageTrait, ErrorLogTrait, FilenameRetryCounterTrait, OutputBufferTrait;
 
+    public $extension = '.json';
     /**
      * The name and signature of the console command.
      *
@@ -31,6 +40,8 @@ class SendDataFromConvertedFile extends Command
      * @var string
      */
     protected $description = 'Send data from converted file';
+
+    private $fileContentErrors = [];
 
     /**
      * Create a new command instance.
@@ -52,18 +63,19 @@ class SendDataFromConvertedFile extends Command
         $timeout = $this->option('timeout');
         $timeout =
             filter_var($timeout, FILTER_VALIDATE_BOOLEAN) && is_bool($timeout)
-                ? (float) config('sync.pos.to_cdis.timeout')
-                : (
-                    (float) $timeout
-                        ? filter_var($timeout, FILTER_VALIDATE_FLOAT)
-                        : false
-                );
+            ? (float) config('sync.pos.to_cdis.timeout')
+            : ((float) $timeout
+                ? filter_var($timeout, FILTER_VALIDATE_FLOAT)
+                : false
+            );
 
-        if ($timeout < 0.3 || (! is_float($timeout))) {
+        if ($timeout < 0.3 || (!is_float($timeout))) {
             $this->createLog('Timeout value must be equal or greater than 0.3.', 'error', true, []);
 
             return;
         }
+
+        $maximumRetry = config('sync.pos.to_cdis.max_retry') ?? 5;
 
         $entries = [
             'transaction',
@@ -114,32 +126,11 @@ class SendDataFromConvertedFile extends Command
                 $fileStorageSetup = $fieldMappingDetails->fileStorageSetup;
                 $apiSetup = $fieldMappingDetails->apiSetup;
 
-                if ($fileStorageSetup->storage_type == StorageType::FTP) {
-                    $remoteDiskName = 'pos_ftp_remote_send_data_from_converted_file';
-                    $localDiskName = 'pos_ftp_local_send_data_from_converted_file';
+                $selectedDisk = $this->intializeDisk($fileStorageSetup);
 
-                    resolve('filesystem')->forgetDisk($remoteDiskName);
-                    app()['config']->set('filesystems.disks.' . $remoteDiskName . '.driver', 'ftp');
-                    app()['config']->set('filesystems.disks.' . $remoteDiskName . '.host', $fileStorageSetup->host);
-                    app()['config']->set('filesystems.disks.' . $remoteDiskName . '.username', $fileStorageSetup->username);
-                    app()['config']->set('filesystems.disks.' . $remoteDiskName . '.password', $fileStorageSetup->password);
-                    app()['config']->set('filesystems.disks.' . $remoteDiskName . '.port', $fileStorageSetup->port);
-                    app()['config']->set('filesystems.disks.' . $remoteDiskName . '.root', $fileStorageSetup->remote_path);
-
-                    resolve('filesystem')->forgetDisk($localDiskName);
-                    app()['config']->set('filesystems.disks.' . $localDiskName . '.driver', 'local');
-                    app()['config']->set('filesystems.disks.' . $localDiskName . '.root', $fileStorageSetup->local_path);
-                } else if ($fileStorageSetup->storage_type == StorageType::LOCAL_NETWORK) {
-                    $remoteDiskName = 'pos_local_remote_send_data_from_converted_file';
-                    $localDiskName = 'pos_local_local_send_data_from_converted_file';
-
-                    resolve('filesystem')->forgetDisk($remoteDiskName);
-                    app()['config']->set('filesystems.disks.' . $remoteDiskName . '.driver', 'local');
-                    app()['config']->set('filesystems.disks.' . $remoteDiskName . '.root', $fileStorageSetup->remote_path);
-
-                    resolve('filesystem')->forgetDisk($localDiskName);
-                    app()['config']->set('filesystems.disks.' . $localDiskName . '.driver', 'local');
-                    app()['config']->set('filesystems.disks.' . $localDiskName . '.root', $fileStorageSetup->local_path);
+                if (isset($selectedDisk) && is_array($selectedDisk)) {
+                    $remoteDiskName = $selectedDisk['remoteDiskName'];
+                    $localDiskName = $selectedDisk['localDiskName'];
                 } else {
                     $this->createLog(__('error.no_file_storage_setup_detected'), 'error', true, [$entryLogLabel], []);
                     sleep($timeout);
@@ -149,20 +140,18 @@ class SendDataFromConvertedFile extends Command
                 $entryFolderName = Str::title(str_replace('_', ' ', $entry));
 
                 $localDisk = Storage::disk($localDiskName);
-                $sourcePath = $entryFolderName . '/Converted/To sync';
-                $syncedPath = $entryFolderName . '/Converted/Synced';
-                $failedSyncBadRequestPath = $entryFolderName . '/Converted/Failed sync/Bad request';
-                $failedSyncUnsyncablePath = $entryFolderName . '/Converted/Failed sync/Unsyncable';
+                $sourcePath = $entryFolderName.'/Converted/To sync';
+                $syncedPath = $entryFolderName.'/Converted/Synced';
+                $failedSyncResyncPath = $entryFolderName.'/Converted/Failed sync/Resync';
+                $failedSyncUnsyncablePath = $entryFolderName.'/Converted/Failed sync/Unsyncable';
+                $failedSyncUnsyncableErrorsPath = $failedSyncUnsyncablePath.'/Errors';
 
                 $files = $localDisk->allFiles($sourcePath);
 
                 if (! $files) {
                     $this->createLog(__('message.no_data_to_send'), 'info', true, [$entryLogLabel], []);
-
-                    if (ob_get_length()) {
-                        ob_end_flush();
-                        flush();
-                    }
+                    
+                    $this->flushOutputBuffer();
 
                     continue;
                 } else {
@@ -171,77 +160,92 @@ class SendDataFromConvertedFile extends Command
 
                 foreach ($files as $file) {
                     $fileContent = $localDisk->get($file);
-                    $fileContent = (array) json_decode($fileContent);
+                    $jsonFileContent = (array) json_decode($fileContent);
                     $fileName = substr($file, strrpos($file, '/') + 1);
+
+                    $this->fileContentErrors = [];
+
+                    if ($this->getRetryCount($fileName) > intval($maximumRetry)) {
+                        $this->moveToUnsyncableFolder($localDisk, $failedSyncUnsyncablePath, $file, $fileName);
+                        continue;
+                    }
+
+                    if (! $this->isValidFileAndContent($fileContent, $fileName)) {
+
+                        $this->moveToUnsyncableFolder($localDisk, $failedSyncUnsyncablePath, $file, $fileName);
+
+                        foreach($this->fileContentErrors as $error) {
+                            $this->setErrorLog($entryLogLabel, $fileName, $failedSyncUnsyncablePath, ErrorStatus::SYNCING_ERROR, null, 'Invalid Content', $error);
+                        }
+
+                        continue;
+                    }
 
                     $responseBodyContent = null;
 
                     try {
-                        $response = $this->send($fileContent, $apiSetup);
-                        $statusCodeLabel = 'Status code: '. $response->getStatusCode();
+                        $response = $this->send($jsonFileContent, $apiSetup);
+                        $statusCodeLabel = 'Status code: '.$response->getStatusCode();
 
                         $responseBodyContent = json_decode($response->getBody()->getContents());
-
-                        $destinationPath = null;
+                        $errors = isset($responseBodyContent->errors) ? (array) $responseBodyContent->errors : [];
 
                         if (isset($responseBodyContent->exception) || isset($responseBodyContent->trace)) {
-                            $this->createLog($responseBodyContent->exception.': '.$responseBodyContent->message, 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
+                            $exceptionTrace = $responseBodyContent->exception.': '.$responseBodyContent->message;
+                            $this->createLog($exceptionTrace, 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
+                            $this->setErrorLog($entryLogLabel, $fileName, $failedSyncResyncPath, ErrorStatus::SYNCING_ERROR, null, $statusCodeLabel, $exceptionTrace);
 
-                            $destinationPath = $failedSyncUnsyncablePath.'/'.$fileName;
+                            $this->moveToUnsyncableFolder($localDisk, $failedSyncUnsyncablePath, $file, $fileName);
                         } else {
-                            $errors = isset($responseBodyContent->errors) ? (array) $responseBodyContent->errors : [];
-
                             if ((isset($responseBodyContent->success) && $responseBodyContent->success) || (isset($responseBodyContent->message) && $responseBodyContent->message == 'Duplicate Entry.')) {
-                                $this->createLog($responseBodyContent->message,
+                                $this->createLog(
+                                    $responseBodyContent->message,
                                     ($responseBodyContent->message == 'Duplicate Entry.' ? 'warn' : 'info'),
                                     true,
                                     [$entryLogLabel, $statusCodeLabel],
                                     [$file]
                                 );
 
-                                $destinationPath = $syncedPath.'/'.$fileName;
-                            } else if (isset($responseBodyContent->success) && ! $responseBodyContent->success && count($errors) > 0) {
+                                $this->moveToSyncedFolder($localDisk, $syncedPath, $file, $fileName);
+                            } else if (isset($responseBodyContent->success) && !$responseBodyContent->success && count($errors) > 0) {
                                 $this->createLog(__('error.failed_to_send_data'), 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
                                 $this->createLog('    Errors:', 'error', false);
                                 foreach ($errors as $error) {
-                                    $this->createLog('        -> '.json_encode($error), 'error', false);
+                                    $this->createLog('        -> ' . json_encode($error), 'error', false);
+                                    $this->setErrorLog($entryLogLabel, $fileName, $failedSyncResyncPath, ErrorStatus::SYNCING_ERROR, null, $statusCodeLabel, json_encode($error));
                                 }
-
-                                $destinationPath = $failedSyncBadRequestPath.'/'.$fileName;
-                            } else if (isset($responseBodyContent->success) && ! $responseBodyContent->success || (isset($responseBodyContent->message) && $responseBodyContent->message == 'Request failed.')) {
+                                $this->moveToResyncFolder($localDisk, $failedSyncResyncPath, $file, $fileName);
+                            } else if (isset($responseBodyContent->success) && !$responseBodyContent->success || (isset($responseBodyContent->message) && $responseBodyContent->message == 'Request failed.')) {
                                 $this->createLog(__('error.failed_to_send_data'), 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
-                                $this->createLog('    Cause: '. $responseBodyContent->message, 'error', false);
-
-                                $destinationPath = $failedSyncBadRequestPath.'/'.$fileName;
+                                $this->createLog('    Cause: '.$responseBodyContent->message, 'error', false);
+                              
+                                $this->setErrorLog($entryLogLabel, $fileName, $failedSyncResyncPath, ErrorStatus::SYNCING_ERROR, null, $statusCodeLabel, $responseBodyContent->message);
+                                $this->moveToResyncFolder($localDisk, $failedSyncResyncPath, $file, $fileName);
                             } else {
-                                $this->createLog(__('error.unsyncable_data'), 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
-                                $destinationPath = $failedSyncUnsyncablePath.'/'.$fileName;
+                                $this->createLog(__('error.failed_to_send_data'), 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
+
+                                $this->setErrorLog($entryLogLabel, $fileName, $failedSyncResyncPath, ErrorStatus::SYNCING_ERROR, null, $statusCodeLabel, $responseBodyContent->message);
+                                $this->moveToResyncFolder($localDisk, $failedSyncResyncPath, $file, $fileName);
                             }
                         }
-
-                        if ($localDisk->exists($destinationPath)) {
-                            $localDisk->delete($destinationPath);
-                        }
-
-                        $localDisk->move($file, $destinationPath);
                     } catch (\Exception $exception) {
                         $this->createLog($exception->getMessage(), 'warn', true, [$entryLogLabel]);
+
+                        $this->setErrorLog($entryLogLabel, $fileName, $failedSyncResyncPath, ErrorStatus::SYNCING_ERROR, null, 'Exception', $exception->getMessage());
+                        $this->moveToResyncFolder($localDisk, $failedSyncResyncPath, $file, $fileName);
+
                         sleep($timeout);
 
-                        if (ob_get_length()) {
-                            ob_end_flush();
-                            flush();
-                        }
+                        $this->flushOutputBuffer();
 
                         continue;
                     }
                 }
+
+                $this->createErrorLogFile($localDisk, $failedSyncUnsyncableErrorsPath, ErrorStatus::SYNCING_ERROR);
             }
 
-            if (ob_get_length()) {
-                ob_end_flush();
-                flush();
-            }
+            $this->flushOutputBuffer();
 
             if (! $hasFilesToSync) {
                 sleep($timeout);
@@ -281,5 +285,73 @@ class SendDataFromConvertedFile extends Command
             'branch_code' => config('configuration.branch_code'),
             'system_datetime' => Carbon::now()->format('Y-m-d h:i:s'),
         ];
+    }
+
+    private function isValidFileAndContent($jsonContent, $filename)
+    {
+        if (! $this->hasValidFilenamePattern($filename)) {
+            $this->fileContentErrors[] = __('message.file_has_invalid_pattern');
+            return false;
+        }
+
+        if (! isJsonExtension($filename)) {
+            $this->fileContentErrors[] = __('message.file_is_not_json');
+            return false;
+        }
+
+        if (empty($jsonContent)) {
+            $this->fileContentErrors[] = __('message.empty_json_file');
+            return false;
+        }
+
+        if (!isValidJson($jsonContent)) {
+            $this->fileContentErrors[] = __('message.not_valid_json_file');
+            return false;
+        }
+
+        $json = json_decode($jsonContent, true);
+        if (isset($json['transaction'])) {
+            $transaction = $json['transaction'][0];
+
+            if (!isset($transaction['transaction_id'])) {
+                $this->fileContentErrors[] = __('message.key_not_present', ['key' => 'transaction_id']);
+            }
+
+            if (isset($transaction['official_receipt'])) {
+                $officialReceipt = $transaction['official_receipt'][0];
+
+                if (!isset($officialReceipt['or_number'])) {
+                    $this->fileContentErrors[] = __('message.key_not_present', ['key' => 'or_number']);
+                }
+            } else {
+                $this->fileContentErrors[] = __('message.key_not_present', ['key' => 'official_receipt']);
+            }
+        } else {
+            $this->fileContentErrors[] = __('message.key_not_present', ['key' => 'transaction']);
+        }
+
+        if (count($this->fileContentErrors) > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function moveToSyncedFolder($localDisk, $destinationFolder, $file, $fileName)
+    {
+        $targetFile = $destinationFolder.'/'.$this->removeRetryCount($fileName);
+        $this->moveFile($localDisk, $file, $targetFile);
+    }
+
+    private function moveToUnsyncableFolder($localDisk, $destinationFolder, $file, $fileName)
+    {
+        $targetFile = $destinationFolder.'/'.$this->removeRetryCount($fileName);
+        $this->moveFile($localDisk, $file, $targetFile);
+    }
+
+    private function moveToResyncFolder($localDisk, $destinationFolder, $file, $fileName)
+    {
+        $targetFile = $destinationFolder.'/'.$this->setRetryCount($fileName);
+        $this->moveFile($localDisk, $file, $targetFile);
     }
 }
