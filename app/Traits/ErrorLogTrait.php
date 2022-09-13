@@ -36,33 +36,35 @@ trait ErrorLogTrait
 
     public function createErrorLogFile($localDisk, $destinationErrorFolderPath, $status)
     {
-        $errorLogs = ErrorLog::whereRaw('Date(created_at) = CURDATE()')->where('status', '=', $status)->get();
+        $errorLogs = ErrorLog::whereRaw('Date(created_at) = CURDATE()')->get();
 
         if ($errorLogs !== null) {
-            $filenames = Arr::pluck($errorLogs, 'filename');
-            $entriesMaxLength = empty($filenames) ? 60 :  @max(array_map('strlen', $filenames)) ?? 60;
-            $output = "";
-            foreach ($errorLogs as $errorLog) {
-                $details = $errorLog->details;
-                $spaces = ($entriesMaxLength - strlen($errorLog->filename)) / 2;
-                $filenameLog = str_repeat(' ', ceil($spaces)) . $errorLog->filename . str_repeat(' ', floor($spaces));
+            if (count($errorLogs) > 0) {
+                $filenames = Arr::pluck($errorLogs, 'filename');
+                $entriesMaxLength = empty($filenames) ? 60 :  @max(array_map('strlen', $filenames)) ?? 60;
+                $output = "";
+                foreach ($errorLogs as $errorLog) {
+                    $details = $errorLog->details;
+                    $spaces = ($entriesMaxLength - strlen($errorLog->filename)) / 2;
+                    $filenameLog = str_repeat(' ', ceil($spaces)) . $errorLog->filename . str_repeat(' ', floor($spaces));
 
-                if ($details !== null) {
-                    foreach ($details as $detail) {
-                        $output .= '['.$errorLog->status.']['.$detail->created_at.']['.$errorLog->pos_entry.']['.$filenameLog.']['.$detail->error_type.': '.$detail->description.']';
-                        $output .= "\n";
+                    if ($details !== null) {
+                        foreach ($details as $detail) {
+                            $output .= '[' . $errorLog->status . '][' . $detail->created_at . '][' . $errorLog->pos_entry . '][' . $filenameLog . '][' . $detail->error_type . ': ' . $detail->description . ']';
+                            $output .= "\n";
+                        }
+                    } else {
+                        $output .= '[' . $errorLog->status . '][' . $errorLog->created_at . '][' . $errorLog->pos_entry . '][' . $filenameLog . ']';
                     }
-                } else {
-                    $output .= '['.$errorLog->status.']['.$errorLog->created_at.']['.$errorLog->pos_entry.']['.$filenameLog.']';
                 }
-            }
-            $today =  Carbon::now()->format('Y-m-d');
-            $logFile = $destinationErrorFolderPath.'/catapult-'.$today.'.log';
+                $today =  Carbon::now()->format('Y-m-d');
+                $logFile = $destinationErrorFolderPath . '/catapult-' . $today . '.log';
 
-            if ($localDisk->exists($logFile)) {
-                $localDisk->delete($logFile);
+                if ($localDisk->exists($logFile)) {
+                    $localDisk->delete($logFile);
+                }
+                $localDisk->put($logFile, $output);
             }
-            $localDisk->put($logFile, $output );
         }
     }
 }

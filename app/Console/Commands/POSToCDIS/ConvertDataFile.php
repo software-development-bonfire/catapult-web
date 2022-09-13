@@ -143,10 +143,8 @@ class ConvertDataFile extends Command
                     $folderFileCount = $localDisk->allFiles($directory);
                     $expectedFileCount = substr($directory, -1);
                     $folderName = substr($directory, strrpos($directory, '/') + 1);
-
-                    if ($folderFileCount == $expectedFileCount) {
-                        continue;
-                    } else {
+                   
+                    if (count($folderFileCount) != $expectedFileCount) {
                         $this->setErrorLog(
                             $entryLogLabel,
                             $folderName,
