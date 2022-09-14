@@ -12,6 +12,7 @@ return [
     'pos' => [
         'to_cdis' => [
             'timeout' => 5,
+            'max_retry' => 4,
         ]
     ],
 ];

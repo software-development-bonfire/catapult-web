@@ -89,6 +89,12 @@ return [
             'driver' => 'errorlog',
             'level' => 'debug',
         ],
+
+        'bonfire' => [
+            'driver' => 'bonfire',
+            'path' => storage_path('logs/bonfire.log'),
+            'level' => 'error',
+        ],
     ],
 
 ];

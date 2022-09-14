@@ -2,6 +2,9 @@
 
 namespace App\Console\Commands\POSToCDIS;
 
+use App\Entities\ErrorLog;
+use App\Entities\ErrorLogDetail;
+use App\Enums\ErrorStatus;
 use App\Enums\MappingType;
 use App\Enums\Status;
 use App\Enums\StorageType;
@@ -14,11 +17,14 @@ use App\Services\CDIS\v2\TerminalTransactionService;
 use App\Services\CDIS\v2\ZReadService;
 use App\Services\CDIS\v2\POSAuditTrailService;
 use App\Services\CDIS\v2\CashDrawerService;
+use App\Traits\ErrorLogTrait;
 use App\Traits\GenericHelper;
+use App\Traits\StorageTrait;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -28,7 +34,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ConvertDataFile extends Command
 {
-    use GenericHelper;
+    use GenericHelper, StorageTrait, ErrorLogTrait;
 
     public $extension = 'json';
     /**
@@ -109,32 +115,11 @@ class ConvertDataFile extends Command
                 $fileStorageSetup = $fieldMappingDetails->fileStorageSetup;
                 $dataMappings = $fieldMappingDetails->dataMappings;
 
-                if ($fileStorageSetup->storage_type == StorageType::FTP) {
-                    $remoteDiskName = 'pos_ftp_remote_convert_data_file';
-                    $localDiskName = 'pos_ftp_local_convert_data_file';
+                $selectedDisk = $this->intializeDisk($fileStorageSetup);
 
-                    resolve('filesystem')->forgetDisk($remoteDiskName);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'ftp');
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.host', $fileStorageSetup->host);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.username', $fileStorageSetup->username);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.password', $fileStorageSetup->password);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.port', $fileStorageSetup->port);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
-
-                    resolve('filesystem')->forgetDisk($localDiskName);
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
-                } else if ($fileStorageSetup->storage_type == StorageType::LOCAL_NETWORK) {
-                    $remoteDiskName = 'pos_local_remote_convert_data_file';
-                    $localDiskName = 'pos_local_local_convert_data_file';
-
-                    resolve('filesystem')->forgetDisk($remoteDiskName);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
-
-                    resolve('filesystem')->forgetDisk($localDiskName);
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
+                if (isset($selectedDisk) && is_array($selectedDisk)) {
+                    $remoteDiskName = $selectedDisk['remoteDiskName'];
+                    $localDiskName = $selectedDisk['localDiskName'];
                 } else {
                     return false;
                 }
@@ -143,6 +128,11 @@ class ConvertDataFile extends Command
 
                 $localDisk = Storage::disk($localDiskName);
                 $sourcePath = $entryFolderName.'/To convert';
+
+                $failedConversionFolderPathErrors = '/'.$entryFolderName.'/Failed conversion/Errors';
+              
+                app()['config']->set('logging.channels.bonfire.path',  $failedConversionFolderPathErrors);
+
                 $directories = $localDisk->allDirectories($sourcePath);
 
                 if (! $directories) {
@@ -152,17 +142,25 @@ class ConvertDataFile extends Command
                 foreach ($directories as $directory) {
                     $folderFileCount = $localDisk->allFiles($directory);
                     $expectedFileCount = substr($directory, -1);
-
-                    if ($folderFileCount == $expectedFileCount) {
-                        continue;
-                    }
-
                     $folderName = substr($directory, strrpos($directory, '/') + 1);
+                   
+                    if (count($folderFileCount) != $expectedFileCount) {
+                        $this->setErrorLog(
+                            $entryLogLabel,
+                            $folderName,
+                            $directory,
+                            ErrorStatus::CONVERSION_ERROR,
+                            '',
+                            'Mismatched file count',
+                            count($folderFileCount).' files found but '.intval($expectedFileCount).' expected file count inside this folder '.$folderName
+                        );
+                    }
 
                     $this->createLog(__('label.converting'). ' :', 'info', true, [$entryLogLabel], [$folderName]);
 
                     $files = $localDisk->allFiles($directory);
                     $entriesData = (object) array();
+                    $fileCsvCollection = array();
 
                     foreach ($files as $file) {
                         $filename = substr($file, strrpos($file, '/') + 1);
@@ -170,6 +168,7 @@ class ConvertDataFile extends Command
                         try {
                             $entryFileAcronym = explode('_', $filename)[0];
                             $contents = Excel::toArray(new PosToCdisExport, $file, $localDiskName);
+                            $fileCsvCollection[$entryFileAcronym] = $filename;
 
                             foreach ($contents as $index => $content) {
                                 $keys = $content[0];
@@ -236,6 +235,7 @@ class ConvertDataFile extends Command
                         $mappings = $dataMappings->where('file_name', $entryAcronym)->toArray();
                         if (isset($entriesData->{$entryAcronym})) {
                             $entryData = $entriesData->{$entryAcronym};
+                            $filename = $fileCsvCollection[$entryAcronym];
 
                             foreach ($mappings as $mapping) {
                                 if (strpos($mapping['field'], '.*.') !== false) {
@@ -276,8 +276,9 @@ class ConvertDataFile extends Command
                                         } catch(Exception $exception) {
                                             $mappingErrors[$entryAcronym][] = array(
                                                 'error_type' => 'Reference error',
-                                                'description' => $mapping['column_name'].' not found in CSV file',
-                                                'meta' => [$mapping['file_name'].'.'.$mapping['reference_column_name'],  $objectName.'.'.$mapping['column_name'], $folderName]
+                                                'description' => $mapping['column_name'].' not found in CSV file',                                                
+                                                'meta' => [$mapping['file_name'].'.'.$mapping['reference_column_name'],  $objectName.'.'.$mapping['column_name'], $folderName],
+                                                'filename' => $filename,
                                             );
                                             continue;
                                         }
@@ -293,7 +294,8 @@ class ConvertDataFile extends Command
                                             $mappingErrors[$entryAcronym][] = array(
                                                 'error_type' => 'Reference error',
                                                 'description' => $mapping['head_reference'].' with a value of '.$referenceValue.' not found.',
-                                                'meta' => [$mapping['file_name'].'.'.$mapping['reference_column_name'],  $objectName.'.'.$mapping['column_name'], $folderName]
+                                                'meta' => [$mapping['file_name'].'.'.$mapping['reference_column_name'],  $objectName.'.'.$mapping['column_name'], $folderName],
+                                                'filename' => $filename,
                                             );
                                         }
                                     }
@@ -325,7 +327,8 @@ class ConvertDataFile extends Command
                                                     $mappingErrors[$entryAcronym][] = array(
                                                         'error_type' => 'No value was set even the default value. This is required.',
                                                         'description' => $mapping['column_name'],
-                                                        'meta' => ['Row: '. ($entryDatumIndex + 2)]
+                                                        'meta' => ['Row: '. ($entryDatumIndex + 2)],
+                                                        'filename' => $filename,
                                                     );
                                                 } else {
                                                     $fieldValue = $mapping['default_value'];
@@ -337,7 +340,8 @@ class ConvertDataFile extends Command
                                             $mappingErrors[$entryAcronym][] = array(
                                                 'error_type' => 'Column not found',
                                                 'description' => $mapping['column_name'],
-                                                'meta' => ['Row: '. ($entryDatumIndex + 2)]
+                                                'meta' => ['Row: '. ($entryDatumIndex + 2)],
+                                                'filename' => $filename,
                                             );
 
                                             break;
@@ -377,6 +381,8 @@ class ConvertDataFile extends Command
                             $entryLogLabel,
                             $serviceClass);
                     } else {
+                        $failedConversionFolderPath = '/'.$entryFolderName.'/Failed conversion/'.$folderName;
+
                         $this->createLog(
                             __('error.conversion_failed'),
                             'error',
@@ -400,10 +406,10 @@ class ConvertDataFile extends Command
                                     [],
                                     $error['meta']
                                 );
+
+                                $this->setErrorLog($entryLogLabel, $error['filename'], $directory, ErrorStatus::CONVERSION_ERROR, $key, $error['error_type'], $error['description']);
                             }
                         }
-
-                        $failedConversionFolderPath = '/'.$entryFolderName.'/Failed conversion/'.$folderName;
 
                         try {
                             if ($localDisk->exists($failedConversionFolderPath)) {
@@ -420,6 +426,7 @@ class ConvertDataFile extends Command
                             );
                         }
 
+                        $this->createErrorLogFile($localDisk, $failedConversionFolderPathErrors, ErrorStatus::CONVERSION_ERROR);
                     }
                 }
             }
@@ -497,7 +504,7 @@ class ConvertDataFile extends Command
                     $disk->move($directory, $processedFolderPath);
                 }
 
-                $this->createLog(__('label.converted'). '  :', 'info', true, [$entryLogLabel], [$fileName]);
+                $this->createLog(__('label.converted').'  :', 'info', true, [$entryLogLabel], [$fileName]);
             }
         } catch(\Throwable $exception) {
             $this->createLog(
@@ -506,6 +513,16 @@ class ConvertDataFile extends Command
                 true,
                 [$entryLogLabel],
                 [$fileName, 'Failed conversion']
+            );
+
+            $this->setErrorLog(
+                $entryLogLabel, 
+                $fileName, 
+                $directory, 
+                ErrorStatus::CONVERSION_ERROR,
+                '', 
+                'Failed conversion',
+                $exception->getMessage().' in '.$exception->getFile().' at line '.$exception->getLine()
             );
 
             if ($disk->exists($failedConversionFolderPath)) {
