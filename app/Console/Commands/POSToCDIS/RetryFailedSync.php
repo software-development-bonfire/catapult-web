@@ -117,12 +117,17 @@ class RetryFailedSync extends Command implements ShouldQueue
                     $resyncPath = $entryFolderName.'/Converted/Failed sync/Resync';
                     $unsyncablePath = $entryFolderName.'/Converted/Failed sync/Unsyncable';
 
+                    $toConvertPath = $entryFolderName.'/To convert';
+                    $failedConversionFolderPathErrors = $entryFolderName.'/Failed conversion/Errors';
+
                     try {
 
                         $this->createDirectoryIfNotExist($localDisk, $toSyncPath);
                         $this->createDirectoryIfNotExist($localDisk, $syncedPath);
                         $this->createDirectoryIfNotExist($localDisk, $resyncPath);
                         $this->createDirectoryIfNotExist($localDisk, $unsyncablePath);
+                        $this->createDirectoryIfNotExist($localDisk, $toConvertPath);
+                        $this->createDirectoryIfNotExist($localDisk, $failedConversionFolderPathErrors);
                         
                     } catch (\Exception $ex) {
                         $this->createLog(__('error.remote_directory_not_exists'), 'error', true, [$entryLogLabel], [$fileStorageSetup->remote_path]);

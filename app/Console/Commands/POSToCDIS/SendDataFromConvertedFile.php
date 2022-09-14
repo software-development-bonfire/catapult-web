@@ -4,6 +4,7 @@ namespace App\Console\Commands\POSToCDIS;
 
 use App\Entities\ErrorLog;
 use App\Entities\ErrorLogDetail;
+use App\Enums\CDIS\TerminalTransactionType;
 use App\Enums\ErrorStatus;
 use App\Enums\Status;
 use App\Enums\StorageType;
@@ -144,7 +145,7 @@ class SendDataFromConvertedFile extends Command
                 $syncedPath = $entryFolderName.'/Converted/Synced';
                 $failedSyncResyncPath = $entryFolderName.'/Converted/Failed sync/Resync';
                 $failedSyncUnsyncablePath = $entryFolderName.'/Converted/Failed sync/Unsyncable';
-                $failedSyncUnsyncableErrorsPath = $failedSyncUnsyncablePath.'/Errors';
+                $failedConversionFolderPathErrors = '/'.$entryFolderName.'/Failed conversion/Errors';
 
                 $files = $localDisk->allFiles($sourcePath);
 
@@ -242,7 +243,7 @@ class SendDataFromConvertedFile extends Command
                     }
                 }
 
-                $this->createErrorLogFile($localDisk, $failedSyncUnsyncableErrorsPath, ErrorStatus::SYNCING_ERROR);
+                $this->createErrorLogFile($localDisk, $failedConversionFolderPathErrors, ErrorStatus::SYNCING_ERROR);
             }
 
             $this->flushOutputBuffer();
@@ -310,21 +311,28 @@ class SendDataFromConvertedFile extends Command
         }
 
         $json = json_decode($jsonContent, true);
-        if (isset($json['transaction'])) {
-            $transaction = $json['transaction'][0];
+        if (isset($json['transaction']) ) {
+            $transaction = !empty($json['transaction']) ? $json['transaction'][0] : array();
 
             if (!isset($transaction['transaction_id'])) {
                 $this->fileContentErrors[] = __('message.key_not_present', ['key' => 'transaction_id']);
             }
 
-            if (isset($transaction['official_receipt'])) {
-                $officialReceipt = $transaction['official_receipt'][0];
+            $transactionType = isset($transaction['transaction_type']) ? $transaction['transaction_type'] : null;
+            if (
+                $transactionType === TerminalTransactionType::SALES
+                ||  $transactionType === TerminalTransactionType::REFUND
+                ||  $transactionType === TerminalTransactionType::FREE_ITEMS
+            ) {
+                if (isset($transaction['official_receipt']) && !empty($transaction['official_receipt'])) {
+                    $officialReceipt = $transaction['official_receipt'][0];
 
-                if (!isset($officialReceipt['or_number'])) {
-                    $this->fileContentErrors[] = __('message.key_not_present', ['key' => 'or_number']);
+                    if (!isset($officialReceipt['or_number'])) {
+                        $this->fileContentErrors[] = __('message.key_not_present', ['key' => 'or_number']);
+                    }
+                } else {
+                    $this->fileContentErrors[] = __('message.key_not_present', ['key' => 'official_receipt']);
                 }
-            } else {
-                $this->fileContentErrors[] = __('message.key_not_present', ['key' => 'official_receipt']);
             }
         } else {
             $this->fileContentErrors[] = __('message.key_not_present', ['key' => 'transaction']);
