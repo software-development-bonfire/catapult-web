@@ -9,10 +9,26 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use App\Traits\FilenameRetryCounterTrait;
 
+/**
+ * Trait ErrorLogTrait
+ * @package App\Traits
+ */
 trait ErrorLogTrait
 {
     use FilenameRetryCounterTrait;
 
+    /**
+     * Insert errors into database
+     *
+     * @param string  $entryLogLabel
+     * @param string  $fileName
+     * @param string  $path
+     * @param string  $status
+     * @param string  $detailSheet
+     * @param string  $detailErrorType
+     * @param string  $detailDescription
+     *
+     */
     public function setErrorLog($entryLogLabel, $fileName, $path, $status, $detailSheet, $detailErrorType, $detailDescription)
     {
         $filename = $this->removeRetryCount($fileName);
@@ -34,6 +50,14 @@ trait ErrorLogTrait
         ));
     }
 
+    /**
+     * Create error log file by date, constructed data from errors stored in the database
+     *
+     * @param FileSystem  $localDisk
+     * @param string  $destinationErrorFolderPath
+     * @param string  $status
+     *
+     */
     public function createErrorLogFile($localDisk, $destinationErrorFolderPath, $status)
     {
         $errorLogs = ErrorLog::whereRaw('Date(created_at) = CURDATE()')->get();

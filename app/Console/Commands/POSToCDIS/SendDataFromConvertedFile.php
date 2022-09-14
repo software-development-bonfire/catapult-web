@@ -305,7 +305,7 @@ class SendDataFromConvertedFile extends Command
             return false;
         }
 
-        if (!isValidJson($jsonContent)) {
+        if (! isValidJson($jsonContent)) {
             $this->fileContentErrors[] = __('message.not_valid_json_file');
             return false;
         }
@@ -314,7 +314,7 @@ class SendDataFromConvertedFile extends Command
         if (isset($json['transaction']) ) {
             $transaction = !empty($json['transaction']) ? $json['transaction'][0] : array();
 
-            if (!isset($transaction['transaction_id'])) {
+            if (! isset($transaction['transaction_id'])) {
                 $this->fileContentErrors[] = __('message.key_not_present', ['key' => 'transaction_id']);
             }
 
@@ -327,10 +327,10 @@ class SendDataFromConvertedFile extends Command
                 ||  $transactionType === TerminalTransactionType::FREE_ITEMS )
                 &&  $isZread === 0
             ) {
-                if (isset($transaction['official_receipt']) && !empty($transaction['official_receipt'])) {
+                if (isset($transaction['official_receipt']) && ! empty($transaction['official_receipt'])) {
                     $officialReceipt = $transaction['official_receipt'][0];
 
-                    if (!isset($officialReceipt['or_number'])) {
+                    if (! isset($officialReceipt['or_number'])) {
                         $this->fileContentErrors[] = __('message.key_not_present', ['key' => 'or_number']);
                     }
                 } else {

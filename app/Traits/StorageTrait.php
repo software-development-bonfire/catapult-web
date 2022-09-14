@@ -5,8 +5,19 @@ namespace App\Traits;
 use App\Enums\StorageType;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Trait StorageTrait
+ * @package App\Traits
+ */
 trait StorageTrait
 {
+    /**
+     * Get disk depending on storage type
+     *
+     * @param object  $fileStorageSetup
+     *
+     * @return FileSystem
+     */
     public function intializeDisk($fileStorageSetup)
     {
         $remoteDiskName = null;
@@ -47,6 +58,14 @@ trait StorageTrait
         ];
     }
 
+    /**
+     * Check directory inside root folder and create if not exist
+     *
+     * @param string  $rootFolder
+     * @param string  $targetFoler
+     *
+     * @return FileSystem
+     */
     public function checkDirectory($rootFolder, $targetFoler)
     {
         $checked = true;
@@ -61,6 +80,12 @@ trait StorageTrait
         return $checked;
     }
 
+    /**
+     * Create directory if not exist
+     *
+     * @param FileSystem  $disk
+     * @param string  $directory
+     */
     public function createDirectoryIfNotExist($disk, $directory)
     {
         if (!$disk->exists($directory)) {
@@ -68,6 +93,13 @@ trait StorageTrait
         }
     }
 
+    /**
+     * Move file
+     *
+     * @param FileSystem  $disk
+     * @param string  $sourceFile
+     * @param string  $targetFile
+     */
     public function moveFile($disk, $sourceFile, $targetFile)
     {
         if ($disk->exists($targetFile)) {

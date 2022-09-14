@@ -1,6 +1,6 @@
 <?php
 
-if (!function_exists('stringToJson')) {
+if (! function_exists('stringToJson')) {
 
     function stringToJson($data)
     {
@@ -8,18 +8,18 @@ if (!function_exists('stringToJson')) {
     }
 }
 
-if (!function_exists('isValidJson')) {
+if (! function_exists('isValidJson')) {
 
     function isValidJson($data)
     {
-        if (!empty($data)) {
+        if (! empty($data)) {
             @json_decode($data);
             return (json_last_error() === JSON_ERROR_NONE);
         }
     }
 }
 
-if (!function_exists('isJsonExtension')) {
+if (! function_exists('isJsonExtension')) {
 
     function isJsonExtension($filename)
     {

@@ -10,12 +10,28 @@ use App\Observers\BidObserver;
  */
 trait FilenameRetryCounterTrait
 {
+    /**
+     * Check if filename pattern is valid
+     * validation is not totally acurate
+     * it checks only the count of splitted filename
+     *
+     * @param string  $fileName
+     *
+     * @return boolean
+     */
     public function hasValidFilenamePattern($filename)
     {
         $explodedFilename = explode("_", $filename);
         return count($explodedFilename) > 6;
     }
 
+    /**
+     * This will add a (retry count) in filename as suffix
+     *
+     * @param string  $filename
+     *
+     * @return string constructed filename with (retry count)
+     */
     public function setRetryCount($filename)
     {
         $extensions = explode('.', $filename);
@@ -37,6 +53,13 @@ trait FilenameRetryCounterTrait
         return implode("_", $explodedFilename).".".$extension;
     }
 
+    /**
+     * Get (retry count) in filename
+     *
+     * @param string  $filename
+     *
+     * @return int $retryCount
+     */
     public function getRetryCount($filename)
     {
         $retryCount = 0;
@@ -47,6 +70,14 @@ trait FilenameRetryCounterTrait
         return intval($retryCount);
     }
 
+    /**
+     * Remove (retry count) in filename
+     * and returns to its original filename
+     *
+     * @param string  $filename
+     *
+     * @return int $originalFilename
+     */
     public function removeRetryCount($filename)
     {
         $extension = null;

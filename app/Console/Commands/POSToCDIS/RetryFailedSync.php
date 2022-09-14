@@ -134,7 +134,7 @@ class RetryFailedSync extends Command implements ShouldQueue
                         continue;
                     }
 
-                    if (!$this->hasInternetConnection()) {
+                    if (! $this->hasInternetConnection()) {
                         $this->createLog(__('message.no_internet_connection'), 'error', true,  [$entryLogLabel]);
 
                         $this->flushOutputBuffer();
