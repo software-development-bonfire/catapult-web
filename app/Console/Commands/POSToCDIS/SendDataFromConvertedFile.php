@@ -319,10 +319,13 @@ class SendDataFromConvertedFile extends Command
             }
 
             $transactionType = isset($transaction['transaction_type']) ? $transaction['transaction_type'] : null;
-            if (
+            $isZread = isset($transaction['is_zread']) ? $transaction['is_zread'] : 0;
+
+            if ((
                 $transactionType === TerminalTransactionType::SALES
                 ||  $transactionType === TerminalTransactionType::REFUND
-                ||  $transactionType === TerminalTransactionType::FREE_ITEMS
+                ||  $transactionType === TerminalTransactionType::FREE_ITEMS )
+                &&  $isZread === 0
             ) {
                 if (isset($transaction['official_receipt']) && !empty($transaction['official_receipt'])) {
                     $officialReceipt = $transaction['official_receipt'][0];
