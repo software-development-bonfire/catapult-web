@@ -36,6 +36,11 @@ class CDISCostAndPriceChange extends BaseModel
         'updated_by' => 'string',
     ];
 
+    public function details() 
+    {
+        return $this->hasMany(CDISCostAndPriceChangeDetail::class, 'head_bid', 'bid');
+    }
+
     public function vendor()
     {
         return $this->belongsTo(CDISVendor::class, 'vendor_bid', 'bid');
