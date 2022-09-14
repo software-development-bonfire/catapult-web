@@ -16,6 +16,60 @@
 CREATE DATABASE IF NOT EXISTS `catapult_web` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */;
 USE `catapult_web`;
 
+-- Dumping structure for table catapult_web.api_setups
+CREATE TABLE IF NOT EXISTS `api_setups` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `bid` bigint(20) unsigned NOT NULL,
+  `name` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `end_point` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` tinyint(4) NOT NULL,
+  `created_by` bigint(20) unsigned NOT NULL,
+  `updated_by` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `api_setups_bid_unique` (`bid`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Dumping data for table catapult_web.api_setups: ~5 rows (approximately)
+DELETE FROM `api_setups`;
+/*!40000 ALTER TABLE `api_setups` DISABLE KEYS */;
+INSERT INTO `api_setups` (`id`, `bid`, `name`, `end_point`, `status`, `created_by`, `updated_by`, `created_at`, `updated_at`, `deleted_at`) VALUES
+	(1, 1, 'Transaction', 'http://localhost/api/catapult/v2/terminal_transaction/store', 1, 1, 1, '2021-09-28 16:58:45', '2022-09-08 00:02:15', NULL),
+	(2, 1000000000000000001, 'Zread', 'http://localhost/api/catapult/v2/zread/store', 1, 1000000000000000002, 1, '2021-10-11 18:25:39', '2022-09-08 00:02:21', NULL),
+	(3, 1000000000000000002, 'Audit Trail', 'http://localhost/api/catapult/v2/audit_trail/store', 1, 1000000000000000002, 1, '2021-10-12 11:31:16', '2022-09-08 00:02:25', NULL),
+	(4, 1000000000000000003, 'Cash Breakdown', 'http://localhost/api/catapult/v2/cash_breakdown/store', 1, 1000000000000000001, 1, '2021-10-12 14:11:07', '2022-09-08 00:02:30', NULL),
+	(5, 1000000000000000004, 'Cash Drawer', 'http://localhost/api/catapult/v2/cash_drawer/store', 1, 1000000000000000001, 1, '2021-10-12 14:11:18', '2022-09-08 00:02:36', NULL);
+/*!40000 ALTER TABLE `api_setups` ENABLE KEYS */;
+
+-- Dumping structure for table catapult_web.catapult_db_setups
+CREATE TABLE IF NOT EXISTS `catapult_db_setups` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `bid` bigint(20) unsigned NOT NULL,
+  `name` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `host` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `port` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `db_name` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `username` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` tinyint(4) NOT NULL,
+  `created_by` bigint(20) unsigned NOT NULL,
+  `updated_by` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `catapult_db_setups_bid_unique` (`bid`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Dumping data for table catapult_web.catapult_db_setups: ~0 rows (approximately)
+DELETE FROM `catapult_db_setups`;
+/*!40000 ALTER TABLE `catapult_db_setups` DISABLE KEYS */;
+INSERT INTO `catapult_db_setups` (`id`, `bid`, `name`, `host`, `port`, `db_name`, `username`, `password`, `status`, `created_by`, `updated_by`, `created_at`, `updated_at`, `deleted_at`) VALUES
+	(1, 1, 'TEST', 'TEST', 'TEST', 'TEST', 'TEST', 'TEST', 1, 1, NULL, '2021-09-28 16:58:40', '2021-09-28 16:58:40', NULL);
+/*!40000 ALTER TABLE `catapult_db_setups` ENABLE KEYS */;
+
 -- Dumping structure for table catapult_web.field_mapping
 CREATE TABLE IF NOT EXISTS `field_mapping` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -45,7 +99,7 @@ CREATE TABLE IF NOT EXISTS `field_mapping` (
   CONSTRAINT `field_mapping_file_storage_setup_bid_foreign` FOREIGN KEY (`file_storage_setup_bid`) REFERENCES `file_storage_setup` (`bid`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table catapult_web.field_mapping: ~16 rows (approximately)
+-- Dumping data for table catapult_web.field_mapping: ~17 rows (approximately)
 DELETE FROM `field_mapping`;
 /*!40000 ALTER TABLE `field_mapping` DISABLE KEYS */;
 INSERT INTO `field_mapping` (`id`, `bid`, `file_storage_setup_bid`, `catapult_db_setup_bid`, `api_setup_bid`, `name`, `type`, `status`, `is_customized_mapping`, `data_entry`, `primary_table`, `data_condition`, `created_by`, `updated_by`, `created_at`, `updated_at`, `deleted_at`) VALUES
@@ -92,7 +146,7 @@ CREATE TABLE IF NOT EXISTS `field_mapping_detail` (
   CONSTRAINT `field_mapping_detail_field_mapping_bid_foreign` FOREIGN KEY (`field_mapping_bid`) REFERENCES `field_mapping` (`bid`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=9840 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table catapult_web.field_mapping_detail: ~299 rows (approximately)
+-- Dumping data for table catapult_web.field_mapping_detail: ~306 rows (approximately)
 DELETE FROM `field_mapping_detail`;
 /*!40000 ALTER TABLE `field_mapping_detail` DISABLE KEYS */;
 INSERT INTO `field_mapping_detail` (`id`, `bid`, `field_mapping_bid`, `required`, `is_primary_key`, `nullable`, `field`, `description`, `mapping_type`, `file_name`, `default_value`, `column_name`, `reference_column_name`, `head_reference`, `created_at`, `updated_at`) VALUES
@@ -403,6 +457,38 @@ INSERT INTO `field_mapping_detail` (`id`, `bid`, `field_mapping_bid`, `required`
 	(9838, 1112000000000000026, 1112000000000000001, 1, 0, 0, '', '', '', '', '([cost_and_price_change_detail.product_pricing_type.name] == \'Selling Price\' ? \'Regular\' : [cost_and_price_change_detail.product_pricing_type.name])', 'Price Mode', NULL, NULL, '2022-09-08 10:59:36', '2022-09-08 10:59:36'),
 	(9839, 1112000000000000027, 1112000000000000001, 1, 0, 0, 'cost_and_price_change_detail.new_value', '', '', '', '', 'Scheduled Price', NULL, NULL, '2022-09-08 10:59:36', '2022-09-08 10:59:36');
 /*!40000 ALTER TABLE `field_mapping_detail` ENABLE KEYS */;
+
+-- Dumping structure for table catapult_web.file_storage_setup
+CREATE TABLE IF NOT EXISTS `file_storage_setup` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `bid` bigint(20) unsigned NOT NULL,
+  `name` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `storage_type` tinyint(4) NOT NULL DEFAULT '0',
+  `local_path` varchar(512) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `remote_path` varchar(512) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `server` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `host` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `port` tinyint(4) DEFAULT NULL,
+  `username` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `password` varchar(128) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` tinyint(4) NOT NULL,
+  `remarks` varchar(128) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by` bigint(20) unsigned NOT NULL,
+  `updated_by` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `file_storage_setup_bid_unique` (`bid`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Dumping data for table catapult_web.file_storage_setup: ~2 rows (approximately)
+DELETE FROM `file_storage_setup`;
+/*!40000 ALTER TABLE `file_storage_setup` DISABLE KEYS */;
+INSERT INTO `file_storage_setup` (`id`, `bid`, `name`, `storage_type`, `local_path`, `remote_path`, `server`, `host`, `port`, `username`, `password`, `status`, `remarks`, `created_by`, `updated_by`, `created_at`, `updated_at`, `deleted_at`) VALUES
+	(1, 1, 'CDIS TO POS (DEFAULT)', 0, 'C:\\Users\POS\\Documents\\CDIS\\CDIS to POS', 'C:\\Users\POS\\Documents\\CDIS\\CDIS to POS', '', '', NULL, 'superadmin', 'superadmin031819', 1, NULL, 1, 1, '2021-09-28 16:58:16', '2022-09-07 23:29:49', NULL),
+	(2, 1000000000000000001, 'POS TO CDIS (DEFAULT)', 0, 'C:\\Users\POS\\Documents\\CDIS\\POS to CDIS\\Catapult', 'C:\\Users\POS\\Documents\\CDIS\\POS to CDIS', '', '', NULL, 'superadmin', 'superadmin031819', 1, NULL, 1000000000000000002, 1, '2021-10-05 11:10:42', '2022-09-07 23:30:39', NULL);
+/*!40000 ALTER TABLE `file_storage_setup` ENABLE KEYS */;
 
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
