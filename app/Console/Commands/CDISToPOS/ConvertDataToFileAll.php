@@ -212,7 +212,9 @@ class ConvertDataToFileAll extends Command
 
                     $action = 'create';
                     if ($this->modelHasColumn($entityDatum, $tableName, 'deleted_at')) {
-                        $action = 'delete';
+                        if ($entityDatum->deleted_at !== null) {
+                            $action = 'delete';
+                        }
                     } else {
                         if (
                             $this->modelHasColumn($entityDatum, $tableName, 'created_at') &&
