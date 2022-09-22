@@ -748,8 +748,13 @@ class ConvertDataToFile extends Command
                     }
 
                     foreach ($relationData as $relationDatum) {
-                        $tableName = str_replace('cdis_', '', $relationDatum->tableName());
-                        $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $syncEntry, $entryName);
+                        if (isset($relationDatum)) {
+                            $dynamicRelationTableName = $this->getTableName($relationDatum);
+                            if (isset($dynamicRelationTableName)) {
+                                $tableName = str_replace('cdis_', '', $dynamicRelationTableName);
+                                $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $syncEntry, $entryName);
+                            }
+                        }
                     }
                 }
 
@@ -1301,9 +1306,14 @@ class ConvertDataToFile extends Command
                     }
 
                     foreach ($relationData as $relationDatum) {
-                        $tableName = str_replace('cdis_', '', $relationDatum->tableName());
-                        foreach ($forEachVariableData as $paramData) {
-                            $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $forSyncDatum, $entryName, $paramName, $paramData);
+                        if (isset($relationDatum)) {
+                            $dynamicRelationTableName = $this->getTableName($relationDatum);
+                            if (isset($dynamicRelationTableName)) {
+                                $tableName = str_replace('cdis_', '', $dynamicRelationTableName);
+                                foreach ($forEachVariableData as $paramData) {
+                                    $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $forSyncDatum, $entryName, $paramName, $paramData);
+                                }
+                            }
                         }
                     }
                 }

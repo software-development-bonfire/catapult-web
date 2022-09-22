@@ -835,10 +835,12 @@ class ConvertDataToFileAll extends Command
                         foreach ($relationData as $relationDatum) {
                             if (! empty($relationDatum)) {
                                 if (is_array($relationDatum)) {
-                                    $tableName = $this->getTableName($relationDatum);
-                                    $tableName = str_replace('cdis_', '',$tableName);
-                                    
-                                    $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $syncEntry, $entryName);
+                                    $dynamicRelationTableName = $this->getTableName($relationDatum);
+                                    if (isset($dynamicRelationTableName)) {
+                                        $tableName = str_replace('cdis_', '',$dynamicRelationTableName);
+                                        
+                                        $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $syncEntry, $entryName);
+                                    }
                                 }
                             }
                         }
@@ -1402,9 +1404,12 @@ class ConvertDataToFileAll extends Command
 
                             foreach ($relationData as $relationDatum) {
                                 if (isset($relationDatum)) {
-                                    $tableName = str_replace('cdis_', '', $relationDatum->tableName());
-                                    foreach ($forEachVariableData as $paramData) {
-                                        $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $forSyncDatum, $entryName, $paramName, $paramData);
+                                    $dynamicRelationTableName = $this->getTableName($relationDatum);
+                                    if (isset($dynamicRelationTableName)) {
+                                        $tableName = str_replace('cdis_', '', $dynamicRelationTableName);
+                                        foreach ($forEachVariableData as $paramData) {
+                                            $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $forSyncDatum, $entryName, $paramName, $paramData);
+                                        }
                                     }
                                 }
                             }
