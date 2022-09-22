@@ -820,26 +820,31 @@ class ConvertDataToFileAll extends Command
 
                     $referenceFoundRelation = implode('.', array_reverse($relationCamelCase));
 
-                    if (!empty($referenceFoundRelation)) {
-                        $eagerLoadedData = $entryData->load($referenceFoundRelation);
+                    if (! empty($referenceFoundRelation)) {
 
-                        $relationData = $eagerLoadedData;
-                        foreach ($relationCamelCase as $function) {
-                            if (! isset($relationData->{$function})) {
-                                break;
+                        if ($entryData->relationLoaded($referenceFoundRelation)) {
+
+                            $eagerLoadedData = $entryData->load($referenceFoundRelation);
+                            $relationData = $eagerLoadedData;
+
+                            foreach ($relationCamelCase as $function) {
+                                if (! isset($relationData->{$function})) {
+                                    break;
+                                }
+
+                                $relationData = $relationData->{$function};
                             }
-
-                            $relationData = $relationData->{$function};
-                        }
-
-                        foreach ($relationData as $relationDatum) {
-                            if (! empty($relationDatum)) {
-                                if (is_array($relationDatum)) {
-                                    $dynamicRelationTableName = $this->getTableName($relationDatum);
-                                    if (isset($dynamicRelationTableName)) {
-                                        $tableName = str_replace('cdis_', '',$dynamicRelationTableName);
-                                        
-                                        $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $syncEntry, $entryName);
+                            if (! empty($relationData)) {
+                                foreach ($relationData as $relationDatum) {
+                                    if (! empty($relationDatum)) {
+                                        if (is_array($relationDatum)) {
+                                            $dynamicRelationTableName = $this->getTableName($relationDatum);
+                                            if (! empty($dynamicRelationTableName)) {
+                                                $tableName = str_replace('cdis_', '',$dynamicRelationTableName);
+                                                
+                                                $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $syncEntry, $entryName);
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1393,22 +1398,27 @@ class ConvertDataToFileAll extends Command
 
                     $referenceFoundRelation = implode('.', array_reverse($relationCamelCase));
 
-                    if (isset($referenceFoundRelation)) {
-                        $eagerLoadedData = $entryData->load($referenceFoundRelation);
+                    if (! empty($referenceFoundRelation)) {
 
-                        $relationData = $eagerLoadedData;
-                        if (isset($referenceFoundRelation)) {
+                        if ($entryData->relationLoaded($referenceFoundRelation)) {
+
+                            $eagerLoadedData = $entryData->load($referenceFoundRelation);
+                            $relationData = $eagerLoadedData;
+                        
                             foreach ($relationCamelCase as $function) {
                                 $relationData = $relationData->{$function};
                             }
-
-                            foreach ($relationData as $relationDatum) {
-                                if (isset($relationDatum)) {
-                                    $dynamicRelationTableName = $this->getTableName($relationDatum);
-                                    if (isset($dynamicRelationTableName)) {
-                                        $tableName = str_replace('cdis_', '', $dynamicRelationTableName);
-                                        foreach ($forEachVariableData as $paramData) {
-                                            $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $forSyncDatum, $entryName, $paramName, $paramData);
+                            if (! empty($relationData)) {
+                                foreach ($relationData as $relationDatum) {
+                                    if (! empty($relationDatum)) {
+                                        if (is_array($relationDatum)) {
+                                            $dynamicRelationTableName = $this->getTableName($relationDatum);
+                                            if (! empty($dynamicRelationTableName)) {
+                                                $tableName = str_replace('cdis_', '', $dynamicRelationTableName);
+                                                foreach ($forEachVariableData as $paramData) {
+                                                    $mappedData[] = $this->plotMapping($dataMappings, $relationDatum, $tableName, $forSyncDatum, $entryName, $paramName, $paramData);
+                                                }
+                                            }
                                         }
                                     }
                                 }
