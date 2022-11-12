@@ -48,7 +48,11 @@ class Listen extends Command
     {
         while (true) {
             if ($this->hasInternetConnection()) {
-                $this->connect();
+                try {
+                    $this->connect();
+                } catch (\Exception $e) {
+                    Artisan::call('network:resolve');
+                }
             } else {
                 $this->createLog("Could not connect: No internet connection.", 'warn', true, ['CONNECTION ERROR']);
             }
