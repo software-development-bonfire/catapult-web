@@ -46,8 +46,15 @@ class Listen extends Command
      */
     public function handle()
     {
+        $cdisUrl = urlToDomain(config()->get('app.cdis_url'));
+        $pusherDomain = 'ws-eu.pusher.com';
+
         while (true) {
-            if ($this->hasInternetConnection()) {
+            if (
+                $this->hasInternetConnection() &&
+                $this->hasInternetConnection($cdisUrl) &&
+                $this->hasInternetConnection($pusherDomain)
+            ) {
                 try {
                     $this->connect();
                 } catch (\Exception $e) {
