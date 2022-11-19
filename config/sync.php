@@ -7,6 +7,7 @@ return [
             'limit' => 300,
             'interval' => 3600,
             'broadcast' => true,
+            'progress_divisor' => 100
         ]
     ],
     'pos' => [

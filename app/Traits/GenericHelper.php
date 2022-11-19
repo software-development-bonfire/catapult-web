@@ -289,14 +289,17 @@ trait GenericHelper
         }
     }
 
-    public function cdisAndCatapultSyncChannel($branchCode)
+    public function cdisAndCatapultSyncChannel($branchCode, $includeBranchCode = true)
     {
         $clientId = config('configuration.client_id');
         $cdisUrl = config()->get('app.cdis_url');
         $host = str_replace(':', '_', parse_url($cdisUrl, PHP_URL_HOST));
         $port = parse_url($cdisUrl, PHP_URL_PORT);
 
-        return $host.(! is_null($port) ? '_'.$port : '').'_catapult_sync.'.$clientId.'_'.$branchCode;
+        if ($includeBranchCode) {
+            return $host.(! is_null($port) ? '_'.$port : '').'_catapult_sync.'.$clientId.'_'.$branchCode;
+        }
+        return  $host.(! is_null($port) ? '_'.$port : '').'_catapult_sync.'.$clientId;
     }
 
     public function hasInternetConnection($hostname = "www.example.com", $port = 80)
