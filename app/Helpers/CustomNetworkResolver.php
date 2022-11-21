@@ -33,13 +33,13 @@ class CustomNetworkResolver
     {
         $resetted = false;
 
-        $exec_string = 'netsh int ip reset';
+        $execString = 'netsh int ip reset';
 
-        $this->printCommandEntry($exec_string);
+        $this->printCommandEntry($execString);
 
         // Exec string for Windows-based systems.
         // Other OS is not yet supported
-        exec($exec_string, $output, $return);
+        exec($execString, $output, $return);
 
         // Strip empty lines and reorder the indexes from 0 (to make results more
         // uniform across OS versions).
@@ -66,23 +66,21 @@ class CustomNetworkResolver
     {
         $flushed = false;
 
-        $exec_string = 'ipconfig /flushdns';
+        $execString = 'ipconfig /flushdns';
 
-        $this->printCommandEntry($exec_string);
+        $this->printCommandEntry($execString);
 
         // Exec string for Windows-based systems.
         // Other OS is not yet supported
-        exec($exec_string, $output, $return);
+        exec($execString, $output, $return);
 
         $this->commandOutput = implode('', $output);
         $output = array_values(array_filter($output));
 
         $this->printOutput($output);
 
-        if (! empty($output[1])) {
-            if ($output[1] === $this->expectedFlushOuputMessage) {
-                $flushed = true;
-            }
+        if (! empty($output[1]) && ($output[1] === $this->expectedFlushOuputMessage)) {
+            $flushed = true;
         }
 
         return $flushed;
