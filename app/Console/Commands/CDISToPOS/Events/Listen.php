@@ -46,9 +46,20 @@ class Listen extends Command
      */
     public function handle()
     {
+        $cdisUrl = urlToDomain(config()->get('app.cdis_url'));
+        $pusherDomain = 'ws-eu.pusher.com';
+
         while (true) {
-            if ($this->hasInternetConnection()) {
-                $this->connect();
+            if (
+                $this->hasInternetConnection() &&
+                $this->hasInternetConnection($cdisUrl) &&
+                $this->hasInternetConnection($pusherDomain)
+            ) {
+                try {
+                    $this->connect();
+                } catch (\Exception $e) {
+                    Artisan::call('network:resolve');
+                }
             } else {
                 $this->createLog("Could not connect: No internet connection.", 'warn', true, ['CONNECTION ERROR']);
             }
