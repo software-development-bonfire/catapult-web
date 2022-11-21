@@ -25,6 +25,9 @@ class CustomNetworkResolver
     /**
      * We need to reinitiate network protocol installed
      * the machine, send command to reset ip
+     * 
+     * @return boolean
+     *   The result after resetting network proocol
      */
     public function resolve()
     {
@@ -34,6 +37,8 @@ class CustomNetworkResolver
 
         $this->printCommandEntry($exec_string);
 
+        // Exec string for Windows-based systems.
+        // Other OS is not yet supported
         exec($exec_string, $output, $return);
 
         // Strip empty lines and reorder the indexes from 0 (to make results more
@@ -43,7 +48,7 @@ class CustomNetworkResolver
 
         $this->printOutput($output);
         // If the result line in the output is not empty, parse it.
-        if (!empty($output[1])) {
+        if (! empty($output[1])) {
             $resetted = true;
         }
 
@@ -52,15 +57,21 @@ class CustomNetworkResolver
 
     /**
      * We need to flush dns to resolve some DNS caching
+     * and to resolve some issues in website browsing experience
+     * 
+     * @return boolean
+     *   The result after flushing DNS
      */
     public function flushDns()
     {
-        $resetted = false;
+        $flushed = false;
 
         $exec_string = 'ipconfig /flushdns';
 
         $this->printCommandEntry($exec_string);
 
+        // Exec string for Windows-based systems.
+        // Other OS is not yet supported
         exec($exec_string, $output, $return);
 
         $this->commandOutput = implode('', $output);
@@ -70,19 +81,29 @@ class CustomNetworkResolver
 
         if (! empty($output[1])) {
             if ($output[1] === $this->expectedFlushOuputMessage) {
-                $resetted = true;
+                $flushed = true;
             }
         }
 
-        return $resetted;
+        return $flushed;
     }
 
+    /**
+     * Log command entry via default laravel logging system
+     * It will helps to determine what commands being executed
+     * and if in-case there are problems encountered, this may helps
+     * for debugging purpose
+     */
     private function printCommandEntry($commandString)
     {
         Log::info($this->lineSeparator);
         Log::info("Executing {$commandString}...");
     }
 
+    /**
+     * Print the command output to display as exact CLI output
+     * when method=exec, this will work on Windows OS only
+     */
     private function printOutput($output)
     {
         if (isset($output) && is_array($output)) {

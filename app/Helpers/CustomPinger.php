@@ -51,7 +51,7 @@ class CustomPinger
      */
     public function __construct($host, $ttl = 255, $timeout = 10)
     {
-        if (!isset($host)) {
+        if (! isset($host)) {
             throw new \Exception("Error: Host name not supplied.");
         }
 
@@ -234,17 +234,17 @@ class CustomPinger
         // Exec string for Windows-based systems.
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
             // -n = number of pings; -i = ttl; -w = timeout (in milliseconds).
-            $exec_string = 'ping -n 1 -i ' . $ttl . ' -w ' . ($timeout * 1000) . ' ' . $host;
+            $exec_string = 'ping -n 1 -i '.$ttl.' -w '.($timeout * 1000).' '.$host;
         }
         // Exec string for Darwin based systems (OS X).
         else if (strtoupper(PHP_OS) === 'DARWIN') {
             // -n = numeric output; -c = number of pings; -m = ttl; -t = timeout.
-            $exec_string = 'ping -n -c 1 -m ' . $ttl . ' -t ' . $timeout . ' ' . $host;
+            $exec_string = 'ping -n -c 1 -m '.$ttl.' -t '.$timeout.' '.$host;
         }
         // Exec string for other UNIX-based systems (Linux).
         else {
             // -n = numeric output; -c = number of pings; -t = ttl; -W = timeout
-            $exec_string = 'ping -n -c 1 -t ' . $ttl . ' -W ' . $timeout . ' ' . $host . ' 2>&1';
+            $exec_string = 'ping -n -c 1 -t '.$ttl.' -W '.$timeout.' '.$host.' 2>&1';
         }
 
         exec($exec_string, $output, $return);
@@ -255,7 +255,7 @@ class CustomPinger
         $output = array_values(array_filter($output));
 
         // If the result line in the output is not empty, parse it.
-        if (!empty($output[1])) {
+        if (! empty($output[1])) {
             // Search for a 'time' value in the result line.
             $response = preg_match("/time(?:=|<)(?<time>[\.0-9]+)(?:|\s)ms/", $output[1], $matches);
 
@@ -281,8 +281,8 @@ class CustomPinger
         $start = microtime(true);
         // fsockopen prints a bunch of errors if a host is unreachable. Hide those
         // irrelevant errors and deal with the results instead.
-        $fp = @fsockopen($this->host, $this->port, $errno, $errstr, $this->timeout);
-        if (!$fp) {
+        $fSock = @fsockopen($this->host, $this->port, $errno, $errstr, $this->timeout);
+        if (! $fSock) {
             $latency = false;
         } else {
             $latency = microtime(true) - $start;
@@ -308,14 +308,14 @@ class CustomPinger
         $code = "\x00";
         $checksum = "\x00\x00";
         $identifier = "\x00\x00";
-        $seq_number = "\x00\x00";
-        $package = $type . $code . $checksum . $identifier . $seq_number . $this->data;
+        $seqNumber = "\x00\x00";
+        $package = $type.$code.$checksum.$identifier.$seqNumber.$this->data;
 
         // Calculate the checksum.
         $checksum = $this->calculateChecksum($package);
 
         // Finalize the package.
-        $package = $type . $code . $checksum . $identifier . $seq_number . $this->data;
+        $package = $type.$code.$checksum.$identifier.$seqNumber.$this->data;
 
         // Create a socket, connect to server, then read socket and calculate.
         if ($socket = socket_create(AF_INET, SOCK_RAW, 1)) {

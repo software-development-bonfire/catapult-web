@@ -28,11 +28,11 @@ if (! function_exists('genericGroupBy')) {
     }
 }
 
-if (!function_exists('urlToDomain')) {
+if (! function_exists('urlToDomain')) {
     function urlToDomain($url)
     {
         $input = trim($url, '/');
-        if (!preg_match('#^http(s)?://#', $input)) {
+        if (! preg_match('#^http(s)?://#', $input)) {
             $input = 'http://' . $input;
         }
         $urlParts = parse_url($input);

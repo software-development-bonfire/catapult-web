@@ -64,7 +64,7 @@ class NetworkTroubleshooter extends Command
         $resolved = true;
         try {
             $config = \React\Dns\Config\Config::loadSystemConfigBlocking();
-            if (!$config->nameservers) {
+            if (! $config->nameservers) {
                 $config->nameservers[] = '8.8.8.8';
             }
 
