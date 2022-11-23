@@ -27,4 +27,5 @@ final class CatapultSyncStatus extends Enum
     const ConversionDone    = 'ConversionDone';
     const CancelConversion  = 'CancelConversion';
     const CancelSyncing     = 'CancelSyncing';
+    const PongCatapult      = 'PongCatapult';
 }

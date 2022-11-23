@@ -150,7 +150,6 @@ class FetchDataForSyncPerEvent extends Command
         $timeEnd = microtime(true);
         $executionTime = ($timeEnd - $timeStart);
 
-        Log::alert(__('info.fetch_success').' @ '.$this->secondsToHumanReadableTime($executionTime));
         $this->createLog(__('info.fetch_success').' @ '.$this->secondsToHumanReadableTime($executionTime), 'info', true);
 
         // If syncing is not yet executed, then we must

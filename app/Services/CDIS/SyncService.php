@@ -121,6 +121,8 @@ class SyncService
 
             $uri = config('endpoint.cdis.domain').''.config('endpoint.cdis.for.catapult.v1.sync');
 
+            $progressDivisor = config('sync.cdis.to_catapult.progress_divisor');
+
             $options = [
                 'json' => ['sender_details' => $this->getSenderDetails(), 'bids' => $bids],
                 'headers' => [
@@ -131,6 +133,13 @@ class SyncService
             $request = $this->request($uri, $options, $client);
 
             $bodyContent = json_decode($request->getBody()->getContents());
+
+            if (empty($bodyContent)) {
+                return (object) [
+                    'count' => 0,
+                    'total' => 0
+                ];
+            }
 
             $count = $bodyContent->data !== null && isset($bodyContent->data->count) ? $bodyContent->data->count : 0;
             $total = $bodyContent->data !== null && isset($bodyContent->data->total) ? $bodyContent->data->total : 0;
@@ -233,7 +242,7 @@ class SyncService
                 if ($broadcast && $showProgress) {
                     $this->pushSyncStatus($branchCode, $broadcast, __('info.syncing').$progress.' of '.$total);
                 } else {
-                    if ($broadcast && ($progress % 100 == 0)) {
+                    if ($broadcast && ($progress % $progressDivisor == 0)) {
                         $this->pushSyncStatus($branchCode,  $broadcast, __('info.syncing').$progress.' of '.$total);
                     }
                 }

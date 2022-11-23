@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\CDISToPOS;
 
+use App\Enums\CatapultSyncStatus;
 use App\Traits\DatabaseTransaction;
 use App\Traits\GenericHelper;
 use App\Traits\JobCancellationTrait;
@@ -101,6 +102,7 @@ class CancelConvertDataToFile extends Command
         // send to CDIS that conversion been cancelled
         if ($broadcast && !$isConverting) {
             $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.create_csv_for_new_branch_cancelled'), null);
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status',  ['state' => CatapultSyncStatus::ConversionDone, 'code' => $branchCode], null);
             $this->clearCancelledConversion();
             $this->clearConverting();
         }

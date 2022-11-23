@@ -6,6 +6,7 @@ use App\Entities\CDISSync;
 use App\Entities\ErrorLog;
 use App\Entities\ErrorLogDetail;
 use App\Entities\FieldMapping;
+use App\Enums\CatapultSyncStatus;
 use App\Enums\MappingType;
 use App\Enums\Status;
 use App\Enums\StorageType;
@@ -70,6 +71,7 @@ class ConvertDataToFile extends Command
         ini_set('max_execution_time', '-1');
         ini_set('memory_limit', '-1');
 
+        $progressDivisor = config('sync.cdis.to_catapult.progress_divisor');
         $branchCode = config('configuration.branch_code');
 
         $interval = $this->option('interval');
@@ -206,7 +208,7 @@ class ConvertDataToFile extends Command
                 if ($broadcast &&  $showProgress) {
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.converting').$progress.'/'.$totalCount, null);
                 } else {
-                    if ($broadcast && ($progress % 100 == 0)) {
+                    if ($broadcast && ($progress % $progressDivisor == 0)) {
                         $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.converting').$progress.'/'.$totalCount, null);
                     }
                 }
@@ -259,9 +261,11 @@ class ConvertDataToFile extends Command
             } else {
                 $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone',  __('info.create_csv_for_new_branch_success').' @ '.$this->secondsToHumanReadableTime($executionTime), null);
             }
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status',  ['state' => CatapultSyncStatus::ConversionDone, 'code' => $branchCode], null);
         }
         $this->clearCancelledConversion();
         $this->clearConverting();
+        $this->setSyncStatus(CatapultSyncStatus::ConversionDone);
     }
 
     /**

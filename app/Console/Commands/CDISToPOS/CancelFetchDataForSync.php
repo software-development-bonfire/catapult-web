@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\CDISToPOS;
 
+use App\Enums\CatapultSyncStatus;
 use App\Traits\GenericHelper;
 use App\Traits\JobCancellationTrait;
 use App\Traits\PusherTrait;
@@ -113,6 +114,7 @@ class CancelFetchDataForSync extends Command
         // send to CDIS that syncing been cancelled
         if ($broadcast && !$isSyncing) {
             $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', __('info.syncing_cancelled'), null);
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status',  ['state' => CatapultSyncStatus::SyncDone, 'code' => $branchCode], null);
             $this->clearCancelledSyncing();
             $this->clearSyncing();
         }

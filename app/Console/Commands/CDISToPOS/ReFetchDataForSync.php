@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\CDISToPOS;
 
+use App\Enums\CatapultSyncStatus;
 use App\Enums\DeleteSyncedAction;
 use App\Services\CDIS\SyncService;
 use App\Traits\GenericHelper;
@@ -140,6 +141,7 @@ class ReFetchDataForSync extends Command
             $this->clearCancelledSyncing();
             $this->clearSyncing();
 
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status',  ['state' => CatapultSyncStatus::Converting, 'code' => $branchCode], null);
             if ($generateType === 'changes') {
                 Artisan::queue('cdis:convert-data-to-file-event', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false']);
             } else {
