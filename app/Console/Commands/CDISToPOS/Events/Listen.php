@@ -160,7 +160,6 @@ class Listen extends Command
 
                 case "App\Events\Catapult\TriggerCDISFetchDataForSyncPerEvent":
                     if ($this->getSyncStatus() !== CatapultSyncStatus::Syncing) {
-                        $this->triggerPusher($branchCode, CatapultSyncStatus::Syncing, __('info.syncing'), $payload);
                         Artisan::queue('cdis:fetch-data-for-sync-event', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false']);
                     }
                     break;
@@ -218,6 +217,7 @@ class Listen extends Command
 
                 case "App\Events\Catapult\TriggerCDISFetchDataForSyncManualDone":
                     $this->triggerPusher($branchCode, CatapultSyncStatus::SyncDone, __('info.syncing_to_catapult_success'), $payload);
+                    $this->setSyncStatus(CatapultSyncStatus::SyncDone);
                     break;
 
                 default:

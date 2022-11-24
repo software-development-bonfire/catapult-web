@@ -3,6 +3,7 @@
 namespace App\Services\CDIS;
 
 use App\Entities\CDISSync;
+use App\Enums\CatapultSyncStatus;
 use App\Enums\DeleteSyncedAction;
 use App\Jobs\CDIS\DeleteSynced;
 use App\Jobs\CDIS\Sync;
@@ -14,6 +15,7 @@ use App\Traits\PusherTrait;
 use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -107,9 +109,11 @@ class SyncService
     {
         if ($broadcast) {
             $this->initializePusher();
+            $this->pushSyncStatus($branchCode,  $broadcast,  ['state' => CatapultSyncStatus::Syncing, 'code' => $branchCode], 'catapult:status');
         }
 
         $this->setSyncing();
+        $this->setSyncStatus(CatapultSyncStatus::Syncing);
 
         return $this->transaction(function () use ($bids, $branchCode, $broadcast, $deleteSyncedDone, $showProgress) {
             $client = [
@@ -244,20 +248,29 @@ class SyncService
                 } else {
                     if ($broadcast && ($progress % $progressDivisor == 0)) {
                         $this->pushSyncStatus($branchCode,  $broadcast, __('info.syncing').$progress.' of '.$total);
+                        if (count($bids) > 0) {
+                            DeleteSynced::dispatch($bids, $branchCode, $broadcast, $deleteSyncedDone, $hasBeenCancelled);
+                            $this->pushSyncStatus($branchCode,  $broadcast,  ['state' => CatapultSyncStatus::SyncDone, 'code' => $branchCode], 'catapult:status');
+                            $this->setSyncStatus(CatapultSyncStatus::SyncDone);
+                        }
                     }
                 }
             }
             if ($hasBeenCancelled) {
                 if ($broadcast) {
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', __('info.syncing_cancelled'), null);
+                    $this->pushSyncStatus($branchCode,  $broadcast, __('info.syncing_cancelled'), 'SyncDone');
                 }
             } else {
                 if (count($bids) > 0) {
                     DeleteSynced::dispatch($bids, $branchCode, $broadcast, $deleteSyncedDone, $hasBeenCancelled);
+                    $this->pushSyncStatus($branchCode,  $broadcast,  ['state' => CatapultSyncStatus::SyncDone, 'code' => $branchCode], 'catapult:status');
+                    $this->setSyncStatus(CatapultSyncStatus::SyncDone);
                 }
             }
             $this->clearCancelledSyncing();
             $this->clearSyncing();
+            $this->setSyncStatus(CatapultSyncStatus::SyncDone);
 
             return (object) [
                 'count' => $count,
@@ -285,10 +298,10 @@ class SyncService
         ];
     }
 
-    private function pushSyncStatus($branchCode, $broadcast, $message)
+    private function pushSyncStatus($branchCode, $broadcast, $message, $eventName = 'Syncing')
     {
         if ($broadcast) {
-            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Syncing', $message, null);
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), $eventName, $message, null);
         }
     }
 
@@ -344,6 +357,7 @@ class SyncService
             \App\Entities\CDISProductModifierDetail::class,
             \App\Entities\CDISTags::class,
             \App\Entities\CDISProductUomPackagingTag::class,
+            \App\Entities\CDISChargesSettings::class
         ];
     }
 }

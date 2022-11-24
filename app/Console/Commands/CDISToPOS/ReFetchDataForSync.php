@@ -88,7 +88,6 @@ class ReFetchDataForSync extends Command
 
         $syncService = app()->make(SyncService::class);
 
-        $this->setSyncing();
         $this->clearCancelledConversion();
         $this->clearConverting();
 
@@ -140,6 +139,7 @@ class ReFetchDataForSync extends Command
         if ($noDataToSync) { 
             $this->clearCancelledSyncing();
             $this->clearSyncing();
+            $this->setSyncStatus(CatapultSyncStatus::Converting);
 
             $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status',  ['state' => CatapultSyncStatus::Converting, 'code' => $branchCode], null);
             if ($generateType === 'changes') {

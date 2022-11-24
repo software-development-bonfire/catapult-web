@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\CDISToPOS;
 
+use App\Enums\CatapultSyncStatus;
 use App\Enums\DeleteSyncedAction;
 use App\Services\CDIS\SyncService;
 use App\Traits\GenericHelper;
@@ -112,8 +113,9 @@ class FetchDataForSync extends Command
                 Cache::forget('cdis_fetching_data_for_sync');
                 $this->createLog(__('message.no_data_to_sync'), 'info', true);
                 if ($broadcast) {
-                    Log::alert(__('message.no_data_to_sync'));
+                    $this->setSyncStatus(CatapultSyncStatus::SyncDone);
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', __('message.no_data_to_sync'), null);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status',  ['state' => CatapultSyncStatus::SyncDone, 'code' => $branchCode], null);
                 }
             } else if (isset($forSync->bidsChunks) && $forSync->bidsChunks > 0) {
                 Cache::forever('cdis_fetching_data_for_sync', true);
@@ -156,8 +158,10 @@ class FetchDataForSync extends Command
         // send to CDIS that syncing been cancelled
         if ($broadcast && $hasBeenCancelled) {
             $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', __('info.syncing_cancelled'), null);
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status',  ['state' => CatapultSyncStatus::SyncDone, 'code' => $branchCode], null);
             $this->clearCancelledSyncing();
             $this->clearSyncing();
+            $this->setSyncStatus(CatapultSyncStatus::SyncDone);
         }
     }
 }
