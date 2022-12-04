@@ -3,6 +3,7 @@
 namespace App\Services\CDIS;
 
 use App\Entities\CDISSync;
+use App\Enums\CatapultActionType;
 use App\Enums\CatapultSyncStatus;
 use App\Enums\DeleteSyncedAction;
 use App\Jobs\CDIS\DeleteSynced;
@@ -16,6 +17,7 @@ use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -37,11 +39,11 @@ class SyncService
      * @param string $table
      * @return \Illuminate\Http\Response
      */
-    public function forSync($limit = 100, $table = 'all', $broadcast = false, $deleteSyncedDone = DeleteSyncedAction::CONVERT_ALL, $showProgress = false, $isRefetched = false)
+    public function forSync($limit = 100, $table = 'all', $broadcast = false, $catapultActionType = CatapultActionType::EVENT, $progressDivisor = 100,  $showProgress = false, $isRefetched = false)
     {
-        return $this->transaction(function () use ($limit, $table, $broadcast, $deleteSyncedDone, $showProgress, $isRefetched) {
-            if ($broadcast && $deleteSyncedDone === DeleteSyncedAction::CONVERT && ! $isRefetched) {
-                CDISSync::truncate();
+        return $this->transaction(function () use ($limit, $table, $broadcast, $catapultActionType, $progressDivisor, $showProgress, $isRefetched) {
+            if ($broadcast && $catapultActionType === CatapultActionType::NEW_BRANCH && ! $isRefetched) {
+                //CDISSync::truncate();
             }
 
             $client = [
@@ -87,7 +89,7 @@ class SyncService
             $bidsChunks = array_chunk($bids, $limit);
 
             foreach ($bidsChunks as $bidsChunk) {
-                Sync::dispatch($bidsChunk, $senderDetails['branch_code'], $broadcast, $deleteSyncedDone, $showProgress);
+                Sync::dispatch($bidsChunk, $senderDetails['branch_code'], $broadcast, $catapultActionType, $progressDivisor, $showProgress);
             }
 
             return (object) [
@@ -105,17 +107,22 @@ class SyncService
      * @param bool $broadcast
      * @return \Illuminate\Http\Response
      */
-    public function sync($bids = [], $branchCode, $broadcast = false, $deleteSyncedDone, $showProgress = false)
+    public function sync($bids = [], $branchCode, $broadcast = false, $catapultActionType, $progressDivisor, $showProgress = false)
     {
         if ($broadcast) {
             $this->initializePusher();
-            $this->pushSyncStatus($branchCode,  $broadcast,  ['state' => CatapultSyncStatus::Syncing, 'code' => $branchCode], 'catapult:status');
+            $this->pushSyncStatus($branchCode,  $broadcast,  [
+                'state' => CatapultSyncStatus::Syncing, 
+                'code' => $branchCode, 
+                'description' => $catapultActionType
+            ], 'catapult:status');
+            $this->pushSyncStatus($branchCode,  $broadcast, __('info.syncing'), CatapultSyncStatus::Progress);
         }
 
         $this->setSyncing();
         $this->setSyncStatus(CatapultSyncStatus::Syncing);
 
-        return $this->transaction(function () use ($bids, $branchCode, $broadcast, $deleteSyncedDone, $showProgress) {
+        return $this->transaction(function () use ($bids, $branchCode, $broadcast, $catapultActionType, $progressDivisor, $showProgress) {
             $client = [
                 'verify' => false,
                 'http_errors' => false,
@@ -124,8 +131,6 @@ class SyncService
             ];
 
             $uri = config('endpoint.cdis.domain').''.config('endpoint.cdis.for.catapult.v1.sync');
-
-            $progressDivisor = config('sync.cdis.to_catapult.progress_divisor');
 
             $options = [
                 'json' => ['sender_details' => $this->getSenderDetails(), 'bids' => $bids],
@@ -159,6 +164,7 @@ class SyncService
             $hasBeenCancelled = false;
 
             $bids = [];
+            $autoDeletedBids = [];
 
             $progress = 0;
             foreach ($values as $value) {
@@ -167,6 +173,7 @@ class SyncService
                     break;
                 }
                 array_push($bids, $value->sync->bid);
+                array_push($autoDeletedBids, $value->sync->bid);
 
                 unset($value->sync->id);
                 unset($value->sync->bid);
@@ -247,30 +254,28 @@ class SyncService
                     $this->pushSyncStatus($branchCode, $broadcast, __('info.syncing').$progress.' of '.$total);
                 } else {
                     if ($broadcast && ($progress % $progressDivisor == 0)) {
-                        $this->pushSyncStatus($branchCode,  $broadcast, __('info.syncing').$progress.' of '.$total);
-                        if (count($bids) > 0) {
-                            DeleteSynced::dispatch($bids, $branchCode, $broadcast, $deleteSyncedDone, $hasBeenCancelled);
-                            $this->pushSyncStatus($branchCode,  $broadcast,  ['state' => CatapultSyncStatus::SyncDone, 'code' => $branchCode], 'catapult:status');
-                            $this->setSyncStatus(CatapultSyncStatus::SyncDone);
-                        }
+                        $this->pushSyncStatus($branchCode,  $broadcast, __('info.syncing').$progress.' of '.$total, CatapultSyncStatus::Progress);
                     }
                 }
             }
             if ($hasBeenCancelled) {
                 if ($broadcast) {
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', __('info.syncing_cancelled'), null);
-                    $this->pushSyncStatus($branchCode,  $broadcast, __('info.syncing_cancelled'), 'SyncDone');
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), CatapultSyncStatus::ProgressDone, __('info.syncing_cancelled'), null);
+                    $this->pushSyncStatus($branchCode,  $broadcast, __('info.syncing_cancelled'), CatapultSyncStatus::SyncDone);
                 }
             } else {
                 if (count($bids) > 0) {
-                    DeleteSynced::dispatch($bids, $branchCode, $broadcast, $deleteSyncedDone, $hasBeenCancelled);
-                    $this->pushSyncStatus($branchCode,  $broadcast,  ['state' => CatapultSyncStatus::SyncDone, 'code' => $branchCode], 'catapult:status');
-                    $this->setSyncStatus(CatapultSyncStatus::SyncDone);
+                    DeleteSynced::dispatch($bids, $branchCode, $broadcast, $catapultActionType, $hasBeenCancelled);
+                    $this->pushSyncStatus($branchCode,  $broadcast,  [
+                        'state' => CatapultSyncStatus::ProgressDone, 
+                        'code' => $branchCode, 
+                        'description' => $catapultActionType
+                    ], 'catapult:status');
                 }
             }
             $this->clearCancelledSyncing();
             $this->clearSyncing();
-            $this->setSyncStatus(CatapultSyncStatus::SyncDone);
+            $this->setSyncStatus(CatapultSyncStatus::ProgressDone);
 
             return (object) [
                 'count' => $count,

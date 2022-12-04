@@ -14,20 +14,21 @@ class DeleteSynced implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $bids, $branchCode, $broadcast, $deleteSyncedAction,  $cancelled;
+    public $bids, $branchCode, $broadcast, $catapultActionType, $cancelled, $resummable;
     /**
      * Create a new job instance.
      *
      * @param array $bids
      * @return void
      */
-    public function __construct($bids, $branchCode, $broadcast, $deleteSyncedAction , $cancelled = false)
+    public function __construct($bids, $branchCode, $broadcast, $catapultActionType, $cancelled = false, $resummable = false)
     {
         $this->bids = $bids;
         $this->branchCode = $branchCode;
         $this->broadcast = $broadcast;
-        $this->deleteSyncedAction = $deleteSyncedAction;
+        $this->catapultActionType = $catapultActionType;
         $this->cancelled = $cancelled;
+        $this->resummable = $resummable;
     }
 
     /**
@@ -49,8 +50,9 @@ class DeleteSynced implements ShouldQueue
                 'bid' => $this->bids,
                 'branch_code' => $this->branchCode,
                 'broadcast' => $this->broadcast,
-				'deleteSyncedAction' => $this->deleteSyncedAction,
+				'catapultActionType' => $this->catapultActionType,
 				'cancelled' => $this->cancelled,
+				'resummable' => $this->resummable,
             ],
             'headers' => [
                 'Accept' => 'application/json',

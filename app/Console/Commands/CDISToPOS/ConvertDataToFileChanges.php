@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
-class ConvertDataToFilePerEvent extends Command
+class ConvertDataToFileChanges extends Command
 {
     use DatabaseTransaction, GenericHelper, PusherTrait, JobCancellationTrait, StorageTrait;
 
@@ -38,7 +38,7 @@ class ConvertDataToFilePerEvent extends Command
      *
      * @var string
      */
-    protected $signature = 'cdis:convert-data-to-file-event {--interval=true}{--limit=true}{--broadcast=false}{--progress=false}';
+    protected $signature = 'cdis:convert-data-to-file-changes {--interval=true}{--limit=true}{--broadcast=false}{--type=EVENT}{--progress=false}{--progress_divisor=100}';
 
     /**
      * The console command description.
@@ -76,28 +76,20 @@ class ConvertDataToFilePerEvent extends Command
         $branchCode = config('configuration.branch_code');
 
         $interval = $this->option('interval');
-        $interval =
-            filter_var($interval, FILTER_VALIDATE_BOOLEAN)
-            ? config('sync.cdis.to_catapult.interval')
-            : ((int) $interval
-                ? filter_var($interval, FILTER_VALIDATE_INT)
-                : false
-            );
+        $interval = toBooleanOrInt($interval, config('sync.cdis.to_catapult.interval'));
 
-        $limit = $this->option('limit');
-        $limit =
-            filter_var($limit, FILTER_VALIDATE_BOOLEAN)
-            ? config('sync.cdis.to_catapult.limit')
-            : ((int) $limit
-                ? filter_var($limit, FILTER_VALIDATE_INT)
-                : false
-            );
+        $limit = config('sync.cdis.to_catapult.convert_limit');
 
         $broadcast = $this->option('broadcast');
-        $broadcast = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
+        $broadcast = toBooleanOrInt($broadcast, config('sync.cdis.to_catapult.broadcast'));
 
         $showProgress = $this->option('progress');
         $showProgress = filter_var($showProgress, FILTER_VALIDATE_BOOLEAN);
+
+        $catapultActionType = $this->option('type');
+
+        $progressDivisor = $this->option('progress_divisor');
+        $progressDivisor = toBooleanOrInt($progressDivisor, config('sync.cdis.to_catapult.progress_divisor'));
 
         Cache::forget('excludedEntries');
         Cache::forget('excludedSyncBids');
@@ -110,12 +102,18 @@ class ConvertDataToFilePerEvent extends Command
 
         // Conversion already been executed
         $this->setConverting();
+        $this->setSyncStatus(CatapultSyncStatus::Converting);
 
         $this->mappingVariable = [];
 
         if ($broadcast) {
             $this->initializePusher();
             $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.converting_changes_only'), null);
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status',  [
+                'state' => CatapultSyncStatus::Converting, 
+                'code' => $branchCode, 
+                'description' => $catapultActionType
+            ], null);
         }
 
         $syncEntries = app()->make(SyncEntryRepository::class)
@@ -123,7 +121,7 @@ class ConvertDataToFilePerEvent extends Command
 
         foreach ($syncEntries as $syncEntry) {
             $this->syncEntries[$syncEntry->name] = $syncEntry->alias;
-            Cache::forget('file_storage_setup_' . $syncEntry->name);
+            Cache::forget('file_storage_setup_'.$syncEntry->name);
         }
 
         $fieldMappingDetails = app()
@@ -253,26 +251,30 @@ class ConvertDataToFilePerEvent extends Command
                 break;
             }
         }
+
         $timeEnd = microtime(true);
         $executionTime = ($timeEnd - $timeStart);
 
+        $convertMessage = null;
         if ($hasBeenCancelled) {
-            $this->createLog(__('info.generate_csv_changes_only_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime));
+            $convertMessage = __('info.generate_csv_changes_only_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime);
         } else {
-            $this->createLog(__('info.generate_csv_changes_only_success').' @ '.$this->secondsToHumanReadableTime($executionTime));
+            $convertMessage = __('info.generate_csv_changes_only_success').' @ '.$this->secondsToHumanReadableTime($executionTime);
         }
+        $this->createLog($convertMessage);
 
         if ($broadcast) {
-            if ($hasBeenCancelled) {
-                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.generate_csv_changes_only_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime), null);
+            if ($hasNoDataToConvert) {
+                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), CatapultSyncStatus::ConversionDone, __('message.no_data_to_convert_to_value', ['value' => $this->extension]), null);
             } else {
-                if ($hasNoDataToConvert) {
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('message.no_data_to_convert_to_value', ['value' => $this->extension]), null);
-                } else {
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.generate_csv_changes_only_success').' @ '.$this->secondsToHumanReadableTime($executionTime), null);
-                }
+                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), CatapultSyncStatus::ConversionDone, $convertMessage, null);
             }
-            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status',  ['state' => CatapultSyncStatus::ConversionDone, 'code' => $branchCode], null);
+
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status',  [
+                'state' => CatapultSyncStatus::ConversionDone,
+                'code' => $branchCode,
+                'description' => $catapultActionType
+            ], null);
         }
         $this->clearCancelledConversion();
         $this->clearConverting();

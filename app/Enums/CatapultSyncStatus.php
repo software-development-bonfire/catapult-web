@@ -16,6 +16,7 @@ use BenSampo\Enum\Enum;
  */
 final class CatapultSyncStatus extends Enum
 {
+    const Generating        = 'Generating';
     const Subscribed        = 'Subscribed';
     const Offline           = 'Offline';
     const Online            = 'Online';
@@ -28,4 +29,6 @@ final class CatapultSyncStatus extends Enum
     const CancelConversion  = 'CancelConversion';
     const CancelSyncing     = 'CancelSyncing';
     const PongCatapult      = 'PongCatapult';
+    const Progress          = 'Progress';
+    const ProgressDone      = 'ProgressDone';
 }

@@ -116,7 +116,7 @@ trait JobCancellationTrait
         $branchCode = config('configuration.branch_code');
         if (! empty($branchCode)) {
             $syncDetail = SyncDetail::where('code', '=', $branchCode)->first();
-            if (!empty($syncDetail)) {
+            if (! empty($syncDetail)) {
                 $status = $syncDetail->state;
             }
         }
@@ -140,7 +140,7 @@ trait JobCancellationTrait
         }
     }
 
-    public function isResovedBeenExecuted()
+    public function isResolvedBeenExecuted()
     {
         $resolveExecuted =  false;
         $syncDetail = SyncDetail::where('code', '=', 0)->first();
@@ -154,7 +154,9 @@ trait JobCancellationTrait
     {
         $syncDetail = SyncDetail::where('code', '=', 0)->where('online_at', '<=', Carbon::now()->subHours(2))->first();
         if (! empty($syncDetail)) {
-            $syncDetail->update(['state' => null, 'count' => 0]);
+            $syncDetail->update(['state' => false, 'sync_entry' => 0]);
         }
+        $syncDetail = SyncDetail::where('code', '=', 0)->first();
+        return $syncDetail->sync_entry;
     }
 }

@@ -16,6 +16,20 @@ if (! function_exists('toSafeValue')) {
     }
 }
 
+if (! function_exists('toBooleanOrInt')) {
+    function toBooleanOrInt($value, $defaultValue)
+    {
+        $value = filter_var($value, FILTER_VALIDATE_BOOLEAN)
+            ? $defaultValue
+            : ((int) $value
+                ? filter_var($value, FILTER_VALIDATE_INT)
+                : false
+            );
+
+        return $value;
+    }
+}
+
 if (! function_exists('genericGroupBy')) {
     function genericGroupBy($array, $key) {
         $return = array();
