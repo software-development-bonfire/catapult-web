@@ -39,7 +39,7 @@ class CDISChargesSettings extends BaseModel
     public function syncDetails()
     {
         $code = '';
-        $group = $this->getTable() ?? 'charges_settings';
+        $group = $this->getTable() ?? 'cdis_charges_settings';
         $headBid = $this->bid;
         $level = 1;
 

@@ -253,8 +253,11 @@ class SyncService
                 if ($broadcast && $showProgress) {
                     $this->pushSyncStatus($branchCode, $broadcast, __('info.syncing').$progress.' of '.$total);
                 } else {
-                    if ($broadcast && ($progress % $progressDivisor == 0)) {
-                        $this->pushSyncStatus($branchCode,  $broadcast, __('info.syncing').$progress.' of '.$total, CatapultSyncStatus::Progress);
+                    try {
+                        if ($broadcast && ($progress % $progressDivisor == 0)) {
+                            //$this->pushSyncStatus($branchCode,  $broadcast, __('info.syncing').$progress.' of '.$total, CatapultSyncStatus::Progress);
+                        }
+                    } catch (Exception $e) {
                     }
                 }
             }

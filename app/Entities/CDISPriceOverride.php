@@ -32,4 +32,14 @@ class CDISPriceOverride extends Base
     {
         return $this->belongsTo(TerminalTransactionDetail::class, 'transaction_detail_bid', 'bid');
     }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => null,
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+        );
+    }
 }

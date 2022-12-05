@@ -48,4 +48,14 @@ class CDISCashBreakdown extends BaseModel implements Transformable
     {
         return $this->belongsTo(Terminal::class, 'terminal_bid', 'bid');
     }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => null,
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+        );
+    }
 }

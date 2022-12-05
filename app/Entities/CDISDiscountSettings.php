@@ -29,7 +29,7 @@ class CDISDiscountSettings extends BaseModel
     public function syncDetails()
     {
         $code = '';
-        $group = $this->getTable();
+        $group = $this->getTable() ?? 'cdis_discount_settings';
         $headBid = $this->bid;
         $level = 1;
 

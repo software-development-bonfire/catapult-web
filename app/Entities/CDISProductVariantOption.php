@@ -34,4 +34,17 @@ class CDISProductVariantOption extends BaseModel
     {
         return $this->belongsTo(CDISProductVariant::class, 'head_bid','bid');
     }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => null,
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+            'reference_bid' => $this->head_bid,
+            'reference_table' => 'cdis_product_variant',
+        );
+    }
+
 }
