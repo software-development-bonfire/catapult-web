@@ -148,7 +148,7 @@ class ReFetchDataForSync extends Command
                 ], null);
 
                 $this->setSyncStatus(CatapultSyncStatus::Converting);
-                $this->queue($convertCommand, [
+                Artisan::queue($convertCommand, [
                     '--interval' => $interval,
                     '--limit' => $limit,
                     '--broadcast' =>  $broadcast,

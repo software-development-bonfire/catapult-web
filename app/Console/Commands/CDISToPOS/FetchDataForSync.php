@@ -174,7 +174,7 @@ class FetchDataForSync extends Command
                 'description' => $catapultActionType
             ], null);
 
-            $this->queue('cdis:convert-data-to-file', [
+            Artisan::queue('cdis:convert-data-to-file', [
                 '--interval' => $interval,
                 '--limit' => $limit,
                 '--broadcast' =>  $broadcast,
