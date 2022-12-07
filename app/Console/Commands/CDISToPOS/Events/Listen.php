@@ -167,7 +167,8 @@ class Listen extends Command
                     $currentSyncStatus = $this->getSyncStatus();
                     if (
                         $currentSyncStatus !== CatapultSyncStatus::Fetching &&
-                        $currentSyncStatus !== CatapultSyncStatus::Syncing
+                        $currentSyncStatus !== CatapultSyncStatus::Syncing &&
+                        $currentSyncStatus !== CatapultSyncStatus::Converting
                     ) {
                         $options = (object)$this->getPayloadOptions($payload);
 
