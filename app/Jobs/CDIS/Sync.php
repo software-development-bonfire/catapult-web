@@ -16,20 +16,21 @@ class Sync implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $bids, $branchCode, $broadcast, $deleteSyncedAction, $showProgress;
+    public $bids, $branchCode, $broadcast, $catapultActionType, $showProgress, $progressDivisor;
     /**
      * Create a new job instance.
      *
      * @param array $bids
      * @return void
      */
-    public function __construct($bids, $branchCode, $broadcast, $deleteSyncedAction, $showProgress = false)
+    public function __construct($bids, $branchCode, $broadcast, $catapultActionType, $progressDivisor, $showProgress = false)
     {
         $this->bids = $bids;
         $this->branchCode = $branchCode;
         $this->broadcast = $broadcast;
-        $this->deleteSyncedAction = $deleteSyncedAction;
+        $this->catapultActionType = $catapultActionType;
         $this->showProgress = $showProgress;
+        $this->progressDivisor = $progressDivisor;
     }
 
     /**
@@ -41,7 +42,7 @@ class Sync implements ShouldQueue
     {
         $syncService = app()->make(SyncService::class);
 
-        $syncedDetails = $syncService->sync($this->bids, $this->branchCode, $this->broadcast, $this->deleteSyncedAction, $this->showProgress);
+        $syncedDetails = $syncService->sync($this->bids, $this->branchCode, $this->broadcast, $this->catapultActionType, $this->progressDivisor, $this->showProgress);
 
         return $syncedDetails;
     }

@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands\CDISToPOS;
 
+use App\Enums\CatapultActionType;
+use App\Enums\CatapultSyncStatus;
 use App\Enums\DeleteSyncedAction;
 use App\Services\CDIS\SyncService;
 use App\Traits\GenericHelper;
@@ -20,7 +22,7 @@ class ReFetchDataForSync extends Command
      *
      * @var string
      */
-    protected $signature = 'cdis:fetch-data-for-sync-again {--interval=true}{--limit=true}{--table=all}{--broadcast=false}{--progress=false}{--type=all}';
+    protected $signature = 'cdis:fetch-data-for-sync-again {--interval=true}{--limit=true}{--table=all}{--broadcast=false}{--type=EVENT}{--progress=false}{--progress_divisor=100}';
 
     /**
      * The console command description.
@@ -56,38 +58,25 @@ class ReFetchDataForSync extends Command
         $branchCode = config('configuration.branch_code');
 
         $interval = $this->option('interval');
-        $interval =
-            filter_var($interval, FILTER_VALIDATE_BOOLEAN)
-            ? config('sync.cdis.to_catapult.interval')
-            : ((int) $interval
-                ? filter_var($interval, FILTER_VALIDATE_INT)
-                : false
-            );
+        $interval = toBooleanOrInt($interval, config('sync.cdis.to_catapult.interval'));
 
         $limit = $this->option('limit');
-        $limit =
-            filter_var($limit, FILTER_VALIDATE_BOOLEAN)
-            ? config('sync.cdis.to_catapult.limit')
-            : ((int) $limit
-                ? filter_var($limit, FILTER_VALIDATE_INT)
-                : false
-            );
+        $limit = toBooleanOrInt($limit, config('sync.cdis.to_catapult.limit'));
 
         $broadcast = $this->option('broadcast');
-        $broadcast = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
+        $broadcast = toBooleanOrInt($broadcast, config('sync.cdis.to_catapult.broadcast'));
 
         $showProgress = $this->option('progress');
         $showProgress = filter_var($showProgress, FILTER_VALIDATE_BOOLEAN);
 
         $table = $this->option('table');
+        $catapultActionType = $this->option('type');
 
-        $generateType = $this->option('type');
-
-        $deleteSyncedAction = ($generateType === 'changes') ? DeleteSyncedAction::CONVERT_EVENT : DeleteSyncedAction::CONVERT_ALL;
+        $progressDivisor = $this->option('progress_divisor');
+        $progressDivisor = toBooleanOrInt($progressDivisor, config('sync.cdis.to_catapult.progress_divisor'));
 
         $syncService = app()->make(SyncService::class);
 
-        $this->setSyncing();
         $this->clearCancelledConversion();
         $this->clearConverting();
 
@@ -106,7 +95,7 @@ class ReFetchDataForSync extends Command
                 break;
             }
 
-            $forSync = $syncService->forSync($limit, $table, $broadcast, $deleteSyncedAction, $showProgress, true);
+            $forSync = $syncService->forSync($limit, $table, $broadcast, $catapultActionType, $progressDivisor, $showProgress);
 
             if (! isset($forSync->bidsChunks)) {
                 $noDataToSync = true;
@@ -136,16 +125,38 @@ class ReFetchDataForSync extends Command
             }
         } while (true);
 
-        if ($noDataToSync) { 
+        if ($noDataToSync) {
             $this->clearCancelledSyncing();
             $this->clearSyncing();
 
-            if ($generateType === 'changes') {
-                Artisan::queue('cdis:convert-data-to-file-event', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false']);
+            $convertCommand = null;
+            if ($catapultActionType === CatapultActionType::NEW_BRANCH) {
+                $convertCommand = 'cdis:convert-data-to-file';
+            } else if ($catapultActionType === CatapultActionType::ALL) {
+                $convertCommand = 'cdis:convert-data-to-file-all';
+            } else if ($catapultActionType === CatapultActionType::CHANGES) {
+                $convertCommand = 'cdis:convert-data-to-file-changes';
             } else {
-                Artisan::queue('cdis:convert-data-to-file-all', ['--interval' => 'false', '--limit' => '9999999', '--broadcast' => 'true', '--progress' => 'false']);
+                $convertCommand = null;
             }
-            
+
+            if (! empty($convertCommand)) {
+                $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status',  [
+                    'state' => CatapultSyncStatus::Converting, 
+                    'code' => $branchCode, 
+                    'description' => $catapultActionType
+                ], null);
+
+                $this->setSyncStatus(CatapultSyncStatus::Converting);
+                Artisan::queue($convertCommand, [
+                    '--interval' => $interval,
+                    '--limit' => $limit,
+                    '--broadcast' =>  $broadcast,
+                    '--progress' => $showProgress,
+                    '--progress_divisor' => $progressDivisor,
+                    '--type' => $catapultActionType
+                ]);
+            }
         }
     }
 }

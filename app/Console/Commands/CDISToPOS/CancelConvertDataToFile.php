@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands\CDISToPOS;
 
+use App\Enums\CatapultActionType;
+use App\Enums\CatapultSyncStatus;
 use App\Traits\DatabaseTransaction;
 use App\Traits\GenericHelper;
 use App\Traits\JobCancellationTrait;
@@ -18,7 +20,7 @@ class CancelConvertDataToFile extends Command
      *
      * @var string
      */
-    protected $signature = 'cdis:cancel-convert {--retry=5}{--broadcast=false}{--progress=false}';
+    protected $signature = 'cdis:cancel-convert {--retry=5}{--broadcast=false}{--progress=false}{--type=NEW_BRANCH}';
 
     /**
      * The console command description.
@@ -53,6 +55,8 @@ class CancelConvertDataToFile extends Command
 
         $broadcast = $this->option('broadcast');
         $broadcast = filter_var($broadcast, FILTER_VALIDATE_BOOLEAN);
+
+        $catapultActionType = $this->option('type');
 
         if ($broadcast) {
             $this->initializePusher();
@@ -95,14 +99,28 @@ class CancelConvertDataToFile extends Command
         $timeEnd = microtime(true);
         $executionTime = ($timeEnd - $timeStart);
 
-        $this->createLog(__('info.create_csv_for_new_branch_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime), 'info', true);
+        $cancellationMessage = null;
+        if ($catapultActionType === CatapultActionType::NEW_BRANCH) {
+            $cancellationMessage = __('info.create_csv_for_new_branch_cancelled');
+        } else if ($catapultActionType === CatapultActionType::ALL) {
+            $cancellationMessage = __('info.generate_csv_all_data_cancelled');
+        } else {
+            $cancellationMessage = __('info.generate_csv_changes_only_cancelled');
+        }
+        $this->createLog($cancellationMessage.' @ '.$this->secondsToHumanReadableTime($executionTime), 'info', true);
 
         // If conversion is not yet executed, then we must
         // send to CDIS that conversion been cancelled
-        if ($broadcast && !$isConverting) {
-            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'ConversionDone', __('info.create_csv_for_new_branch_cancelled'), null);
+        if ($broadcast && ! $isConverting) {
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), CatapultSyncStatus::ConversionDone, $cancellationMessage, null);
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status',  [
+                'state' => CatapultSyncStatus::ConversionDone,
+                'code' => $branchCode,
+                'description' => $catapultActionType
+            ], null);
             $this->clearCancelledConversion();
             $this->clearConverting();
+            $this->setSyncStatus(CatapultSyncStatus::ConversionDone);
         }
     }
 }

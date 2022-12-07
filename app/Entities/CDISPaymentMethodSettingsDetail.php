@@ -34,7 +34,7 @@ class CDISPaymentMethodSettingsDetail extends BaseModel
         $headTableName = 'cdis_payment_method_settings';
         $headBid = null;
 
-        if ($this->head !== null) {
+        if ($this->paymentMethodSettings !== null) {
             $headFirstData =  $this->paymentMethodSettings()->first();
             if ($headFirstData !== null) {
                 $headTableName = $headFirstData->getTable();

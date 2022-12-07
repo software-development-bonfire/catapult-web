@@ -4,9 +4,11 @@ namespace App\Entities;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class CDISDiscountSettings extends BaseModel
+class CDISChargesSettings extends BaseModel
 {
-    protected $table = 'cdis_discount_settings';
+    use SoftDeletes;
+
+    protected $table = 'cdis_charges_settings';
 
     protected $primaryKey = 'bid';
 
@@ -14,22 +16,30 @@ class CDISDiscountSettings extends BaseModel
         'bid',
         'code',
         'description',
-        'method',
-        'discount_type',
-        'discount_amount',
-        'receipt_count',
+        'transaction_type',
+        'charge_type',
+        'charge_amount',
+        'is_auto_apply',
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
         'bid' => 'string',
+        'is_auto_apply' => 'boolean'
+    ];
+
+    protected $auditExclude = [
+        'id',
+        'bid',
+        'created_by',
+        'updated_by',
     ];
 
     public function syncDetails()
     {
         $code = '';
-        $group = $this->getTable() ?? 'cdis_discount_settings';
+        $group = $this->getTable() ?? 'cdis_charges_settings';
         $headBid = $this->bid;
         $level = 1;
 

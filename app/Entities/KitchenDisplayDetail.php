@@ -29,4 +29,14 @@ class KitchenDisplayDetail extends Base
     {
         return $this->belongsTo(KitchenDisplay::class, 'head_bid','bid');
     }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => null,
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+        );
+    }
 }

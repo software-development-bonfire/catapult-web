@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\CDISToPOS;
 
+use App\Enums\CatapultSyncStatus;
 use App\Traits\GenericHelper;
 use App\Traits\JobCancellationTrait;
 use App\Traits\PusherTrait;
@@ -18,7 +19,7 @@ class CancelFetchDataForSync extends Command
      *
      * @var string
      */
-    protected $signature = 'cdis:cancel-sync {--retry=5}{--broadcast=true}{--progress=false}';
+    protected $signature = 'cdis:cancel-sync {--retry=5}{--broadcast=true}{--progress=false}{--type=NEW_BRANCH}';
 
     /**
      * The console command description.
@@ -57,11 +58,9 @@ class CancelFetchDataForSync extends Command
         $showProgress = $this->option('progress');
         $showProgress = filter_var($showProgress, FILTER_VALIDATE_BOOLEAN);
 
-        $this->createLog(
-            __('info.cancelling'),
-            'info',
-            true
-        );
+        $catapultActionType = $this->option('type');
+
+        $this->createLog(__('info.cancelling'), 'info', true);
 
         if ($broadcast) {
             $this->initializePusher();
@@ -111,10 +110,16 @@ class CancelFetchDataForSync extends Command
 
         // If syncing is not yet executed, then we must
         // send to CDIS that syncing been cancelled
-        if ($broadcast && !$isSyncing) {
-            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'SyncDone', __('info.syncing_cancelled'), null);
+        if ($broadcast && ! $isSyncing) {
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), CatapultSyncStatus::SyncDone, __('info.syncing_cancelled'), null);
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status',  [
+                'state' => CatapultSyncStatus::SyncDone, 
+                'code' => $branchCode, 
+                'description' => $catapultActionType
+            ], null);
             $this->clearCancelledSyncing();
             $this->clearSyncing();
+            $this->setSyncStatus(CatapultSyncStatus::SyncDone);
         }
     }
 }
