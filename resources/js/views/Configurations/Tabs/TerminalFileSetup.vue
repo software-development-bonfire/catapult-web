@@ -16,7 +16,7 @@
                     :values="tableData"
                     :settings="table.settings"
                     :rowIndex="tableDataIndex"
-                    v-on:row-click="openDetail(tableData, tableDataIndex)">
+                    v-on:row-click="viewRow(tableData, tableDataIndex)">
                     <td class="datatable-cell" align="center">
                         <span v-text="tableData.name"></span>
                     </td>
@@ -60,6 +60,7 @@
                         class="form-control"
                         v-model="form.values.terminal_code"
                         :class="errors.terminal_code !== '' ? 'is-invalid' : ''"
+                        :disabled="form.mode === 'view'"
                         @keypress="errors.terminal_code = ''">
                 </form-field>
                 <form-field
@@ -71,6 +72,7 @@
                         class="form-control"
                         v-model="form.values.name"
                         :class="errors.name !== '' ? 'is-invalid' : ''"
+                        :disabled="form.mode === 'view'"
                         @keypress="errors.name = ''">
                 </form-field>
                 <form-field
@@ -81,6 +83,7 @@
                         class="v-select--hide-selected"
                         :class="errors.endpoint !== '' ? 'is-invalid' : ''"
                         :clearable="false"
+                        :disabled="form.mode === 'view'"
                         v-model="form.values.endpoint"
                         :options="selections.endpoint.options"
                         @option:selected="errors.endpoint = ''">
@@ -93,6 +96,7 @@
                     <select
                         class="form-control"
                         :class="errors.type !== '' ? 'is-invalid' : ''"
+                        :disabled="form.mode === 'view'"
                         v-model="form.values.type"
                         @change="errors.type = ''">
                         <option :value="1">{{ $t('label.transactions') }}</option>
@@ -110,12 +114,16 @@
                         class="form-control"
                         v-model="form.values.terminal_path"
                         :class="errors.terminal_path !== '' ? 'is-invalid' : ''"
+                        :disabled="form.mode === 'view'"
                         @keypress="errors.terminal_path = ''">
                 </form-field>
                 <form-field
                     class="form-group">
                     <label>{{ $t('label.status') }}</label>
-                    <select class="form-control" v-model="form.values.status">
+                    <select
+                        class="form-control"
+                        v-model="form.values.status"
+                        :disabled="form.mode === 'view'">
                         <option :value="1">{{ $t('label.active') }}</option>
                         <option :value="0">{{ $t('label.inactive') }}</option>
                     </select>
@@ -340,7 +348,7 @@
                     endpoint: data.endpoint_object,
                     type: data.type,
                     terminal_path: data.terminal_path,
-                    status: 1,
+                    status: data.status,
                 };
 
                 this.modal.visible = true;
@@ -420,15 +428,18 @@
                 };
             },
 
-            openDetail(data, index) {
-                this.errors = {}
-                this.form.mode = 'update';
+            viewRow(data, index) {
+                this.clearForm();
+                this.form.index = index;
+                this.form.mode = 'view';
 
                 this.form.values = {
-                    index: index,
-                    bid: data.bid,
+                    id: index,
+                    terminal_code: data.terminal_code,
                     name: data.name,
-                    endpoint: data.endpoint,
+                    endpoint: data.endpoint_object,
+                    type: data.type,
+                    terminal_path: data.terminal_path,
                     status: data.status
                 }
 
