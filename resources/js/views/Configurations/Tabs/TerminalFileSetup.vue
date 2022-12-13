@@ -16,7 +16,7 @@
                     :values="tableData"
                     :settings="table.settings"
                     :rowIndex="tableDataIndex"
-                    v-on:row-click="viewRow(tableData, tableDataIndex)">
+                    v-on:row-click="editRow(tableDataIndex, tableData)">
                     <td class="datatable-cell" align="center">
                         <span v-text="tableData.name"></span>
                     </td>
@@ -27,7 +27,7 @@
                         <span v-text="tableData.endpoint"></span>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <span v-text="tableData.type"></span>
+                        <span v-text="getTerminalType(tableData.type)"></span>
                     </td>
                     <td class="datatable-cell" align="center">
                         <span v-text="tableData.terminal_path"></span>
@@ -61,7 +61,6 @@
                         class="form-control"
                         v-model="form.values.terminal_code"
                         :class="errors.terminal_code !== '' ? 'is-invalid' : ''"
-                        :disabled="form.mode === 'view'"
                         @keypress="errors.terminal_code = ''">
                 </form-field>
                 <form-field
@@ -73,7 +72,6 @@
                         class="form-control"
                         v-model="form.values.name"
                         :class="errors.name !== '' ? 'is-invalid' : ''"
-                        :disabled="form.mode === 'view'"
                         @keypress="errors.name = ''">
                 </form-field>
                 <form-field
@@ -84,7 +82,6 @@
                         class="v-select--hide-selected"
                         :class="errors.endpoint !== '' ? 'is-invalid' : ''"
                         :clearable="false"
-                        :disabled="form.mode === 'view'"
                         v-model="form.values.endpoint"
                         :options="selections.endpoint.options"
                         @option:selected="errors.endpoint = ''">
@@ -97,7 +94,6 @@
                     <select
                         class="form-control"
                         :class="errors.type !== '' ? 'is-invalid' : ''"
-                        :disabled="form.mode === 'view'"
                         v-model="form.values.type"
                         @change="errors.type = ''">
                         <option :value="1">{{ $t('label.transactions') }}</option>
@@ -115,7 +111,6 @@
                         class="form-control"
                         v-model="form.values.terminal_path"
                         :class="errors.terminal_path !== '' ? 'is-invalid' : ''"
-                        :disabled="form.mode === 'view'"
                         @keypress="errors.terminal_path = ''">
                 </form-field>
                 <form-field
@@ -123,8 +118,7 @@
                     <label>{{ $t('label.status') }}</label>
                     <select
                         class="form-control"
-                        v-model="form.values.status"
-                        :disabled="form.mode === 'view'">
+                        v-model="form.values.status">
                         <option :value="1">{{ $t('label.active') }}</option>
                         <option :value="0">{{ $t('label.inactive') }}</option>
                     </select>
@@ -294,6 +288,22 @@
             }
         },
         methods: {
+            getTerminalType(type) {
+                let result = '';
+
+                if (type === 1) {
+                    result = this.$t('label.transactions');
+                } else if (type === 2) {
+                    result = this.$t('label.x_reading');
+                } else if (type === 3) {
+                    result = this.$t('label.y_reading');
+                } else if (type === 4) {
+                    result = this.$t('label.z_reading');
+                }
+
+                return result;
+            },
+
             paginate(page = 1) {
                 if (this.$root.isLoading) return;
                 axios.get('api-setup'+'?page='+page, {
@@ -427,24 +437,6 @@
                 this.dialog.cancel.function = () => {
                     this.dialog.visible = false;
                 };
-            },
-
-            viewRow(data, index) {
-                this.clearForm();
-                this.form.index = index;
-                this.form.mode = 'view';
-
-                this.form.values = {
-                    id: index,
-                    terminal_code: data.terminal_code,
-                    name: data.name,
-                    endpoint: data.endpoint_object,
-                    type: data.type,
-                    terminal_path: data.terminal_path,
-                    status: data.status
-                }
-
-                this.modal.visible = true;
             }
         }
     }
