@@ -13,6 +13,10 @@
             <slot></slot>
             <td class="datatable-cell datatable-cell--action row-add"><i class="fa fa-save fa-lg" @click.stop="addRow($event)"></i></td>
         </template>
+        <template v-else-if="rowType === 'custom-actions'">
+            <td class="datatable-cell datatable-cell--row-number" v-if="settings.withRowNumbers">{{ rowNumber($attrs.rowIndex) }}</td>
+            <slot></slot>
+        </template>
         <template v-else>
             <td class="datatable-cell datatable-cell--row-number" v-if="settings.withRowNumbers">{{ rowNumber($attrs.rowIndex) }}</td>
             <slot></slot>

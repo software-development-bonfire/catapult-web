@@ -7,7 +7,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" :class="activePane === 'file_storage' ? 'active' : ''" @click="activePane = 'file_storage'" id="file-storage-setup-tab" href="#file-storage-setup" role="tab" aria-controls="file-storage-setup" aria-selected="false">
+                <a class="nav-link" :class="activePane === 'file-storage' ? 'active' : ''" @click="activePane = 'file-storage'" id="file-storage-setup-tab" href="#file-storage-setup" role="tab" aria-controls="file-storage-setup" aria-selected="false">
                     {{ $t('label.file_storage_setup') }}
                 </a>
             </li>
@@ -21,12 +21,18 @@
                     {{ $t('label.api_setup') }}
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" :class="activePane === 'terminal-file-setup' ? 'active' : ''" @click="activePane = 'terminal-file-setup'" id="terminal-file-setup" href="#terminal-file-setup" role="tab" aria-controls="terminal-file-setup" aria-selected="false">
+                    {{ $t('label.terminal_file_setup') }}
+                </a>
+            </li>
         </ul>
         <div class="tab-content">
             <licensing v-show="activePane === 'licensing'"></licensing>
-            <file-storage-setup v-show="activePane === 'file_storage'"></file-storage-setup>
+            <file-storage-setup v-show="activePane === 'file-storage'"></file-storage-setup>
             <catapult-db-setup v-show="activePane === 'catapult'"></catapult-db-setup>
             <api-setup v-show="activePane === 'api'"></api-setup>
+            <terminal-file-setup v-show="activePane === 'terminal-file-setup'"></terminal-file-setup>
         </div>
     </div>
 </template>
@@ -36,6 +42,7 @@
     import FileStorageSetup from './Tabs/FileStorageSetup.vue';
     import CatapultDBSetup from './Tabs/CatapultDBSetup.vue';
     import APISetup from './Tabs/APISetup.vue';
+    import TerminalFileSetup from './Tabs/TerminalFileSetup.vue';
 
     export default {
         components: {
@@ -43,6 +50,7 @@
             'file-storage-setup': FileStorageSetup,
             'catapult-db-setup': CatapultDBSetup,
             'api-setup': APISetup,
+            'terminal-file-setup': TerminalFileSetup,
         },
         mounted() {
             let urlData = QueryString.parse(window.location.search.substr(1));
