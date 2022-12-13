@@ -46,6 +46,7 @@
         <modal
             centered-display
             v-if="modal.visible"
+            :class="form.mode === 'view' ? 'modal--no-footer' : ''"
             @close="modal.visible = false">
             <template slot="header">
                 Terminal File Setup Details
@@ -130,7 +131,7 @@
                 </form-field>
             </template>
             <template slot="footer">
-                <div align="center">
+                <div align="center" v-if="form.mode !== 'view'">
                     <button class="button button--light" @click="save">{{ $t('label.save') }}</button>
                 </div>
             </template>
