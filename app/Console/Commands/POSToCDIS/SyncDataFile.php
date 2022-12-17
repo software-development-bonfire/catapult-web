@@ -108,7 +108,7 @@ class SyncDataFile extends Command implements ShouldQueue
 
                 $fileStorageSetup = $fieldMappingDetails->fileStorageSetup;
 
-                $selectedDisk = $this->intializeDisk($fileStorageSetup, \App\Enums\StorageCommandSelection::CONVERT);
+                $selectedDisk = $this->intializeDisk($fileStorageSetup, \App\Enums\StorageCommandSelection::SYNC);
 
                 if (isset($selectedDisk) && is_array($selectedDisk)) {
                     $remoteDiskName = $selectedDisk['remoteDiskName'];
