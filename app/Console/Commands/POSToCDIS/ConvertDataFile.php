@@ -115,7 +115,7 @@ class ConvertDataFile extends Command
                 $fileStorageSetup = $fieldMappingDetails->fileStorageSetup;
                 $dataMappings = $fieldMappingDetails->dataMappings;
 
-                $selectedDisk = $this->intializeDisk($fileStorageSetup);
+                $selectedDisk = $this->intializeDisk($fileStorageSetup, \App\Enums\StorageCommandSelection::CONVERT);
 
                 if (isset($selectedDisk) && is_array($selectedDisk)) {
                     $remoteDiskName = $selectedDisk['remoteDiskName'];

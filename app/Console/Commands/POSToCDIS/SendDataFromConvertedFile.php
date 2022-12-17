@@ -127,7 +127,7 @@ class SendDataFromConvertedFile extends Command
                 $fileStorageSetup = $fieldMappingDetails->fileStorageSetup;
                 $apiSetup = $fieldMappingDetails->apiSetup;
 
-                $selectedDisk = $this->intializeDisk($fileStorageSetup);
+                $selectedDisk = $this->intializeDisk($fileStorageSetup, \App\Enums\StorageCommandSelection::SEND);
 
                 if (isset($selectedDisk) && is_array($selectedDisk)) {
                     $remoteDiskName = $selectedDisk['remoteDiskName'];
