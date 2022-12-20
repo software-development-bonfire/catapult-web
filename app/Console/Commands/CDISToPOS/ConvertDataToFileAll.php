@@ -169,27 +169,6 @@ class ConvertDataToFileAll extends Command
                 if ($hasBeenCancelled) {
                     break;
                 }
-                $syncDetails = $entityDatum->syncDetails();
-
-                $code = $this->generateRandomKey(10, 1, '');
-
-                $level = $syncDetails->level;
-                $group = $syncDetails->group;
-                $headBid = $syncDetails->head_bid;
-                $referenceBid = $syncDetails->reference_bid ?? null;
-                $referenceTable = $syncDetails->reference_table ?? null;
-
-                if ($level > 1) {
-                    $parent = CDISSync::where('level', '=', 1)
-                    ->where('branch_bid', '=', $branch->bid)
-                        ->where('group', '=', $group)
-                        ->where('table_bid', '=', $headBid)
-                        ->first();
-
-                    if ($parent) {
-                        $code = $parent->code;
-                    }
-                }
 
                 $action = 'create';
                 if ($this->modelHasColumn($entityDatum, $tableName, 'deleted_at')) {
@@ -215,20 +194,21 @@ class ConvertDataToFileAll extends Command
                         }
                     }
                 }
+                $syncDetails = $entityDatum->syncDetails();
 
-                $entityRow =  array(
-                    'branch_bid' => $branch->bid,
-                    'table_bid' => $entityDatum->bid,
-                    'table_name' =>  $tableName,
-                    'reference_bid' => $referenceBid,
-                    'reference_table' => $referenceTable,
-                    'level' => $level,
-                    'group' => $group,
-                    'code' => $code,
-                    'action' => $action,
+                CDISSync::create(
+                    array(
+                        'branch_bid' => $branch->bid,
+                        'table_bid' => $entityDatum->bid,
+                        'table_name' =>  $tableName,
+                        'reference_bid' => $syncDetails->reference_bid ?? null,
+                        'reference_table' => $syncDetails->reference_table ?? null,
+                        'level' => 1,
+                        'group' => null,
+                        'code' => $this->generateRandomKey(10, 1, ''),
+                        'action' => $action,
+                    )
                 );
-
-                CDISSync::create($entityRow);
 
                 $progress++;
 
