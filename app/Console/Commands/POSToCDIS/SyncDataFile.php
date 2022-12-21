@@ -9,6 +9,7 @@ use App\Enums\StorageType;
 use App\Repositories\Contracts\FieldMappingRepository;
 use App\Services\ErrorLogService;
 use App\Traits\GenericHelper;
+use App\Traits\StorageTrait;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Cache;
@@ -17,7 +18,7 @@ use Illuminate\Support\Str;
 
 class SyncDataFile extends Command implements ShouldQueue
 {
-    use GenericHelper;
+    use GenericHelper, StorageTrait;
 
     public $errorLogService;
 
@@ -107,32 +108,11 @@ class SyncDataFile extends Command implements ShouldQueue
 
                 $fileStorageSetup = $fieldMappingDetails->fileStorageSetup;
 
-                if ($fileStorageSetup->storage_type == StorageType::FTP) {
-                    $remoteDiskName = 'pos_ftp_remote_sync_data_file';
-                    $localDiskName = 'pos_ftp_local_sync_data_file';
+                $selectedDisk = $this->intializeDisk($fileStorageSetup, \App\Enums\StorageCommandSelection::SYNC);
 
-                    resolve('filesystem')->forgetDisk($remoteDiskName);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'ftp');
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.host', $fileStorageSetup->host);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.username', $fileStorageSetup->username);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.password', $fileStorageSetup->password);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.port', $fileStorageSetup->port);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
-
-                    resolve('filesystem')->forgetDisk($localDiskName);
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
-                } else if ($fileStorageSetup->storage_type == StorageType::LOCAL_NETWORK) {
-                    $remoteDiskName = 'pos_local_remote_sync_data_file';
-                    $localDiskName = 'pos_local_local_sync_data_file';
-
-                    resolve('filesystem')->forgetDisk($remoteDiskName);
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$remoteDiskName.'.root', $fileStorageSetup->remote_path);
-
-                    resolve('filesystem')->forgetDisk($localDiskName);
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
-                    app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
+                if (isset($selectedDisk) && is_array($selectedDisk)) {
+                    $remoteDiskName = $selectedDisk['remoteDiskName'];
+                    $localDiskName = $selectedDisk['localDiskName'];
                 } else {
                     return false;
                 }

@@ -99,7 +99,7 @@ class RetryFailedSync extends Command implements ShouldQueue
 
                     $fileStorageSetup = $fieldMappingDetails->fileStorageSetup;
 
-                    $selectedDisk = $this->intializeDisk($fileStorageSetup);
+                    $selectedDisk = $this->intializeDisk($fileStorageSetup, \App\Enums\StorageCommandSelection::RESEND);
 
                     if (isset($selectedDisk) && is_array($selectedDisk)) {
                         $remoteDiskName = $selectedDisk['remoteDiskName'];

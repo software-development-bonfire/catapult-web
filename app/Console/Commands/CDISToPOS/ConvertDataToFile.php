@@ -6,6 +6,7 @@ use App\Entities\CDISSync;
 use App\Entities\ErrorLog;
 use App\Entities\ErrorLogDetail;
 use App\Entities\FieldMapping;
+use App\Enums\CatapultActionType;
 use App\Enums\CatapultSyncStatus;
 use App\Enums\MappingType;
 use App\Enums\Status;
@@ -248,9 +249,17 @@ class ConvertDataToFile extends Command
         $convertMessage = null;
         if ($hasBeenCancelled) {
             $this->clearCancelledConversion();
-            $convertMessage = __('info.create_csv_for_new_branch_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime);
+            if ($catapultActionType === CatapultActionType::NEW_BRANCH) {
+                $convertMessage = __('info.create_csv_for_new_branch_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime);
+            } else {
+                $convertMessage = __('info.generate_csv_all_data_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime);
+            }
         } else {
-            $convertMessage = __('info.create_csv_for_new_branch_success').' @ '.$this->secondsToHumanReadableTime($executionTime);
+            if ($catapultActionType === CatapultActionType::NEW_BRANCH) {
+                $convertMessage = __('info.create_csv_for_new_branch_success').' @ '.$this->secondsToHumanReadableTime($executionTime);
+            } else {
+                $convertMessage = __('info.generate_csv_all_data_success').' @ '.$this->secondsToHumanReadableTime($executionTime);
+            }
         }
         $this->createLog($convertMessage);
 

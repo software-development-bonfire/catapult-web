@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Enums\StorageCommandSelection;
 use App\Enums\StorageType;
 use Illuminate\Support\Facades\Storage;
 
@@ -18,14 +19,15 @@ trait StorageTrait
      *
      * @return FileSystem
      */
-    public function intializeDisk($fileStorageSetup)
+    public function intializeDisk($fileStorageSetup , $storageCommandSelection = StorageCommandSelection::SYNC)
     {
         $remoteDiskName = null;
         $localDiskName = null;
 
         if ($fileStorageSetup->storage_type == StorageType::FTP) {
-            $remoteDiskName = 'pos_ftp_remote_send_data_from_converted_file';
-            $localDiskName = 'pos_ftp_local_send_data_from_converted_file';
+            $selectedDisk = $this->fileSystemFTPDiskSelection($storageCommandSelection);
+            $remoteDiskName = $selectedDisk['remoteDiskName'];
+            $localDiskName = $selectedDisk['localDiskName'];
 
             resolve('filesystem')->forgetDisk($remoteDiskName);
             app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'ftp');
@@ -39,8 +41,10 @@ trait StorageTrait
             app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
             app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
         } else if ($fileStorageSetup->storage_type == StorageType::LOCAL_NETWORK) {
-            $remoteDiskName = 'pos_local_remote_send_data_from_converted_file';
-            $localDiskName = 'pos_local_local_send_data_from_converted_file';
+
+            $selectedDisk = $this->fileSystemLocalDiskSelection($storageCommandSelection);
+            $remoteDiskName = $selectedDisk['remoteDiskName'];
+            $localDiskName = $selectedDisk['localDiskName'];
 
             resolve('filesystem')->forgetDisk($remoteDiskName);
             app()['config']->set('filesystems.disks.'.$remoteDiskName.'.driver', 'local');
@@ -50,6 +54,56 @@ trait StorageTrait
             app()['config']->set('filesystems.disks.'.$localDiskName.'.driver', 'local');
             app()['config']->set('filesystems.disks.'.$localDiskName.'.root', $fileStorageSetup->local_path);
         } else {
+        }
+
+        return [
+            'remoteDiskName' => $remoteDiskName,
+            'localDiskName' => $localDiskName
+        ];
+    }
+
+    private function fileSystemLocalDiskSelection($storageCommandSelection = StorageCommandSelection::RESEND)
+    {
+        $remoteDiskName = null;
+        $localDiskName = null;
+
+        if ($storageCommandSelection === StorageCommandSelection::CONVERT) {
+            $remoteDiskName = 'pos_local_remote_convert_data_file';
+            $localDiskName = 'pos_local_local_convert_data_file';
+        } else if ($storageCommandSelection === StorageCommandSelection::SEND) {
+            $remoteDiskName = 'pos_local_remote_send_data_from_converted_file';
+            $localDiskName = 'pos_local_local_send_data_from_converted_file';
+        } else if ($storageCommandSelection === StorageCommandSelection::SYNC) {
+            $remoteDiskName = 'pos_local_remote_sync_data_file';
+            $localDiskName = 'pos_local_local_sync_data_file';
+        } else {
+            $remoteDiskName = 'pos_local_remote_resend_file';
+            $localDiskName = 'pos_local_local_resend_file';
+        }
+
+        return [
+            'remoteDiskName' => $remoteDiskName,
+            'localDiskName' => $localDiskName
+        ];
+    }
+
+    private function fileSystemFTPDiskSelection($storageCommandSelection = StorageCommandSelection::RESEND)
+    {
+        $remoteDiskName = null;
+        $localDiskName = null;
+
+        if ($storageCommandSelection === StorageCommandSelection::CONVERT) {
+            $remoteDiskName = 'pos_ftp_remote_convert_data_file';
+            $localDiskName = 'pos_ftp_local_convert_data_file';
+        } else if ($storageCommandSelection === StorageCommandSelection::SEND) {
+            $remoteDiskName = 'pos_ftp_remote_send_data_from_converted_file';
+            $localDiskName = 'pos_ftp_local_send_data_from_converted_file';
+        } else if ($storageCommandSelection === StorageCommandSelection::SYNC) {
+            $remoteDiskName = 'pos_ftp_remote_sync_data_file';
+            $localDiskName = 'pos_ftp_local_sync_data_file';
+        } else {
+            $remoteDiskName = 'pos_ftp_remote_resend_file';
+            $localDiskName = 'pos_ftp_local_resend_file';
         }
 
         return [
