@@ -114,6 +114,15 @@
                         @keypress="errors.terminal_path = ''">
                 </form-field>
                 <form-field
+                    class="form-group"
+                    :error="errors.sub_directories">
+                    <label>{{ $t('label.sub_directories') }}</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        v-model="form.values.terminal_path">
+                </form-field>
+                <form-field
                     class="form-group">
                     <label>{{ $t('label.status') }}</label>
                     <select
@@ -167,9 +176,11 @@
         },
         mounted() {
             this.paginate();
+            this.getSyncEntryChosen();
         },
         data() {
             return {
+                terminalFileSetupRootUri: 'terminal-file-setup',
                 errors: {
                     terminal_code: '',
                     name: '',
@@ -206,8 +217,10 @@
                         endpoint: '',
                         type: '',
                         terminal_path: '',
+                        sub_directories: '',
                         status: 1,
-                    }
+                    },
+                    mapping_type: 1,
                 },
                 table: {
                     header: [
@@ -234,6 +247,11 @@
                         {
                             name: "terminal_path",
                             label: this.$t('label.terminal_path'),
+                            width: '250'
+                        },
+                        {
+                            name: "subfolder",
+                            label: this.$t('label.sub_directories'),
                             width: '250'
                         },
                         {
@@ -306,7 +324,7 @@
 
             paginate(page = 1) {
                 if (this.$root.isLoading) return;
-                axios.get('api-setup'+'?page='+page, {
+                axios.get(this.terminalFileSetupRootUri+'?page='+page, {
                     params: {
                         itemsPerPage: this.table.settings.itemsPerPage,
                     }
@@ -330,6 +348,7 @@
                     endpoint: '',
                     type: '',
                     terminal_path: '',
+                    sub_directories: '',
                 };
 
                 this.form.index = 0;
@@ -342,6 +361,7 @@
                     endpoint: '',
                     type: '',
                     terminal_path: '',
+                    sub_directories: '',
                     status: 1,
                 }
             },
@@ -399,45 +419,55 @@
                     return;
                 }
 
-                this.dialog.visible = true;
-                this.dialog.status = 'success';
-
                 if (this.form.mode === 'create') {
-                    this.table.values.data.push({
-                        terminal_code: this.form.values.terminal_code,
-                        name: this.form.values.name,
-                        endpoint: this.form.values.endpoint.label,
-                        endpoint_object: this.form.values.endpoint,
-                        type: this.form.values.type,
-                        terminal_path: this.form.values.terminal_path,
-                        status: this.form.values.status
-                    });
-
-                    this.dialog.message = this.$t('success.value_successfully_created', { value: this.$t('label.terminal_file_setup') });
+                    axios.post(this.terminalFileSetupRootUri, this.form.values)
+                        .then(response => {
+                            that.paginate();
+                            that.dialog.visible = true;
+                            that.dialog.status = 'success';
+                            that.dialog.message = response.data.message;
+                            that.dialog.ok.function = () => {
+                                that.dialog.visible = false;
+                                that.modal.visible = false;
+                            };
+                            that.errors = {}
+                        }).catch(error => {
+                            that.errors = error.response.data.errors
+                        });
                 } else {
-                    this.table.values.data[i] = {
-                        terminal_code: this.form.values.terminal_code,
-                        name: this.form.values.name,
-                        endpoint: this.form.values.endpoint.label,
-                        endpoint_object: this.form.values.endpoint,
-                        type: this.form.values.type,
-                        terminal_path: this.form.values.terminal_path,
-                        status: this.form.values.status
-                    }
+                    let index = this.form.index;
 
-                    this.dialog.message = this.$t('success.value_successfully_updated', { value: this.$t('label.terminal_file_setup') });
+                    axios.patch(`${this.terminalFileSetupRootUri}/${this.form.values.bid}`, this.form.values)
+                        .then(response => {
+                            that.table.values.data[index] = {...that.form.values};
+
+                            that.dialog.visible = true;
+                            that.dialog.status = 'success';
+                            that.dialog.message = response.data.message;
+                            that.dialog.ok.function = () => {
+                                that.dialog.visible = false;
+                                that.modal.visible = false;
+                            };
+                            that.errors = {}
+                        }).catch(error => {
+                            that.errors = error.response.data.errors
+                        });
                 }
+            },
+            
+            async getSyncEntryChosen() {
+                let that = this;
 
-                this.dialog.ok.function = () => {
-                    this.modal.visible = false;
-                    this.dialog.visible = false;
-                    this.clearForm();
-                };
-
-                this.dialog.cancel.function = () => {
-                    this.dialog.visible = false;
-                };
-            }
+                await axios.get('/sync-entry/chosen', {
+                    params: {
+                        filters: {
+                            type: this.form.mapping_type
+                        }
+                    }
+                }).then(function(response) {
+                    that.$set(that.selections.sync_entry, 'options', response.data.data);
+                });
+            },
         }
     }
 </script>

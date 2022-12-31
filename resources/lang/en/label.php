@@ -187,6 +187,8 @@ return [
     'start_time' => 'Start Time',
     'status' => 'Status',
     'storage_type' => 'Storage Type',
+    'sub_directories' => 'Sub-Directories',
+    'sub_folders' => 'Sub-Folders',
     'sync_interval_name' => 'Sync Interval Name',
     'sync_interval_setting' => 'Sync Interval Setting',
     'sync_interval_setting_detail' => 'Sync Interval Setting Detail',

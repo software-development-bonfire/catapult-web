@@ -64,6 +64,7 @@ Route::group(['middleware' => 'auth'], function () {
         'syncing' => 'SyncingSetupController',
         'user' => 'UserAccountController',
         'field-mapping-list' => 'FieldMappingController',
+        'terminal-file-setup' => 'TerminalFileSetupController',
     ]);
 
 
