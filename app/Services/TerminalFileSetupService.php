@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Entities\TerminalFileSetup;
 use App\Traits\DatabaseTransaction;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class TerminalFileSetupService
 {
@@ -18,8 +19,12 @@ class TerminalFileSetupService
      */
     public function store($data)
     {
-        return $this->transaction(function() use($data) {
+        return $this->transaction(function () use ($data) {
             $data['created_by'] = Auth::user()->bid;
+            if ($data['endpoint']) {
+                $data['api_setup_bid'] = $data['endpoint']['value'];
+            };
+
             $terminalFileSetup = TerminalFileSetup::create($data);
 
             return $terminalFileSetup;
@@ -35,8 +40,11 @@ class TerminalFileSetupService
      */
     public function update($data, $bid)
     {
-        return $this->transaction(function() use($data, $bid) {
+        return $this->transaction(function () use ($data, $bid) {
             $data['updated_by'] = Auth::user()->bid;
+            if ($data['endpoint']) {
+                $data['api_setup_bid'] = $data['endpoint']['value'];
+            };
 
             $terminalFileSetup = TerminalFileSetup::find($bid)->update($data);
 
@@ -52,10 +60,8 @@ class TerminalFileSetupService
      */
     public function destroy($bid)
     {
-        return $this->transaction(function() use($bid) {
+        return $this->transaction(function () use ($bid) {
             return TerminalFileSetup::find($bid)->delete();
         });
     }
 }
-
-

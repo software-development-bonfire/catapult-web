@@ -15,7 +15,7 @@ class TerminalFileSetupTransformer extends TransformerAbstract
     protected $defaultIncludes = [
         //
     ];
-    
+
     /**
      * List of resources possible to include
      *
@@ -24,7 +24,7 @@ class TerminalFileSetupTransformer extends TransformerAbstract
     protected $availableIncludes = [
         //
     ];
-    
+
     /**
      * A Fractal transformer.
      *
@@ -35,8 +35,12 @@ class TerminalFileSetupTransformer extends TransformerAbstract
         return [
             'bid' => (string) $model->bid,
             'name' => (string) $model->name,
-        //    'stype_label' => StorageType::getDescription($model->storage_type),
-            'storage_type' => $model->type,
+            'type' => $model->type,
+            'endpoint' => [
+                'value' => $model->apiSetup->bid,
+                'label' => $model->apiSetup->name,
+                'endpoint_url' => $model->apiSetup->end_point,
+            ],
             'api_setup_bid' => (string) $model->api_setup_bid,
             'terminal_code' => (string) $model->terminal_code,
             'terminal_path' => (string) $model->terminal_path,

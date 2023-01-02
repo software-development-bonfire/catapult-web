@@ -57,6 +57,15 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/store', 'FieldMappingController@store');
     });
 
+    
+    Route::group(['prefix' => 'terminal-file-setup'], function () {
+        Route::patch('/update/{bid}', 'TerminalFileSetupController@update');
+        Route::delete('/destroy/{bid}', 'TerminalFileSetupController@destroy');
+        Route::get('/list', 'TerminalFileSetupController@index');
+        Route::post('/store', 'TerminalFileSetupController@store');
+        Route::get('/chosen/endpoints', 'TerminalFileSetupController@getEndpointChosen');
+    });
+
     Route::apiResources([
         'file-storage-setup' => 'FileStorageSetupController',
         'catapult-db-setup' => 'CatapultDbSetupController',
@@ -64,7 +73,6 @@ Route::group(['middleware' => 'auth'], function () {
         'syncing' => 'SyncingSetupController',
         'user' => 'UserAccountController',
         'field-mapping-list' => 'FieldMappingController',
-        'terminal-file-setup' => 'TerminalFileSetupController',
     ]);
 
 

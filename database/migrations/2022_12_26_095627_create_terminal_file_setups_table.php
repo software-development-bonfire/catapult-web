@@ -26,7 +26,7 @@ class CreateTerminalFileSetupsTable extends Migration
             $table->string('terminal_code', 50);
             $table->string('terminal_path', 254)->nullable();
             $table->text('sub_directories', 254)->nullable();
-            $table->tinyInteger('status');
+            $table->tinyInteger('status')->default(1);
             $table->unsignedBigInteger('created_by');
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));

@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\StorageType;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class TerminalFileSetupRequest extends FormRequest
 {
@@ -26,12 +24,14 @@ class TerminalFileSetupRequest extends FormRequest
     public function rules()
     {
         $rules = [
+            'bid' => 'sometimes',
             'name' => 'required|max:45|unique:terminal_file_setups,name,NULL,bid,deleted_at,NULL',
             'type' => 'required',
             'name' => 'max:50',
             'terminal_code' => 'required|max:50',
             'terminal_path' => 'required|max:254',
-            'api_setup_bid' => 'sometimes',
+            'sub_directories' => 'sometimes',
+            'endpoint' => 'sometimes',
             'status' => 'required',
         ];
 
@@ -50,7 +50,7 @@ class TerminalFileSetupRequest extends FormRequest
             'type.required' => __('validation.required', ['attribute' => __('label.type')]),
             'terminal_code.required' => __('validation.required', ['attribute' => __('label.terminal_code')]),
             'terminal_path.required' => __('validation.required', ['attribute' => __('label.terminal_path')]),
-            'api_setup_bid.required' => __('validation.required', ['attribute' => __('label.endpoint')]),
+            'endpoint.required' => __('validation.required', ['attribute' => __('label.endpoint')]),
             'status.required' => __('validation.required', ['attribute' => __('label.status')]),
         ];
     }

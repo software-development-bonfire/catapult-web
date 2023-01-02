@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TerminalFileSetupRequest;
+use App\Repositories\Contracts\ApiSetupRepository;
 use App\Repositories\Contracts\TerminalFileSetupRepository;
 use App\Services\TerminalFileSetupService;
+use App\Transformers\EndpointChosenTransformer;
 use App\Transformers\TerminalFileSetupTransformer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\Log;
 
 class TerminalFileSetupController extends Controller
 {
@@ -16,7 +19,7 @@ class TerminalFileSetupController extends Controller
     /**
      * import terminalFileSetupService.
      *
-     * @param  FileStorageSetupService  $terminalFileSetupService
+     * @param  TerminalFileSetupService  $terminalFileSetupService
      *
      */
     public function __construct(TerminalFileSetupService $terminalFileSetupService)
@@ -46,14 +49,14 @@ class TerminalFileSetupController extends Controller
      */
     public function store(TerminalFileSetupRequest $request)
     {
-       // try {
+        try {
             $this->terminalFileSetupService->store($request->validated());
-        //  catch(\Exception $ex) {
-        //     return $this->errorResponse(
-        //         [],
-        //         __('error.terminal_file_setup_failed_create')
-        //     );
-        // }
+        } catch (\Exception $ex) {
+            return $this->errorResponse(
+                [],
+                __('error.terminal_file_setup_failed_create')
+            );
+        }
 
         return $this->successfulResponse([], __('success.terminal_file_setup_created'));
     }
@@ -69,14 +72,14 @@ class TerminalFileSetupController extends Controller
     {
         try {
             $this->terminalFileSetupService->update($request->validated(), $id);
-        } catch(\Exception $ex) {
+        } catch (\Exception $ex) {
             return $this->errorResponse(
                 [],
                 __('error.terminal_file_setup_failed_update')
             );
         }
 
-         return $this->successfulResponse([], __('success.terminal_file_setup_updated'));
+        return $this->successfulResponse([], __('success.terminal_file_setup_updated'));
     }
 
     /**
@@ -99,5 +102,14 @@ class TerminalFileSetupController extends Controller
             [],
             Lang::get('success.terminal_file_setup_deleted')
         );
+    }
+
+    public function getEndpointChosen()
+    {
+        $list = app()->make(ApiSetupRepository::class)->list(['itemsPerPage' => 1000]);
+
+        $list = fractal($list, EndpointChosenTransformer::class);
+
+        return $this->successfulResponse($list);
     }
 }

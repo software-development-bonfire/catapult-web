@@ -16,15 +16,16 @@
                     :values="tableData"
                     :settings="table.settings"
                     :rowIndex="tableDataIndex"
-                    v-on:row-click="editRow(tableDataIndex, tableData)">
+                    v-on:dbl-row-click="editRow(tableDataIndex, tableData)">
                     <td class="datatable-cell" align="center">
                         <span v-text="tableData.name"></span>
                     </td>
                     <td class="datatable-cell" align="center">
                         <span v-text="tableData.terminal_code"></span>
                     </td>
-                    <td class="datatable-cell" align="center">
-                        <span v-text="tableData.endpoint"></span>
+                    <td class="datatable-cell" align="left">
+                        <div class="endpoint-header" v-text="tableData.endpoint.label"></div>
+                        <i class="endpoint-description" v-text="tableData.endpoint.endpoint_url"></i>
                     </td>
                     <td class="datatable-cell" align="center">
                         <span v-text="getTerminalType(tableData.type)"></span>
@@ -33,12 +34,15 @@
                         <span v-text="tableData.terminal_path"></span>
                     </td>
                     <td class="datatable-cell" align="center">
+                        <span v-text="tableData.sub_directories"></span>
+                    </td>
+                    <td class="datatable-cell" align="center">
                         <span v-if="tableData.status == 1">{{ $t('label.active') }}</span>
                         <span v-if="tableData.status == 0">{{ $t('label.inactive') }}</span>
                     </td>
                     <td class="datatable-cell" align="center">
                         <i class="fa fa-edit fa-lg row-update ml-1" @click.stop="editRow(tableDataIndex, tableData)"></i>
-                        <i class="fa fa-times-circle fa-lg row-delete ml-1 mr-1" @click.stop="deleteRow(tableDataIndex)"></i>
+                        <i class="fa fa-times-circle fa-lg row-delete ml-1 mr-1" @click.stop="deleteRow(tableDataIndex, tableData)"></i>
                     </td>
                 </table-row>
             </template>
@@ -84,8 +88,19 @@
                         :clearable="false"
                         v-model="form.values.endpoint"
                         :options="selections.endpoint.options"
-                        @option:selected="errors.endpoint = ''">
+                        @option:selected="onSelectedEndpoint($event)">
+                        >
                     </v-select>
+                </form-field>
+                
+                <form-field
+                    class="form-group">
+                    <label>{{ $t('label.endpoint_url') }}</label>
+                    <input
+                        readonly
+                        type="text"
+                        class="form-control readonly"
+                        v-model="form.values.endpoint_url">
                 </form-field>
                 <form-field
                     class="form-group"
@@ -96,9 +111,9 @@
                         :class="errors.type !== '' ? 'is-invalid' : ''"
                         v-model="form.values.type"
                         @change="errors.type = ''">
-                        <option :value="1">{{ $t('label.transactions') }}</option>
-                        <option :value="2">{{ $t('label.x_reading') }}</option>
-                        <option :value="3">{{ $t('label.y_reading') }}</option>
+                        <option :value="1">{{ $t('label.sales_transactions') }}</option>
+                        <option :value="2">{{ $t('label.journal_reports') }}</option>
+                        <option :value="3">{{ $t('label.other_reports') }}</option>
                         <option :value="4">{{ $t('label.z_reading') }}</option>
                     </select>
                 </form-field>
@@ -120,7 +135,7 @@
                     <input
                         type="text"
                         class="form-control"
-                        v-model="form.values.terminal_path">
+                        v-model="form.values.sub_directories">
                 </form-field>
                 <form-field
                     class="form-group">
@@ -176,7 +191,7 @@
         },
         mounted() {
             this.paginate();
-            this.getSyncEntryChosen();
+            this.getEndpointsChosen();
         },
         data() {
             return {
@@ -212,9 +227,11 @@
                     mode: 'create',
                     values: {
                         id: '',
+                        bid: '',
                         terminal_code: '',
                         name: '',
                         endpoint: '',
+                        endpoint_url: '',
                         type: '',
                         terminal_path: '',
                         sub_directories: '',
@@ -232,7 +249,7 @@
                         {
                             name: "terminal_code",
                             label: this.$t('label.terminal_code'),
-                            width: '150'
+                            width: '100'
                         },
                         {
                             name: "endpoint",
@@ -257,7 +274,7 @@
                         {
                             name: "status",
                             label: this.$t('label.status'),
-                            width: '90'
+                            width: '60'
                         },
                         {
                             name: "actions",
@@ -291,14 +308,17 @@
                             {
                                 label: 'Endpoint 1',
                                 value: '10001',
+                                endpoint_url: '',
                             },
                             {
                                 label: 'Endpoint 2',
                                 value: '10002',
+                                endpoint_url: '',
                             },
                             {
                                 label: 'Endpoint 3',
                                 value: '10003',
+                                endpoint_url: '',
                             },
                         ]
                     },
@@ -309,14 +329,16 @@
             getTerminalType(type) {
                 let result = '';
 
-                if (type === 1) {
-                    result = this.$t('label.transactions');
-                } else if (type === 2) {
-                    result = this.$t('label.x_reading');
-                } else if (type === 3) {
-                    result = this.$t('label.y_reading');
-                } else if (type === 4) {
+                if (type === window.REPORT_FILE_TYPE.SALES_TRANSACTIONS) {
+                    result = this.$t('label.sales_transactions');
+                } else if (type === window.REPORT_FILE_TYPE.JOURNAL_REPORTS) {
+                    result = this.$t('label.journal_reports');
+                } else if (type === window.REPORT_FILE_TYPE.OTHER_REPORTS) {
+                    result = this.$t('label.other_reports');
+                } else if (type === window.REPORT_FILE_TYPE.Z_READING) {
                     result = this.$t('label.z_reading');
+                } else {
+                    result = this.$t('label.unknown');
                 }
 
                 return result;
@@ -324,7 +346,7 @@
 
             paginate(page = 1) {
                 if (this.$root.isLoading) return;
-                axios.get(this.terminalFileSetupRootUri+'?page='+page, {
+                axios.get(this.terminalFileSetupRootUri+'/list?page='+page, {
                     params: {
                         itemsPerPage: this.table.settings.itemsPerPage,
                     }
@@ -346,6 +368,7 @@
                     terminal_code: '',
                     name: '',
                     endpoint: '',
+                    endpoint_url: '',
                     type: '',
                     terminal_path: '',
                     sub_directories: '',
@@ -354,16 +377,17 @@
                 this.form.index = 0;
                 this.form.mode = 'create';
 
-                this.form.values = {
-                    id: '',
-                    terminal_code: '',
-                    name: '',
-                    endpoint: '',
-                    type: '',
-                    terminal_path: '',
-                    sub_directories: '',
-                    status: 1,
-                }
+                this.form.values.id = '';
+                this.form.values.bid = '';
+                this.form.values.terminal_code = '';
+                this.form.values.name = '';
+                this.form.values.endpoint = '';
+                this.form.values.endpoint_url = '';
+                this.form.values.type = '';
+                this.form.values.terminal_path = '';
+                this.form.values.sub_directories = '';
+                this.form.values.status = 1;
+
             },
 
             editRow(index, data) {
@@ -374,28 +398,34 @@
 
                 this.form.values = {
                     id: index,
+                    bid: data.bid,
                     terminal_code: data.terminal_code,
                     name: data.name,
-                    endpoint: data.endpoint_object,
+                    endpoint: data.endpoint,
+                    endpoint_url: data.endpoint.endpoint_url,
                     type: data.type,
                     terminal_path: data.terminal_path,
+                    sub_directories: data.sub_directories,
                     status: data.status,
                 };
 
                 this.modal.visible = true;
             },
 
-            deleteRow(index) {
+            deleteRow(index, data) {
                 this.dialog.visible = true;
                 this.dialog.status = 'confirm';
                 this.dialog.message = 'Do you want to remove this data?';
                 this.dialog.ok.function = () => {
-                    this.table.values.data.splice(index, 1);
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.value_successfully_deleted', { value: this.$t('label.terminal_file_setup') });
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                    };
+                    axios.delete(`${this.terminalFileSetupRootUri}/destroy/${data.bid}`)
+                    .then(response => {
+                        this.table.values.data.splice(index, 1);
+                        this.dialog.status = 'success';
+                        this.dialog.message = response.data.message;
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                        };
+                    });
                 };
                 this.dialog.cancel.function = () => {
                     this.dialog.visible = false;
@@ -403,9 +433,9 @@
             },
 
             save() {
-                let i = this.form.index;
+                let that = this;
 
-                this.errors.terminal_code = this.form.values.terminal_code === '' ? this.$t('error.the_value_field_is_required', { value: this.$t('label.terminal_code') }) : '';
+                this.errors.terminal_code = !!this.form.values.terminal_code ? '' : this.$t('error.the_value_field_is_required', { value: this.$t('label.terminal_code') });
                 this.errors.name = this.form.values.name === '' ? this.$t('error.the_value_field_is_required', { value: this.$t('label.terminal_receipt_name') }) : '';
                 this.errors.endpoint = this.form.values.endpoint === '' ? this.$t('error.the_value_field_is_required', { value: this.$t('label.endpoint') }) : '';
                 this.errors.type = this.form.values.type === '' ? this.$t('error.the_value_field_is_required', { value: this.$t('label.type') }) : '';
@@ -420,7 +450,7 @@
                 }
 
                 if (this.form.mode === 'create') {
-                    axios.post(this.terminalFileSetupRootUri, this.form.values)
+                    axios.post(`${this.terminalFileSetupRootUri}/store`, this.form.values)
                         .then(response => {
                             that.paginate();
                             that.dialog.visible = true;
@@ -437,9 +467,9 @@
                 } else {
                     let index = this.form.index;
 
-                    axios.patch(`${this.terminalFileSetupRootUri}/${this.form.values.bid}`, this.form.values)
+                    axios.patch(`${this.terminalFileSetupRootUri}/update/${this.form.values.bid}`, this.form.values)
                         .then(response => {
-                            that.table.values.data[index] = {...that.form.values};
+                            that.table.values.data[index] = { ...that.form.values };
 
                             that.dialog.visible = true;
                             that.dialog.status = 'success';
@@ -454,20 +484,45 @@
                         });
                 }
             },
-            
-            async getSyncEntryChosen() {
+
+            onSelectedEndpoint: function onSelectedEndpoint(event) {
+                this.errors.endpoint = '';
+                this.form.values.endpoint_url = event.endpoint_url;
+            },
+
+            async getEndpointsChosen() {
                 let that = this;
 
-                await axios.get('/sync-entry/chosen', {
+                await axios.get(`${this.terminalFileSetupRootUri}/chosen/endpoints`, {
                     params: {
                         filters: {
                             type: this.form.mapping_type
-                        }
+                        },
                     }
                 }).then(function(response) {
-                    that.$set(that.selections.sync_entry, 'options', response.data.data);
+                    that.$set(that.selections.endpoint, 'options', response.data.data.data);
                 });
             },
         }
     }
 </script>
+
+<style lang="scss" scoped>
+   .endpoint {
+        &-header {
+            color: #001e07;
+            font-weight: bold;
+            &:hover {
+                color: darken(#00aa27, 5%);
+                cursor: pointer;
+            }
+        }
+        &-description {
+            color: #979797;
+            &:hover {
+                color: darken(#1178f7, 5%);
+                cursor: pointer;
+            }
+        }
+    }
+</style>

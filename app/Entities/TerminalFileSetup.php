@@ -16,14 +16,14 @@ use Prettus\Repository\Traits\TransformableTrait;
 class TerminalFileSetup extends Model implements Transformable
 {
     use TransformableTrait,
-    SoftDeletes,
-    BidObserverTrait;
+        SoftDeletes,
+        BidObserverTrait;
 
-protected $table = 'terminal_file_setups';
+    protected $table = 'terminal_file_setups';
 
-protected $primaryKey = 'bid';
+    protected $primaryKey = 'bid';
 
-public $incrementing = false;
+    public $incrementing = false;
 
     /**
      * The attributes that are mass assignable.
@@ -38,6 +38,7 @@ public $incrementing = false;
         'status',
         'terminal_code',
         'terminal_path',
+        'sub_directories',
         'created_by',
         'updated_by',
     ];
