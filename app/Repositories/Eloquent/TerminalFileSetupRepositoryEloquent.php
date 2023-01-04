@@ -25,7 +25,7 @@ class TerminalFileSetupRepositoryEloquent extends BaseRepository implements Term
         return TerminalFileSetup::class;
     }
 
-    
+
 
     /**
      * Boot up the repository, pushing criteria
@@ -35,13 +35,13 @@ class TerminalFileSetupRepositoryEloquent extends BaseRepository implements Term
         $this->pushCriteria(app(RequestCriteria::class));
     }
 
-     /**
+    /**
      * Get list of Terminal File Setup
      *
-     * @param Array $filters
+     * @param object $filters
      * @return Collection $result.
      */
-    public function list($filters)
+    public function list($filters = null)
     {
         $this->model = $this->model
             ->select([
@@ -56,7 +56,14 @@ class TerminalFileSetupRepositoryEloquent extends BaseRepository implements Term
             ])
             ->orderBy('id', 'ASC');
 
-        return $this->paginate($filters['itemsPerPage']);
+        if (! empty($filters) && ! empty($filters->type)) {
+            $this->model = $this->model->where('type', $filters->type);
+        }
+
+        if (! empty($filters->itemsPerPage)) {
+            return $this->paginate($filters->itemsPerPage);
+        }
+
+        return $this->model->get();
     }
-    
 }

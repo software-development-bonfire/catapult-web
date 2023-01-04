@@ -47,8 +47,10 @@ export default {
             "malformed_token": "Malformed Token",
             "no_api_setup_detected": "No api setup detected. Please contact administrator.",
             "no_column_found": "No column found, Please add configuration in Field Mapping.",
+            "no_endpoint_configured": "No endpoint configured. Please contact administrator.",
             "no_field_mapping_detected": "No field mapping detected. Please contact administrator.",
             "no_file_storage_setup_detected": "No file storage setup detected. Please contact administrator.",
+            "no_terminal_file_setup_detected": "No terminal file setup detected. Please contact administrator.",
             "remote_directory_not_exists": "Remote Directory not exists. Please contact administrator",
             "sync_interval_setting_failed_create": "Sync interval setting failed to create.",
             "sync_interval_setting_failed_deleted": "Sync intervalsetting failed to deleted.",
@@ -98,6 +100,8 @@ export default {
             "moving_failed_files_to": "Moving [{count}] failed files to ",
             "no_data_found": "No data found.",
             "no_data_to_sync": "No data to sync.",
+            "no_file_found": "No files found.",
+            "no_files_found_in": "No files found in {value}",
             "processing": "Processing...",
             "resetting_network": "Resetting network...",
             "resolving_dns": "Resolving DNS {domain}...",
@@ -109,7 +113,10 @@ export default {
             "syncing_to_catapult_failed": "Syncing to Catapult failed!",
             "syncing_to_catapult_success": "Syncing to Catapult success!",
             "table_constructed": "{table} constructed with {count} records [{progress}/{table_count}]",
-            "watching_files_to_resync": "Watching files need to resync..."
+            "uploading_files": "Uploading files",
+            "uploading_report": "Uploading report",
+            "watching_files_to_resync": "Watching files need to resync...",
+            "watching_files_to_upload": "Watching files to upload..."
         },
         "label": {
             "action": "Action",

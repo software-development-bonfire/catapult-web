@@ -45,6 +45,6 @@ class TerminalFileSetup extends Model implements Transformable
 
     public function apiSetup()
     {
-        return $this->belongsTo(ApiSetup::class, 'api_setup_bid', 'bid');
+        return $this->belongsTo(ApiSetup::class, 'api_setup_bid', 'bid')->withTrashed();
     }
 }

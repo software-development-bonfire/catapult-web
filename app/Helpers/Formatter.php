@@ -30,6 +30,13 @@ if (! function_exists('toBooleanOrInt')) {
     }
 }
 
+if (! function_exists('cleanNonAlphaNumericChars')) {
+    function cleanNonAlphaNumericChars($value)
+    {
+        return preg_replace('/[^a-zA-Z0-9]/', '', $value);
+    }
+}
+
 if (! function_exists('genericGroupBy')) {
     function genericGroupBy($array, $key) {
         $return = array();

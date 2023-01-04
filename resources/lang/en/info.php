@@ -32,8 +32,9 @@ return [
     'moved_failed_files_to' =>'Moved [:count] failed files to ',
     'moving_failed_files_to' =>'Moving [:count] failed files to ',
     'no_data_found' => 'No data found.',
-    'no_data_found' => 'No data found.',
     'no_data_to_sync' => 'No data to sync.',
+    'no_file_found' => 'No files found.',
+    'no_files_found_in' => 'No files found in :value',
     'processing' => 'Processing...',
     'resetting_network' => 'Resetting network...',
     'resolving_dns' => 'Resolving DNS :domain...',
@@ -45,5 +46,8 @@ return [
     'syncing_to_catapult_failed' => 'Syncing to Catapult failed!',
     'syncing_to_catapult_success' => 'Syncing to Catapult success!',
     'table_constructed' => ':table constructed with :count records [:progress/:table_count]',
-    'watching_files_to_resync' => 'Watching files need to resync...'
+    'uploading_files' => 'Uploading files',
+    'uploading_report' => 'Uploading report',
+    'watching_files_to_resync' => 'Watching files need to resync...',
+    'watching_files_to_upload' => 'Watching files to upload...'
 ];

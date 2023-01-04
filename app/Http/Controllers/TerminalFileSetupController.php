@@ -34,7 +34,8 @@ class TerminalFileSetupController extends Controller
      */
     public function index(Request $request)
     {
-        $list = app()->make(TerminalFileSetupRepository::class)->list($request->all());
+        $filters = (object)$request->all();
+        $list = app()->make(TerminalFileSetupRepository::class)->list($filters);
 
         $list = fractal($list, TerminalFileSetupTransformer::class);
 
@@ -106,7 +107,7 @@ class TerminalFileSetupController extends Controller
 
     public function getEndpointChosen()
     {
-        $list = app()->make(ApiSetupRepository::class)->list(['itemsPerPage' => 1000]);
+        $list = app()->make(ApiSetupRepository::class)->list(null);
 
         $list = fractal($list, EndpointChosenTransformer::class);
 

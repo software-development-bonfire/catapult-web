@@ -112,6 +112,23 @@ trait StorageTrait
         ];
     }
 
+     /**
+     * Resolve filesytem disk dynamically
+     *
+     * @param string  $diskName
+     * @param string  $defaultPath
+     *
+     * @return Illuminate\Support\Facades\Storage
+     */
+    public function resolveFilesystemDisk($diskName, $defaultPath)
+    {
+        resolve('filesystem')->forgetDisk($diskName);
+        app()['config']->set("filesystems.disks.$diskName.driver", 'local');
+        app()['config']->set("filesystems.disks.$diskName.root", $defaultPath);
+
+        return Storage::disk($diskName);
+    }
+
     /**
      * Check directory inside root folder and create if not exist
      *
@@ -125,7 +142,7 @@ trait StorageTrait
         $checked = true;
         try {
             $remoteDisk = Storage::disk($rootFolder);
-            if (!$remoteDisk->exists($targetFoler)) {
+            if (! $remoteDisk->exists($targetFoler)) {
                 $remoteDisk->makeDirectory($targetFoler);
             }
         } catch (\Exception $ex) {
@@ -142,7 +159,7 @@ trait StorageTrait
      */
     public function createDirectoryIfNotExist($disk, $directory)
     {
-        if (!$disk->exists($directory)) {
+        if (! $disk->exists($directory)) {
             $disk->makeDirectory($directory);
         }
     }
