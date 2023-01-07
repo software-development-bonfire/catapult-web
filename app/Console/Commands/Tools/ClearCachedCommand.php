@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Tools;
 
 use App\Traits\JobCancellationTrait;
 use Illuminate\Console\Command;

@@ -56,3 +56,8 @@ When you want to stop and restart the rebasing, type this command:
 ```bash
 git rebase --abort
 ```
+
+# Catapult Custom Commands
+* `php artisan network:resolve`  _#This well resolve common local network issues.
+In backgound it execute windows command [ **_netsh int ip reset_** ] and [ **ipconfig /flushdns** ]._
+* `php artisan clear:cache`  _#Clear all defined caches such; **sync** and **convert**_

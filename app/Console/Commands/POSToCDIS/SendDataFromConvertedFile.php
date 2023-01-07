@@ -5,9 +5,11 @@ namespace App\Console\Commands\POSToCDIS;
 use App\Entities\ErrorLog;
 use App\Entities\ErrorLogDetail;
 use App\Enums\CDIS\TerminalTransactionType;
+use App\Enums\CommonErrors;
 use App\Enums\ErrorStatus;
 use App\Enums\Status;
 use App\Enums\StorageType;
+use App\Helpers\CustomPinger as Ping;
 use App\Repositories\Contracts\FieldMappingRepository;
 use App\Traits\ErrorLogTrait;
 use App\Traits\FilenameRetryCounterTrait;
@@ -61,6 +63,9 @@ class SendDataFromConvertedFile extends Command
      */
     public function handle()
     {
+        $cdisUrl = getDomain(config()->get('app.cdis_url'), true);
+        $cdisDomainName = getDomain($cdisUrl, false);
+
         $timeout = $this->option('timeout');
         $timeout =
             filter_var($timeout, FILTER_VALIDATE_BOOLEAN) && is_bool($timeout)
@@ -91,6 +96,18 @@ class SendDataFromConvertedFile extends Command
         }
 
         while (true) {
+            if (! $this->hasInternetConnection() && ! $this->hasInternetConnection($cdisUrl)) {
+                $this->setErrorLineLog(__('message.no_internet_connection'));
+                continue;
+            }
+
+            $ping = new Ping($cdisDomainName);
+            $latency = $ping->ping();
+            if (! $latency) {
+                $this->setErrorLineLog(__('message.no_ping_response_from_host', ['value' => $cdisDomainName]));
+                continue;
+            }
+
             $entriesMaxLength = max(array_map('strlen', $entries));
             $remoteDiskName = '';
             $localDiskName = '';
@@ -126,6 +143,15 @@ class SendDataFromConvertedFile extends Command
 
                 $fileStorageSetup = $fieldMappingDetails->fileStorageSetup;
                 $apiSetup = $fieldMappingDetails->apiSetup;
+
+                $endpointDomain = getDomain($apiSetup->end_point, true);
+                if ($endpointDomain !== $cdisUrl) {
+                    $this->setErrorLineLog(__('error.configured_endpoint_does_not_matched_to', ['value' => $cdisUrl]));
+                    continue;
+                }
+                $this->setErrorLineLog($cdisUrl);
+                $this->setErrorLineLog($endpointDomain);
+                $this->setErrorLineLog($apiSetup->end_point);
 
                 $selectedDisk = $this->intializeDisk($fileStorageSetup, \App\Enums\StorageCommandSelection::SEND);
 
@@ -196,7 +222,18 @@ class SendDataFromConvertedFile extends Command
                             $this->createLog($exceptionTrace, 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
                             $this->setErrorLog($entryLogLabel, $fileName, $failedSyncResyncPath, ErrorStatus::SYNCING_ERROR, null, $statusCodeLabel, $exceptionTrace);
 
-                            $this->moveToUnsyncableFolder($localDisk, $failedSyncUnsyncablePath, $file, $fileName);
+                            if (Str::contains(
+                                $responseBodyContent->message,
+                                [
+                                    CommonErrors::COULD_NOT_RESOLVE_HOST,
+                                    CommonErrors::POST_METHOD_NOT_SUPPORTED,
+                                    CommonErrors::OPEN_SSL_CONNECT
+                                ]
+                            )) {
+                                $this->moveToResyncFolder($localDisk, $failedSyncResyncPath, $file, $fileName);
+                            } else {
+                                $this->moveToUnsyncableFolder($localDisk, $failedSyncUnsyncablePath, $file, $fileName);
+                            }
                         } else {
                             if ((isset($responseBodyContent->success) && $responseBodyContent->success) || (isset($responseBodyContent->message) && $responseBodyContent->message == 'Duplicate Entry.')) {
                                 $this->createLog(
@@ -364,5 +401,12 @@ class SendDataFromConvertedFile extends Command
     {
         $targetFile = $destinationFolder.'/'.$this->setRetryCount($fileName);
         $this->moveFile($localDisk, $file, $targetFile);
+    }
+
+    private function setErrorLineLog ($message) {
+        $this->createLog($message, 'error', true);
+        $this->flushOutputBuffer();
+
+        sleep(5);
     }
 }

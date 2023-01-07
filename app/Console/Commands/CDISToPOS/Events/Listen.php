@@ -4,6 +4,7 @@ namespace App\Console\Commands\CDISToPOS\Events;
 
 use App\Enums\CatapultActionType;
 use App\Enums\CatapultSyncStatus;
+use App\Helpers\CustomPinger as Ping;
 use App\Traits\GenericHelper;
 use App\Traits\JobCancellationTrait;
 use App\Traits\PusherTrait;
@@ -60,7 +61,13 @@ class Listen extends Command
                 $this->hasInternetConnection($cdisUrl) &&
                 $this->hasInternetConnection($pusherDomain)
             ) {
-                $this->connect();
+                $ping = new Ping($cdisUrl);
+                $latency = $ping->ping();
+                if ($latency) {
+                    $this->connect();
+                } else {
+                    $this->createLog(__('message.no_ping_response_from_host', ['value' => $cdisUrl]), 'warn', true, ['CONNECTION ERROR']);
+                }
             } else {
                 $this->createLog("Could not connect: No internet connection.", 'warn', true, ['CONNECTION ERROR']);
             }

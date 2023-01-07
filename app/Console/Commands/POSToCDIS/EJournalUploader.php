@@ -3,7 +3,7 @@
 namespace App\Console\Commands\POSToCDIS;
 
 use App\Enums\ReportFileType;
-use \App\Helpers\CustomPinger as Ping;
+use App\Helpers\CustomPinger as Ping;
 use App\Repositories\Contracts\TerminalFileSetupRepository;
 use App\Services\ErrorLogService;
 use App\Traits\GenericHelper;
