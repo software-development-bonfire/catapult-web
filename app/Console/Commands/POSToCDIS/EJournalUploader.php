@@ -3,6 +3,7 @@
 namespace App\Console\Commands\POSToCDIS;
 
 use App\Enums\ReportFileType;
+use \App\Helpers\CustomPinger as Ping;
 use App\Repositories\Contracts\TerminalFileSetupRepository;
 use App\Services\ErrorLogService;
 use App\Traits\GenericHelper;
@@ -54,6 +55,9 @@ class EJournalUploader extends Command implements ShouldQueue
      */
     public function handle()
     {
+        $cdisUrl = getDomain(config()->get('app.cdis_url'), true);
+        $cdisDomainName = getDomain($cdisUrl, false);
+
         $this->line(__('info.watching_files_to_upload'));
         $this->line('');
 
@@ -67,12 +71,30 @@ class EJournalUploader extends Command implements ShouldQueue
         }
         while (true) {
 
+            if (! $this->hasInternetConnection() && ! $this->hasInternetConnection($cdisUrl)) {
+                $this->setErrorLog(__('message.no_internet_connection'));
+                continue;
+            }
+
+            $ping = new Ping($cdisDomainName);
+            $latency = $ping->ping();
+            if (! $latency) {
+                $this->setErrorLog(__('message.no_ping_response_from_host', ['value' => $cdisDomainName]));
+                continue;
+            }
+
             $terminalFileSetups = app()->make(TerminalFileSetupRepository::class)->list($filters);
             if (count($terminalFileSetups) > 0) {
                 foreach ($terminalFileSetups as $terminalFile) {
                     $apiSetup = $terminalFile->apiSetup;
                     if (empty($apiSetup)) {
-                        $this->createLog(__('error.no_endpoint_configured'), 'warn', true,);
+                        $this->setErrorLog(__('error.no_endpoint_configured'));
+                        continue;
+                    }
+
+                    $endpointDomain = getDomain($apiSetup->end_point, true);
+                    if ($endpointDomain !== $cdisUrl) {
+                        $this->setErrorLog(__('error.configured_endpoint_does_not_matched_to', ['value' => $cdisUrl]));
                         continue;
                     }
 
@@ -98,23 +120,23 @@ class EJournalUploader extends Command implements ShouldQueue
                                 'branch_code' => config('configuration.branch_code'),
                                 'terminal_number' => $terminalFile->terminal_code,
                                 'type' => $terminalFile->type,
-                                'module_type' => 'e_journal',
-                                'date' => $this->getContentLogDate($fileContent),
-
+                                'module_type' => \Illuminate\Support\Str::snake(ReportFileType::getDescription($terminalFile->type)),
+                                'date' => $this->getDate($file, $fileContent, $terminalFile->type),
                             ];
+
                             $response = $this->send($filenamePath, $data, $apiSetup);
                             $statusCode = $response->getStatusCode();
 
                             $responseBodyContent = json_decode($response->getBody()->getContents());
 
                             if (! empty($responseBodyContent) && $responseBodyContent->success) {
-                                $targetFilename = "$destinationSubDirectory/$file";
 
+                                $targetFilename = "$destinationSubDirectory/$file";
                                 $storageDisk->put($targetFilename, $storageDisk->get($file));
-    
+
                                 if ($storageDisk->exists($targetFilename)) {
                                     $storageDisk->delete($file);
-                                }                           
+                                }
                             } else {
 
                             }
@@ -176,19 +198,43 @@ class EJournalUploader extends Command implements ShouldQueue
         ];
     }
 
-    private function getContentLogDate($content)
+    private function getDate($file, $content, $reportFileType)
     {
-        $logDate = Carbon::now();
-        $pattern = "/Log Date.*: (.*)/";
-        if (preg_match_all($pattern, $content, $matches)) {
-            $match = implode(",", $matches[0]);
-            if (!empty($match)) {
-                $chunks =  explode(":", $match);
-                if (!empty($chunks) && count($chunks) > 1) {
-                    $logDate = trim($chunks[1]);
+        $date = Carbon::now();
+
+        if ($reportFileType === ReportFileType::Z_READING || $reportFileType === ReportFileType::SALES_TRANSACTIONS) {
+
+            $pattern = "/Log Date.*: (.*)/";
+            if ($reportFileType === ReportFileType::SALES_TRANSACTIONS) {
+                $pattern = "/(LOGDATE.*):(.*)/";
+            }
+
+            if (preg_match_all($pattern, $content, $matches)) {
+                $match = implode(",", $matches[0]);
+                if (! empty($match)) {
+                    $chunks =  explode(":", $match);
+                    if (! empty($chunks) && count($chunks) > 1) {
+                        $date = trim($chunks[1]);
+                        if (! empty($date)) {
+                            $date = date_create_from_format("m/d/Y", $date);
+                            $date = date_format($date, "Y-m-d");
+                        }
+                    }
                 }
             }
+        } else if ($reportFileType === ReportFileType::JOURNAL_REPORTS) {
+            $filename = pathinfo($file, PATHINFO_FILENAME);
+            $createdDate = date_create_from_format("mdY", $filename);
+            $date = date_format($createdDate, "Y-m-d");
+        } else {
         }
-        return $logDate;
+        return $date;
+    }
+
+    private function setErrorLog ($message) {
+        $this->createLog($message, 'error', true);
+        $this->flushOutputBuffer();
+
+        sleep(5);
     }
 }
