@@ -61,13 +61,7 @@ class Listen extends Command
                 $this->hasInternetConnection($cdisUrl) &&
                 $this->hasInternetConnection($pusherDomain)
             ) {
-                $ping = new Ping($cdisUrl);
-                $latency = $ping->ping();
-                if ($latency) {
-                    $this->connect();
-                } else {
-                    $this->createLog(__('message.no_ping_response_from_host', ['value' => $cdisUrl]), 'warn', true, ['CONNECTION ERROR']);
-                }
+                $this->connect();
             } else {
                 $this->createLog("Could not connect: No internet connection.", 'warn', true, ['CONNECTION ERROR']);
             }

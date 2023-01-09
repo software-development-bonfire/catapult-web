@@ -23,7 +23,7 @@ class ConfigurationValidator extends Command
      *
      * @var string
      */
-    protected $signature = 'config:validate';
+    protected $signature = 'pos:validate';
 
     /**
      * The console command description.
@@ -54,11 +54,23 @@ class ConfigurationValidator extends Command
         $cdisHostScheme = getDomain($cdisUrl, true);
         $pusherhost = 'ws-eu.pusher.com';
 
+        // This section will initialize the project by calling
+        // optimize:clear command to clear all system caches and 
+        // compiled services and packages. Then we make sure to
+        // re-generate app key of the system
+        $this->line("INITIALIZE...");
+        $this->call('optimize:clear');
+        $this->call('key:generate');
+        $this->call('optimize');
+
+        // This section will check internet connection by calling
+        // $hasInternetConnection generic helper and we need to ping
+        // CDIS Host to check server connection is available
         $this->line("NETWORK CONNECTION...");
-        if (!$this->hasInternetConnection() && !$this->hasInternetConnection($cdisHost)) {
-            $this->error("[x] Internet connection: ".__('message.no_internet_connection'));
-        } else {
+        if ( $this->hasInternetConnection() && $this->hasInternetConnection($cdisHost)) {
             $this->info("[✔] Internet connection!");
+        } else {
+            $this->error("[✖] Internet connection: ".__('message.no_internet_connection'));
         }
 
         $ping = new Ping($cdisHost);
@@ -66,8 +78,13 @@ class ConfigurationValidator extends Command
         if ($latency) {
             $this->info("[✔] Pinging: ".$cdisHost);
         } else {
-            $this->error("[✖] Pinging: ".__('message.no_ping_response_from_host', ['value' => $cdisHost]));
+            $this->error("[✖] Pinging: ".__('error.no_ping_response_from_host', ['value' => $cdisHost]));
         }
+
+        // This section will check configured file storage and API setup of
+        // Catapult. It will check field mapping and field mapping directory existence.
+        // It conducts also basic endpoints validation to check if it returns valid response
+        // from server. It returns count of files inside directories.
         $this->line("FILE STORAGE AND API SETUP...");
         $entries = [
             'transaction',
@@ -181,6 +198,7 @@ class ConfigurationValidator extends Command
             }
         }     
         
+        // This section will check pending jobs and failed jobs
         $this->line("JOBS...");
         $tableJobs = ['jobs', 'failed_jobs'];
         $entriesMaxLength = max(array_map('strlen', $tableJobs));

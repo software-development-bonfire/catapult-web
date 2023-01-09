@@ -82,13 +82,6 @@ class RetryFailedSync extends Command implements ShouldQueue
                 $this->setErrorLog(__('message.no_internet_connection'));
                 continue;
             }
-
-            $ping = new Ping($cdisDomainName);
-            $latency = $ping->ping();
-            if (! $latency) {
-                $this->setErrorLog(__('message.no_ping_response_from_host', ['value' => $cdisDomainName]));
-                continue;
-            }
             
             $entriesMaxLength = max(array_map('strlen', $entries));
 

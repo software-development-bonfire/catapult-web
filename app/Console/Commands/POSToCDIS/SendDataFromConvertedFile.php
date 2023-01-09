@@ -101,13 +101,6 @@ class SendDataFromConvertedFile extends Command
                 continue;
             }
 
-            $ping = new Ping($cdisDomainName);
-            $latency = $ping->ping();
-            if (! $latency) {
-                $this->setErrorLineLog(__('message.no_ping_response_from_host', ['value' => $cdisDomainName]));
-                continue;
-            }
-
             $entriesMaxLength = max(array_map('strlen', $entries));
             $remoteDiskName = '';
             $localDiskName = '';
@@ -149,9 +142,6 @@ class SendDataFromConvertedFile extends Command
                     $this->setErrorLineLog(__('error.configured_endpoint_does_not_matched_to', ['value' => $cdisUrl]));
                     continue;
                 }
-                $this->setErrorLineLog($cdisUrl);
-                $this->setErrorLineLog($endpointDomain);
-                $this->setErrorLineLog($apiSetup->end_point);
 
                 $selectedDisk = $this->intializeDisk($fileStorageSetup, \App\Enums\StorageCommandSelection::SEND);
 
