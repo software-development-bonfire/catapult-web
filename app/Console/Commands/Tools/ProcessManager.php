@@ -65,6 +65,7 @@ class ProcessManager extends Command
                 // error will occur, it happens due to version support but just ignore it.
                 if ($with === 'startup') {
                     $this->executeCommand("pm2 unstartup");
+                    $this->executeCommand("pm2-startup uninstall");
                 }
                 // Kill running processes
                 // Removed installed pm2
