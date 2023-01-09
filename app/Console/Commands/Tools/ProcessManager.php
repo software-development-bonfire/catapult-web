@@ -64,7 +64,6 @@ class ProcessManager extends Command
                 // auto-start must be disabled before installation of PM2. Sometimes the 
                 // error will occur, it happens due to version support but just ignore it.
                 if ($with === 'startup') {
-                    $this->executeCommand("pm2 unstartup");
                     $this->executeCommand("pm2-startup uninstall");
                 }
                 // Kill running processes

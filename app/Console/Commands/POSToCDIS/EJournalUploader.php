@@ -76,13 +76,6 @@ class EJournalUploader extends Command implements ShouldQueue
                 continue;
             }
 
-            $ping = new Ping($cdisDomainName);
-            $latency = $ping->ping();
-            if (! $latency) {
-                $this->setErrorLog(__('message.no_ping_response_from_host', ['value' => $cdisDomainName]));
-                continue;
-            }
-
             $terminalFileSetups = app()->make(TerminalFileSetupRepository::class)->list($filters);
             if (count($terminalFileSetups) > 0) {
                 foreach ($terminalFileSetups as $terminalFile) {
