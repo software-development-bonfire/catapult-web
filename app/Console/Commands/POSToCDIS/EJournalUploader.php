@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\POSToCDIS;
 
+use App\Enums\CommonErrors;
 use App\Enums\ReportFileType;
 use App\Helpers\CustomPinger as Ping;
 use App\Repositories\Contracts\TerminalFileSetupRepository;
@@ -96,9 +97,11 @@ class EJournalUploader extends Command implements ShouldQueue
                     $storageDisk = $this->resolveFilesystemDisk(cleanNonAlphaNumericChars(strtolower($terminalFile->name)), $terminalPath);
 
                     $rootSubDirectory = '/';
-                    $destinationSubDirectory = '/Uploaded';
+                    $destinationSubDirectoryUpload = '/Uploaded';
+                    $destinationSubDirectoryErrors = '/Errors';
                     $this->createDirectoryIfNotExist($storageDisk, $rootSubDirectory);
-                    $this->createDirectoryIfNotExist($storageDisk, $destinationSubDirectory);
+                    $this->createDirectoryIfNotExist($storageDisk, $destinationSubDirectoryUpload);
+                    $this->createDirectoryIfNotExist($storageDisk, $destinationSubDirectoryErrors);
 
                     $files = $storageDisk->files($rootSubDirectory);
                     if (count($files)) {
@@ -122,20 +125,39 @@ class EJournalUploader extends Command implements ShouldQueue
 
                             $responseBodyContent = json_decode($response->getBody()->getContents());
 
-                            if (! empty($responseBodyContent) && $responseBodyContent->success) {
-
-                                $targetFilename = "$destinationSubDirectory/$file";
-                                $storageDisk->put($targetFilename, $storageDisk->get($file));
-
-                                if ($storageDisk->exists($targetFilename)) {
-                                    $storageDisk->delete($file);
+                            if (! empty($responseBodyContent)) {
+                                $targetFilename = "$destinationSubDirectoryUpload/$file";
+                                if (
+                                    $responseBodyContent->success &&
+                                    (isset($responseBodyContent->message)
+                                    && \Illuminate\Support\Str::contains($responseBodyContent->message, "successfully uploaded")
+                                    )
+                                ) {
+                                    $targetFilename = "$destinationSubDirectoryUpload/$file";
                                 }
-                            } else {
 
+                                if (! empty($responseBodyContent->errors)) {
+                                    if (\Illuminate\Support\Str::contains(
+                                        $responseBodyContent->errors,
+                                        [
+                                            CommonErrors::NO_FILE_REPORT_FOUND,
+                                            CommonErrors::NOT_ALLOWED_FILE_EXT
+                                        ]
+                                    )) {
+                                        $targetFilename = "$destinationSubDirectoryErrors/$file";
+                                    }
+                                }
+
+                                $this->moveFile($storageDisk, $file, $targetFilename);
+                            } else {
+                                if ($statusCode === 429) {
+                                    sleep(10);
+                                }
                             }
                                 
                             $this->createLog("Status code: $statusCode", 'info', true,);    
                             $this->createLog(json_encode($responseBodyContent), 'warn', true,);
+                            sleep(5); // add time delay to avoid too many request
                         }
                     } else {
                         $this->createLog(__('info.no_files_found_in', ['value' => $terminalPath]), 'warn', true,);
@@ -210,7 +232,9 @@ class EJournalUploader extends Command implements ShouldQueue
                         $date = trim($chunks[1]);
                         if (! empty($date)) {
                             $date = date_create_from_format("m/d/Y", $date);
-                            $date = date_format($date, "Y-m-d");
+                            if (! empty($date)) {
+                                $date = date_format($date, "Y-m-d");
+                            }
                         }
                     }
                 }
@@ -218,7 +242,9 @@ class EJournalUploader extends Command implements ShouldQueue
         } else if ($reportFileType === ReportFileType::JOURNAL_REPORTS) {
             $filename = pathinfo($file, PATHINFO_FILENAME);
             $createdDate = date_create_from_format("mdY", $filename);
-            $date = date_format($createdDate, "Y-m-d");
+            if (! empty($createdDate)) {
+                $date = date_format($createdDate, "Y-m-d");
+            }
         } else {
         }
         return $date;
