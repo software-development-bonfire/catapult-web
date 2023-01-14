@@ -11,9 +11,12 @@ use App\Traits\GenericHelper;
 use App\Traits\OutputBufferTrait;
 use App\Traits\StorageTrait;
 use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Response as FacadesResponse;
 use Illuminate\Support\Facades\Storage;
 
 class EJournalUploader extends Command implements ShouldQueue
@@ -99,18 +102,33 @@ class EJournalUploader extends Command implements ShouldQueue
                     $rootSubDirectory = '/';
                     $destinationSubDirectoryUpload = '/Uploaded';
                     $destinationSubDirectoryErrors = '/Errors';
+
                     $this->createDirectoryIfNotExist($storageDisk, $rootSubDirectory);
                     $this->createDirectoryIfNotExist($storageDisk, $destinationSubDirectoryUpload);
                     $this->createDirectoryIfNotExist($storageDisk, $destinationSubDirectoryErrors);
 
                     $files = $storageDisk->files($rootSubDirectory);
+
                     if (count($files)) {
                         foreach ($files as $file) {
-                            $fileContent = $storageDisk->get($file);
+                            $targetFilenameError = "$destinationSubDirectoryErrors/$file";
+                            $targetFilenameSuccess = "$destinationSubDirectoryUpload/$file";
+
+                            try {
+                                // To avoid FatalErrorException due to allocated memory size limit,
+                                // we set memory limit before reading the content of the file
+                                ini_set('memory_limit', '-1');
+                                $fileContent = $storageDisk->get($file);
+                            } catch (\Exception $e) {
+                                // Move the file to designated error folder to make sure
+                                // in next run, files will not be re-included
+                                $this->moveFile($storageDisk, $file, $targetFilenameError);
+                                $this->createLog(json_encode($e), 'error', true, ['FileException']);
+                                continue;
+                            }
 
                             $filenamePath = "$terminalPath/$file";
 
-                            $this->createLog($file, 'info', true,);
                             $data = [
                                 'name' => $terminalFile->name,
                                 'branch_code' => config('configuration.branch_code'),
@@ -120,43 +138,80 @@ class EJournalUploader extends Command implements ShouldQueue
                                 'date' => $this->getDate($file, $fileContent, $terminalFile->type),
                             ];
 
-                            $response = $this->send($filenamePath, $data, $apiSetup);
-                            $statusCode = $response->getStatusCode();
+                            try {
+                                $response = $this->send($filenamePath, $data, $apiSetup);
+                                $responseBodyContent = json_decode($response->getBody()->getContents());
+                                $statusCode = $response->getStatusCode();
+                                if ($statusCode >= 300) {
+                                    // is HTTP status code (for non-exceptions) 
+                                    $statusText = Response::$statusTexts[$statusCode];
 
-                            $responseBodyContent = json_decode($response->getBody()->getContents());
-
-                            if (! empty($responseBodyContent)) {
-                                $targetFilename = "$destinationSubDirectoryUpload/$file";
-                                if (
-                                    $responseBodyContent->success &&
-                                    (isset($responseBodyContent->message)
-                                    && \Illuminate\Support\Str::contains($responseBodyContent->message, "successfully uploaded")
-                                    )
-                                ) {
-                                    $targetFilename = "$destinationSubDirectoryUpload/$file";
-                                }
-
-                                if (! empty($responseBodyContent->errors)) {
-                                    if (\Illuminate\Support\Str::contains(
-                                        $responseBodyContent->errors,
-                                        [
-                                            CommonErrors::NO_FILE_REPORT_FOUND,
-                                            CommonErrors::NOT_ALLOWED_FILE_EXT
-                                        ]
-                                    )) {
-                                        $targetFilename = "$destinationSubDirectoryErrors/$file";
+                                    if ($statusCode === Response::HTTP_TOO_MANY_REQUESTS) {
+                                        // Too many request, we need to extend delay time (10 seconds)
+                                        // as a rest time after request error
+                                        sleep(10);
+                                    }
+                                    if (
+                                        $statusCode === Response::HTTP_REQUEST_ENTITY_TOO_LARGE ||
+                                        $statusCode === Response::HTTP_BAD_REQUEST
+                                    ) {
+                                        // File is too large or maybe bad request due to file not found
+                                        // or extension is not allowed
+                                        $this->moveFile($storageDisk, $file, $targetFilenameError);
+                                        sleep(5);
+                                    }
+                                    $this->setErrorLog("{$statusText} : ".json_encode($responseBodyContent),[$statusCode]);
+                                } else {
+                                    if (! empty($responseBodyContent)) {
+                                        if ($statusCode === Response::HTTP_OK) {
+                                            $this->moveFile($storageDisk, $file, $targetFilenameSuccess);
+                                            $this->createLog(json_encode($responseBodyContent), 'info', true, [Response::$statusTexts[$statusCode]]);
+                                        } else {
+                                            // Display warning message containing API response,
+                                            // means request is successfully sent but it does not return
+                                            // an expected response
+                                            $this->createLog(json_encode($responseBodyContent), 'warn', true, [Response::$statusTexts[$statusCode]]);
+                                        }
                                     }
                                 }
-
-                                $this->moveFile($storageDisk, $file, $targetFilename);
-                            } else {
-                                if ($statusCode === 429) {
-                                    sleep(10);
+                            } catch (\GuzzleHttp\Exception\TooManyRedirectsException $e) {
+                                // handle too many redirects
+                                $this->setErrorLog(json_encode($e), ['TooManyRedirectsException']);
+                            } catch (\GuzzleHttp\Exception\ClientException | \GuzzleHttp\Exception\ServerException $e) {
+                                // ClientException is thrown for 400 level errors if the http_errors request option is set to true.
+                                // ServerException is thrown for 500 level errors if the http_errors request option is set to true.
+                                if ($e->hasResponse()) {
+                                    // is HTTP status code, e.g. 500 
+                                    $statusCode = $e->getResponse()->getStatusCode();
+                                    if (
+                                        $statusCode === Response::HTTP_REQUEST_ENTITY_TOO_LARGE ||
+                                        $statusCode === Response::HTTP_BAD_REQUEST
+                                    ) {
+                                        // File is too large or maybe bad request due to file not found
+                                        // or extension is not allowed
+                                        $this->moveFile($storageDisk, $file, $targetFilenameError);
+                                        sleep(5);
+                                    }
                                 }
+                                $this->setErrorLog(json_encode($e->getResponse()), ['ClientException|ServerException', $statusCode]);
+                            } catch (\GuzzleHttp\Exception\ConnectException $e) {
+                                // ConnectException is thrown in the event of a networking error.
+                                // This may be an error reported by lowlevel functionality 
+                                // (e.g.  cURL error)
+                                $errno = '';
+                                $handlerContext = $e->getHandlerContext();
+                                if ($handlerContext['errno'] ?? 0) {
+                                    // this is the lowlevel error code, not the HTTP status code!!!
+                                    // for example 6 for "Couldn't resolve host" (for libcurl)
+                                    $errno = (int)($handlerContext['errno']);
+                                }
+                                // get a description of the error
+                                $errorMessage = $handlerContext['error'] ?? $e->getMessage();
+                                $this->setErrorLog(json_encode($errorMessage), ['ConnectException', $errno]);
+                            } catch (\Exception $e) {
+                                // fallback, in case of other exception
+                                $this->setErrorLog(json_encode($e), ['HttpException']);
                             }
-                                
-                            $this->createLog("Status code: $statusCode", 'info', true,);    
-                            $this->createLog(json_encode($responseBodyContent), 'warn', true,);
                             sleep(5); // add time delay to avoid too many request
                         }
                     } else {
@@ -165,7 +220,6 @@ class EJournalUploader extends Command implements ShouldQueue
                 }
             } else {
                 $this->createLog(__('error.no_terminal_file_setup_detected'), 'warn', true,);
-                continue;
             }
 
             $this->flushOutputBuffer();
@@ -183,6 +237,8 @@ class EJournalUploader extends Command implements ShouldQueue
         $senderDetails = ['sender_details' => $this->getSenderDetails()];
         $content = array_merge($senderDetails, $data);
 
+        // To upload files together with other information  we use 
+        // multipart option, upload both json file and form-data; 
         $options =  [
             'multipart' => [
                 [
@@ -218,7 +274,9 @@ class EJournalUploader extends Command implements ShouldQueue
         $date = Carbon::now();
 
         if ($reportFileType === ReportFileType::Z_READING || $reportFileType === ReportFileType::SALES_TRANSACTIONS) {
-
+            // If the file is z-reading or receipts of a transaction, we need to get the log date
+            // inside the file content using defined patterns; Tested only in generated receipts
+            // of 1TEQ POS System.
             $pattern = "/Log Date.*: (.*)/";
             if ($reportFileType === ReportFileType::SALES_TRANSACTIONS) {
                 $pattern = "/(LOGDATE.*):(.*)/";
@@ -240,6 +298,9 @@ class EJournalUploader extends Command implements ShouldQueue
                 }
             }
         } else if ($reportFileType === ReportFileType::JOURNAL_REPORTS) {
+            // If the file journal report, then we need to extract date
+            // from its filename (we assume that the file is in mdY format),
+            // Other than that, it needs to be revised; 
             $filename = pathinfo($file, PATHINFO_FILENAME);
             $createdDate = date_create_from_format("mdY", $filename);
             if (! empty($createdDate)) {
@@ -250,8 +311,9 @@ class EJournalUploader extends Command implements ShouldQueue
         return $date;
     }
 
-    private function setErrorLog ($message) {
-        $this->createLog($message, 'error', true);
+    private function setErrorLog($message, $status = [])
+    {
+        $this->createLog($message, 'error', true, $status);
         $this->flushOutputBuffer();
 
         sleep(5);
