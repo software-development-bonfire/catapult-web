@@ -160,6 +160,12 @@ class EJournalUploader extends Command implements ShouldQueue
                                         $this->moveFile($storageDisk, $file, $targetFilenameError);
                                         sleep(5);
                                     }
+                                    if ($statusCode === Response::HTTP_PRECONDITION_FAILED) {
+                                        // Due to some missing references, which are a prereq on saving
+                                        // attachments, we need to add some delay to make sure syncing of 
+                                        // data comes first before re-uploading
+                                        sleep(10);
+                                    }
                                     $this->setErrorLog("{$statusText} : ".json_encode($responseBodyContent),[$statusCode]);
                                 } else {
                                     if (! empty($responseBodyContent)) {
@@ -211,6 +217,7 @@ class EJournalUploader extends Command implements ShouldQueue
                             } catch (\Exception $e) {
                                 // fallback, in case of other exception
                                 $this->setErrorLog(json_encode($e), ['HttpException']);
+                                sleep(10);
                             }
                             sleep(5); // add time delay to avoid too many request
                         }
