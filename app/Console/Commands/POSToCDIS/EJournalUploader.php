@@ -10,6 +10,7 @@ use App\Services\ErrorLogService;
 use App\Traits\GenericHelper;
 use App\Traits\OutputBufferTrait;
 use App\Traits\StorageTrait;
+use App\Traits\TerminalFileSetupTrait;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Console\Command;
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\Storage;
 
 class EJournalUploader extends Command implements ShouldQueue
 {
-    use GenericHelper, OutputBufferTrait, StorageTrait;
+    use GenericHelper, OutputBufferTrait, StorageTrait, TerminalFileSetupTrait;
 
     public $errorLogService;
 
@@ -99,21 +100,29 @@ class EJournalUploader extends Command implements ShouldQueue
 
                     $storageDisk = $this->resolveFilesystemDisk(cleanNonAlphaNumericChars(strtolower($terminalFile->name)), $terminalPath);
 
-                    $rootSubDirectory = '/';
+                    $sourceDirectory = '/';
                     $destinationSubDirectoryUpload = '/Uploaded';
                     $destinationSubDirectoryErrors = '/Errors';
 
-                    $this->createDirectoryIfNotExist($storageDisk, $rootSubDirectory);
+                    $this->createDirectoryIfNotExist($storageDisk, $sourceDirectory);
                     $this->createDirectoryIfNotExist($storageDisk, $destinationSubDirectoryUpload);
                     $this->createDirectoryIfNotExist($storageDisk, $destinationSubDirectoryErrors);
 
-                    $files = $storageDisk->files($rootSubDirectory);
+                    $subFolder =  $this->getSubFolder($terminalFile);
+                    if ($subFolder) {
+                        $sourceDirectory = $subFolder;
+                    }
+
+                    $files = $storageDisk->files($sourceDirectory);
 
                     if (count($files)) {
+                        $this->createLog(__('info.files_found_in', ['value' => "$terminalPath/$sourceDirectory"]), 'info', true,[$terminalFile->name, count($files) ]);
+
                         foreach ($files as $file) {
                             $targetFilenameError = "$destinationSubDirectoryErrors/$file";
                             $targetFilenameSuccess = "$destinationSubDirectoryUpload/$file";
 
+                            $this->createLog($file, 'line', true);
                             try {
                                 // To avoid FatalErrorException due to allocated memory size limit,
                                 // we set memory limit before reading the content of the file
@@ -222,7 +231,7 @@ class EJournalUploader extends Command implements ShouldQueue
                             sleep(5); // add time delay to avoid too many request
                         }
                     } else {
-                        $this->createLog(__('info.no_files_found_in', ['value' => $terminalPath]), 'warn', true,);
+                        $this->createLog(__('info.no_files_found_in', ['value' => "$terminalPath/$sourceDirectory"]), 'warn', true, [$terminalFile->name]);
                     }
                 }
             } else {
@@ -274,48 +283,6 @@ class EJournalUploader extends Command implements ShouldQueue
             'branch_code' => config('configuration.branch_code'),
             'system_datetime' => Carbon::now()->format('Y-m-d h:i:s'),
         ];
-    }
-
-    private function getDate($file, $content, $reportFileType)
-    {
-        $date = Carbon::now();
-
-        if ($reportFileType === ReportFileType::Z_READING || $reportFileType === ReportFileType::SALES_TRANSACTIONS) {
-            // If the file is z-reading or receipts of a transaction, we need to get the log date
-            // inside the file content using defined patterns; Tested only in generated receipts
-            // of 1TEQ POS System.
-            $pattern = "/Log Date.*: (.*)/";
-            if ($reportFileType === ReportFileType::SALES_TRANSACTIONS) {
-                $pattern = "/(LOGDATE.*):(.*)/";
-            }
-
-            if (preg_match_all($pattern, $content, $matches)) {
-                $match = implode(",", $matches[0]);
-                if (! empty($match)) {
-                    $chunks =  explode(":", $match);
-                    if (! empty($chunks) && count($chunks) > 1) {
-                        $date = trim($chunks[1]);
-                        if (! empty($date)) {
-                            $date = date_create_from_format("m/d/Y", $date);
-                            if (! empty($date)) {
-                                $date = date_format($date, "Y-m-d");
-                            }
-                        }
-                    }
-                }
-            }
-        } else if ($reportFileType === ReportFileType::JOURNAL_REPORTS) {
-            // If the file journal report, then we need to extract date
-            // from its filename (we assume that the file is in mdY format),
-            // Other than that, it needs to be revised; 
-            $filename = pathinfo($file, PATHINFO_FILENAME);
-            $createdDate = date_create_from_format("mdY", $filename);
-            if (! empty($createdDate)) {
-                $date = date_format($createdDate, "Y-m-d");
-            }
-        } else {
-        }
-        return $date;
     }
 
     private function setErrorLog($message, $status = [])

@@ -85,6 +85,7 @@ export default {
             "create_csv_for_new_branch_success": "Create CSV for New Branch success!",
             "creating_file": "Creating file...",
             "fetch_success": "Fetching data for sync success!",
+            "files_found_in": "Files found in {value}",
             "domain_ip": "Domain IP",
             "fetching": "Fetching data for sync...",
             "flushing_network": "Flushing DNS in local network...",
