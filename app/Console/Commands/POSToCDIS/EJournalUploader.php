@@ -98,31 +98,31 @@ class EJournalUploader extends Command implements ShouldQueue
 
                     $terminalPath = $terminalFile->terminal_path;
 
-                    $storageDisk = $this->resolveFilesystemDisk(cleanNonAlphaNumericChars(strtolower($terminalFile->name)), $terminalPath);
-
                     $sourceDirectory = '/';
                     $destinationSubDirectoryUpload = '/Uploaded';
                     $destinationSubDirectoryErrors = '/Errors';
 
-                    $this->createDirectoryIfNotExist($storageDisk, $sourceDirectory);
-                    $this->createDirectoryIfNotExist($storageDisk, $destinationSubDirectoryUpload);
-                    $this->createDirectoryIfNotExist($storageDisk, $destinationSubDirectoryErrors);
-
                     $subFolder =  $this->getSubFolder($terminalFile);
                     if ($subFolder) {
-                        $sourceDirectory = $subFolder;
+                        $terminalPath = "$terminalFile->terminal_path/$subFolder";
                     }
+
+                    $storageDisk = $this->resolveFilesystemDisk(cleanNonAlphaNumericChars(strtolower($terminalFile->name)), $terminalPath);
+
+                    $this->createDirectoryIfNotExist($storageDisk, $destinationSubDirectoryUpload);
+                    $this->createDirectoryIfNotExist($storageDisk, $destinationSubDirectoryErrors);
 
                     $files = $storageDisk->files($sourceDirectory);
 
                     if (count($files)) {
-                        $this->createLog(__('info.files_found_in', ['value' => "$terminalPath/$sourceDirectory"]), 'info', true,[$terminalFile->name, count($files) ]);
+                        $this->createLog(__('info.files_found_in', ['value' => $terminalPath]), 'info', true,[$terminalFile->name, count($files) ]);
 
                         foreach ($files as $file) {
                             $targetFilenameError = "$destinationSubDirectoryErrors/$file";
                             $targetFilenameSuccess = "$destinationSubDirectoryUpload/$file";
 
                             $this->createLog($file, 'line', true);
+
                             try {
                                 // To avoid FatalErrorException due to allocated memory size limit,
                                 // we set memory limit before reading the content of the file
@@ -231,7 +231,7 @@ class EJournalUploader extends Command implements ShouldQueue
                             sleep(5); // add time delay to avoid too many request
                         }
                     } else {
-                        $this->createLog(__('info.no_files_found_in', ['value' => "$terminalPath/$sourceDirectory"]), 'warn', true, [$terminalFile->name]);
+                        $this->createLog(__('info.no_files_found_in', ['value' => $terminalPath]), 'warn', true, [$terminalFile->name]);
                     }
                 }
             } else {
