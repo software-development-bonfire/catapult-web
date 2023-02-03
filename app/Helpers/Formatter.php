@@ -30,6 +30,13 @@ if (! function_exists('toBooleanOrInt')) {
     }
 }
 
+if (! function_exists('cleanNonAlphaNumericChars')) {
+    function cleanNonAlphaNumericChars($value)
+    {
+        return preg_replace('/[^a-zA-Z0-9]/', '', $value);
+    }
+}
+
 if (! function_exists('genericGroupBy')) {
     function genericGroupBy($array, $key) {
         $return = array();
@@ -56,4 +63,14 @@ if (! function_exists('urlToDomain')) {
     }
 }
 
-
+if (! function_exists('getDomain')) {
+    function getDomain($url, $includeScheme = true)
+    {
+        $pieces = parse_url($url);
+        $domain = isset($pieces['host']) ? $pieces['host'] : $pieces['path'];
+        if (preg_match('/(?P<domain>[a-z0-9][a-z0-9\-]{1,63}\.[a-z\.]{2,6})$/i', $domain, $regs)) {
+            return $includeScheme ? $pieces['scheme'].'://'.$regs['domain'] : $regs['domain'];
+        }
+        return false;
+    }
+}

@@ -146,7 +146,7 @@
                         },
                         {
                             name: "end_point",
-                            label: this.$t('label.end_point'),
+                            label: this.$t('label.endpoint'),
                             width: '200'
                         },
                         {

@@ -33,7 +33,7 @@ class ApiSetupRepositoryEloquent extends BaseRepository implements ApiSetupRepos
     {
         $this->pushCriteria(app(RequestCriteria::class));
     }
-    
+
     /**
      * Get unit of measurement list
      *
@@ -53,6 +53,9 @@ class ApiSetupRepositoryEloquent extends BaseRepository implements ApiSetupRepos
             ])
             ->orderBy('id', 'ASC');
 
-        return $this->paginate($filters['itemsPerPage']);
+        if (! empty($filters['itemsPerPage'])) {
+            return $this->paginate($filters['itemsPerPage']);
+        }
+        return $this->model->get();
     }
 }

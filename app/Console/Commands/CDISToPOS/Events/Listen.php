@@ -4,6 +4,7 @@ namespace App\Console\Commands\CDISToPOS\Events;
 
 use App\Enums\CatapultActionType;
 use App\Enums\CatapultSyncStatus;
+use App\Helpers\CustomPinger as Ping;
 use App\Traits\GenericHelper;
 use App\Traits\JobCancellationTrait;
 use App\Traits\PusherTrait;

@@ -297,6 +297,12 @@ class CustomPinger
      * requires the script to be run with root privileges, though, so this method
      * only works reliably on Windows systems and on Linux servers where the
      * script is not being run as a web user.
+     * 
+     * NOTE: to make it work, sockets must be enabled
+     * Please consider changing your php.ini
+     * ;extension=php_sockets.dll to extension=php_sockets.dll
+     * If sockets is disabled, then it may result error such;
+     * <Call to undefined function App\Helpers\socket_create()>
      *
      * @return float
      *   Latency, in ms.

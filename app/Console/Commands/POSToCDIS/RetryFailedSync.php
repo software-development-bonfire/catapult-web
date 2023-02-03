@@ -5,6 +5,7 @@ namespace App\Console\Commands\POSToCDIS;
 use App\Entities\Configuration;
 use App\Enums\Status;
 use App\Enums\StorageType;
+use App\Helpers\CustomPinger as Ping;
 use App\Repositories\Contracts\FieldMappingRepository;
 use App\Services\ErrorLogService;
 use App\Traits\GenericHelper;
@@ -56,6 +57,9 @@ class RetryFailedSync extends Command implements ShouldQueue
      */
     public function handle()
     {
+        $cdisUrl = getDomain(config()->get('app.cdis_url'), true);
+        $cdisDomainName = getDomain($cdisUrl, false);
+
         $this->line(__('info.watching_files_to_resync'));
         $this->line('');
 
@@ -74,6 +78,11 @@ class RetryFailedSync extends Command implements ShouldQueue
         }
 
         while (true) {
+            if (! $this->hasInternetConnection() && ! $this->hasInternetConnection($cdisUrl)) {
+                $this->setErrorLog(__('message.no_internet_connection'));
+                continue;
+            }
+            
             $entriesMaxLength = max(array_map('strlen', $entries));
 
             foreach ($entries as $entry) {
@@ -148,7 +157,7 @@ class RetryFailedSync extends Command implements ShouldQueue
                     $toResyncFilesCount = count($toResyncFiles);
 
                     if ($toResyncFilesCount > 0) {
-                        $this->createLog(__('message.moving_failed_files_to', ['count' => $toResyncFilesCount]), 'line', true, [$entryLogLabel], [$toSyncTargetPath]);
+                        $this->createLog(__('info.moving_failed_files_to', ['count' => $toResyncFilesCount]), 'line', true, [$entryLogLabel], [$toSyncTargetPath]);
                         $progressbar = $this->output->createProgressBar($toResyncFilesCount);
                         $progressbar->start();
                         foreach ($toResyncFiles as $file) {
@@ -166,7 +175,7 @@ class RetryFailedSync extends Command implements ShouldQueue
                         $progressbar->finish();
                         $this->line('');
 
-                        $this->createLog(__('message.moved_failed_files_to', ['count' => $toResyncFilesCount]), 'info', true, [$entryLogLabel], [$toSyncTargetPath]);
+                        $this->createLog(__('info.moved_failed_files_to', ['count' => $toResyncFilesCount]), 'info', true, [$entryLogLabel], [$toSyncTargetPath]);
                     }
                 } else {
                     $this->createLog(
@@ -182,5 +191,12 @@ class RetryFailedSync extends Command implements ShouldQueue
             $this->flushOutputBuffer();
             sleep(5);
         }
+    }
+
+    private function setErrorLog ($message) {
+        $this->createLog($message, 'error', true);
+        $this->flushOutputBuffer();
+
+        sleep(5);
     }
 }

@@ -29,7 +29,7 @@ class CustomNetworkResolver
      * @return boolean
      *   The result after resetting network proocol
      */
-    public function resolve()
+    public function resolve($background = true)
     {
         $resetted = false;
 
@@ -39,7 +39,11 @@ class CustomNetworkResolver
 
         // Exec string for Windows-based systems.
         // Other OS is not yet supported
-        exec($execString, $output, $return);
+        if ($background && strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            pclose(popen("start /B ".$execString, "r"));
+        } else {
+            exec($execString, $output, $return);
+        }
 
         // Strip empty lines and reorder the indexes from 0 (to make results more
         // uniform across OS versions).

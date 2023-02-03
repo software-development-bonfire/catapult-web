@@ -29,3 +29,10 @@ window.API_ENDPOINT = {
         CASH_DRAWER: 5,
     }
 }
+
+window.REPORT_FILE_TYPE = {
+    SALES_TRANSACTIONS: 1,
+    JOURNAL_REPORTS: 2,
+    OTHER_REPORTS: 3,
+    Z_READING: 4,
+}
