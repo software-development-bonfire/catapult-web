@@ -58,6 +58,41 @@ git rebase --abort
 ```
 
 # Catapult Custom Commands
-* `php artisan network:resolve`  _#This well resolve common local network issues.
+* `php artisan network:resolve`  _#This will resolve common local network issues.
 In backgound it execute windows command [ **_netsh int ip reset_** ] and [ **ipconfig /flushdns** ]._
 * `php artisan clear:cache`  _#Clear all defined caches such; **sync** and **convert**_
+
+- ``` php artisan pos:upload```  *#automatically upload all files and it depends on the configuration of Terminal File Setup;*
+
+- ``` php artisan pos:pm2```  *#Simply restart the running pm2, but **optimize** is called to make sure it would take effects if there are configurations in Catapult;*
+     **Above command is equivalent to;**
+```
+pm2 stop all
+php artisan optimize
+pm2 restart all
+```
+
+- ``` php artisan pos:pm2 install --with=startup```  *#to install pm2 and automatically save processes inside ecosystem.config.js. This include also installation of pm2-windows-startup*
+     **Above command is equivalent to;**
+```
+npm install pm2 -g
+npm install pm2-windows-startup -g
+pm2 start ecosystem.config.js
+pm2 save
+pm2-startup install
+pm2 save
+```
+- ```php artisan pos:pm2 uninstall --with=startup```  *#to uninstall pm2, this will automatically remove pm2-startup in registry, stop all processes, then remove configuration*
+**Above command is equivalent to;**
+```
+pm2-startup uninstall #Disable startup:
+pm2 kill #Kill the daemon process
+npm remove pm2 -g #uninstall globally
+npm rm -rf ~/.pm2 #Remove all saved configuration and logs:
+```
+
+- ```php artisan pos:validate```  *#to validate current configuration of Catapult.*
+:bulb: **NOTE**
+[✔] indicates everything is configured properly or working fine
+[✖] it means configuration needs to be checked and re-configuration is required
+[⚠] is just a warning and can be ignored, but you can check it if you may;
