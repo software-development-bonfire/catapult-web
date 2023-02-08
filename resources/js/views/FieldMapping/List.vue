@@ -20,7 +20,7 @@
                     :values="tableData"
                     :settings="table.settings"
                     :rowIndex="tableDataIndex"
-                    v-on:row-click="openDetail(tableData)">
+                    v-on:dbl-row-click="openDetail(tableData)">
                     <td class="datatable-cell">
                         <span v-text="tableData.name"></span>
                     </td>

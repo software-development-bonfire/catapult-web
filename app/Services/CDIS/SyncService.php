@@ -165,6 +165,7 @@ class SyncService
 
             $bids = [];
             $autoDeletedBids = [];
+            Schema::disableForeignKeyConstraints();
 
             $progress = 0;
             foreach ($values as $value) {
@@ -261,6 +262,7 @@ class SyncService
                     }
                 }
             }
+            Schema::enableForeignKeyConstraints();
             if ($hasBeenCancelled) {
                 if ($broadcast) {
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), CatapultSyncStatus::ProgressDone, __('info.syncing_cancelled'), null);

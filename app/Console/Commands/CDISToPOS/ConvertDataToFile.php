@@ -245,20 +245,21 @@ class ConvertDataToFile extends Command
 
         $timeEnd = microtime(true);
         $executionTime = ($timeEnd - $timeStart);
+        $humanReadableTime = $this->secondsToHumanReadableTime($executionTime);
 
         $convertMessage = null;
         if ($hasBeenCancelled) {
             $this->clearCancelledConversion();
             if ($catapultActionType === CatapultActionType::NEW_BRANCH) {
-                $convertMessage = __('info.create_csv_for_new_branch_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime);
+                $convertMessage = __('info.create_csv_for_new_branch_cancelled').' @ '.$humanReadableTime;
             } else {
-                $convertMessage = __('info.generate_csv_all_data_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime);
+                $convertMessage = __('info.generate_csv_all_data_cancelled').' @ '.$humanReadableTime;
             }
         } else {
             if ($catapultActionType === CatapultActionType::NEW_BRANCH) {
-                $convertMessage = __('info.create_csv_for_new_branch_success').' @ '.$this->secondsToHumanReadableTime($executionTime);
+                $convertMessage = __('info.create_csv_for_new_branch_success').' @ '.$humanReadableTime;
             } else {
-                $convertMessage = __('info.generate_csv_all_data_success').' @ '.$this->secondsToHumanReadableTime($executionTime);
+                $convertMessage = __('info.generate_csv_all_data_success').' @ '.$humanReadableTime;
             }
         }
         $this->createLog($convertMessage);
