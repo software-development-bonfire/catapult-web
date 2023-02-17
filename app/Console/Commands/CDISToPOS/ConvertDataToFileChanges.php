@@ -783,8 +783,6 @@ class ConvertDataToFileChanges extends Command
                     $mappedHeaders = array_keys($mappedDatum);
                     $mappedValues = array_values($mappedDatum);
 
-                    //$mappedValues = array_map("unserialize", array_unique(array_map("serialize", $mappedValues)));
-
                     $filePath = $targetFolder.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
 
                     if (! isset($excelDataCollection[$filePath])) {
@@ -813,8 +811,6 @@ class ConvertDataToFileChanges extends Command
                         } else {
                             $excelDataCollection[$filePath]['data'][] = $mappedValues;
                         }
-
-                         //$excelDataCollection[$filePath]['data'][] = $mappedValues; //remove this line to avoid duplicate entry
 
                         $this->createLog(
                             $filePath .' updated',

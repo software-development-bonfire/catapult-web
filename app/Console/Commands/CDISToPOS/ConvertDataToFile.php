@@ -815,8 +815,6 @@ class ConvertDataToFile extends Command
                             $excelDataCollection[$filePath]['data'][] = $mappedValues;
                         }
 
-                        //$excelDataCollection[$filePath]['data'][] = $mappedValues; //remove this line to avoid duplicate entry
-
                         $this->createLog(
                             $filePath .' updated',
                             'info',
