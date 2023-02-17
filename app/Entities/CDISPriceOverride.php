@@ -1,0 +1,45 @@
+<?php
+
+namespace App\Entities;
+
+class CDISPriceOverride extends Base
+{
+    protected $table = 'cdis_price_override';
+
+    public $timestamps = false;
+
+    protected $fillable = [
+        'transaction_detail_bid',
+        'transaction_product_bid',
+        'product_bid',
+        'product_name',
+        'product_description',
+        'product_code',
+        'old_price',
+        'new_price',
+        'quantity',
+        'approved_by',
+        'approved_date'
+    ];
+
+    protected $casts = [
+        'bid' => 'string',
+        'transaction_detail_bid' => 'string',
+        'transaction_product_bid' => 'string',
+    ];
+
+    public function terminalTransactionDetail()
+    {
+        return $this->belongsTo(TerminalTransactionDetail::class, 'transaction_detail_bid', 'bid');
+    }
+
+    public function syncDetails()
+    {
+        return (object) array(
+            'code' => null,
+            'group' => null,
+            'head_bid' => null,
+            'level' => 1,
+        );
+    }
+}

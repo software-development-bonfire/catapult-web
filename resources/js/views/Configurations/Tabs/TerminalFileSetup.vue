@@ -1,0 +1,532 @@
+<template>
+    <div class="tab-pane fade show active" id="api-setup" role="tabpanel" aria-labelledby="api-setup-tab">
+        <div class="m-1">
+            <button class="button button--dark" @click="create">{{ $t('label.add_new') }}</button>
+        </div>
+        <datatable
+            class="datatable--hoverable"
+            :header-fields="table.header"
+            :settings="table.settings"
+            :table="table.values"
+            v-on:paginate="paginate">
+            <template slot="content">
+                <table-row
+                    type="custom-actions"
+                    v-for="(tableData, tableDataIndex) in table.values.data" :key="tableDataIndex"
+                    :values="tableData"
+                    :settings="table.settings"
+                    :rowIndex="tableDataIndex"
+                    v-on:dbl-row-click="editRow(tableDataIndex, tableData)">
+                    <td class="datatable-cell" align="center">
+                        <span v-text="tableData.name"></span>
+                    </td>
+                    <td class="datatable-cell" align="center">
+                        <span v-text="tableData.terminal_code"></span>
+                    </td>
+                    <td class="datatable-cell" align="left">
+                        <div class="endpoint-header" v-text="tableData.endpoint.label"></div>
+                        <i class="endpoint-description" v-text="tableData.endpoint.endpoint_url"></i>
+                    </td>
+                    <td class="datatable-cell" align="center">
+                        <span v-text="getTerminalType(tableData.type)"></span>
+                    </td>
+                    <td class="datatable-cell" align="center">
+                        <span v-text="tableData.terminal_path"></span>
+                    </td>
+                    <td class="datatable-cell" align="center">
+                        <span v-text="tableData.sub_directories"></span>
+                    </td>
+                    <td class="datatable-cell" align="center">
+                        <span
+                            class="status_label"
+                            :class="tableData.status ? 'status_label--active' : 'status_label--inactive'"
+                            v-text="tableData.status ? $t('label.active') : $t('label.inactive')">
+                        </span>
+                    </td>
+                    <td class="datatable-cell" align="center">
+                        <i class="fa fa-edit fa-lg row-update ml-1" @click.stop="editRow(tableDataIndex, tableData)"></i>
+                        <i class="fa fa-times-circle fa-lg row-delete ml-1 mr-1" @click.stop="deleteRow(tableDataIndex, tableData)"></i>
+                    </td>
+                </table-row>
+            </template>
+        </datatable>
+        <modal
+            centered-display
+            v-if="modal.visible"
+            :class="form.mode === 'view' ? 'modal--no-footer' : ''"
+            @close="modal.visible = false">
+            <template slot="header">
+                Terminal File Setup Details
+            </template>
+            <template slot="content">
+                <form-field
+                    class="form-group"
+                    :error="errors.terminal_code">
+                    <label>{{ $t('label.terminal_code') }} <span class="required">*</span></label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        v-model="form.values.terminal_code"
+                        @keypress="errors.terminal_code = ''">
+                </form-field>
+                <form-field
+                    class="form-group"
+                    :error="errors.name">
+                    <label>{{ $t('label.name') }} <span class="required">*</span></label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        v-model="form.values.name"
+                        @keypress="errors.name = ''">
+                </form-field>
+                <form-field
+                    class="form-group"
+                    :error="errors.endpoint">
+                    <label>{{ $t('label.endpoint') }} <span class="required">*</span></label>
+                    <v-select
+                        class="v-select--hide-selected"
+                        :clearable="false"
+                        v-model="form.values.endpoint"
+                        :options="selections.endpoint.options"
+                        @option:selected="onSelectedEndpoint($event)">
+                        >
+                    </v-select>
+                </form-field>
+                
+                <form-field
+                    class="form-group">
+                    <label>{{ $t('label.endpoint_url') }}</label>
+                    <input
+                        readonly
+                        type="text"
+                        class="form-control readonly"
+                        v-model="form.values.endpoint_url">
+                </form-field>
+                <form-field
+                    class="form-group"
+                    :error="errors.type">
+                    <label>{{ $t('label.type') }} <span class="required">*</span></label>
+                    <select
+                        class="form-control"
+                        v-model="form.values.type"
+                        @change="errors.type = ''">
+                        <option :value="1">{{ $t('label.sales_transactions') }}</option>
+                        <option :value="2">{{ $t('label.journal_reports') }}</option>
+                        <option :value="3">{{ $t('label.other_reports') }}</option>
+                        <option :value="4">{{ $t('label.z_reading') }}</option>
+                    </select>
+                </form-field>
+                <form-field
+                    class="form-group"
+                    :error="errors.terminal_path">
+                    <label>{{ $t('label.terminal_path') }} <span class="required">*</span></label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        v-model="form.values.terminal_path"
+                        @keypress="errors.terminal_path = ''">
+                </form-field>
+                <form-field
+                    class="form-group"
+                    :error="errors.sub_directories">
+                    <label>{{ $t('label.sub_directories') }}</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        v-model="form.values.sub_directories">
+                </form-field>
+                <form-field
+                    class="form-group">
+                    <label>{{ $t('label.status') }}</label>
+                    <select
+                        class="form-control"
+                        v-model="form.values.status">
+                        <option :value="1">{{ $t('label.active') }}</option>
+                        <option :value="0">{{ $t('label.inactive') }}</option>
+                    </select>
+                </form-field>
+            </template>
+            <template slot="footer">
+                <div align="center" v-if="form.mode !== 'view'">
+                    <button class="button button--light" @click="save">{{ $t('label.save') }}</button>
+                </div>
+            </template>
+        </modal>
+        <dialog-box
+            :status="dialog.status"
+            :type="dialog.type"
+            :visible.sync="dialog.visible"
+            @ok="dialog.ok.function"
+            @cancel="dialog.cancel.function">
+            <template slot="message">
+                <span v-text="dialog.message"></span>
+            </template>
+        </dialog-box>
+    </div>
+</template>
+
+<script>
+    import Datatable from '../../../components/Datatable2/Datatable.vue';
+    import TableRow from '../../../components/Datatable2/TableRow.vue';
+    import Modal from '../../../components/Modal/Modal.vue';
+    import DialogBox from '../../../components/Message/DialogBox.vue';
+    import FormField from '../../../components/Containers/FormField.vue';
+    import Util from '../../../mixins/Util.vue';
+
+    export default {
+        components: {
+            Datatable,
+            TableRow,
+            Modal,
+            DialogBox,
+            FormField
+        },
+        mixins: [ Util ],
+        props: {
+            activeTab: {
+                type: Boolean
+            }
+        },
+        mounted() {
+            this.paginate();
+            this.getEndpointsChosen();
+        },
+        data() {
+            return {
+                terminalFileSetupRootUri: 'terminal-file-setup',
+                errors: {
+                    terminal_code: '',
+                    name: '',
+                    endpoint: '',
+                    type: '',
+                    terminal_path: '',
+                },
+                filters: {},
+                dialog: {
+                    visible: false,
+                    type: '',
+                    message: '',
+                    ok: {
+                        function: () => {},
+                        function: () => {}
+                    },
+                    cancel: {
+                        function: () => {
+                            this.dialog.visible = false;
+                        },
+                        function: () => {}
+                    },
+                },
+                modal: {
+                    visible: false
+                },
+                form: {
+                    index: 0,
+                    mode: 'create',
+                    values: {
+                        id: '',
+                        bid: '',
+                        terminal_code: '',
+                        name: '',
+                        endpoint: '',
+                        endpoint_url: '',
+                        type: '',
+                        terminal_path: '',
+                        sub_directories: '',
+                        status: 1,
+                    },
+                    mapping_type: 1,
+                },
+                table: {
+                    header: [
+                        {
+                            name: "name",
+                            label: this.$t('label.name'),
+                            width: '200'
+                        },
+                        {
+                            name: "terminal_code",
+                            label: this.$t('label.terminal_code'),
+                            width: '100'
+                        },
+                        {
+                            name: "endpoint",
+                            label: this.$t('label.endpoint'),
+                            width: '150'
+                        },
+                        {
+                            name: "type",
+                            label: this.$t('label.type'),
+                            width: '120'
+                        },
+                        {
+                            name: "terminal_path",
+                            label: this.$t('label.terminal_path'),
+                            width: '250'
+                        },
+                        {
+                            name: "subfolder",
+                            label: this.$t('label.sub_directories'),
+                            width: '250'
+                        },
+                        {
+                            name: "status",
+                            label: this.$t('label.status'),
+                            width: '60'
+                        },
+                        {
+                            name: "actions",
+                            label: '',
+                            width: '50'
+                        }
+                    ],
+                    values: {
+                        data: [],
+                        meta: {
+                            pagination: {
+                                count: 1,
+                                current_page: 1,
+                                links: {},
+                                per_page: 10,
+                                total: 1,
+                                total_pages: 1
+                            }
+                        }
+                    },
+                    settings: {
+                        itemsPerPage: 10,
+                        withRowNumbers: true,
+                        hasEdit: false,
+                        hasDelete: false,
+                    }
+                },
+                selections: {
+                    endpoint: {
+                        options: [
+                            {
+                                label: 'Endpoint 1',
+                                value: '10001',
+                                endpoint_url: '',
+                            },
+                            {
+                                label: 'Endpoint 2',
+                                value: '10002',
+                                endpoint_url: '',
+                            },
+                            {
+                                label: 'Endpoint 3',
+                                value: '10003',
+                                endpoint_url: '',
+                            },
+                        ]
+                    },
+                }
+            }
+        },
+        methods: {
+            getTerminalType(type) {
+                let result = '';
+
+                if (type === window.REPORT_FILE_TYPE.SALES_TRANSACTIONS) {
+                    result = this.$t('label.sales_transactions');
+                } else if (type === window.REPORT_FILE_TYPE.JOURNAL_REPORTS) {
+                    result = this.$t('label.journal_reports');
+                } else if (type === window.REPORT_FILE_TYPE.OTHER_REPORTS) {
+                    result = this.$t('label.other_reports');
+                } else if (type === window.REPORT_FILE_TYPE.Z_READING) {
+                    result = this.$t('label.z_reading');
+                } else {
+                    result = this.$t('label.unknown');
+                }
+
+                return result;
+            },
+
+            paginate(page = 1) {
+                if (this.$root.isLoading) return;
+                axios.get(this.terminalFileSetupRootUri+'/list?page='+page, {
+                    params: {
+                        itemsPerPage: this.table.settings.itemsPerPage,
+                    }
+                })
+                .then(response => {
+                   this.table.values.data = response.data.data.data
+                   this.table.values.meta  = response.data.data.meta
+
+                })
+            },
+
+            create() {
+                this.clearForm();
+                this.modal.visible = true;
+            },
+
+            clearFormErrors() {
+                this.errors = {
+                    terminal_code: '',
+                    name: '',
+                    endpoint: '',
+                    endpoint_url: '',
+                    type: '',
+                    terminal_path: '',
+                    sub_directories: '',
+                };
+            },
+
+            clearForm() {
+               this.clearFormErrors();
+
+                this.form.index = 0;
+                this.form.mode = 'create';
+
+                this.form.values.id = '';
+                this.form.values.bid = '';
+                this.form.values.terminal_code = '';
+                this.form.values.name = '';
+                this.form.values.endpoint = '';
+                this.form.values.endpoint_url = '';
+                this.form.values.type = '';
+                this.form.values.terminal_path = '';
+                this.form.values.sub_directories = '';
+                this.form.values.status = 1;
+
+            },
+
+            editRow(index, data) {
+                this.clearForm();
+
+                this.form.index = index;
+                this.form.mode = 'update';
+
+                this.form.values = {
+                    id: index,
+                    bid: data.bid,
+                    terminal_code: data.terminal_code,
+                    name: data.name,
+                    endpoint: data.endpoint,
+                    endpoint_url: data.endpoint.endpoint_url,
+                    type: data.type,
+                    terminal_path: data.terminal_path,
+                    sub_directories: data.sub_directories,
+                    status: data.status,
+                };
+
+                this.modal.visible = true;
+            },
+
+            deleteRow(index, data) {
+                this.dialog.visible = true;
+                this.dialog.status = 'confirm';
+                this.dialog.message = 'Do you want to remove this data?';
+                this.dialog.ok.function = () => {
+                    axios.delete(`${this.terminalFileSetupRootUri}/destroy/${data.bid}`)
+                    .then(response => {
+                        this.table.values.data.splice(index, 1);
+                        this.dialog.status = 'success';
+                        this.dialog.message = response.data.message;
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                        };
+                    });
+                };
+                this.dialog.cancel.function = () => {
+                    this.dialog.visible = false;
+                };
+            },
+
+            save() {
+                let that = this;
+
+                this.errors.terminal_code = !!this.form.values.terminal_code ? '' : this.$t('error.the_value_field_is_required', { value: this.$t('label.terminal_code') });
+                this.errors.name = this.form.values.name === '' ? this.$t('error.the_value_field_is_required', { value: this.$t('label.terminal_receipt_name') }) : '';
+                this.errors.endpoint = this.form.values.endpoint === '' ? this.$t('error.the_value_field_is_required', { value: this.$t('label.endpoint') }) : '';
+                this.errors.type = this.form.values.type === '' ? this.$t('error.the_value_field_is_required', { value: this.$t('label.type') }) : '';
+                this.errors.terminal_path = this.form.values.terminal_path === '' ? this.$t('error.the_value_field_is_required', { value: this.$t('label.terminal_path') }) : '';
+
+                if (this.form.values.terminal_code === ''
+                    || this.form.values.name === ''
+                    || this.form.values.endpoint === ''
+                    || this.form.values.type === ''
+                    || this.form.values.terminal_path === '') {
+                    return;
+                }
+
+                if (this.form.mode === 'create') {
+                    axios.post(`${this.terminalFileSetupRootUri}/store`, this.form.values)
+                        .then(response => {
+                            that.clearFormErrors();
+                            that.paginate();
+                            that.dialog.visible = true;
+                            that.dialog.status = 'success';
+                            that.dialog.message = response.data.message;
+                            that.dialog.ok.function = () => {
+                                that.dialog.visible = false;
+                                that.modal.visible = false;
+                            };
+                            that.errors = {}
+                        }).catch(error => {
+                            that.errors = error.response.data.errors
+                        });
+                } else {
+                    let index = this.form.index;
+
+                    axios.patch(`${this.terminalFileSetupRootUri}/update/${this.form.values.bid}`, this.form.values)
+                        .then(response => {
+                            that.clearFormErrors();
+                            that.table.values.data[index] = { ...that.form.values };
+
+                            that.dialog.visible = true;
+                            that.dialog.status = 'success';
+                            that.dialog.message = response.data.message;
+                            that.dialog.ok.function = () => {
+                                that.dialog.visible = false;
+                                that.modal.visible = false;
+                            };
+                            that.errors = {}
+                        }).catch(error => {
+                            that.errors = error.response.data.errors
+                        });
+                }
+            },
+
+            onSelectedEndpoint: function onSelectedEndpoint(event) {
+                this.errors.endpoint = '';
+                this.form.values.endpoint_url = event.endpoint_url;
+            },
+
+            async getEndpointsChosen() {
+                let that = this;
+
+                await axios.get(`${this.terminalFileSetupRootUri}/chosen/endpoints`, {
+                    params: {
+                        filters: {
+                            type: this.form.mapping_type
+                        },
+                    }
+                }).then(function(response) {
+                    that.$set(that.selections.endpoint, 'options', response.data.data.data);
+                });
+            },
+        }
+    }
+</script>
+
+<style lang="scss" scoped>
+   .endpoint {
+        &-header {
+            color: #001e07;
+            font-weight: bold;
+            &:hover {
+                color: darken(#00aa27, 5%);
+                cursor: pointer;
+            }
+        }
+        &-description {
+            color: #979797;
+            &:hover {
+                color: darken(#1178f7, 5%);
+                cursor: pointer;
+            }
+        }
+    }
+</style>

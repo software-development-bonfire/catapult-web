@@ -1,0 +1,97 @@
+.table-design {
+    border-collapse: collapse;
+    thead {
+        tr {
+            td {
+                padding: 4px;
+                text-transform: uppercase;
+                font-weight: bold;
+            }
+        }
+    }
+    tbody {
+        tr {
+            td {
+                padding: 4px;
+                input[type="text"],
+                select {
+                    height: auto;
+                    padding: 4px 8px;
+                }
+            }
+        }
+    }
+
+    &--default {
+        thead {
+            tr {
+                td {
+                    border: 1px #ccc solid;
+                    background-color: #E5E5E5;
+                }
+            }
+        }
+        tbody {
+            tr {
+                td {
+                    border: 1px #ccc solid;
+                    background-color: #fff;
+                }
+            }
+        }
+    }
+}
+
+.row {
+    &-add {
+        color: #00aa27;
+        &:hover {
+            color: darken(#00aa27, 5%);
+            cursor: pointer;
+        }
+    }
+    &-view {
+        color: #1178f7;
+        &:hover {
+            color: darken(#1178f7, 5%);
+            cursor: pointer;
+        }
+    }
+    &-update {
+        color: #e28000;
+        &:hover {
+            color: darken(#e28000, 5%);
+            cursor: pointer;
+        }
+    }
+    &-delete {
+        color: #e01818;
+        &:hover {
+            color: darken(#e01818, 5%);
+            cursor: pointer;
+        }
+    }
+}
+
+.table-layout {
+    td {
+        padding: 4px;
+    }
+}
+
+.datatable-row {
+    &--sm {
+        input[type="text"],
+        select {
+            border-radius: 0px;
+            padding: 4px 8px;
+            height: 30px;
+        }
+    }
+}
+
+.tr--selected {
+    td {
+        background-color: #fff1bc !important;
+    }
+}

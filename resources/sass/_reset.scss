@@ -1,0 +1,25 @@
+.form-control,
+.btn {
+    &:focus {
+        box-shadow: initial !important;
+    }
+}
+
+b,
+label,
+.badge,
+th {
+    font-weight: bold;
+}
+
+.badge {
+    text-transform: uppercase;
+}
+
+.form-control,
+.mx-input {
+    &:disabled {
+        cursor: not-allowed;
+        background-color: #e9ecef !important;
+    }
+}

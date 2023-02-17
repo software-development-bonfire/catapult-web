@@ -1,0 +1,133 @@
+<?php
+
+use App\Entities\FieldMappingPreset;
+use Eighty8\LaravelSeeder\Migration\MigratableSeeder;
+use Eighty8\LaravelSeeder\Repository\DisableForeignKeysTrait;
+
+class CdisAuditTrailFields extends MigratableSeeder
+{
+    use DisableForeignKeysTrait;
+
+    /**
+     * Run the database seeder.
+     */
+    public function run(): void
+    {
+        $auditTrail = [
+            'type' => '2',
+            'preset_name' => 'Audit Trail (Default)',
+            'data_entry' => 'audit_trail',
+            'status' => 1,
+            'created_by' => 1,
+        ];
+
+        $fieldMappingPreset = FieldMappingPreset::create($auditTrail);
+
+        $fieldMappingPresetDetail = [
+            [
+                'required' => 1,
+                'field' => 'log_id',
+                'description' => null,
+                'mapping_type' => 'VARCHAR',
+                'file_name' => 'AT',
+                'column_name' => 'id',
+            ],
+            [
+                'required' => 1,
+                'field' => 'branch_code',
+                'description' => null,
+                'mapping_type' => 'INT',
+                'file_name' => 'AT',
+                'column_name' => 'branch_code',
+            ],
+            [
+                'required' => 1,
+                'field' => 'terminal_number',
+                'description' => null,
+                'mapping_type' => 'VARCHAR',
+                'file_name' => 'AT',
+                'column_name' => 'terminal_number',
+            ],
+            [
+                'required' => 1,
+                'field' => 'date',
+                'description' => null,
+                'mapping_type' => 'DATETIME',
+                'file_name' => 'AT',
+                'column_name' => 'date',
+            ],
+            [
+                'required' => 1,
+                'field' => 'application',
+                'description' => null,
+                'mapping_type' => 'VARCHAR',
+                'file_name' => 'AT',
+                'column_name' => 'application',
+            ],
+            [
+                'required' => 1,
+                'field' => 'cashier',
+                'description' => null,
+                'mapping_type' => 'VARCHAR',
+                'file_name' => 'AT',
+                'column_name' => 'cashier',
+            ],
+            [
+                'required' => 1,
+                'field' => 'supervisor',
+                'description' => null,
+                'mapping_type' => 'VARCHAR',
+                'file_name' => 'AT',
+                'column_name' => 'supervisor',
+            ],
+            [
+                'required' => 1,
+                'field' => 'job',
+                'description' => null,
+                'mapping_type' => 'VARCHAR',
+                'file_name' => 'AT',
+                'column_name' => 'job',
+            ],
+            [
+                'required' => 1,
+                'field' => 'transaction_no',
+                'description' => null,
+                'mapping_type' => 'INT',
+                'file_name' => 'AT',
+                'column_name' => 'transaction_no',
+            ],
+            [
+                'required' => 1,
+                'field' => 'receipt_no',
+                'description' => null,
+                'mapping_type' => 'INT',
+                'file_name' => 'AT',
+                'column_name' => 'receipt_no',
+            ],
+            [
+                'required' => 1,
+                'field' => 'remarks',
+                'description' => null,
+                'mapping_type' => 'VARCHAR',
+                'file_name' => 'AT',
+                'default_value' => '""',
+                'column_name' => 'remarks',
+            ],
+        ];
+
+        foreach ($fieldMappingPresetDetail as $value) {
+            $fieldMappingPreset->detail()->create($value);
+        }
+    }
+
+    /**
+     * Reverts the database seeder.
+     */
+    public function down(): void
+    {
+        FieldMappingPreset::where([
+            'preset_name' => 'Audit Trail (Default)',
+            'data_entry' => 'audit_trail',
+        ])->forceDelete();
+    }
+}

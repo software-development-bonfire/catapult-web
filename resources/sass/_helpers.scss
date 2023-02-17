@@ -1,0 +1,8 @@
+.flex-1 {
+    flex: 1 !important;
+}
+.overflow {
+    &-initial {
+        overflow: initial !important;
+    }
+}
