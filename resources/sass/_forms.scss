@@ -150,3 +150,91 @@ ul.nav-tabs {
         }
     }
 }
+
+
+// Status Labels
+.datatable,
+.table-design {
+    .status_label,
+    .status-plan {
+        width: 100%;
+        padding: 2px;
+    }
+}
+.status_label {
+    display: inline-block;
+    padding: 5px 8px;
+    border-radius: 4px;
+    color: #fff;
+    text-align: center;
+    border: 1px transparent solid;
+    text-transform: uppercase;
+    &--box {
+        width: auto;
+        padding: 5px 8px;
+        border-radius: 0px;
+        color: #fff;
+        text-transform: uppercase;
+        font-size: 14px;
+    }
+    &--active {
+        background-color: #2aa85c;
+        border-color: darken(#2aa85c, 15%);
+    }
+    &--inactive {
+        background-color: #c01c1c;
+        border-color: darken(#c01c1c, 15%);
+    }
+    &--inactive-yellow {
+        background-color: #FFA834;
+        border-color: darken(#FFA834, 15%);
+    }
+    &--activated {
+        background-color: #2aa85c;
+        border-color: darken(#2aa85c, 15%);
+    }
+    &--expired {
+        background-color: #c01c1c;
+        border-color: darken(#c01c1c, 15%);
+    }
+    &--unused, &--lapsed {
+        background-color: #7f8c8d;
+        border-color: darken(#7f8c8d, 15%);
+    }
+    &--released {
+        background-color: #f39c12;
+        border-color: darken(#f39c12, 15%);
+    }
+    &--cancelled {
+        background-color: #c01c1c;
+        border-color: darken(#c01c1c, 15%);
+    }
+    &--approved {
+        background-color: #355723;
+        border-color: darken(#355723, 15%);
+    }
+    &--rejected {
+        background-color: #8A0602;
+        border-color: darken(#8A0602, 15%);
+    }
+    &--pending {
+        background-color: #FF8F00;
+        border-color: darken(#FF8F00, 15%);
+    }
+    &--pos_to_cdis {
+        background-color: #0051ff;
+        border-color: darken(#0051ff, 4%);
+    }
+    &--cdis_to_pos {
+        background-color: #f89514;
+        border-color: darken(#f89514, 15%);
+    }
+}
+
+.status-active {
+    color: #0e0c0c;
+}
+
+.status-inactive {
+    color: #a3a3a3;
+}

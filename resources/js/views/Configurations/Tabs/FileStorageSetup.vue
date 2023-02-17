@@ -17,7 +17,8 @@
                     :values="tableData"
                     :settings="table.settings"
                     :rowIndex="tableDataIndex"
-                    v-on:row-click="openDetail(tableData, tableDataIndex)">
+                    v-on:dbl-row-click="openDetail(tableData, tableDataIndex)"
+                    :class="tableData.status ? 'status-active' : 'status-inactive'">
                     <td class="datatable-cell">
                         <span v-text="tableData.name"></span>
                     </td>
@@ -43,8 +44,11 @@
                         <span v-text="tableData.username"></span>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <span v-if="tableData.status == 1">{{ $t('label.active') }}</span>
-                        <span v-if="tableData.status == 0">{{ $t('label.inactive') }}</span>
+                        <span
+                            class="status_label"
+                            :class="tableData.status ? 'status_label--active' : 'status_label--inactive'"
+                            v-text="tableData.status ? $t('label.active') : $t('label.inactive')">
+                        </span>
                     </td>
                     <td class="datatable-cell" align="center">
                         <i class="fa fa-times-circle fa-lg row-delete" @click.stop="deleteRow(tableDataIndex, tableData)"></i>

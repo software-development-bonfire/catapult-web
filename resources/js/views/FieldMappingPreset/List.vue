@@ -47,9 +47,11 @@
                     :values="tableData"
                     :settings="table.settings"
                     :rowIndex="tableDataIndex"
-                    v-on:row-click="openDetail(tableData)">
+                    v-on:dbl-row-click="openDetail(tableData)">
                     <td class="datatable-cell" align="center">
                         <span
+                            class="status_label"
+                            :class="tableData.mapping_type == 1 ? 'status_label--cdis_to_pos' : 'status_label--pos_to_cdis'"
                             v-text="
                                 tableData.mapping_type === 1 ? $t('label.cdis_to_pos')
                                 : tableData.mapping_type === 2 ? $t('label.pos_to_cdis')
@@ -66,7 +68,11 @@
                         <span v-text="tableData.total_field_entries"></span>
                     </td>
                     <td class="datatable-cell">
-                        <span v-text="tableData.status ? $t('label.active') : $t('label.inactive')"></span>
+                        <span
+                            class="status_label"
+                            :class="tableData.status ? 'status_label--active' : 'status_label--inactive'"
+                            v-text="tableData.status ? $t('label.active') : $t('label.inactive')">
+                        </span>
                     </td>
                     <td class="datatable-cell">
                         <span>{{ tableData.last_modified }}</span>

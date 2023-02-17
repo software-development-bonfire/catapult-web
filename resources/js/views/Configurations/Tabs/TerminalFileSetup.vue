@@ -37,8 +37,11 @@
                         <span v-text="tableData.sub_directories"></span>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <span v-if="tableData.status == 1">{{ $t('label.active') }}</span>
-                        <span v-if="tableData.status == 0">{{ $t('label.inactive') }}</span>
+                        <span
+                            class="status_label"
+                            :class="tableData.status ? 'status_label--active' : 'status_label--inactive'"
+                            v-text="tableData.status ? $t('label.active') : $t('label.inactive')">
+                        </span>
                     </td>
                     <td class="datatable-cell" align="center">
                         <i class="fa fa-edit fa-lg row-update ml-1" @click.stop="editRow(tableDataIndex, tableData)"></i>
