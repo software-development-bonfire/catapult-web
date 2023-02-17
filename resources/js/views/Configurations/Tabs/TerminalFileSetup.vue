@@ -67,7 +67,6 @@
                         type="text"
                         class="form-control"
                         v-model="form.values.terminal_code"
-                        :class="errors.terminal_code !== '' ? 'is-invalid' : ''"
                         @keypress="errors.terminal_code = ''">
                 </form-field>
                 <form-field
@@ -78,7 +77,6 @@
                         type="text"
                         class="form-control"
                         v-model="form.values.name"
-                        :class="errors.name !== '' ? 'is-invalid' : ''"
                         @keypress="errors.name = ''">
                 </form-field>
                 <form-field
@@ -87,7 +85,6 @@
                     <label>{{ $t('label.endpoint') }} <span class="required">*</span></label>
                     <v-select
                         class="v-select--hide-selected"
-                        :class="errors.endpoint !== '' ? 'is-invalid' : ''"
                         :clearable="false"
                         v-model="form.values.endpoint"
                         :options="selections.endpoint.options"
@@ -111,7 +108,6 @@
                     <label>{{ $t('label.type') }} <span class="required">*</span></label>
                     <select
                         class="form-control"
-                        :class="errors.type !== '' ? 'is-invalid' : ''"
                         v-model="form.values.type"
                         @change="errors.type = ''">
                         <option :value="1">{{ $t('label.sales_transactions') }}</option>
@@ -128,7 +124,6 @@
                         type="text"
                         class="form-control"
                         v-model="form.values.terminal_path"
-                        :class="errors.terminal_path !== '' ? 'is-invalid' : ''"
                         @keypress="errors.terminal_path = ''">
                 </form-field>
                 <form-field
@@ -366,7 +361,7 @@
                 this.modal.visible = true;
             },
 
-            clearForm() {
+            clearFormErrors() {
                 this.errors = {
                     terminal_code: '',
                     name: '',
@@ -376,6 +371,10 @@
                     terminal_path: '',
                     sub_directories: '',
                 };
+            },
+
+            clearForm() {
+               this.clearFormErrors();
 
                 this.form.index = 0;
                 this.form.mode = 'create';
@@ -455,6 +454,7 @@
                 if (this.form.mode === 'create') {
                     axios.post(`${this.terminalFileSetupRootUri}/store`, this.form.values)
                         .then(response => {
+                            that.clearFormErrors();
                             that.paginate();
                             that.dialog.visible = true;
                             that.dialog.status = 'success';
@@ -472,6 +472,7 @@
 
                     axios.patch(`${this.terminalFileSetupRootUri}/update/${this.form.values.bid}`, this.form.values)
                         .then(response => {
+                            that.clearFormErrors();
                             that.table.values.data[index] = { ...that.form.values };
 
                             that.dialog.visible = true;
