@@ -49,6 +49,7 @@ class ConvertDataToFile extends Command
 
     public $broadcast = false;
     private $mappingVariable = [];
+    private $syncEntries = [];
     /**
      * Create a new command instance.
      *
@@ -198,12 +199,13 @@ class ConvertDataToFile extends Command
                 if ($hasBeenCancelled) {
                     break;
                 }
+
                 $progress++;
                 $targetFolder = '/'.$forSyncDatum->branch_bid.'/'.$folderName;
                 $this->createLog(__('info.processing').$forSyncDatum->table_name, 'info', true, [$progress.'/'.$totalCount],);
-                $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder,  $excelDataCollection);
+                $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, $excelDataCollection);
 
-                if ($broadcast &&  $showProgress) {
+                if ($broadcast && $showProgress) {
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.converting').$progress.'/'.$totalCount, null);
                 } else {
                     if ($broadcast && ($progress % $progressDivisor == 0)) {
@@ -245,20 +247,21 @@ class ConvertDataToFile extends Command
 
         $timeEnd = microtime(true);
         $executionTime = ($timeEnd - $timeStart);
+        $humanReadableTime = $this->secondsToHumanReadableTime($executionTime);
 
         $convertMessage = null;
         if ($hasBeenCancelled) {
             $this->clearCancelledConversion();
             if ($catapultActionType === CatapultActionType::NEW_BRANCH) {
-                $convertMessage = __('info.create_csv_for_new_branch_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime);
+                $convertMessage = __('info.create_csv_for_new_branch_cancelled').' @ '.$humanReadableTime;
             } else {
-                $convertMessage = __('info.generate_csv_all_data_cancelled').' @ '.$this->secondsToHumanReadableTime($executionTime);
+                $convertMessage = __('info.generate_csv_all_data_cancelled').' @ '.$humanReadableTime;
             }
         } else {
             if ($catapultActionType === CatapultActionType::NEW_BRANCH) {
-                $convertMessage = __('info.create_csv_for_new_branch_success').' @ '.$this->secondsToHumanReadableTime($executionTime);
+                $convertMessage = __('info.create_csv_for_new_branch_success').' @ '.$humanReadableTime;
             } else {
-                $convertMessage = __('info.generate_csv_all_data_success').' @ '.$this->secondsToHumanReadableTime($executionTime);
+                $convertMessage = __('info.generate_csv_all_data_success').' @ '.$humanReadableTime;
             }
         }
         $this->createLog($convertMessage);
@@ -267,7 +270,7 @@ class ConvertDataToFile extends Command
             $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), CatapultSyncStatus::ConversionDone, $convertMessage, null);
             $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status',  [
                 'state' => CatapultSyncStatus::ConversionDone, 
-                'code' => $branchCode, 
+                'code' => $branchCode,
                 'description' => $catapultActionType
             ], null);
         }
@@ -749,12 +752,12 @@ class ConvertDataToFile extends Command
                     $referenceFoundRelation = implode('.', array_reverse($relationCamelCase));
 
                     if (! empty($referenceFoundRelation)) {
-                        
+
                         if ($entryData->relationLoaded($referenceFoundRelation)) {
 
                             $eagerLoadedData = $entryData->load($referenceFoundRelation);
                             $relationData = $eagerLoadedData;
-                            
+
                             foreach ($relationCamelCase as $function) {
                                 if (! isset($relationData->{$function})) {
                                     break;
@@ -811,8 +814,6 @@ class ConvertDataToFile extends Command
                         } else {
                             $excelDataCollection[$filePath]['data'][] = $mappedValues;
                         }
-
-                        $excelDataCollection[$filePath]['data'][] = $mappedValues;
 
                         $this->createLog(
                             $filePath .' updated',
@@ -1320,7 +1321,7 @@ class ConvertDataToFile extends Command
                     $referenceFoundRelation = implode('.', array_reverse($relationCamelCase));
 
                     if (! empty($referenceFoundRelation)) {
-                        
+
                         if ($entryData->relationLoaded($referenceFoundRelation)) {
 
                             $eagerLoadedData = $entryData->load($referenceFoundRelation);
@@ -1329,6 +1330,7 @@ class ConvertDataToFile extends Command
                             foreach ($relationCamelCase as $function) {
                                 $relationData = $relationData->{$function};
                             }
+
                             if (! empty($relationData)) {
                                 foreach ($relationData as $relationDatum) {
                                     if (! empty($relationDatum)) {
@@ -1346,7 +1348,6 @@ class ConvertDataToFile extends Command
                             }
                         }
                     }
-
                 }
 
                 foreach ($mappedData as $mappedDatum) {

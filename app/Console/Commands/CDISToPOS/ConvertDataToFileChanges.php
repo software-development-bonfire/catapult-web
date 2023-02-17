@@ -49,6 +49,7 @@ class ConvertDataToFileChanges extends Command
 
     public $broadcast = false;
     private $mappingVariable = [];
+    private $syncEntries = [];
     /**
      * Create a new command instance.
      *
@@ -72,7 +73,6 @@ class ConvertDataToFileChanges extends Command
         ini_set('max_execution_time', '-1');
         ini_set('memory_limit', '-1');
 
-        $progressDivisor = config('sync.cdis.to_catapult.progress_divisor');
         $branchCode = config('configuration.branch_code');
 
         $interval = $this->option('interval');
@@ -200,7 +200,6 @@ class ConvertDataToFileChanges extends Command
             }
 
             $excelDataCollection = [];
-
             $progress = 0;
             $totalCount = count($forSyncData);
 
@@ -211,7 +210,7 @@ class ConvertDataToFileChanges extends Command
                 }
 
                 $progress++;
-                $targetFolder =  $targetFolder = '/'.$forSyncDatum->branch_bid.'/' .$folderName;
+                $targetFolder = '/'.$forSyncDatum->branch_bid.'/'.$folderName;
                 $this->processCustomizedMapping($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, $excelDataCollection);
 
                 if ($broadcast && $showProgress) {
@@ -235,6 +234,7 @@ class ConvertDataToFileChanges extends Command
                     $filePath,
                     $detail['disk_name']
                 );
+
                 $progress++;
                 if ($broadcast && $showProgress) {
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'Converting', __('info.creating_file').$progress.'/'.$totalCount, null);
@@ -246,7 +246,6 @@ class ConvertDataToFileChanges extends Command
             } else {
                 break;
             }
-
             if ($hasBeenCancelled) {
                 break;
             }
@@ -615,8 +614,8 @@ class ConvertDataToFileChanges extends Command
                         'group' => $forSyncDatum->group,
                         'code' => $forSyncDatum->code,
                     ])->get();
-                   
-                    $result = $this->generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder,  $excelDataCollection);
+
+                    $result = $this->generateCustomizedMappingGroupedExcelFile($toSyncData, $forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, $excelDataCollection);
 
                     if ($result) {
                         CDISSync::whereIn('bid', $toSyncData->pluck('bid'))->delete();
@@ -624,14 +623,13 @@ class ConvertDataToFileChanges extends Command
 
                     return $result;
                 } else {
-                   
                     $result = $this->generateCustomizedMappingExcelFile($forSyncDatum, $fieldMappingDetails, $timeStamp, $targetFolder, $excelDataCollection);
 
-                    if ($result) {                    
+                    if ($result) {
                         CDISSync::where([
                             'table_name' => $forSyncDatum->table_name,
                             'table_bid' => $forSyncDatum->table_bid,
-                        ])->delete();                                         
+                        ])->delete();
                     }
 
                     return $result;
@@ -719,20 +717,19 @@ class ConvertDataToFileChanges extends Command
                 if ($hasSoftDeleting) {
                     $entryData = $entryData->withTrashed();
                 }
-               
+
                 $entryData = $entryData->first();
 
-                $entryTableName = $syncEntry->table_name;
+                $entryTableName = str_replace('cdis_', '', $syncEntry->table_name);;
 
-                if (isset($entryData)) {
+                if (empty($entryTableName) && isset($entryData)) {
                     $tableName = $this->getTableName($entryData);
-                    $entryTableName = str_replace('cdis_', '',$tableName);
+                    $entryTableName = str_replace('cdis_', '', $tableName);
                 }
 
                 $mappedData = [];
                 if ($primaryTable == $entryTableName) {
                     $mappedData[] = $this->plotMapping($dataMappings, $entryData, $entryTableName, $syncEntry, $entryName);
-                    
                 } else {
                     $referenceFound = explode('.', $mappingFound[0]['field']);
 
@@ -752,10 +749,10 @@ class ConvertDataToFileChanges extends Command
                     $referenceFoundRelation = implode('.', array_reverse($relationCamelCase));
 
                     if (! empty($referenceFoundRelation)) {
-                        
+
                         if ($entryData->relationLoaded($referenceFoundRelation)) {
 
-                            $eagerLoadedData = $entryData->load($referenceFoundRelation);                            
+                            $eagerLoadedData = $entryData->load($referenceFoundRelation);
                             $relationData = $eagerLoadedData;
 
                             foreach ($relationCamelCase as $function) {
@@ -781,14 +778,11 @@ class ConvertDataToFileChanges extends Command
                         }
                     }
                 }
-                
+
                 foreach ($mappedData as $mappedDatum) {
                     $mappedHeaders = array_keys($mappedDatum);
                     $mappedValues = array_values($mappedDatum);
 
-                    $mappedValues = array_map("unserialize", array_unique(array_map("serialize", $mappedValues)));
-
-                   
                     $filePath = $targetFolder.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
 
                     if (! isset($excelDataCollection[$filePath])) {
@@ -802,9 +796,8 @@ class ConvertDataToFileChanges extends Command
                     if (isset($excelDataCollection[$filePath])) {
                         $foundHeader = $excelDataCollection[$filePath]['headers'];
 
-                       
                         $primaryColumnNameIndex = array_search($primaryColumnName, $foundHeader);
-                        
+
                         if ($primaryColumnNameIndex === false) {
                             continue;
                         }
@@ -859,18 +852,18 @@ class ConvertDataToFileChanges extends Command
             foreach ($dataMappings as $dataMapping) {
                 $mappingField = $dataMapping['field'];
                 $defaultValue = $dataMapping['default_value'];
-                $columnName = $dataMapping['column_name'];
 
                 $field = explode('.', $dataMapping['field']);
 
                 if ($dataMapping['field'] && count($field) == 2) {
                     /* If CDIS FIELDS has pattern table.field */
                     $fieldColumn = $field[1];
-                    $data[$columnName] = $entryData[$fieldColumn];
+                    $data[$dataMapping['column_name']] = $entryData[$fieldColumn];
                 } else if ($dataMapping['field'] && count($field) >= 3) {
                      /* If CDIS FIELDS has pattern table.relation_table.field. */
                     if (str_starts_with($dataMapping['field'], $entryTableName.'.')) {
-                        $data[$columnName] = $this->mappedSpecificData($dataMapping, $syncEntry, $entryTableName, $entryData, null, $paramName, $paramData);
+                        $data[$dataMapping['column_name']] =
+                            $this->mappedSpecificData($dataMapping, $syncEntry, $entryTableName, $entryData, null, $paramName, $paramData);
                     }
                 } else if (! $dataMapping['field'] && $dataMapping['default_value']) {
                     /* If CDIS FIELDS is empty and contains DEFAULT FIELDS VALUES 
@@ -918,8 +911,8 @@ class ConvertDataToFileChanges extends Command
                     } else if ((strpos($defaultValueCondition, '$') !== false)) {
                         eval("\$defaultValueCondition = $defaultValueCondition;");
                     }
-                    
-                    $data[$columnName] = $defaultValueCondition;
+
+                    $data[$dataMapping['column_name']] = $defaultValueCondition;
                 }
 
             }
@@ -1248,10 +1241,9 @@ class ConvertDataToFileChanges extends Command
                 break;
             }
 
-            $this->checkDirectory($remoteDiskName, $targetFolder);
-
             $entityName = $forSyncDatum->table_name;
-            $filePath = $targetFolder.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
+
+            $this->checkDirectory($remoteDiskName, $targetFolder);
 
             $mappingFound = array_values(array_filter($dataMappings, function($value) use($entityName) {
                 return preg_match('%\b('.$entityName.'.)\b%i', $value['field'])
@@ -1290,6 +1282,7 @@ class ConvertDataToFileChanges extends Command
                         continue;
                     }
                 }
+
                 $entryTableName = str_replace('cdis_', '', $entryData->tableName());
 
                 $mappedData = [];
@@ -1335,7 +1328,7 @@ class ConvertDataToFileChanges extends Command
 
                             $eagerLoadedData = $entryData->load($referenceFoundRelation);
                             $relationData = $eagerLoadedData;
-                            
+
                             foreach ($relationCamelCase as $function) {
                                 $relationData = $relationData->{$function};
                             }
@@ -1362,6 +1355,8 @@ class ConvertDataToFileChanges extends Command
                 foreach ($mappedData as $mappedDatum) {
                     $mappedHeaders = array_keys($mappedDatum);
                     $mappedValues = array_values($mappedDatum);
+
+                    $filePath = $targetFolder.'/'.$entryName.'_'.$timeStamp.'.'.$this->extension;
 
                     if (! isset($excelDataCollection[$filePath])) {
                         $excelDataCollection[$filePath] = [

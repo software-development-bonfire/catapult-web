@@ -16,14 +16,25 @@ class CDISPaymentMethodSettings extends BaseModel
         'description',
         'validation_type',
         'receipt_count',
+        'is_default',
+        'get_exact_amount',
         'open_cash_drawer',
+        'payment_charge_type_bid',
+        'payment_tender_type_bid',
+        'payment_transaction_type_bid',
+        'status',
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
         'bid' => 'string',
-        'open_cash_drawer' => 'boolean'
+        'is_default' => 'boolean',
+        'get_exact_amount' => 'boolean',
+        'open_cash_drawer' => 'boolean',
+        'payment_charge_type_bid' => 'string',
+        'payment_tender_type_bid' => 'string',
+        'payment_transaction_type_bid' => 'string',
     ];
 
     protected $auditExclude = [
@@ -36,6 +47,21 @@ class CDISPaymentMethodSettings extends BaseModel
     public function paymentMethodSettingsDetail()
     {
         return $this->hasMany(CDISPaymentMethodSettingsDetail::class, 'head_bid', 'bid');
+    }
+
+    public function chargeType()
+    {
+        return $this->hasOne(CDISPaymentChargeType::class, 'bid', 'payment_charge_type_bid');
+    }
+
+    public function tenderType()
+    {
+        return $this->hasOne(CDISPaymentTenderType::class, 'bid', 'payment_tender_type_bid');
+    }
+
+    public function transactionType()
+    {
+        return $this->hasOne(CDISPaymentTransactionType::class, 'bid', 'payment_transaction_type_bid');
     }
 
     public function syncDetails()

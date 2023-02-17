@@ -46,7 +46,7 @@ return [
     'syncing_to_catapult' => 'Syncing to Catapult...',
     'syncing_to_catapult_failed' => 'Syncing to Catapult failed!',
     'syncing_to_catapult_success' => 'Syncing to Catapult success!',
-    'table_constructed' => ':table constructed with :count records [:progress/:table_count]',
+    'table_constructed' => '[:progress/:table_count]  :table constructed with {:count} records',
     'uploading_files' => 'Uploading files',
     'uploading_report' => 'Uploading report',
     'watching_files_to_resync' => 'Watching files need to resync...',
