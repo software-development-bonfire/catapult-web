@@ -12,6 +12,7 @@ class CDISBrand extends BaseModel
         'bid',
         'code',
         'name',
+        'status',
         'created_by',
         'updated_by',
     ];

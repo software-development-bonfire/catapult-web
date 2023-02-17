@@ -18,6 +18,7 @@ class CDISDiscountSettings extends BaseModel
         'discount_type',
         'discount_amount',
         'receipt_count',
+        'status',
         'created_by',
         'updated_by',
     ];
