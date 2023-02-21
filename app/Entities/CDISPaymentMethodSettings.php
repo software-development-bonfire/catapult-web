@@ -67,7 +67,7 @@ class CDISPaymentMethodSettings extends BaseModel
     public function syncDetails()
     {
         $code = '';
-        $group = $this->getTable() ?? 'cdis_payment_method_settings';
+        $group = null;
         $headBid = $this->bid;
         $level = 1;
 
