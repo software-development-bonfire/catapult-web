@@ -31,8 +31,11 @@ if (! function_exists('toBooleanOrInt')) {
 }
 
 if (! function_exists('cleanNonAlphaNumericChars')) {
-    function cleanNonAlphaNumericChars($value)
+    function cleanNonAlphaNumericChars($value, $withSpace = false)
     {
+        if ($withSpace) {
+            return preg_replace('/[^a-zA-Z0-9] /', '', $value);
+        }
         return preg_replace('/[^a-zA-Z0-9]/', '', $value);
     }
 }

@@ -7,22 +7,20 @@ use App\Enums\ReportFileType;
 use App\Helpers\CustomPinger as Ping;
 use App\Repositories\Contracts\TerminalFileSetupRepository;
 use App\Services\ErrorLogService;
+use App\Traits\FileStorageSetupTrait;
 use App\Traits\GenericHelper;
 use App\Traits\OutputBufferTrait;
 use App\Traits\StorageTrait;
 use App\Traits\TerminalFileSetupTrait;
 use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Response as FacadesResponse;
-use Illuminate\Support\Facades\Storage;
 
-class EJournalUploader extends Command implements ShouldQueue
+class FileUpload extends Command implements ShouldQueue
 {
-    use GenericHelper, OutputBufferTrait, StorageTrait, TerminalFileSetupTrait;
+    use GenericHelper, OutputBufferTrait, StorageTrait, TerminalFileSetupTrait, FileStorageSetupTrait;
 
     public $errorLogService;
 
@@ -31,7 +29,7 @@ class EJournalUploader extends Command implements ShouldQueue
      *
      * @var string
      */
-    protected $signature = 'pos:upload-ejournal {--type=0}';
+    protected $signature = 'pos:upload {--type=0}';
 
     /**
      * The console command description.
@@ -96,41 +94,46 @@ class EJournalUploader extends Command implements ShouldQueue
                         continue;
                     }
 
-                    $terminalPath = $terminalFile->terminal_path;
+                    // Get local path of the POS to CDIS file storage setup
+                    // to be the root source directory
+                    $localPath = $this->getLocalStoragePath($terminalFile);
+                    if (empty($localPath)) {
+                        $this->setErrorLog(__('error.no_file_storage_setup_detected'));
+                        continue;
+                    }
 
+                    // initialize the target disk that handles destination
+                    $sourceFullPath = $localPath.'/Reports/'.cleanNonAlphaNumericChars($terminalFile->name);
+                    $storageDisk = $this->resolveFilesystemDisk('upload_'.cleanNonAlphaNumericChars(strtolower($terminalFile->name)), $sourceFullPath);                    
+                    
                     $sourceDirectory = '/';
                     $destinationSubDirectoryUpload = '/Uploaded';
                     $destinationSubDirectoryErrors = '/Errors';
 
-                    $subFolder =  $this->getSubFolder($terminalFile);
-                    if ($subFolder) {
-                        $terminalPath = "$terminalFile->terminal_path/$subFolder";
-                    }
-
-                    $storageDisk = $this->resolveFilesystemDisk(cleanNonAlphaNumericChars(strtolower($terminalFile->name)), $terminalPath);
-
+                    // create directory if not exist for folder Uploaded and Errors
                     $this->createDirectoryIfNotExist($storageDisk, $destinationSubDirectoryUpload);
                     $this->createDirectoryIfNotExist($storageDisk, $destinationSubDirectoryErrors);
 
+                    // Get files inside source directory
                     $files = $storageDisk->files($sourceDirectory);
 
                     if (count($files)) {
-                        $this->createLog(__('info.files_found_in', ['value' => $terminalPath]), 'info', true,[$terminalFile->name, count($files) ]);
+                        $this->createLog(__('info.files_found_in', ['value' => $sourceFullPath]), 'info', true,[$terminalFile->name, count($files) ]);
 
                         foreach ($files as $file) {
+
+                            $sourceFilenamePath = "$sourceFullPath/$file";
                             $targetFilenameError = "$destinationSubDirectoryErrors/$file";
                             $targetFilenameSuccess = "$destinationSubDirectoryUpload/$file";
-
-                            $this->createLog($file, 'line', true);
-
-                            // Check if file already exist in Upload folder
-                            if ($storageDisk->exists($targetFilenameSuccess)) {
+                           
+                             // Check if file already exist in Upload folder
+                             if ($storageDisk->exists($targetFilenameSuccess)) {
                                 // It means file is already been uploaded, so we need
                                 // to ignore this and proceed to next file
-                                $this->createLog($file, 'line', true, ['Already Uploaded']);
+                                $this->createLog($sourceFilenamePath, 'line', true, ['UPLOADED']);
                                 continue;
                             } else {
-                                $this->createLog($file, 'line', true, ['FOR UPLOAD']);
+                                $this->createLog($sourceFilenamePath, 'line', true, ['UPLOADING...']);
                             }
 
                             try {
@@ -141,13 +144,12 @@ class EJournalUploader extends Command implements ShouldQueue
                             } catch (\Exception $e) {
                                 // Move the file to designated error folder to make sure
                                 // in next run, files will not be re-included
-                                $this->copyFile($storageDisk, $file, $targetFilenameError);
+                                $this->moveFile($storageDisk, $file, $targetFilenameError);
                                 $this->createLog(json_encode($e), 'error', true, ['FileException']);
                                 continue;
                             }
 
-                            $filenamePath = "$terminalPath/$file";
-
+                            // Build necessary data to be sent into CDIS server
                             $data = [
                                 'name' => $terminalFile->name,
                                 'branch_code' => config('configuration.branch_code'),
@@ -158,10 +160,10 @@ class EJournalUploader extends Command implements ShouldQueue
                             ];
 
                             try {
-                                $response = $this->send($filenamePath, $data, $apiSetup);
+                                $response = $this->send($sourceFilenamePath, $data, $apiSetup);
                                 $responseBodyContent = json_decode($response->getBody()->getContents());
                                 $statusCode = $response->getStatusCode();
-                                if ($statusCode >= 300) {
+                                if ($statusCode >= Response::HTTP_MULTIPLE_CHOICES) {
                                     // is HTTP status code (for non-exceptions) 
                                     $statusText = Response::$statusTexts[$statusCode];
 
@@ -176,7 +178,7 @@ class EJournalUploader extends Command implements ShouldQueue
                                     ) {
                                         // File is too large or maybe bad request due to file not found
                                         // or extension is not allowed
-                                        $this->copyFile($storageDisk, $file, $targetFilenameError);
+                                        $this->moveFile($storageDisk, $file, $targetFilenameError);
                                         sleep(5);
                                     }
                                     if ($statusCode === Response::HTTP_PRECONDITION_FAILED) {
@@ -189,7 +191,7 @@ class EJournalUploader extends Command implements ShouldQueue
                                 } else {
                                     if (! empty($responseBodyContent)) {
                                         if ($statusCode === Response::HTTP_OK) {
-                                            $this->copyFile($storageDisk, $file, $targetFilenameSuccess);
+                                            $this->moveFile($storageDisk, $file, $targetFilenameSuccess);
                                             $this->createLog(json_encode($responseBodyContent), 'info', true, [Response::$statusTexts[$statusCode]]);
                                         } else {
                                             // Display warning message containing API response,
@@ -214,7 +216,7 @@ class EJournalUploader extends Command implements ShouldQueue
                                     ) {
                                         // File is too large or maybe bad request due to file not found
                                         // or extension is not allowed
-                                        $this->copyFile($storageDisk, $file, $targetFilenameError);
+                                        $this->moveFile($storageDisk, $file, $targetFilenameError);
                                         sleep(5);
                                     }
                                 }
@@ -234,14 +236,14 @@ class EJournalUploader extends Command implements ShouldQueue
                                 $errorMessage = $handlerContext['error'] ?? $e->getMessage();
                                 $this->setErrorLog(json_encode($errorMessage), ['ConnectException', $errno]);
                             } catch (\Exception $e) {
-                                // fallback, in case of other exception
-                                $this->setErrorLog(json_encode($e), ['HttpException']);
+                                // fallback, in case of other exception                                
+                                $this->setErrorLog(json_encode($e), ['HttpException',$apiSetup->end_point]);
                                 sleep(10);
                             }
                             sleep(5); // add time delay to avoid too many request
                         }
                     } else {
-                        $this->createLog(__('info.no_files_found_in', ['value' => $terminalPath]), 'warn', true, [$terminalFile->name]);
+                        $this->createLog(__('info.no_files_found_in', ['value' => $sourceFullPath]), 'warn', true, [$terminalFile->name]);
                     }
                 }
             } else {
