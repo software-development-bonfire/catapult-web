@@ -20,6 +20,7 @@ class CDISChargesSettings extends BaseModel
         'charge_type',
         'charge_amount',
         'is_auto_apply',
+        'status',
         'created_by',
         'updated_by',
     ];
@@ -39,7 +40,7 @@ class CDISChargesSettings extends BaseModel
     public function syncDetails()
     {
         $code = '';
-        $group = $this->getTable() ?? 'cdis_charges_settings';
+        $group = null;
         $headBid = $this->bid;
         $level = 1;
 

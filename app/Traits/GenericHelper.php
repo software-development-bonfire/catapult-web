@@ -349,13 +349,15 @@ trait GenericHelper
         return $key;
     }
 
-    public function secondsToHumanReadableTime($seconds) 
+    public function secondsToHumanReadableTime($milliSeconds) 
     {
-        $hours = floor($seconds / 3600);
-        $minutes = floor(($seconds / 60) % 60);
-        $seconds = $seconds % 60;
-        
-        return $hours > 0 ? "$hours hrs, $minutes mins" : ($minutes > 0 ? "$minutes mins, $seconds secs" : "$seconds seconds");
+        $hours = floor($milliSeconds / 3600);
+        $minutes = floor(($milliSeconds / 60) % 60);
+        $seconds = $milliSeconds % 60;
+
+        return ($hours > 0 ? "$hours hrs, $minutes mins" : 
+               ($minutes > 0 ? "$minutes mins, $seconds secs" : 
+               ($seconds > 0 ? "$seconds seconds" : "$milliSeconds ms")));
     }
 
     protected function modelHasColumn($model, $tableName = '', $columnName = '') 

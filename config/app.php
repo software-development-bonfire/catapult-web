@@ -3,6 +3,7 @@
 use App\Providers\RepositoryServiceProvider;
 
 return [
+    'version' => '2.1.0.1',
 
     /*
     |--------------------------------------------------------------------------

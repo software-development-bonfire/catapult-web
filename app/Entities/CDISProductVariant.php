@@ -14,6 +14,7 @@ class CDISProductVariant extends BaseModel
         'bid',
         'code',
         'description',
+        'status',
         'created_by',
         'updated_by',
     ];
