@@ -21,6 +21,9 @@
             permissionList: {
                 type: Object,
             },
+            version: {
+                type: String,
+            },
         },
         
         created() {
