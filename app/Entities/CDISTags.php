@@ -13,6 +13,7 @@ class CDISTags extends BaseModel
     protected $fillable = [
         'bid',
         'name',
+        'status',
         'created_by',
         'updated_by',
     ];

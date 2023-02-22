@@ -10,6 +10,7 @@ class CDISPaymentTermSettings extends BaseModel
         'bid',
         'code',
         'name',
+        'status',
         'created_by',
         'updated_by',
     ];

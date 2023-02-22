@@ -18,6 +18,7 @@ class CDISDiscountSettings extends BaseModel
         'discount_type',
         'discount_amount',
         'receipt_count',
+        'status',
         'created_by',
         'updated_by',
     ];
@@ -29,7 +30,7 @@ class CDISDiscountSettings extends BaseModel
     public function syncDetails()
     {
         $code = '';
-        $group = $this->getTable() ?? 'cdis_discount_settings';
+        $group = null;
         $headBid = $this->bid;
         $level = 1;
 
