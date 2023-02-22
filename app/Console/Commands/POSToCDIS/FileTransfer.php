@@ -73,9 +73,9 @@ class FileTransfer extends Command implements ShouldQueue
     public function handle()
     {
         $type = $this->option('type') ?: null;
-        $filters = null;
+        $filters =(object) ['status' => Status::ACTIVE];
         if (! empty($type)) {
-            $filters = (object) ['type' => $type];
+            $filters->type = $type;
 
             $typeDescription = ReportFileType::getDescription(intval($type));
             $this->line(__('info.uploading_report')." [$typeDescription]");

@@ -60,6 +60,10 @@ class TerminalFileSetupRepositoryEloquent extends BaseRepository implements Term
             $this->model = $this->model->where('type', $filters->type);
         }
 
+        if (! empty($filters) && ! empty($filters->status)) {
+            $this->model = $this->model->where('status', $filters->status);
+        }
+
         if (! empty($filters->itemsPerPage)) {
             return $this->paginate($filters->itemsPerPage);
         }

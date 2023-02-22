@@ -4,6 +4,7 @@ namespace App\Console\Commands\POSToCDIS;
 
 use App\Enums\CommonErrors;
 use App\Enums\ReportFileType;
+use App\Enums\Status;
 use App\Helpers\CustomPinger as Ping;
 use App\Repositories\Contracts\TerminalFileSetupRepository;
 use App\Services\ErrorLogService;
@@ -65,9 +66,9 @@ class FileUpload extends Command implements ShouldQueue
         $this->line('');
 
         $type = $this->option('type') ?: null;
-        $filters = null;
+        $filters =(object) ['status' => Status::ACTIVE];
         if (! empty($type)) {
-            $filters = (object) ['type' => $type];
+            $filters->type = $type;
 
             $typeDescription = ReportFileType::getDescription(intval($type));
             $this->line(__('info.uploading_report')." [$typeDescription]");
