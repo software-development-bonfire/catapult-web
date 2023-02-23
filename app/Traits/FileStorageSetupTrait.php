@@ -16,7 +16,6 @@ trait FileStorageSetupTrait
     /**
      * Get storage disk for file storage setup
      * 
-     * 
      * @param TerminalFileSetup $terminalFile
      * @return Storage
      */
@@ -37,7 +36,6 @@ trait FileStorageSetupTrait
              ->where('status', Status::ACTIVE)
              ->where('storage_type', StorageType::LOCAL_NETWORK)
              ->where('name', 'POS TO CDIS (DEFAULT)')->first();
- 
  
          if (! empty($fileStorageSetup)) {
              return $fileStorageSetup->local_path;
