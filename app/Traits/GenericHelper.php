@@ -267,6 +267,20 @@ trait GenericHelper
     }
 
     /**
+     * Generate log label base from give length.
+     *
+     * @param int  $maxLength
+     * @param string  $logLabel
+     *
+     * @return string  $logLabel
+     */
+    public function createLogLabel($maxLength, $logLabel)
+    {
+        $spaces = ($maxLength - strlen($logLabel)) / 2;
+        return str_repeat(' ', ceil($spaces)).$logLabel.str_repeat(' ', floor($spaces));
+    }
+
+    /**
      * Cache set of value.
      *
      * @param string  $key

@@ -4,6 +4,7 @@ namespace App\Console\Commands\POSToCDIS;
 
 use App\Enums\CommonErrors;
 use App\Enums\ReportFileType;
+use App\Enums\Status;
 use App\Helpers\CustomPinger as Ping;
 use App\Repositories\Contracts\TerminalFileSetupRepository;
 use App\Services\ErrorLogService;
@@ -17,6 +18,7 @@ use Illuminate\Console\Command;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response as FacadesResponse;
 use Illuminate\Support\Facades\Storage;
 
@@ -31,7 +33,7 @@ class EJournalUploader extends Command implements ShouldQueue
      *
      * @var string
      */
-    protected $signature = 'pos:upload-ejournal {--type=0}';
+    protected $signature = 'pos:upload-report {--type=0}';
 
     /**
      * The console command description.
@@ -67,9 +69,9 @@ class EJournalUploader extends Command implements ShouldQueue
         $this->line('');
 
         $type = $this->option('type') ?: null;
-        $filters = null;
+        $filters =(object) ['status' => Status::ACTIVE];
         if (! empty($type)) {
-            $filters = (object) ['type' => $type];
+            $filters->type = $type;
 
             $typeDescription = ReportFileType::getDescription(intval($type));
             $this->line(__('info.uploading_report')." [$typeDescription]");
@@ -83,7 +85,12 @@ class EJournalUploader extends Command implements ShouldQueue
 
             $terminalFileSetups = app()->make(TerminalFileSetupRepository::class)->list($filters);
             if (count($terminalFileSetups) > 0) {
+                $entries = $terminalFileSetups->pluck('name')->toArray();
+                $entriesMaxLength = max(array_map('strlen', $entries));
+
                 foreach ($terminalFileSetups as $terminalFile) {
+                    $logLabel = $this->createLogLabel($entriesMaxLength, $terminalFile->name);
+
                     $apiSetup = $terminalFile->apiSetup;
                     if (empty($apiSetup)) {
                         $this->setErrorLog(__('error.no_endpoint_configured'));
@@ -115,25 +122,16 @@ class EJournalUploader extends Command implements ShouldQueue
                     $files = $storageDisk->files($sourceDirectory);
 
                     if (count($files)) {
-                        $this->createLog(__('info.files_found_in', ['value' => $terminalPath]), 'info', true,[$terminalFile->name, count($files) ]);
+                        $this->createLog(__('info.files_found_in', ['value' => $terminalPath]), 'info', true,[$logLabel, count($files) ]);
 
                         foreach ($files as $file) {
+                            $filenamePath = "$terminalPath/$file";
+
                             $targetFilenameError = "$destinationSubDirectoryErrors/$file";
                             $targetFilenameSuccess = "$destinationSubDirectoryUpload/$file";
-
-                            $this->createLog($file, 'line', true);
-
-                            // Check if file already exist in Upload folder
-                            if ($storageDisk->exists($targetFilenameSuccess)) {
-                                // It means file is already been uploaded, so we need
-                                // to ignore this and proceed to next file
-                                $this->createLog($file, 'line', true, ['Already Uploaded']);
-                                continue;
-                            } else {
-                                $this->createLog($file, 'line', true, ['FOR UPLOAD']);
-                            }
-
+                           
                             try {
+                                $this->createLog($filenamePath, 'line', true, [$logLabel]);
                                 // To avoid FatalErrorException due to allocated memory size limit,
                                 // we set memory limit before reading the content of the file
                                 ini_set('memory_limit', '-1');
@@ -141,12 +139,10 @@ class EJournalUploader extends Command implements ShouldQueue
                             } catch (\Exception $e) {
                                 // Move the file to designated error folder to make sure
                                 // in next run, files will not be re-included
-                                $this->copyFile($storageDisk, $file, $targetFilenameError);
+                                $this->moveFile($storageDisk, $file, $targetFilenameError);
                                 $this->createLog(json_encode($e), 'error', true, ['FileException']);
                                 continue;
                             }
-
-                            $filenamePath = "$terminalPath/$file";
 
                             $data = [
                                 'name' => $terminalFile->name,
@@ -161,7 +157,7 @@ class EJournalUploader extends Command implements ShouldQueue
                                 $response = $this->send($filenamePath, $data, $apiSetup);
                                 $responseBodyContent = json_decode($response->getBody()->getContents());
                                 $statusCode = $response->getStatusCode();
-                                if ($statusCode >= 300) {
+                                if ($statusCode >= Response::HTTP_MULTIPLE_CHOICES) {
                                     // is HTTP status code (for non-exceptions) 
                                     $statusText = Response::$statusTexts[$statusCode];
 
@@ -176,7 +172,7 @@ class EJournalUploader extends Command implements ShouldQueue
                                     ) {
                                         // File is too large or maybe bad request due to file not found
                                         // or extension is not allowed
-                                        $this->copyFile($storageDisk, $file, $targetFilenameError);
+                                        $this->moveFile($storageDisk, $file, $targetFilenameError);
                                         sleep(5);
                                     }
                                     if ($statusCode === Response::HTTP_PRECONDITION_FAILED) {
@@ -185,17 +181,17 @@ class EJournalUploader extends Command implements ShouldQueue
                                         // data comes first before re-uploading
                                         sleep(10);
                                     }
-                                    $this->setErrorLog("{$statusText} : ".json_encode($responseBodyContent),[$statusCode]);
+                                    $this->setErrorLog("{$statusText} : ".json_encode($responseBodyContent),[$logLabel, $statusCode]);
                                 } else {
                                     if (! empty($responseBodyContent)) {
                                         if ($statusCode === Response::HTTP_OK) {
-                                            $this->copyFile($storageDisk, $file, $targetFilenameSuccess);
-                                            $this->createLog(json_encode($responseBodyContent), 'info', true, [Response::$statusTexts[$statusCode]]);
+                                            $this->moveFile($storageDisk, $file, $targetFilenameSuccess);
+                                            $this->createLog(json_encode($responseBodyContent), 'info', true, [$logLabel, Response::$statusTexts[$statusCode]]);
                                         } else {
                                             // Display warning message containing API response,
                                             // means request is successfully sent but it does not return
                                             // an expected response
-                                            $this->createLog(json_encode($responseBodyContent), 'warn', true, [Response::$statusTexts[$statusCode]]);
+                                            $this->createLog(json_encode($responseBodyContent), 'warn', true, [$logLabel, Response::$statusTexts[$statusCode]]);
                                         }
                                     }
                                 }
@@ -214,7 +210,7 @@ class EJournalUploader extends Command implements ShouldQueue
                                     ) {
                                         // File is too large or maybe bad request due to file not found
                                         // or extension is not allowed
-                                        $this->copyFile($storageDisk, $file, $targetFilenameError);
+                                        $this->moveFile($storageDisk, $file, $targetFilenameError);
                                         sleep(5);
                                     }
                                 }
@@ -241,7 +237,7 @@ class EJournalUploader extends Command implements ShouldQueue
                             sleep(5); // add time delay to avoid too many request
                         }
                     } else {
-                        $this->createLog(__('info.no_files_found_in', ['value' => $terminalPath]), 'warn', true, [$terminalFile->name]);
+                        $this->createLog(__('info.no_files_found_in', ['value' => $terminalPath]), 'warn', true, [$logLabel]);
                     }
                 }
             } else {

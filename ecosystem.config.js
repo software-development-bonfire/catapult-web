@@ -45,17 +45,6 @@ module.exports = {
             autorestart: true,
         },
         {
-            name : "CPLT-POS-TRANSFER",
-            script: "artisan",
-            args: ["pos:transfer"],
-            exec_interpreter: "php",
-            exec_mode : "fork",
-            max_memory_restart : "5G",
-            watch: false,
-            merge_logs: true,
-            autorestart: true,
-        },
-        {
             name : "CPLT-POS-SDF",
             script: "artisan",
             args: ["pos:sync-data-file"],
@@ -102,7 +91,7 @@ module.exports = {
         {
             name : "CPLT-POS-UPLOAD",
             script: "artisan",
-            args: ["pos:upload"],
+            args: ["pos:upload-report"],
             exec_interpreter: "php",
             exec_mode : "fork",
             max_memory_restart : "5G",
