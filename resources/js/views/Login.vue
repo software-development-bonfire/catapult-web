@@ -10,6 +10,9 @@
                         <span class="catapult-logo-letter--main">C</span>
                         <span class="catapult-logo-letter--sub">atapult</span>
                     </div>
+                    <div align="center" class="data-center-version">
+                        Version {{ $parent.version }}
+                    </div>
                 </div>
                 <div align="center" v-if="errors.hasOwnProperty('username')">
                     <label class="text-danger error-message">
@@ -115,5 +118,9 @@
         &:hover {
             background-color: lighten(#f1f2f6, 2%);
         }
+    }
+    .data-center-version {
+        color: #767676;
+        font-size: 14px;
     }
 </style>
