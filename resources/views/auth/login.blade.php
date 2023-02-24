@@ -15,7 +15,9 @@
     </head>
     <body class="login">
         <div id="app">
-            <core>
+            <core
+                :version='{!! json_encode(config('app.version')) !!}'
+            >
                 <login></login>
             </core>
         </div>

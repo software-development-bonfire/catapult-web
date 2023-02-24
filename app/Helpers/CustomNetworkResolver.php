@@ -32,6 +32,7 @@ class CustomNetworkResolver
     public function resolve($background = true)
     {
         $resetted = false;
+        $output = [];
 
         $execString = 'netsh int ip reset';
 
@@ -69,6 +70,7 @@ class CustomNetworkResolver
     public function flushDns()
     {
         $flushed = false;
+        $output = [];
 
         $execString = 'ipconfig /flushdns';
 

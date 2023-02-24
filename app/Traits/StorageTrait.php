@@ -178,4 +178,19 @@ trait StorageTrait
         }
         $disk->move($sourceFile, $targetFile);
     }
+
+    /**
+     * Copy file
+     *
+     * @param FileSystem  $disk
+     * @param string  $sourceFile
+     * @param string  $targetFile
+     */
+    public function copyFile($disk, $sourceFile, $targetFile)
+    {
+        if ($disk->exists($targetFile)) {
+            $disk->delete($targetFile);
+        }
+        $disk->copy($sourceFile, $targetFile);
+    }
 }

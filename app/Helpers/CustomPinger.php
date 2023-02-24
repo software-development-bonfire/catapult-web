@@ -226,6 +226,7 @@ class CustomPinger
     private function pingExec()
     {
         $latency = false;
+        $output = [];
 
         $ttl = escapeshellcmd($this->ttl);
         $timeout = escapeshellcmd($this->timeout);

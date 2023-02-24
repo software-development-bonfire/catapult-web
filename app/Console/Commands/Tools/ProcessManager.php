@@ -92,6 +92,7 @@ class ProcessManager extends Command
      */
     public function executeCommand($execString)
     {
+        $output = [];
         $this->printCommandEntry($execString);
 
         // Exec string for Windows-based systems.

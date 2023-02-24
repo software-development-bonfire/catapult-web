@@ -91,7 +91,7 @@ module.exports = {
         {
             name : "CPLT-POS-UPLOAD",
             script: "artisan",
-            args: ["pos:upload"],
+            args: ["pos:upload-report"],
             exec_interpreter: "php",
             exec_mode : "fork",
             max_memory_restart : "5G",
