@@ -28,12 +28,12 @@ CREATE TABLE IF NOT EXISTS `api_setups` (
 -- Dumping data for table catapult_web.api_setups: ~8 rows (approximately)
 DELETE FROM `api_setups`;
 INSERT INTO `api_setups` (`id`, `bid`, `name`, `end_point`, `status`, `created_by`, `updated_by`, `created_at`, `updated_at`, `deleted_at`) VALUES
-	(1, 1, 'Transaction', 'https://ebc.mycdis.com/api/catapult/v2/terminal_transaction/store', 1, 1, 1, '2021-09-28 08:58:45', '2023-03-02 01:59:37', NULL),
-	(2, 1000000000000000001, 'Zread', 'https://ebc.mycdis.com/api/catapult/v2/zread/store', 1, 1000000000000000002, 1, '2021-10-11 10:25:39', '2023-03-02 01:59:49', NULL),
-	(3, 1000000000000000002, 'Audit Trail', 'https://ebc.mycdis.com/api/catapult/v2/audit_trail/store', 1, 1000000000000000002, 1, '2021-10-12 03:31:16', '2023-03-02 01:59:56', NULL),
-	(4, 1000000000000000003, 'Cash Breakdown', 'https://ebc.mycdis.com/api/catapult/v2/cash_breakdown/store', 1, 1000000000000000001, 1, '2021-10-12 06:11:07', '2023-03-02 02:00:40', NULL),
-	(5, 1000000000000000004, 'Cash Drawer', 'https://ebc.mycdis.com/api/catapult/v2/cash_drawer/store', 1, 1000000000000000001, 1, '2021-10-12 06:11:18', '2023-03-02 02:00:51', NULL),
-	(6, 1112000000000000001, 'Attachment E-Journals', 'https://ebc.mycdis.com/api/catapult/v2/e_journal/store', 1, 1, 1, '2022-12-31 02:47:10', '2023-03-02 02:00:57', NULL);
+	(1, 1, 'Transaction', 'http://localhost/api/catapult/v2/terminal_transaction/store', 1, 1, 1, '2021-09-28 08:58:45', '2023-03-02 01:59:37', NULL),
+	(2, 1000000000000000001, 'Zread', 'http://localhost/api/catapult/v2/zread/store', 1, 1000000000000000002, 1, '2021-10-11 10:25:39', '2023-03-02 01:59:49', NULL),
+	(3, 1000000000000000002, 'Audit Trail', 'http://localhost/api/catapult/v2/audit_trail/store', 1, 1000000000000000002, 1, '2021-10-12 03:31:16', '2023-03-02 01:59:56', NULL),
+	(4, 1000000000000000003, 'Cash Breakdown', 'http://localhost/api/catapult/v2/cash_breakdown/store', 1, 1000000000000000001, 1, '2021-10-12 06:11:07', '2023-03-02 02:00:40', NULL),
+	(5, 1000000000000000004, 'Cash Drawer', 'http://localhost/api/catapult/v2/cash_drawer/store', 1, 1000000000000000001, 1, '2021-10-12 06:11:18', '2023-03-02 02:00:51', NULL),
+	(6, 1112000000000000001, 'Attachment E-Journals', 'http://localhost/api/catapult/v2/e_journal/store', 1, 1, 1, '2022-12-31 02:47:10', '2023-03-02 02:00:57', NULL);
 
 -- Dumping structure for table catapult_web.field_mapping
 CREATE TABLE IF NOT EXISTS `field_mapping` (
