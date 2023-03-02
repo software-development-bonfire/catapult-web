@@ -1,10 +1,3 @@
--- --------------------------------------------------------
--- Host:                         127.0.0.1
--- Server version:               8.0.28 - MySQL Community Server - GPL
--- Server OS:                    Win64
--- HeidiSQL Version:             12.1.0.6537
--- --------------------------------------------------------
-
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET NAMES utf8 */;
 /*!50503 SET NAMES utf8mb4 */;
@@ -14,8 +7,37 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
+SET SQL_SAFE_UPDATES=0;
+
+-- Dumping structure for table catapult_web.api_setups
+CREATE TABLE IF NOT EXISTS `api_setups` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `bid` bigint unsigned NOT NULL,
+  `name` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `end_point` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` tinyint NOT NULL,
+  `created_by` bigint unsigned NOT NULL,
+  `updated_by` bigint unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `api_setups_bid_unique` (`bid`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Dumping data for table catapult_web.api_setups: ~8 rows (approximately)
+DELETE FROM `api_setups`;
+INSERT INTO `api_setups` (`id`, `bid`, `name`, `end_point`, `status`, `created_by`, `updated_by`, `created_at`, `updated_at`, `deleted_at`) VALUES
+	(1, 1, 'Transaction', 'https://ebc.mycdis.com/api/catapult/v2/terminal_transaction/store', 1, 1, 1, '2021-09-28 08:58:45', '2023-03-02 01:59:37', NULL),
+	(2, 1000000000000000001, 'Zread', 'https://ebc.mycdis.com/api/catapult/v2/zread/store', 1, 1000000000000000002, 1, '2021-10-11 10:25:39', '2023-03-02 01:59:49', NULL),
+	(3, 1000000000000000002, 'Audit Trail', 'https://ebc.mycdis.com/api/catapult/v2/audit_trail/store', 1, 1000000000000000002, 1, '2021-10-12 03:31:16', '2023-03-02 01:59:56', NULL),
+	(4, 1000000000000000003, 'Cash Breakdown', 'https://ebc.mycdis.com/api/catapult/v2/cash_breakdown/store', 1, 1000000000000000001, 1, '2021-10-12 06:11:07', '2023-03-02 02:00:40', NULL),
+	(5, 1000000000000000004, 'Cash Drawer', 'https://ebc.mycdis.com/api/catapult/v2/cash_drawer/store', 1, 1000000000000000001, 1, '2021-10-12 06:11:18', '2023-03-02 02:00:51', NULL),
+	(6, 1112000000000000001, 'Attachment E-Journals', 'https://ebc.mycdis.com/api/catapult/v2/e_journal/store', 1, 1, 1, '2022-12-31 02:47:10', '2023-03-02 02:00:57', NULL),
+	(7, 1112000000000000002, 'Attachment Journals', 'http://data-center.local/api/catapult/v2/e_journal/store', 1, 1, 1, '2023-01-02 09:29:56', '2023-01-04 06:41:44', '2023-01-04 06:41:44'),
+	(8, 1112000000000000003, 'Attachment Z-Reading', 'http://data-center.local/api/catapult/v2/e_journal/store', 1, 1, 1, '2023-01-02 09:30:13', '2023-01-04 06:41:41', '2023-01-04 06:41:41');
+
 -- Dumping structure for table catapult_web.field_mapping
-DROP TABLE IF EXISTS `field_mapping`;
 CREATE TABLE IF NOT EXISTS `field_mapping` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `bid` bigint unsigned NOT NULL,
@@ -44,7 +66,7 @@ CREATE TABLE IF NOT EXISTS `field_mapping` (
   CONSTRAINT `field_mapping_file_storage_setup_bid_foreign` FOREIGN KEY (`file_storage_setup_bid`) REFERENCES `file_storage_setup` (`bid`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table catapult_web.field_mapping: ~18 rows (approximately)
+-- Dumping data for table catapult_web.field_mapping: ~17 rows (approximately)
 DELETE FROM `field_mapping`;
 INSERT INTO `field_mapping` (`id`, `bid`, `file_storage_setup_bid`, `catapult_db_setup_bid`, `api_setup_bid`, `name`, `type`, `status`, `is_customized_mapping`, `data_entry`, `primary_table`, `data_condition`, `created_by`, `updated_by`, `created_at`, `updated_at`, `deleted_at`) VALUES
 	(31, 1000000000000000014, 1000000000000000001, 1, 1, 'TRANSACTION', 2, 1, 0, 'transaction', NULL, NULL, 1000000000000000002, 1, '2021-10-05 03:11:23', '2022-06-03 04:51:58', NULL),
@@ -56,7 +78,7 @@ INSERT INTO `field_mapping` (`id`, `bid`, `file_storage_setup_bid`, `catapult_db
 	(51, 1000000000000000021, 1, 1, 1, 'CATEGORY (CUSTOMIZED)', 1, 1, 1, 'Category', 'product_category', '([product_category.deleted_at] == NULL)', 1000000000000000001, 1, '2021-10-18 07:53:14', '2023-02-16 07:56:05', NULL),
 	(52, 1000000000000000022, 1, 1, 1, 'GROUPS (CUSTOMIZED)', 1, 1, 1, 'Groups', 'kitchen_item_setup', '([kitchen_item_setup.deleted_at] == NULL) && ([kitchen_item_setup.status] == 1)  && ([kitchen_item_setup.branch_bid] == App\\Entities\\CDISBranch::where(\'code\', config(\'configuration.branch_code\'))->whereNull(\'deleted_at\')->first()->bid) && ([kitchen_item_setup.kitchen_device_printer.deleted_at] == NULL)', 1000000000000000001, 1, '2021-10-18 08:51:03', '2023-02-16 09:49:17', NULL),
 	(54, 1000000000000000024, 1, 1, 1, 'MENU COMPOSITION (CUSTOMIZED)', 1, 1, 1, 'MenuCompositions', 'product_structure_detail', NULL, 1000000000000000001, 1, '2021-10-19 07:44:34', '2023-02-16 07:56:06', NULL),
-	(55, 1000000000000000025, 1, 1, 1, 'DISCOUNTS (CUSTOMIZED)', 1, 1, 1, 'Discounts', 'discount_settings', '([discount_settings.deleted_at] == NULL)', 1000000000000000001, 1, '2021-10-19 11:42:13', '2023-02-17 13:57:16', NULL),
+	(55, 1000000000000000025, 1, 1, 1, 'DISCOUNTS (CUSTOMIZED)', 1, 1, 1, 'Discounts', 'discount_settings', '([discount_settings.deleted_at] == NULL)', 1000000000000000001, 1, '2021-10-19 11:42:13', '2023-02-20 01:23:45', NULL),
 	(56, 1000000000000000026, 1, 1, 1, 'EXTRAS (CUSTOMIZED)', 1, 1, 1, 'Extras', 'product_addon_detail', '([product_addon_detail.deleted_at] == NULL) && ([product_addon_detail.product_addon.deleted_at] == NULL) && ([product_addon_detail.product_uom_packaging.deleted_at] == NULL)', 1000000000000000001, 1, '2022-01-27 08:46:20', '2023-02-16 07:56:07', NULL),
 	(58, 1000000000000000028, 1, 1, 1, 'MENU SELECTION 1 (CUSTOMIZED)', 1, 1, 1, 'MenuSelection1', 'product_modifier_detail', '@starts_with([product_modifier_detail.product_modifier.description], "Flavors") && @ends_with([product_modifier_detail.product_modifier.product_uom_packaging.product.product_category.name], "*") && ([product_modifier_detail.product_modifier.deleted_at] == NULL) && ([product_modifier_detail.product_uom_packaging.deleted_at] == NULL)  && ([product_modifier_detail.product_modifier.product_uom_packaging.deleted_at] == NULL)', 1000000000000000001, 1, '2022-02-08 12:24:25', '2023-02-16 07:56:08', NULL),
 	(59, 1000000000000000029, 1, 1, 1, 'MENU SELECTION 2 (CUSTOMIZED)', 1, 1, 1, 'MenuSelection2', 'product_modifier_detail', '@starts_with([product_modifier_detail.product_modifier.description], "Drinks") && @ends_with([product_modifier_detail.product_modifier.product_uom_packaging.product.product_category.name], "*") && ([product_modifier_detail.product_modifier.deleted_at] == NULL) && ([product_modifier_detail.product_uom_packaging.deleted_at] == NULL) && ([product_modifier_detail.product_modifier.product_uom_packaging.deleted_at] == NULL)', 1000000000000000001, 1, '2022-02-09 01:10:17', '2023-02-16 07:56:09', NULL),
@@ -67,7 +89,6 @@ INSERT INTO `field_mapping` (`id`, `bid`, `file_storage_setup_bid`, `catapult_db
 	(64, 1112000000000000002, 1, 1, 1, 'TENDER TYPE (CUSTOMIZED)', 1, 1, 1, 'TenderType', 'payment_method_settings', '([payment_method_settings.deleted_at] == NULL)', 1, 1, '2023-02-07 05:35:10', '2023-02-16 07:41:41', NULL);
 
 -- Dumping structure for table catapult_web.field_mapping_detail
-DROP TABLE IF EXISTS `field_mapping_detail`;
 CREATE TABLE IF NOT EXISTS `field_mapping_detail` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `bid` bigint unsigned NOT NULL,
@@ -89,9 +110,9 @@ CREATE TABLE IF NOT EXISTS `field_mapping_detail` (
   UNIQUE KEY `field_mapping_detail_bid_unique` (`bid`),
   KEY `field_mapping_detail_field_mapping_bid_foreign` (`field_mapping_bid`),
   CONSTRAINT `field_mapping_detail_field_mapping_bid_foreign` FOREIGN KEY (`field_mapping_bid`) REFERENCES `field_mapping` (`bid`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE=InnoDB AUTO_INCREMENT=10065 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10097 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table catapult_web.field_mapping_detail: ~315 rows (approximately)
+-- Dumping data for table catapult_web.field_mapping_detail: ~314 rows (approximately)
 DELETE FROM `field_mapping_detail`;
 INSERT INTO `field_mapping_detail` (`id`, `bid`, `field_mapping_bid`, `required`, `is_primary_key`, `nullable`, `field`, `description`, `mapping_type`, `file_name`, `default_value`, `column_name`, `reference_column_name`, `head_reference`, `created_at`, `updated_at`) VALUES
 	(3423, 1000000000000000192, 1000000000000000015, 1, 0, 0, 'terminal_number', NULL, 'VARCHAR', 'ZH', '""', 'terminal_number', NULL, NULL, '2021-10-11 13:38:38', '2021-10-11 13:38:38'),
@@ -401,17 +422,50 @@ INSERT INTO `field_mapping_detail` (`id`, `bid`, `field_mapping_bid`, `required`
 	(10054, 1112000000000000055, 1000000000000000022, 1, 0, 0, '', '', 'DECIMAL', '', '([kitchen_item_setup.kitchen_device_printer.is_printer_dispatch_copy] ? "Yes" : "No")', 'Printer Dispatch Copy', NULL, NULL, '2023-02-16 09:49:17', '2023-02-16 09:49:17'),
 	(10055, 1112000000000000056, 1000000000000000022, 1, 0, 0, 'kitchen_item_setup.branch.code', '', '', '', '', 'Branch Code', NULL, NULL, '2023-02-16 09:49:17', '2023-02-16 09:49:17'),
 	(10056, 1112000000000000057, 1000000000000000022, 1, 0, 0, '', '', '', '', '([kitchen_item_setup.branch.type] == 2 ? \'Yes\' : \'No\')', 'Is Franchised', NULL, NULL, '2023-02-16 09:49:17', '2023-02-16 09:49:17'),
-	(10065, 1112000000000000058, 1000000000000000025, 1, 1, 0, 'discount_settings.bid', '', '', '', '', 'ID', NULL, NULL, '2023-02-17 13:57:16', '2023-02-17 13:57:16'),
-	(10066, 1112000000000000059, 1000000000000000025, 1, 0, 0, 'discount_setting.description', '', '', '', '', 'Discount Title', NULL, NULL, '2023-02-17 13:57:16', '2023-02-17 13:57:16'),
-	(10067, 1112000000000000060, 1000000000000000025, 1, 0, 0, '', '', '', '', '(([discount_settings.discount_type] == 1) ? \'Amount\' : (([discount_settings.discount_type] == 2)  ? \'Percentage\' : (([discount_settings.discount_type] == 3)  ? \'Subtotal Amount\' : (([discount_settings.discount_type] == 4)  ? \'Subtotal Percentage\' : \'\'))))', 'Discount Type', NULL, NULL, '2023-02-17 13:57:16', '2023-02-17 13:57:16'),
-	(10068, 1112000000000000061, 1000000000000000025, 1, 0, 0, 'discount_settings.discount_amount', '', '', '', '', 'Value', NULL, NULL, '2023-02-17 13:57:16', '2023-02-17 13:57:16'),
-	(10069, 1112000000000000062, 1000000000000000025, 1, 0, 0, '', '', '', '', '([discount_settings.status] == App\\Enums\\Status::ACTIVE ? "Yes" : "No")', 'Active', NULL, NULL, '2023-02-17 13:57:16', '2023-02-17 13:57:16'),
-	(10070, 1112000000000000063, 1000000000000000025, 1, 0, 0, '', '', '', '', '0.00', 'Maximum Discount', NULL, NULL, '2023-02-17 13:57:16', '2023-02-17 13:57:16'),
-	(10071, 1112000000000000064, 1000000000000000025, 1, 0, 0, '', '', '', '', '0.00', 'Ceiling Amount', NULL, NULL, '2023-02-17 13:57:16', '2023-02-17 13:57:16'),
-	(10072, 1112000000000000065, 1000000000000000025, 1, 0, 0, '', '', '', '', '0.00', 'Required Purchase Amount', NULL, NULL, '2023-02-17 13:57:16', '2023-02-17 13:57:16');
+	(10089, 1112000000000000058, 1000000000000000025, 1, 1, 0, 'discount_settings.bid', '', '', '', '', 'ID', NULL, NULL, '2023-02-21 02:49:59', '2023-02-21 02:49:59'),
+	(10090, 1112000000000000059, 1000000000000000025, 1, 0, 0, 'discount_setting.description', '', '', '', '', 'Discount Title', NULL, NULL, '2023-02-21 02:49:59', '2023-02-21 02:49:59'),
+	(10091, 1112000000000000060, 1000000000000000025, 1, 0, 0, '', '', '', '', '(([discount_settings.discount_type] == 1) ? \'Amount\' : (([discount_settings.discount_type] == 2)  ? \'Percentage\' : (([discount_settings.discount_type] == 3)  ? \'Subtotal Amount\' : (([discount_settings.discount_type] == 4)  ? \'Subtotal Percentage\' : \'\'))))', 'Discount Type', NULL, NULL, '2023-02-21 02:49:59', '2023-02-21 02:49:59'),
+	(10092, 1112000000000000061, 1000000000000000025, 1, 0, 0, 'discount_settings.discount_amount', '', '', '', '', 'Value', NULL, NULL, '2023-02-21 02:49:59', '2023-02-21 02:49:59'),
+	(10093, 1112000000000000062, 1000000000000000025, 1, 0, 0, '', '', '', '', '([discount_settings.status] == App\\Enums\\Status::ACTIVE ? "Yes" : "No")', 'Active', NULL, NULL, '2023-02-21 02:49:59', '2023-02-21 02:49:59'),
+	(10094, 1112000000000000063, 1000000000000000025, 1, 0, 0, '', '', '', '', '0.00', 'Maximum Discount', NULL, NULL, '2023-02-21 02:49:59', '2023-02-21 02:49:59'),
+	(10095, 1112000000000000064, 1000000000000000025, 1, 0, 0, '', '', '', '', '0.00', 'Ceiling Amount', NULL, NULL, '2023-02-21 02:49:59', '2023-02-21 02:49:59'),
+	(10096, 1112000000000000065, 1000000000000000025, 1, 0, 0, '', '', '', '', '0.00', 'Required Purchase Amount', NULL, NULL, '2023-02-21 02:49:59', '2023-02-21 02:49:59');
+
+-- Dumping structure for table catapult_web.terminal_file_setups
+CREATE TABLE IF NOT EXISTS `terminal_file_setups` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `bid` bigint unsigned NOT NULL,
+  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` int NOT NULL,
+  `api_setup_bid` bigint unsigned DEFAULT NULL,
+  `terminal_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `terminal_path` varchar(254) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sub_directories` text COLLATE utf8mb4_unicode_ci,
+  `status` tinyint NOT NULL DEFAULT '1',
+  `created_by` bigint unsigned NOT NULL,
+  `updated_by` bigint unsigned DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `terminal_file_setups_bid_unique` (`bid`),
+  KEY `terminal_file_setups_api_setup_bid_foreign` (`api_setup_bid`),
+  CONSTRAINT `terminal_file_setups_api_setup_bid_foreign` FOREIGN KEY (`api_setup_bid`) REFERENCES `api_setups` (`bid`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Dumping data for table catapult_web.terminal_file_setups: ~5 rows (approximately)
+DELETE FROM `terminal_file_setups`;
+INSERT INTO `terminal_file_setups` (`id`, `bid`, `name`, `type`, `api_setup_bid`, `terminal_code`, `terminal_path`, `sub_directories`, `status`, `created_by`, `updated_by`, `created_at`, `updated_at`, `deleted_at`) VALUES
+	(1, 1112000000000000001, 'Receipts', 1, 1112000000000000001, '001', 'C:\\Users\\POS\\Documents\\CDIS\\Reports\\001\\RECEIPTS', NULL, 1, 1, 1, '2023-01-02 02:29:35', '2023-03-02 02:03:05', NULL),
+	(2, 1112000000000000002, 'Journals', 2, 1112000000000000001, '001', 'C:\\Users\\POS\\Documents\\CDIS\\Reports\\001\\JOURNALS', NULL, 1, 1, 1, '2023-01-02 02:31:36', '2023-03-02 02:03:14', NULL),
+	(3, 1112000000000000003, 'E-Journals', 2, 1112000000000000001, '001', 'D:\\CDIS\\1TEQ\\CDIS\\POS to CDIS\\Reports', NULL, 1, 1, NULL, '2023-01-02 03:07:35', '2023-01-04 06:42:58', '2023-01-02 03:29:40'),
+	(4, 1112000000000000004, 'Z-Reading', 4, 1112000000000000001, '001', 'C:\\Users\\POS\\Documents\\CDIS\\Reports\\001\\READINGS', NULL, 1, 1, 1, '2023-01-03 01:58:30', '2023-03-02 02:03:21', NULL),
+	(5, 1112000000000000005, 'Others', 3, 1112000000000000001, '001', 'C:\\Users\\POS\\Documents\\CDIS\\Reports\\001\\OTHERS', NULL, 1, 1, 1, '2023-01-04 03:01:53', '2023-03-02 02:03:35', NULL);
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40111 SET SQL_NOTES=IFNULL(@OLD_SQL_NOTES, 1) */;
+
+SET SQL_SAFE_UPDATES=1;
