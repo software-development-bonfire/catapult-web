@@ -20,15 +20,17 @@
 
 namespace App\Helpers;
 
+use App\Traits\ConsoleCommandTrait;
+
 class CustomPinger
 {
+    use ConsoleCommandTrait;
 
     private $host;
     private $ttl;
     private $timeout;
     private $port = 80;
     private $data = 'Ping';
-    private $commandOutput;
 
     /**
      * Called when the Ping object is created.
@@ -247,13 +249,8 @@ class CustomPinger
             // -n = numeric output; -c = number of pings; -t = ttl; -W = timeout
             $execString = 'ping -n -c 1 -t '.$ttl.' -W '.$timeout.' '.$host.' 2>&1';
         }
-
-        exec($execString, $output, $return);
-
-        // Strip empty lines and reorder the indexes from 0 (to make results more
-        // uniform across OS versions).
-        $this->commandOutput = implode('', $output);
-        $output = array_values(array_filter($output));
+        
+        $output = $this->executeCommand($execString);
 
         // If the result line in the output is not empty, parse it.
         if (! empty($output[1])) {

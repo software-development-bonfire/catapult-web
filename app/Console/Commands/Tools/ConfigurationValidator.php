@@ -6,6 +6,7 @@ use App\Enums\Status;
 use App\Helpers\CustomNetworkResolver;
 use App\Helpers\CustomPinger as Ping;
 use App\Repositories\Contracts\FieldMappingRepository;
+use App\Traits\ConsoleCommandTrait;
 use App\Traits\GenericHelper;
 use App\Traits\StorageTrait;
 use Illuminate\Console\Command;
@@ -18,6 +19,7 @@ class ConfigurationValidator extends Command
 {
     use GenericHelper;
     use StorageTrait;
+    use ConsoleCommandTrait;
     /**
      * The name and signature of the console command.
      *
@@ -59,6 +61,7 @@ class ConfigurationValidator extends Command
         // compiled services and packages. Then we make sure to
         // re-generate app key of the system
         $this->line("INITIALIZE...");
+        $this->executeCommand('rm -fr bootstrap/cache/*', false);
         $this->call('optimize:clear');
         $this->call('key:generate');
         $this->call('optimize');
@@ -81,6 +84,25 @@ class ConfigurationValidator extends Command
             $this->error("[✖] Pinging: ".__('error.no_ping_response_from_host', ['value' => $cdisHost]));
         }
 
+        $networkResolver = new CustomNetworkResolver();
+        $connectedNetworkInterface = $networkResolver->setDnsConnectedInterface(false);
+        if (count($connectedNetworkInterface) > 0) {
+            $maxLength = max(array_map('strlen', $connectedNetworkInterface));
+            $this->info("[✔] ".__('info.connected_network', ['value' => count($connectedNetworkInterface)]));
+            foreach ($connectedNetworkInterface as $interfaceName) {
+                $interfaceLabel = $this->computedLogLabel($maxLength, $interfaceName);
+
+                $dns = $networkResolver->getDnsServers($interfaceName);
+                if ($dns && is_array($dns)) {
+                    $this->info("[✔] [{$interfaceLabel}] ".json_encode($dns));
+                } else {
+                    $this->warn("[⚠] [{$interfaceLabel}] No DNS configured.");
+                }
+            }
+        } else {
+            $this->error("[✖] ".__('info.connected_network', ['value' => count($connectedNetworkInterface)]));
+        }
+
         // This section will check configured file storage and API setup of
         // Catapult. It will check field mapping and field mapping directory existence.
         // It conducts also basic endpoints validation to check if it returns valid response
@@ -95,8 +117,7 @@ class ConfigurationValidator extends Command
         ];
         $entriesMaxLength = max(array_map('strlen', $entries));
         foreach ($entries as $entry) {
-            $spaces = ($entriesMaxLength - strlen($entry)) / 2;
-            $entryLogLabel = str_repeat(' ', ceil($spaces)).$entry.str_repeat(' ', floor($spaces));
+            $entryLogLabel = $this->computedLogLabel($entriesMaxLength, $entry);
 
             $filters = (object) [
                 'data_entry' => $entry,
@@ -174,8 +195,7 @@ class ConfigurationValidator extends Command
                             $path = $directory['path'];
                             $name = $directory['name'];
                             $mustZero = $directory['must_zero'];
-                            $spaces = ($entriesMaxLength - strlen($name)) / 2;
-                            $folderLabel = str_repeat(' ', ceil($spaces)).$name.str_repeat(' ', floor($spaces));
+                            $folderLabel = $this->computedLogLabel($entriesMaxLength, $name);
 
                             if ($localDisk->exists($path)) {
                                 $files = $localDisk->files($path);
@@ -203,8 +223,7 @@ class ConfigurationValidator extends Command
         $tableJobs = ['jobs', 'failed_jobs'];
         $entriesMaxLength = max(array_map('strlen', $tableJobs));
         foreach ($tableJobs as $table) {
-            $spaces = ($entriesMaxLength - strlen($table)) / 2;
-            $jobLabel = str_repeat(' ', ceil($spaces)).$table.str_repeat(' ', floor($spaces));
+            $jobLabel = $this->computedLogLabel($entriesMaxLength, $table);
 
             $jobs = DB::table($table)->get();
             $jobsCount = count($jobs);
