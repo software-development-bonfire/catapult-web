@@ -50,6 +50,28 @@ class NetworkTroubleshooter extends Command
         $this->info(__('info.flushing_network'));
         $networkResolver->flushDns();
 
+        $this->info(__('info.setting_dns_for_all_connected_interface'));
+        $errors = [];
+        foreach($networkResolver->setDnsConnectedInterface(false) as $interfaceName){
+            $result = $networkResolver->setDns($interfaceName);
+            if ($result && !is_array($result)) {
+                foreach($networkResolver->showSetDns($interfaceName) as $output) {
+                    $this->line("  {$output}");
+                }
+            } else {
+                $this->line("  {$interfaceName}");
+                foreach($result as $errorOutput) {
+                    $this->error("     {$errorOutput}");
+                    $errors[] = $errorOutput;
+                }
+            }
+        }
+        if (count($errors) > 0) {
+            $this->info(__('info.setting_dns_completed_with_errors'));
+        } else {
+            $this->info(__('info.setting_dns_completed'));
+        }
+
         $this->info(__('info.resolving_dns', ['domain' => "{$cdisUrl} and {$pusherDomain}"]));
         if (
             $this->resolveDns($cdisUrl) ||

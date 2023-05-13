@@ -2,17 +2,15 @@
 
 namespace App\Helpers;
 
+use App\Traits\ConsoleCommandTrait;
 use App\Traits\GenericHelper;
 use Illuminate\Support\Facades\Log;
 
 class CustomNetworkResolver
 {
     use GenericHelper;
+    use ConsoleCommandTrait;
 
-    private $lineSeparator = "......................................................................";
-    private $expectedFlushOuputMessage = 'Successfully flushed the DNS Resolver Cache.';
-
-    private $commandOutput;
     /**
      * Return the command output when method=exec.
      * @return string
@@ -46,12 +44,8 @@ class CustomNetworkResolver
             exec($execString, $output, $return);
         }
 
-        // Strip empty lines and reorder the indexes from 0 (to make results more
-        // uniform across OS versions).
-        $this->commandOutput = implode('', $output);
-        $output = array_values(array_filter($output));
+        $output = $this->parseOutput($output);
 
-        $this->printOutput($output);
         // If the result line in the output is not empty, parse it.
         if (! empty($output[1])) {
             $resetted = true;
@@ -74,16 +68,7 @@ class CustomNetworkResolver
 
         $execString = 'ipconfig /flushdns';
 
-        $this->printCommandEntry($execString);
-
-        // Exec string for Windows-based systems.
-        // Other OS is not yet supported
-        exec($execString, $output, $return);
-
-        $this->commandOutput = implode('', $output);
-        $output = array_values(array_filter($output));
-
-        $this->printOutput($output);
+        $output = $this->executeCommand($execString);
 
         if (! empty($output[1]) && ($output[1] === $this->expectedFlushOuputMessage)) {
             $flushed = true;
@@ -93,27 +78,101 @@ class CustomNetworkResolver
     }
 
     /**
-     * Log command entry via default laravel logging system
-     * It will helps to determine what commands being executed
-     * and if in-case there are problems encountered, this may helps
-     * for debugging purpose
+     * Get all connected network interface
+     * 
+     * @return array
+     *   List of all connected network interface name
      */
-    private function printCommandEntry($commandString)
+    public function setDnsConnectedInterface($setDns = true)
     {
-        Log::info($this->lineSeparator);
-        Log::info("Executing {$commandString}...");
+        $connectedInterfaces = [];
+        $output = [];
+
+        // This command will show the list of network interface 
+        $execString = 'netsh interface show interface';
+
+        $output = $this->executeCommand($execString);
+
+        // Parse response and get only connected network
+        for ($index = 0; $index < count($output); $index++) {
+            $line = $output[$index];
+            // Filter output having line that contains defined patterns
+            if (preg_match('/(Enabled|Disabled)\s+(Connected)\s+(Dedicated|Other)\s+(.*)/', $line, $match)) {
+                array_shift($match);
+                list($adminState, $state, $type, $name) =  $match;
+                if (strtoupper($adminState) == $this->ENABLED &&  strtoupper($state) === $this->CONNECTED) {
+                    $connectedInterfaces[] = $name;
+                    if ($setDns) {
+                        $this->setDns($name);
+                    }
+                }
+            }
+        }
+
+        return $connectedInterfaces;
     }
 
     /**
-     * Print the command output to display as exact CLI output
-     * when method=exec, this will work on Windows OS only
+     * We need to set local network DNS
+     * using defined Google DNS
      */
-    private function printOutput($output)
+    public function setDns($interfaceName)
     {
-        if (isset($output) && is_array($output)) {
-            foreach ($output as $line) {
-                Log::info($line);
+        $result = [];
+        // List of command to be executed in settings DNS of specified network
+        // 1. This will set as STATIC source rather than DHCP, then clear existing address to avoid error
+        // 2. This will set the Primary/Preferred DNS server of the network
+        // 2. This will set the Alternate DNS server of the network
+        $commands = [
+            'netsh interface ip set dns name="'.$interfaceName.'" source=static addr=none',
+            'netsh interface ip add dns name="'.$interfaceName.'" addr=8.8.8.8 index=1',
+            'netsh interface ip add dns name="'.$interfaceName.'" addr=8.8.4.4 index=2'
+        ];
+
+        foreach ($commands as $command) {
+            $output = [];
+
+            $output = $this->executeCommand($command);
+
+            if (! empty($output[0])) {
+                // Check if there is an output and ignored expected message after executing
+                // first command in clearing existing configured addresses
+                if ($output[0] !== $this->expectedSetClearDnsMessage) {
+                    $result[] = "$command --> $output[0]";
+                }
             }
         }
+        return count($result) == 0 ? true : $result;
+    }
+
+    /**
+     * Show configured DNS on specific interface name
+     */
+    public function showSetDns($interfaceName)
+    {
+        $output = [];
+
+        // This commad will show the configured DNS servers of specified interface
+        // both primary and alternate addresses
+        $execString = 'netsh interface ipv4 show dnsservers "'.$interfaceName.'"';
+
+        return $this->executeCommand($execString);
+    }
+
+    public function getDnsServers($interfaceName) {
+        $output = $this->showSetDns($interfaceName);
+        $index = 0;
+        $dns = [];
+        foreach ($output as $line) {
+            if (preg_match('/\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/', $line, $match)) {
+                if ($index == 0) {
+                    $dns['primary'] = $match[0];
+                } else if ($index == 1) {
+                    $dns['secondary'] = $match[0];
+                }
+                $index++;
+            }
+        }
+        return count($dns) > 0 ? $dns : false;
     }
 }

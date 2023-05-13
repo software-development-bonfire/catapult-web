@@ -3,6 +3,7 @@
 return [
     'cancelled_attempt' => 'Cancelled :value with :attempt',
     'cancelling' => 'Cancelling...',
+    'connected_network' => 'Connected Network Interface: <:value>',
     'constructing_tables' => 'Constructing :table_count syncable tables...',
     'constructing_tables_progress' => 'Constructing syncable tables [:progress/:table_count]...',
     'conversion_cannot_be_cancelled' => 'Conversion cannot be cancelled!',
@@ -40,6 +41,9 @@ return [
     'resetting_network' => 'Resetting network...',
     'resolving_dns' => 'Resolving DNS :domain...',
     'resyncing' => 'Resyncing...',
+    'setting_dns_completed' => 'Setting DNS completed!',
+    'setting_dns_completed_with_errors' => 'Setting DNS completed with errors!',
+    'setting_dns_for_all_connected_interface' => 'Setting default DNS for all connected interface.',
     'syncing' => 'Syncing...',
     'syncing_cancelled' => 'Syncing cancelled!',
     'syncing_started' => 'Syncing started...',
