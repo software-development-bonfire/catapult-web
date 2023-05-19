@@ -248,6 +248,14 @@ class Listen extends Command
                     ]);
                     break;
 
+                case "App\Events\Catapult\TriggerHardResync":
+                    $options = (object)$this->getPayloadOptions($payload);
+                    $this->triggerPusher($branchCode, CatapultSyncStatus::Resyncing, __('info.resyncing'), $payload);
+                    Artisan::queue('pos:hard-resync', [
+                        '--type' => $options->type
+                    ]);
+                    break;
+
                 default:
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
                     break;

@@ -36,13 +36,7 @@ class CustomNetworkResolver
 
         $this->printCommandEntry($execString);
 
-        // Exec string for Windows-based systems.
-        // Other OS is not yet supported
-        if ($background && strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            pclose(popen("start /B ".$execString, "r"));
-        } else {
-            exec($execString, $output, $return);
-        }
+        $output = $this->executeCommandBackground($execString);
 
         $output = $this->parseOutput($output);
 
@@ -85,13 +79,18 @@ class CustomNetworkResolver
      */
     public function setDnsConnectedInterface($setDns = true)
     {
+        $useProcessCommand = false;
         $connectedInterfaces = [];
         $output = [];
 
         // This command will show the list of network interface 
         $execString = 'netsh interface show interface';
 
-        $output = $this->executeCommand($execString);
+        if ($useProcessCommand) {
+            $output = $this->executeCommandProcess($execString);
+        } else {
+            $output = $this->executeCommand($execString);
+        }
 
         // Parse response and get only connected network
         for ($index = 0; $index < count($output); $index++) {
@@ -116,7 +115,7 @@ class CustomNetworkResolver
      * We need to set local network DNS
      * using defined Google DNS
      */
-    public function setDns($interfaceName)
+    public function setDns($interfaceName, $process = true)
     {
         $result = [];
         // List of command to be executed in settings DNS of specified network
@@ -132,7 +131,11 @@ class CustomNetworkResolver
         foreach ($commands as $command) {
             $output = [];
 
-            $output = $this->executeCommand($command);
+            if ($process) {
+                $output = $this->executeCommandProcess($command);
+            } else {
+                $output = $this->executeCommand($command);
+            }
 
             if (! empty($output[0])) {
                 // Check if there is an output and ignored expected message after executing

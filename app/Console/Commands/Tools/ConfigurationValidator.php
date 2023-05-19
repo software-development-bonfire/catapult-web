@@ -66,6 +66,20 @@ class ConfigurationValidator extends Command
         $this->call('key:generate');
         $this->call('optimize');
 
+        $this->line("SYSTEM CONFIGURATION...");
+        $clientId = config('configuration.client_id');
+        $branchCode = config('configuration.branch_code');
+        if(empty($clientId)) {
+            $this->error("[✖] Client Id not configured");
+        } else {
+            $this->info("[✔] Client Id {$clientId}");
+        }
+        if(empty($branchCode)) {
+            $this->error("[✖] Branch Code not configured");
+        } else {
+            $this->info("[✔] Branch Code {$branchCode}");
+        }
+
         // This section will check internet connection by calling
         // $hasInternetConnection generic helper and we need to ping
         // CDIS Host to check server connection is available
