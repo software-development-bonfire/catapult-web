@@ -31,4 +31,6 @@ final class CatapultSyncStatus extends Enum
     const PongCatapult      = 'PongCatapult';
     const Progress          = 'Progress';
     const ProgressDone      = 'ProgressDone';
+    const Resyncing         = 'Resyncing';
+    const Resynced          = 'Resynced';
 }
