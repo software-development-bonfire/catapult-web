@@ -64,6 +64,7 @@ class Listen extends Command
                 $this->connect();
             } else {
                 $this->createLog("Could not connect: No internet connection.", 'warn', true, ['CONNECTION ERROR']);
+                $this->executeNetworkResolve();
             }
 
             sleep(5);
@@ -101,13 +102,7 @@ class Listen extends Command
                 $this->error("Could not connect: {$e->getMessage()}");
                 $loop->stop();
 
-                if ($this->isResolvedBeenExecuted()) {
-                    $this->resolvedCount = $this->checkResolvedStatus();
-                } else {
-                    $this->setResolveStatus(true, $this->resolvedCount);
-                    Artisan::callSilent('network:resolve');
-                    $this->resolvedCount++;
-                }
+                $this->executeNetworkResolve();
             });
 
         $loop->run();
@@ -250,8 +245,7 @@ class Listen extends Command
 
                 case "App\Events\Catapult\TriggerHardResync":
                     $options = (object)$this->getPayloadOptions($payload);
-                    $this->triggerPusher($branchCode, CatapultSyncStatus::Resyncing, __('info.resyncing'), $payload);
-                    Artisan::queue('pos:hard-resync', [
+                    Artisan::call('pos:hard-resync', [
                         '--type' => $options->type
                     ]);
                     break;
@@ -332,5 +326,16 @@ class Listen extends Command
             }
         }
         return (object) $result;
+    }
+
+    private function executeNetworkResolve()
+    {
+        if ($this->isResolvedBeenExecuted()) {
+            $this->resolvedCount = $this->checkResolvedStatus();
+        } else {
+            $this->setResolveStatus(true, $this->resolvedCount);
+            Artisan::callSilent('network:resolve');
+            $this->resolvedCount++;
+        }
     }
 }
