@@ -34,7 +34,7 @@ class HardResync extends Command implements ShouldQueue
      *
      * @var string
      */
-    protected $signature = 'pos:hard-resync {--type=HARD_RESYNC}';
+    protected $signature = 'pos:hard-resync {--type=HARD_RESYNC}{--user_bid=null}';
 
     /**
      * The console command description.
@@ -70,6 +70,7 @@ class HardResync extends Command implements ShouldQueue
         ini_set('memory_limit', '-1');
 
         $catapultActionType = $this->option('type');
+        $userBid = $this->option('user_bid');
 
         $branchCode = config('configuration.branch_code');
         $cdisUrl = getDomain(config()->get('app.cdis_url'), true);
@@ -215,7 +216,9 @@ class HardResync extends Command implements ShouldQueue
 
         $convertMessage = [
             'execution' => $this->secondsToHumanReadableTime($executionTime),
-            'moved' => $unsyncableFilesCountMoved
+            'moved' => $unsyncableFilesCountMoved,
+            'type' => $catapultActionType,
+            'userBid' => $userBid,
         ];
         $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), CatapultSyncStatus::Resynced, $convertMessage, null);
     }
