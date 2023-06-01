@@ -406,4 +406,14 @@ trait GenericHelper
         }
         return $tableName;
     }
+
+    public  function getSqlWithBindings($query)
+    {
+        $sql = $query->toSql();
+        $bindings = $query->getBindings();
+
+        return preg_replace_callback('/\?/', function ($match) use ($sql, &$bindings) {
+            return json_encode(array_shift($bindings));
+        }, $sql);
+    }
 }

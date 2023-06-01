@@ -23,6 +23,8 @@ class CDISCostAndPriceChange extends BaseModel
         'updated_by',
         'created_at',
         'updated_at',
+        'is_generated',
+        'generated_at'
     ];
 
     protected $casts = [
