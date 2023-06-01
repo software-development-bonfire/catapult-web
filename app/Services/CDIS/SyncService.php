@@ -370,4 +370,13 @@ class SyncService
             \App\Entities\CDISChargesSettings::class
         ];
     }
+
+    
+    public function getSelectedSyncableEntities()
+    {
+        return [
+            \App\Entities\CDISCostAndPriceChange::class,
+            \App\Entities\CDISCostAndPriceChangeDetail::class,
+        ];
+    }
 }

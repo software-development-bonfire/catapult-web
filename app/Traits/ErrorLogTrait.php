@@ -16,6 +16,7 @@ use App\Traits\FilenameRetryCounterTrait;
 trait ErrorLogTrait
 {
     use FilenameRetryCounterTrait;
+    use ConsoleCommandTrait;
 
     /**
      * Insert errors into database
@@ -44,7 +45,7 @@ trait ErrorLogTrait
 
         ErrorLogDetail::create(array(
             'error_log_bid' => $errorLog->bid,
-            'sheet' =>  isset($detailSheet) ? $detailSheet : '',
+            'sheet' => isset($detailSheet) ? $detailSheet : '',
             'error_type' => $detailErrorType,
             'description' => $detailDescription,
         ));
@@ -65,24 +66,23 @@ trait ErrorLogTrait
         if ($errorLogs !== null) {
             if (count($errorLogs) > 0) {
                 $filenames = Arr::pluck($errorLogs, 'filename');
-                $entriesMaxLength = empty($filenames) ? 60 :  @max(array_map('strlen', $filenames)) ?? 60;
+                $entriesMaxLength = empty($filenames) ? 60 : @max(array_map('strlen', $filenames)) ?? 60;
                 $output = "";
                 foreach ($errorLogs as $errorLog) {
                     $details = $errorLog->details;
-                    $spaces = ($entriesMaxLength - strlen($errorLog->filename)) / 2;
-                    $filenameLog = str_repeat(' ', ceil($spaces)) . $errorLog->filename . str_repeat(' ', floor($spaces));
+                    $filenameLog = $this->computedLogLabel($entriesMaxLength, $errorLog->filename);
 
                     if ($details !== null) {
                         foreach ($details as $detail) {
-                            $output .= '[' . $errorLog->status . '][' . $detail->created_at . '][' . $errorLog->pos_entry . '][' . $filenameLog . '][' . $detail->error_type . ': ' . $detail->description . ']';
+                            $output .= "[{$errorLog->status}][{$detail->created_at}][{$errorLog->pos_entry}][{$filenameLog}][{$detail->error_type}: {$detail->description}]";
                             $output .= "\n";
                         }
                     } else {
-                        $output .= '[' . $errorLog->status . '][' . $errorLog->created_at . '][' . $errorLog->pos_entry . '][' . $filenameLog . ']';
+                        $output .= "[{$errorLog->statu}][{$errorLog->created_at}][{$errorLog->pos_entry}][{$filenameLog}]";
                     }
                 }
                 $today =  Carbon::now()->format('Y-m-d');
-                $logFile = $destinationErrorFolderPath . '/catapult-' . $today . '.log';
+                $logFile = "{$destinationErrorFolderPath}/catapult-{$today}.log";
 
                 if ($localDisk->exists($logFile)) {
                     $localDisk->delete($logFile);

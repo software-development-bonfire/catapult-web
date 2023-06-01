@@ -11,7 +11,9 @@ php artisan key:generate
 php artisan make:schema
 php artisan migrate:install
 php artisan migrate
+php artisan seed:install
 php artisan seed
+php artisan db:seed
 yarn install
 yarn run dev
 php artisan serve
@@ -89,6 +91,7 @@ pm2-startup uninstall #Disable startup:
 pm2 kill #Kill the daemon process
 npm remove pm2 -g #uninstall globally
 npm rm -rf ~/.pm2 #Remove all saved configuration and logs:
+npm cache clean --force # to clean npm cache
 ```
 
 - ```php artisan pos:validate```  *#to validate current configuration of Catapult.*

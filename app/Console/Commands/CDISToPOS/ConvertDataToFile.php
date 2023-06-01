@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\CDISToPOS;
 
+use App\Entities\CDISCostAndPriceChange;
 use App\Entities\CDISSync;
 use App\Entities\ErrorLog;
 use App\Entities\ErrorLogDetail;
@@ -15,6 +16,7 @@ use App\Exports\CDIS\DataConversionToExcel;
 use App\Repositories\Contracts\FieldMappingRepository;
 use App\Repositories\Contracts\SyncEntryRepository;
 use App\Traits\DatabaseTransaction;
+use App\Traits\GenerateTrait;
 use App\Traits\GenericHelper;
 use App\Traits\JobCancellationTrait;
 use App\Traits\PusherTrait;
@@ -31,6 +33,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class ConvertDataToFile extends Command
 {
     use DatabaseTransaction, GenericHelper, PusherTrait, JobCancellationTrait, StorageTrait;
+    use GenerateTrait;
 
     public $extension = 'csv';
     /**
@@ -627,6 +630,10 @@ class ConvertDataToFile extends Command
 
                     if ($result) {
                         CDISSync::whereIn('bid', $toSyncData->pluck('bid'))->delete();
+
+                        if ($forSyncDatum->table_name === 'cost_and_price_change') {
+                            $this->setGenerated(app()->make(CDISCostAndPriceChange::class), $toSyncData->pluck('bid'));
+                        }
                     }
 
                     return $result;
@@ -638,6 +645,10 @@ class ConvertDataToFile extends Command
                             'table_name' => $forSyncDatum->table_name,
                             'table_bid' => $forSyncDatum->table_bid,
                         ])->delete();
+
+                        if ($forSyncDatum->table_name === 'cost_and_price_change') {
+                            $this->setGenerated(app()->make(CDISCostAndPriceChange::class), $forSyncDatum->table_bid);
+                        }
                     }
 
                     return $result;
