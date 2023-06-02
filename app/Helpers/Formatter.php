@@ -16,6 +16,14 @@ if (! function_exists('toSafeValue')) {
     }
 }
 
+if (! function_exists('starts_with_toupper')) {
+
+    function starts_with_toupper($haystack, $needles)
+    {
+        return str_starts_with(strtoupper($haystack), $needles);
+    }
+}
+
 if (! function_exists('toBooleanOrInt')) {
     function toBooleanOrInt($value, $defaultValue)
     {
