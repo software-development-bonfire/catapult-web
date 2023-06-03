@@ -49,6 +49,11 @@ class GenerateCostAndPriceChange extends Command
     public $broadcast = false;
     private $mappingVariable = [];
 
+    private $currentDate;
+    private $previousDay;
+    private $nextDay;
+    private $branchCode;
+
     /**
      * Create a new command instance.
      *
@@ -56,7 +61,10 @@ class GenerateCostAndPriceChange extends Command
      */
     public function __construct()
     {
+        $this->branchCode = config('configuration.branch_code');
         $this->timeInterval = config('sync.scheduling.time_interval');
+        $this->previousDay = config('sync.scheduling.previous_day');
+        $this->nextDay = config('sync.scheduling.next_day');
         parent::__construct();
     }
 
@@ -145,104 +153,28 @@ class GenerateCostAndPriceChange extends Command
 
     private function startGenerateCsv()
     {
-        $branchCode = config('configuration.branch_code');
-        $branch = CDISBranch::where('code', $branchCode)->first();
+        $branch = CDISBranch::where('code', $this->branchCode)->first();
 
-        $currentDate = Carbon::now();
-        $filters = (object) [
-            'type' => CostAndPriceChangeType::TIME_TRIGGER,
-            'is_generated' => DisplayState::NO,
-            'effective_at' => now()->subDays(2),
-            'expires_at' => now()->addDays(2),
-        ];
+        $this->currentDate = Carbon::now();
 
-        $costAndPriceChangeBids = [];
+        $costAndPriceChangeBids = $this->buildCostAndPriceChangeSyncEntry($branch);
 
-        // Get list
-        $syncableEntity = \App\Entities\CDISCostAndPriceChangeDetail::class;
-        $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($syncableEntity));
-        $entityData = app()->make($syncableEntity);
+        if (! empty($costAndPriceChangeBids)) {
+            if ($this->buildCostAndPriceChangeDetailSyncEntry($costAndPriceChangeBids, $branch)) {
 
-        if (!empty($filters)) {
-            if (isset($filters->type) && $filters->type !== '') {
-                $entityData = $entityData->where('type', $filters->type);
+                $options = $this->getConsoleOptions();
+
+                Artisan::queue('cdis:convert-data-to-file', [
+                    '--interval' => $options->interval,
+                    '--limit' => $options->limit,
+                    '--broadcast' =>  $options->broadcast,
+                    '--progress' => $options->progress,
+                    '--progress_divisor' => $options->progress_divisor,
+                    '--type' => $options->type
+                ]);
             }
-            if (isset($filters->pricing_type) && $filters->pricing_type !== '') {
-                $entityData = $entityData->where('pricing_type', $filters->pricing_type);
-            }
-            if (! empty($filters->status)) {
-                $entityData = $entityData->where('status', $filters->status);
-            }
-            if (isset($filters->is_generated) && $filters->is_generated !== '') {
-                $entityData = $entityData->where('is_generated', $filters->is_generated);
-            }
-            if (! empty($filters->effective_at) && !empty($filters->expires_at)) {
-                $effectiveAt = parseDateTime($filters->effective_at, 'Y-m-d h:i:s', '');
-                $expiresAt = parseDateTime($filters->expires_at, 'Y-m-d h:i:s', '');
-                $entityData = $entityData->whereBetween('expires_at', [$effectiveAt, $expiresAt]);
-            } else {
-                if (! empty($filters->effective_at)) {
-                    $effectiveAt = parseDateTime($filters->effective_at, 'Y-m-d', '');
-                    $entityData = $entityData->whereBetween('effective_at', ["{$effectiveAt} 00:00:00", "{$effectiveAt} 23:59:59"]);
-                }
-                if (!empty($filters->expires_at)) {
-                    $expiresAt = parseDateTime($filters->expires_at, 'Y-m-d', '');
-                    $entityData = $entityData->whereBetween('effective_at', ["{$expiresAt} 00:00:00", "{$expiresAt} 23:59:59"]);
-                }
-            }
-        }
-
-        if ($hasSoftDeleting) {
-            $entityData = $entityData->withTrashed();
-        }
-
-        $entityName = str_replace('App\\Entities\\CDIS', '', $syncableEntity);
-        $tableName =  Str::snake($entityName);
-        $entityData = $entityData->get();
-
-        if (count($entityData) <= 0) {
-            $this->createLog($currentDate);
         } else {
-            $this->createLog(count($entityData) . ' cost and price change');
-            $bids = $entityData->pluck('bid');
-            $costAndPriceChangeBids[] = $bids;
-        }
-
-        $this->buildEntitySyncEntry($entityData, $tableName, $branch);
-
-        if (!empty($costAndPriceChangeBids)) {
-            $syncableEntity = \App\Entities\CDISCostAndPriceChangeDetail::class;
-            $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($syncableEntity));
-            $entityData = app()->make($syncableEntity);
-
-            $entityData = $entityData->whereIn('head_bid', $costAndPriceChangeBids);
-
-            if ($hasSoftDeleting) {
-                $entityData = $entityData->withTrashed();
-            }
-
-            $entityName = str_replace('App\\Entities\\CDIS', '', $syncableEntity);
-
-            $tableName =  Str::snake($entityName);
-
-            $entityData = $entityData->get();
-
-            if (count($entityData) <= 0) {
-                $this->createLog($currentDate);
-            } else {
-                $this->buildEntitySyncEntry($entityData, $tableName, $branch);
-            }
-
-            $options = $this->getConsoleOptions();
-
-            Artisan::queue('cdis:convert-data-to-file', [
-                '--interval' => $options->interval,
-                '--limit' => $options->limit,
-                '--broadcast' =>  $options->broadcast,
-                '--progress' => $options->progress,
-                '--progress_divisor' => $options->progress_divisor,
-                '--type' => $options->type
-            ]);
+            $this->createLog("No cost and price change...");
         }
     }
 
@@ -290,5 +222,95 @@ class GenerateCostAndPriceChange extends Command
                 )
             );
         }
+    }
+
+    private function buildCostAndPriceChangeSyncEntry($branch)
+    {
+        $filters = (object) [
+            'type' => CostAndPriceChangeType::TIME_TRIGGER,
+            'is_generated' => DisplayState::NO,
+            'effective_at' => now()->subDays($this->previousDay),
+            'expires_at' => now()->addDays($this->nextDay),
+        ];
+
+        $syncableEntity = \App\Entities\CDISCostAndPriceChange::class;
+        $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($syncableEntity));
+        $entityName = str_replace('App\\Entities\\CDIS', '', $syncableEntity);
+        $tableName =  Str::snake($entityName);
+        $entityData = app()->make($syncableEntity);
+
+        $entityData = $this->applyCriteriaHead($entityData, $filters);
+        if ($hasSoftDeleting) {
+            $entityData = $entityData->withTrashed();
+        }
+        $entityData = $entityData->get();
+        $costAndPriceChangeBids = [];
+
+        if (count($entityData) > 0) {
+            $this->createLog(count($entityData) . ' cost and price change');
+
+            $costAndPriceChangeBids = $entityData->pluck('bid');
+
+            $this->buildEntitySyncEntry($entityData, $tableName, $branch);
+        } else {
+            $this->createLog($this->currentDate);
+        }
+        return $costAndPriceChangeBids;
+    }
+
+    private function buildCostAndPriceChangeDetailSyncEntry($bids, $branch)
+    {
+        $syncableEntity = \App\Entities\CDISCostAndPriceChangeDetail::class;
+        $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($syncableEntity));
+        $entityName = str_replace('App\\Entities\\CDIS', '', $syncableEntity);
+        $tableName =  Str::snake($entityName);
+        $entityData = app()->make($syncableEntity);
+
+        $entityData = $entityData->whereIn('head_bid', $bids);
+        if ($hasSoftDeleting) {
+            $entityData = $entityData->withTrashed();
+        }
+        $entityData = $entityData->get();
+
+        if (count($entityData) > 0) {
+            $this->createLog(count($entityData) . ' cost and price change detail');
+            $this->buildEntitySyncEntry($entityData, $tableName, $branch);
+            return true;
+        }
+        return false;
+    }
+
+    private function applyCriteriaHead($entityData, $filters)
+    {
+        if (! empty($filters)) {
+            if (isset($filters->type) && $filters->type !== '') {
+                $entityData = $entityData->where('type', $filters->type);
+            }
+            if (isset($filters->pricing_type) && $filters->pricing_type !== '') {
+                $entityData = $entityData->where('pricing_type', $filters->pricing_type);
+            }
+            if (! empty($filters->status)) {
+                $entityData = $entityData->where('status', $filters->status);
+            }
+            if (isset($filters->is_generated) && $filters->is_generated !== '') {
+                $entityData = $entityData->where('is_generated', $filters->is_generated);
+            }
+            if (! empty($filters->effective_at) && ! empty($filters->expires_at)) {
+                $effectiveAt = parseDateTime($filters->effective_at, 'Y-m-d h:i:s', '');
+                $expiresAt = parseDateTime($filters->expires_at, 'Y-m-d h:i:s', '');
+                //$entityData = $entityData->whereBetween('expires_at', [$effectiveAt, $expiresAt]);
+                $entityData = $entityData->whereBetween('effective_at', ["{$effectiveAt} 00:00:00", "{$expiresAt} 23:59:59"]);
+            } else {
+                if (! empty($filters->effective_at)) {
+                    $effectiveAt = parseDateTime($filters->effective_at, 'Y-m-d', '');
+                    $entityData = $entityData->whereBetween('effective_at', ["{$effectiveAt} 00:00:00", "{$effectiveAt} 23:59:59"]);
+                }
+                if (! empty($filters->expires_at)) {
+                    $expiresAt = parseDateTime($filters->expires_at, 'Y-m-d', '');
+                    $entityData = $entityData->whereBetween('effective_at', ["{$expiresAt} 00:00:00", "{$expiresAt} 23:59:59"]);
+                }
+            }
+        }
+        return $entityData;
     }
 }
