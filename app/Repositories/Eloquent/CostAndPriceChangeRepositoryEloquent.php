@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Criteria\CostAndPriceChange\ListCriteria;
 use App\Entities\CDISCostAndPriceChange;
 use Prettus\Repository\Eloquent\BaseRepository;
 use Prettus\Repository\Criteria\RequestCriteria;
@@ -58,36 +59,8 @@ class CostAndPriceChangeRepositoryEloquent extends BaseRepository implements Cos
             ])
             ->orderBy('id', 'ASC');
 
-        if (! empty($filters)) {
-            if (isset($filters->type) && $filters->type !== '') {
-                $this->model = $this->model->where('type', $filters->type);
-            }
-            if (isset($filters->pricing_type) && $filters->pricing_type !== '') {
-                $this->model = $this->model->where('pricing_type', $filters->pricing_type);
-            }
-            if (! empty($filters->status)) {
-                $this->model = $this->model->where('status', $filters->status);
-            }
-            if (isset($filters->is_generated) && $filters->is_generated !== '') {
-                $this->model = $this->model->where('is_generated', $filters->is_generated);
-            }
-            if (! empty($filters->effective_at) && ! empty($filters->expires_at)) {
-                $effectiveAt = parseDateTime($filters->effective_at, 'Y-m-d h:i:s', '');
-                $expiresAt = parseDateTime($filters->expires_at, 'Y-m-d h:i:s', '');
-                $this->model = $this->model->whereBetween('expires_at', [$effectiveAt, $expiresAt]);
-            } else {
-                if (! empty($filters->effective_at)) {
-                    $effectiveAt = parseDateTime($filters->effective_at, 'Y-m-d', '');
-                    $this->model = $this->model->whereBetween('effective_at', ["{$effectiveAt} 00:00:00", "{$effectiveAt} 23:59:59"]);
-                }
-                if (! empty($filters->expires_at)) {
-                    $expiresAt = parseDateTime($filters->expires_at, 'Y-m-d', '');
-                    $this->model = $this->model->whereBetween('effective_at', ["{$expiresAt} 00:00:00", "{$expiresAt} 23:59:59"]);
-                }
-            }
-        }
+        $this->pushCriteria(new ListCriteria($filters))->applyCriteria();
 
-        Log::alert($this->getSqlWithBindings($this->model));
         return $this->model->get();
     }
 }

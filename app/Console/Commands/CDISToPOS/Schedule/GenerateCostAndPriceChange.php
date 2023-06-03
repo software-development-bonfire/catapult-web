@@ -31,7 +31,7 @@ class GenerateCostAndPriceChange extends Command
 
     public $extension = 'csv';
 
-    private $timeInterval = 1;
+    private $timeInterval = 5;
     /**
      * The name and signature of the console command.
      *
@@ -56,6 +56,7 @@ class GenerateCostAndPriceChange extends Command
      */
     public function __construct()
     {
+        $this->timeInterval = config('sync.scheduling.time_interval');
         parent::__construct();
     }
 
@@ -77,7 +78,7 @@ class GenerateCostAndPriceChange extends Command
 
             if ($canProceedScheduledGeneration && microtime(true) >= $nextTime) {
 
-                $this->startGeneration();
+                $this->startGenerateCsv();
 
                 $nextTime = $this->getNextExecutionTime();
             }
@@ -142,72 +143,94 @@ class GenerateCostAndPriceChange extends Command
         ];
     }
 
-    private function startGeneration()
+    private function startGenerateCsv()
     {
+        $branchCode = config('configuration.branch_code');
+        $branch = CDISBranch::where('code', $branchCode)->first();
 
         $currentDate = Carbon::now();
         $filters = (object) [
             'type' => CostAndPriceChangeType::TIME_TRIGGER,
-           // 'status' => Status::ACTIVE,
             'is_generated' => DisplayState::NO,
             'effective_at' => now()->subDays(2),
             'expires_at' => now()->addDays(2),
         ];
-        $costAndPriceChanges = app()->make(CostAndPriceChangeRepository::class)->list($filters);
 
-        
-        if (count($costAndPriceChanges) > 0) {
-            $this->createLog(count($costAndPriceChanges).' cost and price change');
-            Log::alert(json_encode($costAndPriceChanges));
+        $costAndPriceChangeBids = [];
 
-            $branchCode = config('configuration.branch_code');
-            $branch = CDISBranch::where('code', $branchCode)->first();
+        // Get list
+        $syncableEntity = \App\Entities\CDISCostAndPriceChangeDetail::class;
+        $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($syncableEntity));
+        $entityData = app()->make($syncableEntity);
 
-            $syncableEntity = \App\Entities\CDISCostAndPriceChange::class;
+        if (!empty($filters)) {
+            if (isset($filters->type) && $filters->type !== '') {
+                $entityData = $entityData->where('type', $filters->type);
+            }
+            if (isset($filters->pricing_type) && $filters->pricing_type !== '') {
+                $entityData = $entityData->where('pricing_type', $filters->pricing_type);
+            }
+            if (! empty($filters->status)) {
+                $entityData = $entityData->where('status', $filters->status);
+            }
+            if (isset($filters->is_generated) && $filters->is_generated !== '') {
+                $entityData = $entityData->where('is_generated', $filters->is_generated);
+            }
+            if (! empty($filters->effective_at) && !empty($filters->expires_at)) {
+                $effectiveAt = parseDateTime($filters->effective_at, 'Y-m-d h:i:s', '');
+                $expiresAt = parseDateTime($filters->expires_at, 'Y-m-d h:i:s', '');
+                $entityData = $entityData->whereBetween('expires_at', [$effectiveAt, $expiresAt]);
+            } else {
+                if (! empty($filters->effective_at)) {
+                    $effectiveAt = parseDateTime($filters->effective_at, 'Y-m-d', '');
+                    $entityData = $entityData->whereBetween('effective_at', ["{$effectiveAt} 00:00:00", "{$effectiveAt} 23:59:59"]);
+                }
+                if (!empty($filters->expires_at)) {
+                    $expiresAt = parseDateTime($filters->expires_at, 'Y-m-d', '');
+                    $entityData = $entityData->whereBetween('effective_at', ["{$expiresAt} 00:00:00", "{$expiresAt} 23:59:59"]);
+                }
+            }
+        }
+
+        if ($hasSoftDeleting) {
+            $entityData = $entityData->withTrashed();
+        }
+
+        $entityName = str_replace('App\\Entities\\CDIS', '', $syncableEntity);
+        $tableName =  Str::snake($entityName);
+        $entityData = $entityData->get();
+
+        if (count($entityData) <= 0) {
+            $this->createLog($currentDate);
+        } else {
+            $this->createLog(count($entityData) . ' cost and price change');
+            $bids = $entityData->pluck('bid');
+            $costAndPriceChangeBids[] = $bids;
+        }
+
+        $this->buildEntitySyncEntry($entityData, $tableName, $branch);
+
+        if (!empty($costAndPriceChangeBids)) {
+            $syncableEntity = \App\Entities\CDISCostAndPriceChangeDetail::class;
+            $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($syncableEntity));
+            $entityData = app()->make($syncableEntity);
+
+            $entityData = $entityData->whereIn('head_bid', $costAndPriceChangeBids);
+
+            if ($hasSoftDeleting) {
+                $entityData = $entityData->withTrashed();
+            }
+
             $entityName = str_replace('App\\Entities\\CDIS', '', $syncableEntity);
 
             $tableName =  Str::snake($entityName);
-            foreach ($costAndPriceChanges as $entityDatum) {
-               
-                $action = 'create';
-                if ($this->modelHasColumn($entityDatum, $tableName, 'deleted_at')) {
-                    if ($entityDatum->deleted_at !== null) {
-                        $action = 'delete';
-                    } else {
-                        if (
-                            $this->modelHasColumn($entityDatum, $tableName, 'created_at') &&
-                            $this->modelHasColumn($entityDatum, $tableName, 'updated_at')
-                        ) {
-                            if ($entityDatum->created_at !== $entityDatum->updated_at) {
-                                $action = 'update';
-                            }
-                        }
-                    }
-                } else {
-                    if (
-                        $this->modelHasColumn($entityDatum, $tableName, 'created_at') &&
-                        $this->modelHasColumn($entityDatum, $tableName, 'updated_at')
-                    ) {
-                        if ($entityDatum->created_at !== $entityDatum->updated_at) {
-                            $action = 'update';
-                        }
-                    }
-                }
-                $syncDetails = $entityDatum->syncDetails();
 
-                CDISSync::create(
-                    array(
-                        'branch_bid' => $branch->bid,
-                        'table_bid' => $entityDatum->bid,
-                        'table_name' =>  $tableName,
-                        'reference_bid' => $syncDetails->reference_bid ?? null,
-                        'reference_table' => $syncDetails->reference_table ?? null,
-                        'level' => 1,
-                        'group' => null,
-                        'code' => $this->generateRandomKey(10, 1, ''),
-                        'action' => $action,
-                    )
-                );
+            $entityData = $entityData->get();
+
+            if (count($entityData) <= 0) {
+                $this->createLog($currentDate);
+            } else {
+                $this->buildEntitySyncEntry($entityData, $tableName, $branch);
             }
 
             $options = $this->getConsoleOptions();
@@ -220,8 +243,52 @@ class GenerateCostAndPriceChange extends Command
                 '--progress_divisor' => $options->progress_divisor,
                 '--type' => $options->type
             ]);
-        } else {
-            $this->createLog($currentDate);
+        }
+    }
+
+    private function buildEntitySyncEntry($entityData, $tableName, $branch)
+    {
+        foreach ($entityData as $entityDatum) {
+
+            $action = 'create';
+            if ($this->modelHasColumn($entityDatum, $tableName, 'deleted_at')) {
+                if ($entityDatum->deleted_at !== null) {
+                    $action = 'delete';
+                } else {
+                    if (
+                        $this->modelHasColumn($entityDatum, $tableName, 'created_at') &&
+                        $this->modelHasColumn($entityDatum, $tableName, 'updated_at')
+                    ) {
+                        if ($entityDatum->created_at !== $entityDatum->updated_at) {
+                            $action = 'update';
+                        }
+                    }
+                }
+            } else {
+                if (
+                    $this->modelHasColumn($entityDatum, $tableName, 'created_at') &&
+                    $this->modelHasColumn($entityDatum, $tableName, 'updated_at')
+                ) {
+                    if ($entityDatum->created_at !== $entityDatum->updated_at) {
+                        $action = 'update';
+                    }
+                }
+            }
+            $syncDetails = $entityDatum->syncDetails();
+
+            CDISSync::create(
+                array(
+                    'branch_bid' => $branch->bid,
+                    'table_bid' => $entityDatum->bid,
+                    'table_name' =>  $tableName,
+                    'reference_bid' => $syncDetails->reference_bid ?? null,
+                    'reference_table' => $syncDetails->reference_table ?? null,
+                    'level' => 1,
+                    'group' => null,
+                    'code' => $this->generateRandomKey(10, 1, ''),
+                    'action' => $action,
+                )
+            );
         }
     }
 }
