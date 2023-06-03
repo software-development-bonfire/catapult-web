@@ -34,4 +34,7 @@ return [
             'max_retry' => 4,
         ]
     ],
+    'scheduling' => [
+        'time_interval' => 2,
+    ]
 ];
