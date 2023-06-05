@@ -52,7 +52,7 @@ if (! function_exists('genericGroupBy')) {
     function genericGroupBy($array, $key) {
         $return = array();
         
-        foreach($array as $val) {
+        foreach ($array as $val) {
             $return[$val->$key][] = $val; 
         //  $return[$val[$key]][] = $val; 
         }

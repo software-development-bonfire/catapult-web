@@ -162,7 +162,8 @@ class CustomNetworkResolver
         return $this->executeCommand($execString);
     }
 
-    public function getDnsServers($interfaceName) {
+    public function getDnsServers($interfaceName)
+    {
         $output = $this->showSetDns($interfaceName);
         $index = 0;
         $dns = [];

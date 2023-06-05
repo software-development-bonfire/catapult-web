@@ -235,7 +235,7 @@ class SendDataFromConvertedFileOld extends Command
                                 );
 
                                 $this->moveToSyncedFolder($localDisk, $syncedPath, $file, $fileName);
-                            } else if (isset($responseBodyContent->success) && !$responseBodyContent->success && count($errors) > 0) {
+                            } else if (isset($responseBodyContent->success) && ! $responseBodyContent->success && count($errors) > 0) {
                                 $this->createLog(__('error.failed_to_send_data'), 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
                                 $this->createLog('    Errors:', 'error', false);
                                 foreach ($errors as $error) {
@@ -243,7 +243,7 @@ class SendDataFromConvertedFileOld extends Command
                                     $this->setErrorLog($entryLogLabel, $fileName, $failedSyncResyncPath, ErrorStatus::SYNCING_ERROR, null, $statusCodeLabel, json_encode($error));
                                 }
                                 $this->moveToResyncFolder($localDisk, $failedSyncResyncPath, $file, $fileName);
-                            } else if (isset($responseBodyContent->success) && !$responseBodyContent->success || (isset($responseBodyContent->message) && $responseBodyContent->message == 'Request failed.')) {
+                            } else if (isset($responseBodyContent->success) && ! $responseBodyContent->success || (isset($responseBodyContent->message) && $responseBodyContent->message == 'Request failed.')) {
                                 $this->createLog(__('error.failed_to_send_data'), 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
                                 $this->createLog('    Cause: '.$responseBodyContent->message, 'error', false);
                               

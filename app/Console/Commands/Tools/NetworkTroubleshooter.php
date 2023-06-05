@@ -52,15 +52,15 @@ class NetworkTroubleshooter extends Command
 
         $this->info(__('info.setting_dns_for_all_connected_interface'));
         $errors = [];
-        foreach($networkResolver->setDnsConnectedInterface(false) as $interfaceName){
+        foreach ($networkResolver->setDnsConnectedInterface(false) as $interfaceName){
             $result = $networkResolver->setDns($interfaceName);
             if ($result && !is_array($result)) {
-                foreach($networkResolver->showSetDns($interfaceName) as $output) {
+                foreach ($networkResolver->showSetDns($interfaceName) as $output) {
                     $this->line("  {$output}");
                 }
             } else {
                 $this->line("  {$interfaceName}");
-                foreach($result as $errorOutput) {
+                foreach ($result as $errorOutput) {
                     $this->error("     {$errorOutput}");
                     $errors[] = $errorOutput;
                 }

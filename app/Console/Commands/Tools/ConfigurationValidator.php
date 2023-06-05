@@ -69,12 +69,12 @@ class ConfigurationValidator extends Command
         $this->line("SYSTEM CONFIGURATION...");
         $clientId = config('configuration.client_id');
         $branchCode = config('configuration.branch_code');
-        if(empty($clientId)) {
+        if (empty($clientId)) {
             $this->error("[✖] Client Id not configured");
         } else {
             $this->info("[✔] Client Id {$clientId}");
         }
-        if(empty($branchCode)) {
+        if (empty($branchCode)) {
             $this->error("[✖] Branch Code not configured");
         } else {
             $this->info("[✔] Branch Code {$branchCode}");
@@ -250,7 +250,8 @@ class ConfigurationValidator extends Command
 
     }
 
-    public function urlExists($url) {
+    public function urlExists($url)
+    {
 
         $handle = curl_init($url);
         curl_setopt($handle,  CURLOPT_RETURNTRANSFER, TRUE);
@@ -259,7 +260,7 @@ class ConfigurationValidator extends Command
         $httpCode = curl_getinfo($handle, CURLINFO_HTTP_CODE);
         curl_close($handle);
 
-        if($httpCode >= 200 && $httpCode <= 400) {
+        if ($httpCode >= 200 && $httpCode <= 400) {
             return true;
         } else {
             return false;
