@@ -19,7 +19,7 @@ trait RelationshipTrait
 
         $relationships = [];
 
-        foreach((new ReflectionClass($model))->getMethods(ReflectionMethod::IS_PUBLIC) as $method)
+        foreach ((new ReflectionClass($model))->getMethods(ReflectionMethod::IS_PUBLIC) as $method)
         {
             if ($method->class != get_class($model) ||
                 !empty($method->getParameters()) ||

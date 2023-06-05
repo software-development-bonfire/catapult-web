@@ -3,7 +3,7 @@
 namespace App\Console\Commands\CDISToPOS\Events;
 
 use App\Enums\CatapultActionType;
-use App\Enums\CatapultHandShaking;
+use App\Enums\CatapultHandshaking;
 use App\Enums\CatapultSyncStatus;
 use App\Helpers\CustomPinger as Ping;
 use App\Traits\GenericHelper;
@@ -134,7 +134,7 @@ class Listen extends Command
                     $this->createLog($payload->channel, 'info', true, ['CHANNEL']);
                     $this->createLog('Listening to events...', 'info', true, ['LOG']);
                     $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'PongCatapult', '{}', $this->socketId, true); 
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), CatapultHandShaking::ACK, '{}', $this->socketId, true);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), CatapultHandshaking::ACK, '{}', $this->socketId, true);
                     break;
 
                 case "pusher:error":
@@ -162,9 +162,9 @@ class Listen extends Command
                 case "App\Events\Catapult\HandShake":
                     $data = (object) json_decode($payload->data);
                     if (! empty($data->handShake)) {
-                        if ($data->handShake === CatapultHandShaking::SYN) {
-                            $this->triggerPusher($branchCode, CatapultHandShaking::ACK, json_encode($data), $payload);
-                            $this->createLog(json_encode($payload), 'warn', true, ['EVENT', CatapultHandShaking::ACK]);
+                        if ($data->handShake === CatapultHandshaking::SYN) {
+                            $this->triggerPusher($branchCode, CatapultHandshaking::ACK, json_encode($data), $payload);
+                            $this->createLog(json_encode($payload), 'warn', true, ['EVENT', CatapultHandshaking::ACK]);
                         }
                     }
                     break;
@@ -295,7 +295,7 @@ class Listen extends Command
         if ($state === CatapultSyncStatus::PongCatapult) {
             $state = CatapultSyncStatus::Online;
         }
-        if ($state === CatapultHandShaking::SYN || $state === CatapultHandShaking::ACK) {
+        if ($state === CatapultHandshaking::SYN || $state === CatapultHandshaking::ACK) {
            return;
         }
         $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status', ['state' => $state, 'code' => $branchCode, 'description' => $description], $this->socketId, true);

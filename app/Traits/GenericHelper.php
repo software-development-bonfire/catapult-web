@@ -218,7 +218,7 @@ trait GenericHelper
         $interval = new DateInterval('P1D');
         $period = new DatePeriod($start, $interval, $end);
 
-        foreach($period as $day) {
+        foreach ($period as $day) {
             $formatted = $day->format('Y-m-d');
 
             if(! in_array($formatted, $range)) $missingDates[] = $formatted;
