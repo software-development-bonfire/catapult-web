@@ -2,13 +2,15 @@
 
 namespace App\Console\Commands\POSToCDIS;
 
+use App\Entities\ErrorLog;
+use App\Entities\ErrorLogDetail;
 use App\Enums\CDIS\TerminalTransactionType;
 use App\Enums\CommonErrors;
 use App\Enums\ErrorStatus;
 use App\Enums\Status;
+use App\Enums\StorageType;
+use App\Helpers\CustomPinger as Ping;
 use App\Repositories\Contracts\FieldMappingRepository;
-use App\Traits\CDISRequestTrait;
-use App\Traits\ConsoleCommandTrait;
 use App\Traits\ErrorLogTrait;
 use App\Traits\FilenameRetryCounterTrait;
 use App\Traits\GenericHelper;
@@ -17,15 +19,15 @@ use App\Traits\StorageTrait;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Console\Command;
-use Illuminate\Http\Response;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class SendDataFromConvertedFile extends Command
+class SendDataFromConvertedFileOld extends Command
 {
-    use GenericHelper, StorageTrait, ErrorLogTrait, FilenameRetryCounterTrait, OutputBufferTrait, CDISRequestTrait, ConsoleCommandTrait;
+    use GenericHelper, StorageTrait, ErrorLogTrait, FilenameRetryCounterTrait, OutputBufferTrait;
 
     public $extension = '.json';
     /**
@@ -33,7 +35,7 @@ class SendDataFromConvertedFile extends Command
      *
      * @var string
      */
-    protected $signature = 'pos:send-data-from-converted-file {--timeout=5}';
+    protected $signature = 'pos:send-data-from-converted-file-old {--timeout=5}';
 
     /**
      * The console command description.
@@ -106,7 +108,8 @@ class SendDataFromConvertedFile extends Command
             $hasFilesToSync = false;
 
             foreach ($entries as $entry) {
-                $entryLogLabel = $this->computedLogLabel($entriesMaxLength, $entry);
+                $spaces = ($entriesMaxLength - strlen($entry)) / 2;
+                $entryLogLabel = str_repeat(' ', ceil($spaces)).$entry.str_repeat(' ', floor($spaces));
 
                 $filters = (object) [
                     'data_entry' => $entry,
@@ -199,92 +202,71 @@ class SendDataFromConvertedFile extends Command
 
                     try {
                         $response = $this->send($jsonFileContent, $apiSetup);
-                        $responseBodyContent = json_decode($response->getBody()->getContents());                        
-                        $statusCode = $response->getStatusCode();
+                        $statusCodeLabel = 'Status code: '.$response->getStatusCode();
 
+                        $responseBodyContent = json_decode($response->getBody()->getContents());
                         $errors = isset($responseBodyContent->errors) ? (array) $responseBodyContent->errors : [];
 
-                        if ($statusCode >= Response::HTTP_MULTIPLE_CHOICES) {
-                            // is HTTP status code (for non-exceptions) 
-                            $statusText = Response::$statusTexts[$statusCode];
+                        if (isset($responseBodyContent->exception) || isset($responseBodyContent->trace)) {
+                            $exceptionTrace = $responseBodyContent->exception.': '.$responseBodyContent->message;
+                            $this->createLog($exceptionTrace, 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
+                            $this->setErrorLog($entryLogLabel, $fileName, $failedSyncResyncPath, ErrorStatus::SYNCING_ERROR, null, $statusCodeLabel, $exceptionTrace);
 
-                            if ($statusCode === Response::HTTP_TOO_MANY_REQUESTS) {
-                                // Too many request, we need to extend delay time (10 seconds)
-                                // as a rest time after request error
-                                sleep(10);
-                            }
-                            if (
-                                $statusCode === Response::HTTP_REQUEST_ENTITY_TOO_LARGE ||
-                                $statusCode === Response::HTTP_BAD_REQUEST
-                            ) {
-                                // File is too large or maybe bad request due to file not found
-                                // or extension is not allowed
+                            if (Str::contains(
+                                $responseBodyContent->message,
+                                [
+                                    CommonErrors::COULD_NOT_RESOLVE_HOST,
+                                    CommonErrors::POST_METHOD_NOT_SUPPORTED,
+                                    CommonErrors::OPEN_SSL_CONNECT
+                                ]
+                            )) {
                                 $this->moveToResyncFolder($localDisk, $failedSyncResyncPath, $file, $fileName);
-                                sleep(5);
+                            } else {
+                                $this->moveToUnsyncableFolder($localDisk, $failedSyncUnsyncablePath, $file, $fileName);
                             }
-                            if ($statusCode === Response::HTTP_PRECONDITION_FAILED) {
-                                // Due to some missing references, which are a prereq on saving,
-                                // we need to add some delay 
-                                sleep(10);
-                            }
-                            $this->setErrorLineLog("{$statusText} : ".json_encode($responseBodyContent),[$statusCode]);
                         } else {
-                            if (! empty($responseBodyContent)) {
-                                if ($statusCode === Response::HTTP_OK) {
-                                    $this->moveToSyncedFolder($localDisk, $syncedPath, $file, $fileName);
-                                    $this->createLog(json_encode($responseBodyContent), 'info', true, [Response::$statusTexts[$statusCode]]);
-                                } else {
-                                    // Display warning message containing API response,
-                                    // means request is successfully sent but it does not return
-                                    // an expected response
-                                    $this->createLog(json_encode($responseBodyContent), 'warn', true, [Response::$statusTexts[$statusCode]]);
-                                    $this->setErrorLog($entryLogLabel, $fileName, $failedSyncResyncPath, ErrorStatus::SYNCING_ERROR, null, [Response::$statusTexts[$statusCode]], json_encode($responseBodyContent));
+                            if ((isset($responseBodyContent->success) && $responseBodyContent->success) || (isset($responseBodyContent->message) && $responseBodyContent->message == 'Duplicate Entry.')) {
+                                $this->createLog(
+                                    $responseBodyContent->message,
+                                    ($responseBodyContent->message == 'Duplicate Entry.' ? 'warn' : 'info'),
+                                    true,
+                                    [$entryLogLabel, $statusCodeLabel],
+                                    [$file]
+                                );
+
+                                $this->moveToSyncedFolder($localDisk, $syncedPath, $file, $fileName);
+                            } else if (isset($responseBodyContent->success) && ! $responseBodyContent->success && count($errors) > 0) {
+                                $this->createLog(__('error.failed_to_send_data'), 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
+                                $this->createLog('    Errors:', 'error', false);
+                                foreach ($errors as $error) {
+                                    $this->createLog('        -> ' . json_encode($error), 'error', false);
+                                    $this->setErrorLog($entryLogLabel, $fileName, $failedSyncResyncPath, ErrorStatus::SYNCING_ERROR, null, $statusCodeLabel, json_encode($error));
                                 }
-                            }
-                        }
-                    } catch (\GuzzleHttp\Exception\TooManyRedirectsException $e) {
-                        // handle too many redirects
-                        $this->setErrorLineLog(json_encode($e), ['TooManyRedirectsException']);
-                        $this->setErrorLog($entryLogLabel, $fileName, $failedSyncResyncPath, ErrorStatus::SYNCING_ERROR, null, 'TooManyRedirectsException', json_encode($e));
-                        sleep(10);
-                    } catch (\GuzzleHttp\Exception\ClientException | \GuzzleHttp\Exception\ServerException $e) {
-                        // ClientException is thrown for 400 level errors if the http_errors request option is set to true.
-                        // ServerException is thrown for 500 level errors if the http_errors request option is set to true.
-                        if ($e->hasResponse()) {
-                            // is HTTP status code, e.g. 500 
-                            $statusCode = $e->getResponse()->getStatusCode();
-                            if (
-                                $statusCode === Response::HTTP_REQUEST_ENTITY_TOO_LARGE ||
-                                $statusCode === Response::HTTP_BAD_REQUEST
-                            ) {
-                                // File is too large or maybe bad request due to file not found
-                                // or extension is not allowed
                                 $this->moveToResyncFolder($localDisk, $failedSyncResyncPath, $file, $fileName);
-                                sleep(5);
+                            } else if (isset($responseBodyContent->success) && ! $responseBodyContent->success || (isset($responseBodyContent->message) && $responseBodyContent->message == 'Request failed.')) {
+                                $this->createLog(__('error.failed_to_send_data'), 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
+                                $this->createLog('    Cause: '.$responseBodyContent->message, 'error', false);
+                              
+                                $this->setErrorLog($entryLogLabel, $fileName, $failedSyncResyncPath, ErrorStatus::SYNCING_ERROR, null, $statusCodeLabel, $responseBodyContent->message);
+                                $this->moveToResyncFolder($localDisk, $failedSyncResyncPath, $file, $fileName);
+                            } else {
+                                $this->createLog(__('error.failed_to_send_data'), 'error', true, [$entryLogLabel, $statusCodeLabel], [$file]);
+
+                                $this->setErrorLog($entryLogLabel, $fileName, $failedSyncResyncPath, ErrorStatus::SYNCING_ERROR, null, $statusCodeLabel, $responseBodyContent->message);
+                                $this->moveToResyncFolder($localDisk, $failedSyncResyncPath, $file, $fileName);
                             }
                         }
-                        $this->setErrorLineLog(json_encode($e->getResponse()), ['ClientException|ServerException', $statusCode]);
-                        $this->setErrorLog($entryLogLabel, $fileName, $failedSyncResyncPath, ErrorStatus::SYNCING_ERROR, null, 'ClientException|ServerException', json_encode($e->getResponse()));
-                    } catch (\GuzzleHttp\Exception\ConnectException $e) {
-                        // ConnectException is thrown in the event of a networking error.
-                        // This may be an error reported by lowlevel functionality 
-                        // (e.g.  cURL error)
-                        $errno = '';
-                        $handlerContext = $e->getHandlerContext();
-                        if ($handlerContext['errno'] ?? 0) {
-                            // this is the lowlevel error code, not the HTTP status code!!!
-                            // for example 6 for "Couldn't resolve host" (for libcurl)
-                            $errno = (int)($handlerContext['errno']);
-                        }
-                        // get a description of the error
-                        $errorMessage = $handlerContext['error'] ?? $e->getMessage();
-                        $this->setErrorLineLog(json_encode($errorMessage), ['ConnectException', $errno]);
-                        $this->setErrorLog($entryLogLabel, $fileName, $failedSyncResyncPath, ErrorStatus::SYNCING_ERROR, null, 'ConnectException', json_encode($errorMessage));
-                    } catch (\Exception $e) {
-                        // fallback, in case of other exception                                
-                        $this->setErrorLineLog(json_encode($e), ['HttpException', $apiSetup->end_point]);
-                        $this->setErrorLog($entryLogLabel, $fileName, $failedSyncResyncPath, ErrorStatus::SYNCING_ERROR, null, 'HttpException', $e->getMessage());
-                        sleep(10);
+                    } catch (\Exception $exception) {
+                        $this->createLog($exception->getMessage(), 'warn', true, [$entryLogLabel]);
+
+                        $this->setErrorLog($entryLogLabel, $fileName, $failedSyncResyncPath, ErrorStatus::SYNCING_ERROR, null, 'Exception', $exception->getMessage());
+                        $this->moveToResyncFolder($localDisk, $failedSyncResyncPath, $file, $fileName);
+
+                        sleep($timeout);
+
+                        $this->flushOutputBuffer();
+
+                        continue;
                     }
                 }
 
@@ -357,7 +339,7 @@ class SendDataFromConvertedFile extends Command
 
         $json = json_decode($jsonContent, true);
         if (isset($json['transaction']) ) {
-            $transaction = !empty($json['transaction']) ? $json['transaction'][0] : array();
+            $transaction = ! empty($json['transaction']) ? $json['transaction'][0] : array();
 
             if (! isset($transaction['transaction_id'])) {
                 $this->fileContentErrors[] = __('message.key_not_present', ['key' => 'transaction_id']);
@@ -411,9 +393,8 @@ class SendDataFromConvertedFile extends Command
         $this->moveFile($localDisk, $file, $targetFile);
     }
 
-    private function setErrorLineLog ($message, $status = [])
-    {
-        $this->createLog($message, 'error', true, $status);
+    private function setErrorLineLog ($message) {
+        $this->createLog($message, 'error', true);
         $this->flushOutputBuffer();
 
         sleep(5);

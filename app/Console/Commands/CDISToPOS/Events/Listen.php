@@ -3,6 +3,7 @@
 namespace App\Console\Commands\CDISToPOS\Events;
 
 use App\Enums\CatapultActionType;
+use App\Enums\CatapultHandshaking;
 use App\Enums\CatapultSyncStatus;
 use App\Helpers\CustomPinger as Ping;
 use App\Traits\GenericHelper;
@@ -64,6 +65,7 @@ class Listen extends Command
                 $this->connect();
             } else {
                 $this->createLog("Could not connect: No internet connection.", 'warn', true, ['CONNECTION ERROR']);
+                $this->executeNetworkResolve();
             }
 
             sleep(5);
@@ -101,13 +103,7 @@ class Listen extends Command
                 $this->error("Could not connect: {$e->getMessage()}");
                 $loop->stop();
 
-                if ($this->isResolvedBeenExecuted()) {
-                    $this->resolvedCount = $this->checkResolvedStatus();
-                } else {
-                    $this->setResolveStatus(true, $this->resolvedCount);
-                    Artisan::callSilent('network:resolve');
-                    $this->resolvedCount++;
-                }
+                $this->executeNetworkResolve();
             });
 
         $loop->run();
@@ -137,7 +133,8 @@ class Listen extends Command
                 case "pusher_internal:subscription_succeeded":
                     $this->createLog($payload->channel, 'info', true, ['CHANNEL']);
                     $this->createLog('Listening to events...', 'info', true, ['LOG']);
-                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'PongCatapult', '{}', $this->socketId, true);
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'PongCatapult', '{}', $this->socketId, true); 
+                    $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), CatapultHandshaking::ACK, '{}', $this->socketId, true);
                     break;
 
                 case "pusher:error":
@@ -162,6 +159,16 @@ class Listen extends Command
                     $this->createLog(json_encode($payload), 'warn', true, ['EVENT', 'PongCatapult']);
                     break;
 
+                case "App\Events\Catapult\HandShake":
+                    $data = (object) json_decode($payload->data);
+                    if (! empty($data->handShake)) {
+                        if ($data->handShake === CatapultHandshaking::SYN) {
+                            $this->triggerPusher($branchCode, CatapultHandshaking::ACK, json_encode($data), $payload);
+                            $this->createLog(json_encode($payload), 'warn', true, ['EVENT', CatapultHandshaking::ACK]);
+                        }
+                    }
+                    break;
+            
                 case "App\Events\Catapult\TriggerCDISFetchDataForSync":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
 
@@ -193,7 +200,7 @@ class Listen extends Command
                         Artisan::queue('cdis:fetch-data-for-sync-again', [
                             '--interval' => $options->interval,
                             '--limit' => $options->limit,
-                            '--broadcast' =>  $options->broadcast,
+                            '--broadcast' => $options->broadcast,
                             '--progress' => $options->progress,
                             '--progress_divisor' => $options->progress_divisor,
                             '--type' => $options->type
@@ -248,6 +255,14 @@ class Listen extends Command
                     ]);
                     break;
 
+                case "App\Events\Catapult\TriggerHardResync":
+                    $options = (object)$this->getPayloadOptions($payload);
+                    Artisan::call('pos:hard-resync', [
+                        '--type' => $options->type,
+                        '--user_bid' => $options->userBid
+                    ]);
+                    break;
+
                 default:
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
                     break;
@@ -259,7 +274,7 @@ class Listen extends Command
     {
         $description = null;
         if (! empty($payload)) {
-            $this->createLog(json_encode($payload),  $logType, true, ['EVENT', $payload->event]);
+            $this->createLog(json_encode($payload), $logType, true, ['EVENT', $payload->event]);
 
             if (! empty($payload->data)) {
                 $data = (object) json_decode($payload->data);
@@ -280,7 +295,10 @@ class Listen extends Command
         if ($state === CatapultSyncStatus::PongCatapult) {
             $state = CatapultSyncStatus::Online;
         }
-        $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status',  ['state' => $state, 'code' => $branchCode, 'description' => $description],  $this->socketId, true);
+        if ($state === CatapultHandshaking::SYN || $state === CatapultHandshaking::ACK) {
+           return;
+        }
+        $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status', ['state' => $state, 'code' => $branchCode, 'description' => $description], $this->socketId, true);
     }
 
     private function getPayloadOptions($payload)
@@ -300,6 +318,9 @@ class Listen extends Command
             }
             if (! empty($data->refetchForSync)) {
                 $result['refetchForSync'] = $data->refetchForSync;
+            }
+            if (! empty($data->userBid)) {
+                $result['userBid'] = $data->userBid;
             }
             if (! empty($data->options)) {
                 $options = $data->options;
@@ -324,5 +345,16 @@ class Listen extends Command
             }
         }
         return (object) $result;
+    }
+
+    private function executeNetworkResolve()
+    {
+        if ($this->isResolvedBeenExecuted()) {
+            $this->resolvedCount = $this->checkResolvedStatus();
+        } else {
+            $this->setResolveStatus(true, $this->resolvedCount);
+            $this->callSilent('network:resolve');
+            $this->resolvedCount++;
+        }
     }
 }

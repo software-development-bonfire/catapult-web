@@ -16,6 +16,14 @@ if (! function_exists('toSafeValue')) {
     }
 }
 
+if (! function_exists('starts_with_toupper')) {
+
+    function starts_with_toupper($haystack, $needles)
+    {
+        return str_starts_with(strtoupper($haystack), $needles);
+    }
+}
+
 if (! function_exists('toBooleanOrInt')) {
     function toBooleanOrInt($value, $defaultValue)
     {
@@ -44,7 +52,7 @@ if (! function_exists('genericGroupBy')) {
     function genericGroupBy($array, $key) {
         $return = array();
         
-        foreach($array as $val) {
+        foreach ($array as $val) {
             $return[$val->$key][] = $val; 
         //  $return[$val[$key]][] = $val; 
         }
