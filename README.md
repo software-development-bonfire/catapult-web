@@ -92,7 +92,9 @@ npm rm -rf ~/.pm2 #Remove all saved configuration and logs:
 ```
 
 - ```php artisan pos:validate```  *#to validate current configuration of Catapult.*
-:bulb: **NOTE**
-[✔] indicates everything is configured properly or working fine
-[✖] it means configuration needs to be checked and re-configuration is required
-[⚠] is just a warning and can be ignored, but you can check it if you may;
+
+  💡**NOTE**
+
+     - [✔] indicates everything is configured properly or working fine
+     - [✖] it means configuration needs to be checked and re-configuration is required 
+     - [⚠] is just a warning and can be ignored;
