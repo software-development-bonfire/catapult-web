@@ -339,7 +339,7 @@ class SendDataFromConvertedFileOld extends Command
 
         $json = json_decode($jsonContent, true);
         if (isset($json['transaction']) ) {
-            $transaction = !empty($json['transaction']) ? $json['transaction'][0] : array();
+            $transaction = ! empty($json['transaction']) ? $json['transaction'][0] : array();
 
             if (! isset($transaction['transaction_id'])) {
                 $this->fileContentErrors[] = __('message.key_not_present', ['key' => 'transaction_id']);
