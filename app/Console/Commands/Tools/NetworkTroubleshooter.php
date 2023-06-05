@@ -54,7 +54,7 @@ class NetworkTroubleshooter extends Command
         $errors = [];
         foreach ($networkResolver->setDnsConnectedInterface(false) as $interfaceName){
             $result = $networkResolver->setDns($interfaceName);
-            if ($result && !is_array($result)) {
+            if ($result && ! is_array($result)) {
                 foreach ($networkResolver->showSetDns($interfaceName) as $output) {
                     $this->line("  {$output}");
                 }
