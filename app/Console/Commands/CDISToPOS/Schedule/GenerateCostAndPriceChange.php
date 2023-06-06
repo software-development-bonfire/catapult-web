@@ -227,7 +227,6 @@ class GenerateCostAndPriceChange extends Command
     private function buildCostAndPriceChangeSyncEntry($branch)
     {
         $filters = (object) [
-            'type' => CostAndPriceChangeType::TIME_TRIGGER,
             'is_generated' => DisplayState::NO,
             'effective_at' => now()->subDays($this->previousDay),
             'expires_at' => now()->addDays($this->nextDay),
