@@ -82,10 +82,10 @@ class GenerateCostAndPriceChange extends Command
         while ($active) {
             usleep(1000); // optional, if you want to be considerate
 
-            $canProceedScheduledGeneration = $this->canExecuteScheduledGeneration();
+            $canProceedScheduledGeneration = $this->hasNoCurrentSyncActivity();
 
             if ($canProceedScheduledGeneration && microtime(true) >= $nextTime) {
-
+                $nextTime = $this->getNextExecutionTime();
                 $this->startGenerateCsv();
 
                 $nextTime = $this->getNextExecutionTime();
@@ -106,21 +106,6 @@ class GenerateCostAndPriceChange extends Command
         // Could be via socket or file etc.
         // Return FALSE to stop.
         return true;
-    }
-
-    private function canExecuteScheduledGeneration()
-    {
-        // we must check if there is an activity from/to CDIS
-        // to block the execution of this scheduling
-        $currentSyncStatus = $this->getSyncStatus();
-        if (
-            $currentSyncStatus != CatapultSyncStatus::Fetching &&
-            $currentSyncStatus != CatapultSyncStatus::Syncing &&
-            $currentSyncStatus != CatapultSyncStatus::Converting
-        ) {
-            return true;
-        }
-        return false;
     }
 
     private function getNextExecutionTime()
@@ -158,20 +143,20 @@ class GenerateCostAndPriceChange extends Command
         $this->currentDate = Carbon::now();
 
         $costAndPriceChangeBids = $this->buildCostAndPriceChangeSyncEntry($branch);
-
-        if (! empty($costAndPriceChangeBids)) {
+        if (count($costAndPriceChangeBids) > 0) {
             if ($this->buildCostAndPriceChangeDetailSyncEntry($costAndPriceChangeBids, $branch)) {
-
                 $options = $this->getConsoleOptions();
 
                 Artisan::queue('cdis:convert-data-to-file', [
                     '--interval' => $options->interval,
                     '--limit' => $options->limit,
-                    '--broadcast' =>  $options->broadcast,
+                    '--broadcast' => $options->broadcast,
                     '--progress' => $options->progress,
                     '--progress_divisor' => $options->progress_divisor,
                     '--type' => $options->type
                 ]);
+            } else {
+                $this->setSyncStatus(CatapultSyncStatus::PongCatapult);
             }
         } else {
             $this->createLog("No cost and price change...");
@@ -233,13 +218,12 @@ class GenerateCostAndPriceChange extends Command
         ];
 
         $syncableEntity = \App\Entities\CDISCostAndPriceChange::class;
-        $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($syncableEntity));
-        $entityName = str_replace('App\\Entities\\CDIS', '', $syncableEntity);
-        $tableName =  Str::snake($entityName);
+        $entity = $this->getEntityInformation($syncableEntity);
+
         $entityData = app()->make($syncableEntity);
 
         $entityData = $this->applyCriteriaHead($entityData, $filters);
-        if ($hasSoftDeleting) {
+        if ($entity->has_soft_deleting) {
             $entityData = $entityData->withTrashed();
         }
         $entityData = $entityData->get();
@@ -248,9 +232,11 @@ class GenerateCostAndPriceChange extends Command
         if (count($entityData) > 0) {
             $this->createLog(count($entityData) . ' cost and price change');
 
+            $this->setSyncStatus(CatapultSyncStatus::Scheduling);
+
             $costAndPriceChangeBids = $entityData->pluck('bid');
 
-            $this->buildEntitySyncEntry($entityData, $tableName, $branch);
+            $this->buildEntitySyncEntry($entityData, $entity->table_name, $branch);
         } else {
             $this->createLog($this->currentDate);
         }
@@ -260,20 +246,18 @@ class GenerateCostAndPriceChange extends Command
     private function buildCostAndPriceChangeDetailSyncEntry($bids, $branch)
     {
         $syncableEntity = \App\Entities\CDISCostAndPriceChangeDetail::class;
-        $hasSoftDeleting = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($syncableEntity));
-        $entityName = str_replace('App\\Entities\\CDIS', '', $syncableEntity);
-        $tableName =  Str::snake($entityName);
+        $entity = $this->getEntityInformation($syncableEntity);
         $entityData = app()->make($syncableEntity);
 
         $entityData = $entityData->whereIn('head_bid', $bids);
-        if ($hasSoftDeleting) {
+        if ($entity->has_soft_deleting) {
             $entityData = $entityData->withTrashed();
         }
         $entityData = $entityData->get();
 
         if (count($entityData) > 0) {
             $this->createLog(count($entityData) . ' cost and price change detail');
-            $this->buildEntitySyncEntry($entityData, $tableName, $branch);
+            $this->buildEntitySyncEntry($entityData, $entity->table_name, $branch);
             return true;
         }
         return false;
@@ -281,30 +265,30 @@ class GenerateCostAndPriceChange extends Command
 
     private function applyCriteriaHead($entityData, $filters)
     {
-        if (! empty($filters)) {
+        if (!empty($filters)) {
             if (isset($filters->type) && $filters->type !== '') {
                 $entityData = $entityData->where('type', $filters->type);
             }
             if (isset($filters->pricing_type) && $filters->pricing_type !== '') {
                 $entityData = $entityData->where('pricing_type', $filters->pricing_type);
             }
-            if (! empty($filters->status)) {
-                $entityData = $entityData->where('status', $filters->status);
+            if (!empty($filters->status)) {
+                // $entityData = $entityData->where('status', $filters->status);
             }
             if (isset($filters->is_generated) && $filters->is_generated !== '') {
                 $entityData = $entityData->where('is_generated', $filters->is_generated);
             }
-            if (! empty($filters->effective_at) && ! empty($filters->expires_at)) {
+            if (!empty($filters->effective_at) && !empty($filters->expires_at)) {
                 $effectiveAt = parseDateTime($filters->effective_at, 'Y-m-d h:i:s', '');
                 $expiresAt = parseDateTime($filters->expires_at, 'Y-m-d h:i:s', '');
                 //$entityData = $entityData->whereBetween('expires_at', [$effectiveAt, $expiresAt]);
                 $entityData = $entityData->whereBetween('effective_at', ["{$effectiveAt} 00:00:00", "{$expiresAt} 23:59:59"]);
             } else {
-                if (! empty($filters->effective_at)) {
+                if (!empty($filters->effective_at)) {
                     $effectiveAt = parseDateTime($filters->effective_at, 'Y-m-d', '');
                     $entityData = $entityData->whereBetween('effective_at', ["{$effectiveAt} 00:00:00", "{$effectiveAt} 23:59:59"]);
                 }
-                if (! empty($filters->expires_at)) {
+                if (!empty($filters->expires_at)) {
                     $expiresAt = parseDateTime($filters->expires_at, 'Y-m-d', '');
                     $entityData = $entityData->whereBetween('effective_at', ["{$expiresAt} 00:00:00", "{$expiresAt} 23:59:59"]);
                 }

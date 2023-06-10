@@ -159,7 +159,7 @@ class Listen extends Command
                     $this->createLog(json_encode($payload), 'warn', true, ['EVENT', 'PongCatapult']);
                     break;
 
-                case "App\Events\Catapult\HandShake":
+                case "App\Events\Catapult\Handshake":
                     $data = (object) json_decode($payload->data);
                     if (! empty($data->handShake)) {
                         if ($data->handShake === CatapultHandshaking::SYN) {
@@ -172,14 +172,8 @@ class Listen extends Command
                 case "App\Events\Catapult\TriggerCDISFetchDataForSync":
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
 
-                    $currentSyncStatus = $this->getSyncStatus();
-                    if (
-                        $currentSyncStatus !== CatapultSyncStatus::Fetching &&
-                        $currentSyncStatus !== CatapultSyncStatus::Syncing &&
-                        $currentSyncStatus !== CatapultSyncStatus::Converting
-                    ) {
+                    if ($this->hasNoCurrentSyncActivity()) {
                         $options = (object)$this->getPayloadOptions($payload);
-
                         Artisan::queue('cdis:fetch-data-for-sync', [
                             '--interval' => $options->interval,
                             '--limit' => $options->limit,
@@ -289,7 +283,7 @@ class Listen extends Command
 
     public function updateCatapultStatus($state, $branchCode, $description = null)
     {
-        if ($state !== CatapultSyncStatus::Online) {
+        if ($state !== CatapultSyncStatus::Online && $state !== CatapultHandshaking::SYN && $state !== CatapultHandshaking::ACK) {
             $this->setSyncStatus($state);
         }
         if ($state === CatapultSyncStatus::PongCatapult) {

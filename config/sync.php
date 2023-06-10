@@ -35,7 +35,7 @@ return [
         ]
     ],
     'scheduling' => [
-        'time_interval' => 1,
+        'time_interval' => 2,
         'previous_day' => 2,
         'next_day' => 1,
     ]

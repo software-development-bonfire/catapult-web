@@ -9,6 +9,7 @@ use App\Entities\ErrorLogDetail;
 use App\Entities\FieldMapping;
 use App\Enums\CatapultActionType;
 use App\Enums\CatapultSyncStatus;
+use App\Enums\DefinedTables;
 use App\Enums\MappingType;
 use App\Enums\Status;
 use App\Enums\StorageType;
@@ -26,6 +27,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -631,7 +633,7 @@ class ConvertDataToFile extends Command
                     if ($result) {
                         CDISSync::whereIn('bid', $toSyncData->pluck('bid'))->delete();
 
-                        if ($forSyncDatum->table_name === 'cost_and_price_change') {
+                        if ($forSyncDatum->table_name === DefinedTables::CostAndPriceChange) {
                             $this->setGenerated(app()->make(CDISCostAndPriceChange::class), $toSyncData->pluck('bid'));
                         }
                     }
@@ -646,7 +648,7 @@ class ConvertDataToFile extends Command
                             'table_bid' => $forSyncDatum->table_bid,
                         ])->delete();
 
-                        if ($forSyncDatum->table_name === 'cost_and_price_change') {
+                        if ($forSyncDatum->table_name === DefinedTables::CostAndPriceChange) {
                             $this->setGenerated(app()->make(CDISCostAndPriceChange::class), $forSyncDatum->table_bid);
                         }
                     }

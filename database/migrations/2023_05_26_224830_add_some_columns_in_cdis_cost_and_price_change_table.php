@@ -14,7 +14,7 @@ class AddSomeColumnsInCdisCostAndPriceChangeTable extends Migration
     public function up()
     {
         Schema::table('cdis_cost_and_price_change', function (Blueprint $table) {
-            $table->unsignedBigInteger('is_generated')->nullable()->after('updated_at')->default(\App\Enums\DisplayState::NO);
+            $table->tinyInteger('is_generated')->after('updated_at')->default(\App\Enums\DisplayState::NO);
             $table->timestamp('generated_at')->nullable()->after('is_generated');
         });
     }
