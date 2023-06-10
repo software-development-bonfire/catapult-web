@@ -392,6 +392,15 @@ trait GenericHelper
         ->hasColumn($tableName , $columnName);
     }
 
+    public function getEntityInformation($entity)
+    {
+        $entityName = str_replace('App\\Entities\\CDIS', '', $entity);
+        return (object) [
+            'has_soft_deleting' => in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($entity)),
+            'entity_name' => $entityName,
+            'table_name' => Str::snake($entityName)
+        ];
+    }
     
     public function getTableName($model) {
         $tableName = "";
