@@ -5,24 +5,16 @@ namespace App\Console\Commands\CDISToPOS\Schedule;
 use App\Entities\CDISBranch;
 use App\Entities\CDISSync;
 use App\Enums\CatapultSyncStatus;
-use App\Enums\CDIS\CostAndPriceChangeType;
+use App\Enums\CDIS\ApprovalStatus;
 use App\Enums\DisplayState;
-use App\Enums\MappingType;
-use App\Enums\Status;
-use App\Repositories\Contracts\CostAndPriceChangeRepository;
-use App\Repositories\Contracts\SyncEntryRepository;
 use App\Traits\DatabaseTransaction;
 use App\Traits\GenericHelper;
 use App\Traits\PusherTrait;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
-use App\Services\CDIS\SyncService;
 use App\Traits\JobCancellationTrait;
 use App\Traits\StorageTrait;
-use Exception;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 
 class GenerateCostAndPriceChange extends Command
@@ -108,6 +100,11 @@ class GenerateCostAndPriceChange extends Command
         return true;
     }
 
+    /**
+     * Get time for next execution
+     * 
+     * @return mixed
+     */
     private function getNextExecutionTime()
     {
         // add current time with defined time interval
@@ -136,6 +133,11 @@ class GenerateCostAndPriceChange extends Command
         ];
     }
 
+    /**
+     * Start generation of CSV once there are items
+     * not yet generated that fit with the criteria
+     *
+     */
     private function startGenerateCsv()
     {
         $branch = CDISBranch::where('code', $this->branchCode)->first();
@@ -147,7 +149,7 @@ class GenerateCostAndPriceChange extends Command
             if ($this->buildCostAndPriceChangeDetailSyncEntry($costAndPriceChangeBids, $branch)) {
                 $options = $this->getConsoleOptions();
 
-                Artisan::queue('cdis:convert-data-to-file', [
+                $this->call('cdis:convert-data-to-file', [
                     '--interval' => $options->interval,
                     '--limit' => $options->limit,
                     '--broadcast' => $options->broadcast,
@@ -159,10 +161,13 @@ class GenerateCostAndPriceChange extends Command
                 $this->setSyncStatus(CatapultSyncStatus::PongCatapult);
             }
         } else {
-            $this->createLog("No cost and price change...");
+            $this->createLog(__('message.no_cost_and_price_change'));
         }
     }
 
+    /**
+     * Build sync entry if entity data is not empty
+     */
     private function buildEntitySyncEntry($entityData, $tableName, $branch)
     {
         foreach ($entityData as $entityDatum) {
@@ -197,7 +202,7 @@ class GenerateCostAndPriceChange extends Command
                 array(
                     'branch_bid' => $branch->bid,
                     'table_bid' => $entityDatum->bid,
-                    'table_name' =>  $tableName,
+                    'table_name' => $tableName,
                     'reference_bid' => $syncDetails->reference_bid ?? null,
                     'reference_table' => $syncDetails->reference_table ?? null,
                     'level' => 1,
@@ -209,10 +214,16 @@ class GenerateCostAndPriceChange extends Command
         }
     }
 
+    /**
+     * Build sync entry of {{cost and price change}} table
+     * 
+     * @return array
+     */
     private function buildCostAndPriceChangeSyncEntry($branch)
     {
         $filters = (object) [
             'is_generated' => DisplayState::NO,
+            'status' => ApprovalStatus::APPROVED,
             'effective_at' => now()->subDays($this->previousDay),
             'expires_at' => now()->addDays($this->nextDay),
         ];
@@ -230,7 +241,7 @@ class GenerateCostAndPriceChange extends Command
         $costAndPriceChangeBids = [];
 
         if (count($entityData) > 0) {
-            $this->createLog(count($entityData) . ' cost and price change');
+            $this->createLog(count($entityData).' '.strtolower(Str::studly($entity->table_name)));
 
             $this->setSyncStatus(CatapultSyncStatus::Scheduling);
 
@@ -243,6 +254,11 @@ class GenerateCostAndPriceChange extends Command
         return $costAndPriceChangeBids;
     }
 
+    /**
+     * Build sync entry of {{cost and price change detail}} table
+     * 
+     * @return boolean
+     */
     private function buildCostAndPriceChangeDetailSyncEntry($bids, $branch)
     {
         $syncableEntity = \App\Entities\CDISCostAndPriceChangeDetail::class;
@@ -256,13 +272,18 @@ class GenerateCostAndPriceChange extends Command
         $entityData = $entityData->get();
 
         if (count($entityData) > 0) {
-            $this->createLog(count($entityData) . ' cost and price change detail');
+            $this->createLog(count($entityData).' '.strtolower(Str::studly($entity->table_name)));
             $this->buildEntitySyncEntry($entityData, $entity->table_name, $branch);
             return true;
         }
         return false;
     }
 
+    /**
+     * Set criteria in querying cost and price change data
+     * 
+     * @return mixed
+     */
     private function applyCriteriaHead($entityData, $filters)
     {
         if (!empty($filters)) {
@@ -272,8 +293,8 @@ class GenerateCostAndPriceChange extends Command
             if (isset($filters->pricing_type) && $filters->pricing_type !== '') {
                 $entityData = $entityData->where('pricing_type', $filters->pricing_type);
             }
-            if (!empty($filters->status)) {
-                // $entityData = $entityData->where('status', $filters->status);
+            if (isset($filters->status) && $filters->status !== '') {
+                $entityData = $entityData->where('status', $filters->status);
             }
             if (isset($filters->is_generated) && $filters->is_generated !== '') {
                 $entityData = $entityData->where('is_generated', $filters->is_generated);
