@@ -173,6 +173,8 @@ class Listen extends Command
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
 
                     if ($this->hasNoCurrentSyncActivity()) {
+                        $this->call('clear:jobs');
+
                         $options = (object)$this->getPayloadOptions($payload);
                         Artisan::queue('cdis:fetch-data-for-sync', [
                             '--interval' => $options->interval,
