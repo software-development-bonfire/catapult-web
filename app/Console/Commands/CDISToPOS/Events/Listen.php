@@ -191,16 +191,18 @@ class Listen extends Command
                 case "App\Events\Catapult\TriggerCDISDataConversion":
                     $options = (object)$this->getPayloadOptions($payload);
 
+                    $commandOptions =  [
+                        '--interval' => $options->interval,
+                        '--limit' => $options->limit,
+                        '--broadcast' => $options->broadcast,
+                        '--progress' => $options->progress,
+                        '--progress_divisor' => $options->progress_divisor,
+                        '--type' => $options->type
+                    ];
+
                     if (isset($options->refetchForSync) && $options->refetchForSync) {
                         $this->triggerPusher($branchCode, CatapultSyncStatus::Syncing, __('info.resyncing'), $payload);
-                        Artisan::queue('cdis:fetch-data-for-sync-again', [
-                            '--interval' => $options->interval,
-                            '--limit' => $options->limit,
-                            '--broadcast' => $options->broadcast,
-                            '--progress' => $options->progress,
-                            '--progress_divisor' => $options->progress_divisor,
-                            '--type' => $options->type
-                        ]);
+                        Artisan::queue('cdis:fetch-data-for-sync-again', $commandOptions);
                     } else {
                         $this->triggerPusher($branchCode, CatapultSyncStatus::Converting, __('info.converting'), $payload);
 
@@ -213,14 +215,7 @@ class Listen extends Command
                             $convertCommand = 'cdis:convert-data-to-file-changes';
                         }
 
-                        Artisan::queue($convertCommand, [
-                            '--interval' => $options->interval,
-                            '--limit' => $options->max_limit,
-                            '--broadcast' =>  $options->broadcast,
-                            '--progress' => $options->progress,
-                            '--progress_divisor' => $options->progress_divisor,
-                            '--type' => $options->type
-                        ]);
+                        Artisan::queue($convertCommand, $commandOptions);
                     }
                     break;
 

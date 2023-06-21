@@ -31,6 +31,7 @@ use App\Traits\JobCancellationTrait;
 use App\Traits\StorageTrait;
 use Exception;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 
 class ConvertDataToFileAll extends Command
 {
@@ -132,6 +133,7 @@ class ConvertDataToFileAll extends Command
 
         $syncService = app()->make(SyncService::class);
         $convertableEntities = $syncService->getArrangedSyncableEntities();
+        $syncableEntitiesGroupBy = $syncService->getSyncableEntitiesGroupBy();
 
         $hasBeenCancelled = $this->hasBeenCancelledConversion();;
 
@@ -153,6 +155,12 @@ class ConvertDataToFileAll extends Command
 
             if ($hasSoftDeleting) {
                 $entityData = $entityData->withTrashed();
+            }
+
+            if (isset($syncableEntitiesGroupBy[$syncableEntity])) {
+                $entityData = $entityData
+                    ->groupBy($syncableEntitiesGroupBy[$syncableEntity])
+                    ->orderBy('id', 'DESC');
             }
 
             $entityName = str_replace('App\\Entities\\CDIS', '', $syncableEntity);
@@ -196,11 +204,17 @@ class ConvertDataToFileAll extends Command
                 }
                 $syncDetails = $entityDatum->syncDetails();
 
+                if ($this->modelHasColumn($entityDatum, $tableName, 'branch_bid')) {
+                    if ($entityDatum->branch_bid !== $branch->bid) {
+                        continue;
+                    }
+                }
+
                 CDISSync::create(
                     array(
                         'branch_bid' => $branch->bid,
                         'table_bid' => $entityDatum->bid,
-                        'table_name' =>  $tableName,
+                        'table_name' => $tableName,
                         'reference_bid' => $syncDetails->reference_bid ?? null,
                         'reference_table' => $syncDetails->reference_table ?? null,
                         'level' => 1,
@@ -226,13 +240,21 @@ class ConvertDataToFileAll extends Command
 
         CDISSync::where('branch_bid','!=', $branch->bid)->delete();
 
-        Artisan::queue('cdis:convert-data-to-file', [
+        $commandOptions = [
             '--interval' => $interval,
             '--limit' => $limit,
             '--broadcast' =>  $broadcast,
             '--progress' => $showProgress,
             '--progress_divisor' => $progressDivisor,
             '--type' => $catapultActionType
-        ]);
+        ];
+
+        $jobs = DB::table('jobs')->get();
+
+        if (count($jobs) > 0) {
+            $this->queue('cdis:convert-data-to-file', $commandOptions);
+        } else {
+            $this->call('cdis:convert-data-to-file', $commandOptions);
+        }
     }
 }
