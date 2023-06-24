@@ -125,6 +125,7 @@ export default {
             "the_name_of_queue_connection": "The name of the queue connection to clear",
             "uploading_files": "Uploading files",
             "uploading_report": "Uploading report",
+            "you_run_seeder_first": "You must run seeder first.",
             "watching_files_to_resync": "Watching files need to resync...",
             "watching_files_to_upload": "Watching files to upload..."
         },

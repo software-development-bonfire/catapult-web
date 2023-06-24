@@ -39,7 +39,7 @@ class GenerateCostAndPriceChange extends Command
     protected $description = 'Convert CDIS data (Generate CSV (Selected Table)) to specific file ';
 
     public $broadcast = false;
-    private $mappingVariable = [];
+    public $processing = false;
 
     private $currentDate;
     private $previousDay;
@@ -76,13 +76,15 @@ class GenerateCostAndPriceChange extends Command
 
             $canProceedScheduledGeneration = $this->hasNoCurrentSyncActivity();
 
-            if ($canProceedScheduledGeneration && microtime(true) >= $nextTime) {
-                $nextTime = $this->getNextExecutionTime();
+            if ($canProceedScheduledGeneration && ! $this->processing &&  microtime(true) >= $nextTime) {
+                $this->processing = true;
+
                 $this->startGenerateCsv();
 
                 $nextTime = $this->getNextExecutionTime();
-            }
 
+                $this->processing = false;
+            }
             // Do other stuff (you can have as many other timers as you want)           
 
             // this is a preparation for upcoming changes
@@ -163,6 +165,8 @@ class GenerateCostAndPriceChange extends Command
         } else {
             $this->createLog(__('message.no_cost_and_price_change'));
         }
+
+        $this->processing = false;
     }
 
     /**
@@ -221,10 +225,14 @@ class GenerateCostAndPriceChange extends Command
      */
     private function buildCostAndPriceChangeSyncEntry($branch)
     {
+        $effectiveAt = now()->subDays($this->previousDay);
+        if (intval($this->previousDay) <= 0) {
+            $effectiveAt = now()->subYear(5);
+        }
         $filters = (object) [
             'is_generated' => DisplayState::NO,
             'status' => ApprovalStatus::APPROVED,
-            'effective_at' => now()->subDays($this->previousDay),
+            'effective_at' => $effectiveAt,
             'expires_at' => now()->addDays($this->nextDay),
         ];
 
@@ -248,8 +256,6 @@ class GenerateCostAndPriceChange extends Command
             $costAndPriceChangeBids = $entityData->pluck('bid');
 
             $this->buildEntitySyncEntry($entityData, $entity->table_name, $branch);
-        } else {
-            $this->createLog($this->currentDate);
         }
         return $costAndPriceChangeBids;
     }
@@ -280,7 +286,7 @@ class GenerateCostAndPriceChange extends Command
     }
 
     /**
-     * Set criteria in querying cost and price change data
+     * Set criteria in querying {{cost and price change}} data
      * 
      * @return mixed
      */
@@ -302,17 +308,7 @@ class GenerateCostAndPriceChange extends Command
             if (!empty($filters->effective_at) && !empty($filters->expires_at)) {
                 $effectiveAt = parseDateTime($filters->effective_at, 'Y-m-d h:i:s', '');
                 $expiresAt = parseDateTime($filters->expires_at, 'Y-m-d h:i:s', '');
-                //$entityData = $entityData->whereBetween('expires_at', [$effectiveAt, $expiresAt]);
                 $entityData = $entityData->whereBetween('effective_at', ["{$effectiveAt} 00:00:00", "{$expiresAt} 23:59:59"]);
-            } else {
-                if (!empty($filters->effective_at)) {
-                    $effectiveAt = parseDateTime($filters->effective_at, 'Y-m-d', '');
-                    $entityData = $entityData->whereBetween('effective_at', ["{$effectiveAt} 00:00:00", "{$effectiveAt} 23:59:59"]);
-                }
-                if (!empty($filters->expires_at)) {
-                    $expiresAt = parseDateTime($filters->expires_at, 'Y-m-d', '');
-                    $entityData = $entityData->whereBetween('effective_at', ["{$expiresAt} 00:00:00", "{$expiresAt} 23:59:59"]);
-                }
             }
         }
         return $entityData;
