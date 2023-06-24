@@ -29,7 +29,7 @@ class GenerateCostAndPriceChange extends Command
      *
      * @var string
      */
-    protected $signature = 'schedule:csv {--interval=true}{--limit=true}{--broadcast=false}{--type=ALL}{--progress=false}{--progress_divisor=100}';
+    protected $signature = 'schedule:csv {--interval=false}{--limit=true}{--broadcast=false}{--type=ALL}{--progress=false}{--progress_divisor=100}';
 
     /**
      * The console command description.
@@ -292,7 +292,7 @@ class GenerateCostAndPriceChange extends Command
      */
     private function applyCriteriaHead($entityData, $filters)
     {
-        if (!empty($filters)) {
+        if (! empty($filters)) {
             if (isset($filters->type) && $filters->type !== '') {
                 $entityData = $entityData->where('type', $filters->type);
             }
@@ -305,7 +305,7 @@ class GenerateCostAndPriceChange extends Command
             if (isset($filters->is_generated) && $filters->is_generated !== '') {
                 $entityData = $entityData->where('is_generated', $filters->is_generated);
             }
-            if (!empty($filters->effective_at) && !empty($filters->expires_at)) {
+            if (! empty($filters->effective_at) && ! empty($filters->expires_at)) {
                 $effectiveAt = parseDateTime($filters->effective_at, 'Y-m-d h:i:s', '');
                 $expiresAt = parseDateTime($filters->expires_at, 'Y-m-d h:i:s', '');
                 $entityData = $entityData->whereBetween('effective_at', ["{$effectiveAt} 00:00:00", "{$expiresAt} 23:59:59"]);
