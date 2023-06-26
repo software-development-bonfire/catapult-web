@@ -41,9 +41,9 @@ return [
     | These parameters in generating CSV specifically for Cost and Price Change
     |
     | time_interval     : The time interval in "minutes" that the scheduler will run every minutes
-    | previous_day      : Number of days to check previous cost and price change entry. The default 
+    | previous_day      : Number of days to check previous cost and price change entries. The default 
                           value is -1, means all previous data will be included in criteria
-    | next_day          : Number of days to check time triggered entries in cost and price change.
+    | next_day          : Number of days in advance to check the date of effectivity of cost and price change entries.
     */
     'scheduling' => [
         'time_interval' => 1,
