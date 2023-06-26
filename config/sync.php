@@ -26,7 +26,8 @@ return [
             'interval' => 3600,
             'broadcast' => true,
             'progress_divisor' => 100
-        ]
+        ],
+        'clear_jobs' => false,
     ],
     'pos' => [
         'to_cdis' => [

@@ -265,6 +265,7 @@ class ConvertDataToFile extends Command
         } else {
             if ($catapultActionType === CatapultActionType::NEW_BRANCH) {
                 $convertMessage = __('info.create_csv_for_new_branch_success').' @ '.$humanReadableTime;
+                $this->setBranchGenerated();
             } else {
                 $convertMessage = __('info.generate_csv_all_data_success').' @ '.$humanReadableTime;
             }

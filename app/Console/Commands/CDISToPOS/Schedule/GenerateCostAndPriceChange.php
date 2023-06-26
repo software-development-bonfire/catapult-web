@@ -8,6 +8,7 @@ use App\Enums\CatapultSyncStatus;
 use App\Enums\CDIS\ApprovalStatus;
 use App\Enums\DisplayState;
 use App\Traits\DatabaseTransaction;
+use App\Traits\GenerateTrait;
 use App\Traits\GenericHelper;
 use App\Traits\PusherTrait;
 use Carbon\Carbon;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\Log;
 
 class GenerateCostAndPriceChange extends Command
 {
-    use DatabaseTransaction, GenericHelper, PusherTrait, JobCancellationTrait, StorageTrait;
+    use DatabaseTransaction, GenericHelper, PusherTrait, JobCancellationTrait, StorageTrait, GenerateTrait;
 
     public $extension = 'csv';
 
@@ -67,7 +68,7 @@ class GenerateCostAndPriceChange extends Command
      */
     public function handle()
     {
-        $active = true;
+        $active = $this->checkForStopFlag();
 
         $nextTime = $this->getNextExecutionTime(); // Set initial delay
 
@@ -99,7 +100,7 @@ class GenerateCostAndPriceChange extends Command
         // Logic to check for a program-exit flag
         // Could be via socket or file etc.
         // Return FALSE to stop.
-        return true;
+        return ! $this->isBranchGenerated();
     }
 
     /**
