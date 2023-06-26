@@ -143,12 +143,7 @@ class Listen extends Command
 
                 case "pusher:pong":
                     $this->triggerPusher($branchCode, CatapultSyncStatus::PongCatapult, '{}', $payload);
-                    $currentSyncStatus = $this->getSyncStatus();
-                    if (
-                        $currentSyncStatus !== CatapultSyncStatus::Fetching &&
-                        $currentSyncStatus !== CatapultSyncStatus::Syncing &&
-                        $currentSyncStatus !== CatapultSyncStatus::Converting
-                    ) {
+                    if ($this->hasNoCurrentSyncActivity()) {
                         $this->updateCatapultStatus(CatapultSyncStatus::Online, $branchCode);
                     }
                     
