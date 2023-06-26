@@ -20,6 +20,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(\App\Repositories\Contracts\CDISProductVariantRepository::class, \App\Repositories\Eloquent\CDISProductVariantRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\SyncEntryRepository::class, \App\Repositories\Eloquent\SyncEntryRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\TerminalFileSetupRepository::class, \App\Repositories\Eloquent\TerminalFileSetupRepositoryEloquent::class);
+        $this->app->bind(\App\Repositories\Contracts\CostAndPriceChangeRepository::class, \App\Repositories\Eloquent\CostAndPriceChangeRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\CDIS\TerminalTransactionRepository::class, \App\Repositories\Eloquent\CDIS\TerminalTransactionRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\CDIS\ZReadRepository::class, \App\Repositories\Eloquent\CDIS\ZReadRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\CDIS\POSAuditTrailRepository::class, \App\Repositories\Eloquent\CDIS\POSAuditTrailRepositoryEloquent::class);
