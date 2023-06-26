@@ -6,6 +6,7 @@ use App\Entities\SyncDetail;
 use App\Enums\CatapultSyncStatus;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 trait JobCancellationTrait
 {
@@ -121,6 +122,18 @@ trait JobCancellationTrait
             }
         }
         return $status;
+    }
+
+    public function hasNoCurrentSyncActivity()
+    {        
+        // we must check if there is an activity from/to CDIS
+        // to block the execution
+        $currentSyncStatus = $this->getSyncStatus();
+        return ($currentSyncStatus !== CatapultSyncStatus::Fetching &&
+            $currentSyncStatus !== CatapultSyncStatus::Syncing &&
+            $currentSyncStatus !== CatapultSyncStatus::Converting &&
+            $currentSyncStatus !== CatapultSyncStatus::Scheduling
+        );
     }
 
 

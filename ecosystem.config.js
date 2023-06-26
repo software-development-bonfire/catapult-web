@@ -99,5 +99,16 @@ module.exports = {
             merge_logs: true,
             autorestart: true,
         },
+        {
+            name : "CPLT-POS-SCHED",
+            script: "artisan",
+            args: ["schedule:csv"],
+            exec_interpreter: "php",
+            exec_mode : "fork",
+            max_memory_restart : "5G",
+            watch: false,
+            merge_logs: true,
+            autorestart: true,
+        },
     ]
 }

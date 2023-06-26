@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Carbon;
+
 if (! function_exists('moneyToFloat')) {
 
     function moneyToFloat($value)
@@ -35,6 +37,14 @@ if (! function_exists('toBooleanOrInt')) {
             );
 
         return $value;
+    }
+}
+
+if (! function_exists('parseDateTime')) {
+
+    function parseDateTime($value, $format, $defaultValue = '', $defaultWillBeParsed = false)
+    {
+        return isset($value) ? Carbon::parse($value)->format($format) : ($defaultWillBeParsed ? Carbon::parse($defaultValue)->format($format) : $defaultValue);
     }
 }
 

@@ -183,5 +183,17 @@ class FetchDataForSync extends Command
                 '--type' => $catapultActionType
             ]);
         }
+        
+        if ($noDataToSync && $catapultActionType === CatapultActionType::CHANGES) {
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), CatapultSyncStatus::SyncDone, __('info.syncing_to_catapult_success'), null);
+            $this->pusher->trigger($this->cdisAndCatapultSyncChannel($branchCode), 'catapult:status',  [
+                'state' => CatapultSyncStatus::SyncDone, 
+                'code' => $branchCode, 
+                'description' => $catapultActionType
+            ], null);
+            $this->clearCancelledSyncing();
+            $this->clearSyncing();
+            $this->setSyncStatus(CatapultSyncStatus::SyncDone);
+        }
     }
 }
