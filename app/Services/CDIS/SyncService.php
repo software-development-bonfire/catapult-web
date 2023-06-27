@@ -387,6 +387,7 @@ class SyncService
                 'product_uom_bid',
             ],
             \App\Entities\CDISCostAndPriceChangeDetail::class => [
+                'head_bid',
                 'branch_bid',
                 'product_uom_bid',
                 'pricing_type',
