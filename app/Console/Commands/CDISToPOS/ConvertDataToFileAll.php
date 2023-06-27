@@ -161,6 +161,10 @@ class ConvertDataToFileAll extends Command
                 $entityData = $entityData
                     ->groupBy($syncableEntitiesGroupBy[$syncableEntity])
                     ->orderBy('id', 'DESC');
+                    
+                $entityData = $entityData->get()->unique('product_uom_bid');
+            } else {
+                $entityData = $entityData->get();
             }
 
             $entityName = str_replace('App\\Entities\\CDIS', '', $syncableEntity);
