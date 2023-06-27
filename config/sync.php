@@ -26,7 +26,9 @@ return [
             'interval' => 3600,
             'broadcast' => true,
             'progress_divisor' => 100
-        ]
+        ],
+        'clear_jobs' => false,
+        'hard_resync_network_resolve' => false,
     ],
     'pos' => [
         'to_cdis' => [

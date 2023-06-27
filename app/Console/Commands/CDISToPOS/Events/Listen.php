@@ -5,6 +5,7 @@ namespace App\Console\Commands\CDISToPOS\Events;
 use App\Enums\CatapultActionType;
 use App\Enums\CatapultHandshaking;
 use App\Enums\CatapultSyncStatus;
+use App\Enums\DefinedQueueName;
 use App\Helpers\CustomPinger as Ping;
 use App\Traits\GenericHelper;
 use App\Traits\JobCancellationTrait;
@@ -143,12 +144,7 @@ class Listen extends Command
 
                 case "pusher:pong":
                     $this->triggerPusher($branchCode, CatapultSyncStatus::PongCatapult, '{}', $payload);
-                    $currentSyncStatus = $this->getSyncStatus();
-                    if (
-                        $currentSyncStatus !== CatapultSyncStatus::Fetching &&
-                        $currentSyncStatus !== CatapultSyncStatus::Syncing &&
-                        $currentSyncStatus !== CatapultSyncStatus::Converting
-                    ) {
+                    if ($this->hasNoCurrentSyncActivity()) {
                         $this->updateCatapultStatus(CatapultSyncStatus::Online, $branchCode);
                     }
                     
@@ -173,7 +169,10 @@ class Listen extends Command
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
 
                     if ($this->hasNoCurrentSyncActivity()) {
-                        $this->call('clear:jobs');
+
+                        if (config('sync.cdis.clear_jobs')) {
+                            $this->call('clear:jobs');
+                        }
 
                         $options = (object)$this->getPayloadOptions($payload);
                         Artisan::queue('cdis:fetch-data-for-sync', [
@@ -184,6 +183,8 @@ class Listen extends Command
                             '--progress_divisor' => $options->progress_divisor,
                             '--type' => $options->type
                         ]);
+                    } else {
+                        $this->createLog(json_encode($payload), 'info', true, ['ACTIVITY', $this->getSyncStatus()]);
                     }
                    
                     break;
@@ -191,16 +192,18 @@ class Listen extends Command
                 case "App\Events\Catapult\TriggerCDISDataConversion":
                     $options = (object)$this->getPayloadOptions($payload);
 
+                    $commandOptions =  [
+                        '--interval' => $options->interval,
+                        '--limit' => $options->limit,
+                        '--broadcast' => $options->broadcast,
+                        '--progress' => $options->progress,
+                        '--progress_divisor' => $options->progress_divisor,
+                        '--type' => $options->type
+                    ];
+
                     if (isset($options->refetchForSync) && $options->refetchForSync) {
                         $this->triggerPusher($branchCode, CatapultSyncStatus::Syncing, __('info.resyncing'), $payload);
-                        Artisan::queue('cdis:fetch-data-for-sync-again', [
-                            '--interval' => $options->interval,
-                            '--limit' => $options->limit,
-                            '--broadcast' => $options->broadcast,
-                            '--progress' => $options->progress,
-                            '--progress_divisor' => $options->progress_divisor,
-                            '--type' => $options->type
-                        ]);
+                        Artisan::queue('cdis:fetch-data-for-sync-again', $commandOptions);
                     } else {
                         $this->triggerPusher($branchCode, CatapultSyncStatus::Converting, __('info.converting'), $payload);
 
@@ -213,14 +216,7 @@ class Listen extends Command
                             $convertCommand = 'cdis:convert-data-to-file-changes';
                         }
 
-                        Artisan::queue($convertCommand, [
-                            '--interval' => $options->interval,
-                            '--limit' => $options->max_limit,
-                            '--broadcast' =>  $options->broadcast,
-                            '--progress' => $options->progress,
-                            '--progress_divisor' => $options->progress_divisor,
-                            '--type' => $options->type
-                        ]);
+                        Artisan::queue($convertCommand, $commandOptions);
                     }
                     break;
 
@@ -231,7 +227,7 @@ class Listen extends Command
                         $this->triggerPusher($branchCode, CatapultSyncStatus::Converting, __('info.conversion_cannot_be_cancelled'), $payload);
                     } else {
                         $this->triggerPusher($branchCode, CatapultSyncStatus::CancelConversion, __('info.cancelling'), $payload);
-                        Artisan::queue('cdis:cancel-convert', [
+                        Artisan::call('cdis:cancel-convert', [
                             '--retry' => '10',
                             '--broadcast' => $options->broadcast,
                             '--progress' => $options->progress,
@@ -243,7 +239,7 @@ class Listen extends Command
                 case "App\Events\Catapult\CancelCDISFetchDataForSync":
                     $options = (object)$this->getPayloadOptions($payload);
                     $this->triggerPusher($branchCode, CatapultSyncStatus::CancelSyncing, __('info.cancelling'), $payload);
-                    Artisan::queue('cdis:cancel-sync', [
+                    Artisan::call('cdis:cancel-sync', [
                         '--retry' => '10',
                         '--broadcast' => $options->broadcast,
                         '--progress' => $options->progress,
