@@ -100,7 +100,7 @@ class GenerateCostAndPriceChange extends Command
         // Logic to check for a program-exit flag
         // Could be via socket or file etc.
         // Return FALSE to stop.
-        return ! $this->isBranchGenerated();
+        return $this->isBranchGenerated();
     }
 
     /**
