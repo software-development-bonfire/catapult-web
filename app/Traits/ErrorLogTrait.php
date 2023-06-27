@@ -16,6 +16,7 @@ use App\Traits\FilenameRetryCounterTrait;
 trait ErrorLogTrait
 {
     use FilenameRetryCounterTrait;
+    use ConsoleCommandTrait;
 
     /**
      * Insert errors into database
@@ -69,8 +70,7 @@ trait ErrorLogTrait
                 $output = "";
                 foreach ($errorLogs as $errorLog) {
                     $details = $errorLog->details;
-                    $spaces = ($entriesMaxLength - strlen($errorLog->filename)) / 2;
-                    $filenameLog = str_repeat(' ', ceil($spaces)) . $errorLog->filename . str_repeat(' ', floor($spaces));
+                    $filenameLog = $this->computedLogLabel($entriesMaxLength, $errorLog->filename);
 
                     if ($details !== null) {
                         foreach ($details as $detail) {

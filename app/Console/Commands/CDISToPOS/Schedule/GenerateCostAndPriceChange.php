@@ -8,6 +8,7 @@ use App\Enums\CatapultSyncStatus;
 use App\Enums\CDIS\ApprovalStatus;
 use App\Enums\DisplayState;
 use App\Traits\DatabaseTransaction;
+use App\Traits\GenerateTrait;
 use App\Traits\GenericHelper;
 use App\Traits\PusherTrait;
 use Carbon\Carbon;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\Log;
 
 class GenerateCostAndPriceChange extends Command
 {
-    use DatabaseTransaction, GenericHelper, PusherTrait, JobCancellationTrait, StorageTrait;
+    use DatabaseTransaction, GenericHelper, PusherTrait, JobCancellationTrait, StorageTrait, GenerateTrait;
 
     public $extension = 'csv';
 
@@ -67,16 +68,18 @@ class GenerateCostAndPriceChange extends Command
      */
     public function handle()
     {
-        $active = true;
-
         $nextTime = $this->getNextExecutionTime(); // Set initial delay
-
-        while ($active) {
+        while (true) {
             usleep(1000); // optional, if you want to be considerate
 
+            // this is a preparation for upcoming changes
+            // if we need to add validation to stop the scheduling
+            $active = $this->checkForStopFlag();
+
+            // Check if Catapult has running activity
             $canProceedScheduledGeneration = $this->hasNoCurrentSyncActivity();
 
-            if ($canProceedScheduledGeneration && ! $this->processing &&  microtime(true) >= $nextTime) {
+            if ($active && $canProceedScheduledGeneration && ! $this->processing &&  microtime(true) >= $nextTime) {
                 $this->processing = true;
 
                 $this->startGenerateCsv();
@@ -85,11 +88,6 @@ class GenerateCostAndPriceChange extends Command
 
                 $this->processing = false;
             }
-            // Do other stuff (you can have as many other timers as you want)           
-
-            // this is a preparation for upcoming changes
-            // if we need to add validation to stop the scheduling
-            $active = $this->checkForStopFlag();
         }
     }
 
@@ -99,7 +97,7 @@ class GenerateCostAndPriceChange extends Command
         // Logic to check for a program-exit flag
         // Could be via socket or file etc.
         // Return FALSE to stop.
-        return true;
+        return $this->isBranchGenerated();
     }
 
     /**

@@ -371,12 +371,28 @@ class SyncService
         ];
     }
 
-    
     public function getSelectedSyncableEntities()
     {
         return [
             \App\Entities\CDISCostAndPriceChange::class,
             \App\Entities\CDISCostAndPriceChangeDetail::class,
+        ];
+    }
+
+    public function getSyncableEntitiesGroupBy()
+    {
+        return [
+            \App\Entities\CDISProductBranchAvailability::class => [
+                'branch_bid',
+                'product_uom_bid',
+            ],
+            \App\Entities\CDISCostAndPriceChangeDetail::class => [
+                'head_bid',
+                'branch_bid',
+                'product_uom_bid',
+                'pricing_type',
+                'product_pricing_type_bid'
+            ],
         ];
     }
 }
