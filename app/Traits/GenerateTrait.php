@@ -24,15 +24,11 @@ trait GenerateTrait
 
     public function setBranchGenerated()
     {
-        Storage::disk('public')->put('CSV', 'This file means Create CSV for New Branch already executed.');
+        Storage::disk('public')->put('CSV.info', 'This file means Create CSV for New Branch already executed.');
     }
 
     public function isBranchGenerated()
     {
-        $exist = false;
-        if (File::exists(public_path('CSV'))) {
-            $exist = true;
-        }
-        return $exist; // (Storage::disk('public')->exists('CSV'));
+        return (Storage::disk('public')->exists('CSV.info'));
     }
 }
