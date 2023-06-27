@@ -5,6 +5,7 @@ namespace App\Traits;
 use App\Enums\DisplayState;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
 trait GenerateTrait
@@ -28,6 +29,10 @@ trait GenerateTrait
 
     public function isBranchGenerated()
     {
-        return (Storage::disk('public')->exists('CSV'));
+        $exist = false;
+        if (File::exists(public_path('CSV'))) {
+            $exist = true;
+        }
+        return $exist; // (Storage::disk('public')->exists('CSV'));
     }
 }

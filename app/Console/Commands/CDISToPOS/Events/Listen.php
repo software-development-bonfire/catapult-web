@@ -182,7 +182,9 @@ class Listen extends Command
                             '--progress' => $options->progress,
                             '--progress_divisor' => $options->progress_divisor,
                             '--type' => $options->type
-                        ])->onQueue(DefinedQueueName::SYNC);
+                        ]);
+                    } else {
+                        $this->createLog(json_encode($payload), 'info', true, ['ACTIVITY', $this->getSyncStatus()]);
                     }
                    
                     break;
@@ -214,7 +216,7 @@ class Listen extends Command
                             $convertCommand = 'cdis:convert-data-to-file-changes';
                         }
 
-                        Artisan::queue($convertCommand, $commandOptions)->onQueue(DefinedQueueName::CONVERT);
+                        Artisan::queue($convertCommand, $commandOptions);
                     }
                     break;
 
