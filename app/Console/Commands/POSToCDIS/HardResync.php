@@ -76,7 +76,11 @@ class HardResync extends Command implements ShouldQueue
         $cdisUrl = getDomain(config()->get('app.cdis_url'), true);
         $cdisDomainName = getDomain($cdisUrl, false);
 
-        $this->call('network:resolve');
+        $networkResolved = config('sync.cdis.hard_resync_network_resolve');
+        if ($networkResolved) {
+            $this->call('network:resolve');
+        }
+        $this->call('clear:jobs');
 
         $entries = [
             'transaction',

@@ -39,6 +39,7 @@ class GenerateCostAndPriceChange extends Command
      */
     protected $description = 'Convert CDIS data (Generate CSV (Selected Table)) to specific file ';
 
+    public $active = false;
     public $broadcast = false;
     public $processing = false;
 
@@ -68,11 +69,10 @@ class GenerateCostAndPriceChange extends Command
      */
     public function handle()
     {
-        $active = $this->checkForStopFlag();
-
+        $this->active = $this->checkForStopFlag();
         $nextTime = $this->getNextExecutionTime(); // Set initial delay
 
-        while ($active) {
+        while ($this->active) {
             usleep(1000); // optional, if you want to be considerate
 
             $canProceedScheduledGeneration = $this->hasNoCurrentSyncActivity();
@@ -90,7 +90,7 @@ class GenerateCostAndPriceChange extends Command
 
             // this is a preparation for upcoming changes
             // if we need to add validation to stop the scheduling
-            $active = $this->checkForStopFlag();
+            $this->active = $this->checkForStopFlag();
         }
     }
 
