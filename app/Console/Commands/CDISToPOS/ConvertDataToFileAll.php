@@ -252,9 +252,9 @@ class ConvertDataToFileAll extends Command
         $jobs = DB::table('jobs')->get();
 
         if (count($jobs) > 0) {
-            $this->queue('cdis:convert-data-to-file', $commandOptions);
+            Artisan::queue('cdis:convert-data-to-file', $commandOptions);
         } else {
-            $this->call('cdis:convert-data-to-file', $commandOptions);
+            Artisan::call('cdis:convert-data-to-file', $commandOptions);
         }
     }
 }
