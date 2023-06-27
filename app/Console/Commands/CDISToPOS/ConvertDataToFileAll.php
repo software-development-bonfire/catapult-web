@@ -168,10 +168,7 @@ class ConvertDataToFileAll extends Command
             }
 
             $entityName = str_replace('App\\Entities\\CDIS', '', $syncableEntity);
-
             $tableName =  Str::snake($entityName);
-
-            $entityData = $entityData->get();
 
             $entityCountProgress++;
             $progress = 0;
