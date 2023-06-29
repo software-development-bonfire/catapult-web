@@ -88,8 +88,10 @@ class SyncService
 
             $bidsChunks = array_chunk($bids, $limit);
 
-            foreach ($bidsChunks as $bidsChunk) {
-                Sync::dispatch($bidsChunk, $senderDetails['branch_code'], $broadcast, $catapultActionType, $progressDivisor, $showProgress);
+            if ($catapultActionType !== CatapultActionType::SCHEDULE) {
+                foreach ($bidsChunks as $bidsChunk) {
+                    Sync::dispatch($bidsChunk, $senderDetails['branch_code'], $broadcast, $catapultActionType, $progressDivisor, $showProgress);
+                }
             }
 
             return (object) [

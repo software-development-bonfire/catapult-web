@@ -106,7 +106,7 @@ class GenerateCostAndPriceChange extends Command
 
     private function hasNoCDISSyncEntries()
     {
-        $forSync = app()->make(SyncService::class)->forSync(false, 'all', false, CatapultActionType::EVENT, 100, false, false);
+        $forSync = app()->make(SyncService::class)->forSync(false, 'all', false, CatapultActionType::SCHEDULE, 100, false, false);
 
         if (! isset($forSync->bidsChunks)) {
             return true;
