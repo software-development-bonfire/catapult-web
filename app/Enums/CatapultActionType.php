@@ -16,4 +16,5 @@ final class CatapultActionType extends Enum
     const EVENT         = 'EVENT';
     const CHANGES       = 'CHANGES';
     const ALL           = 'ALL';
+    const SCHEDULE      = 'SCHEDULE';
 }

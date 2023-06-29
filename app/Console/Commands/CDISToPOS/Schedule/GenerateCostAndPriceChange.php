@@ -4,9 +4,11 @@ namespace App\Console\Commands\CDISToPOS\Schedule;
 
 use App\Entities\CDISBranch;
 use App\Entities\CDISSync;
+use App\Enums\CatapultActionType;
 use App\Enums\CatapultSyncStatus;
 use App\Enums\CDIS\ApprovalStatus;
 use App\Enums\DisplayState;
+use App\Services\CDIS\SyncService;
 use App\Traits\DatabaseTransaction;
 use App\Traits\GenerateTrait;
 use App\Traits\GenericHelper;
@@ -30,7 +32,7 @@ class GenerateCostAndPriceChange extends Command
      *
      * @var string
      */
-    protected $signature = 'schedule:csv {--interval=false}{--limit=true}{--broadcast=false}{--type=ALL}{--progress=false}{--progress_divisor=100}';
+    protected $signature = 'schedule:csv {--interval=false}{--limit=true}{--broadcast=false}{--type=SCHEDULE}{--progress=false}{--progress_divisor=100}';
 
     /**
      * The console command description.
@@ -82,7 +84,9 @@ class GenerateCostAndPriceChange extends Command
             if ($active && $canProceedScheduledGeneration && ! $this->processing &&  microtime(true) >= $nextTime) {
                 $this->processing = true;
 
-                $this->startGenerateCsv();
+                if ($this->hasNoCDISSyncEntries() && $this->hasNoCatapultSyncEntries()) {
+                    $this->startGenerateCsv();
+                }
 
                 $nextTime = $this->getNextExecutionTime();
 
@@ -98,6 +102,25 @@ class GenerateCostAndPriceChange extends Command
         // Could be via socket or file etc.
         // Return FALSE to stop.
         return $this->isBranchGenerated();
+    }
+
+    private function hasNoCDISSyncEntries()
+    {
+        $forSync = app()->make(SyncService::class)->forSync(9999999999999, 'all', false, CatapultActionType::EVENT, 100, false, false);
+
+        if (! isset($forSync->bidsChunks)) {
+            return true;
+        }
+        return true;
+    }
+
+    private function hasNoCatapultSyncEntries()
+    {
+        $syncEntries = CDISSync::all();
+        if (count($syncEntries) > 0) {
+            return false;
+        }
+        return true;
     }
 
     /**
