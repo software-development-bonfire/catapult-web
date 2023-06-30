@@ -192,55 +192,6 @@ class GenerateCostAndPriceChange extends Command
     }
 
     /**
-     * Build sync entry if entity data is not empty
-     */
-    private function buildEntitySyncEntry($entityData, $tableName, $branch)
-    {
-        foreach ($entityData as $entityDatum) {
-
-            $action = 'create';
-            if ($this->modelHasColumn($entityDatum, $tableName, 'deleted_at')) {
-                if ($entityDatum->deleted_at !== null) {
-                    $action = 'delete';
-                } else {
-                    if (
-                        $this->modelHasColumn($entityDatum, $tableName, 'created_at') &&
-                        $this->modelHasColumn($entityDatum, $tableName, 'updated_at')
-                    ) {
-                        if ($entityDatum->created_at !== $entityDatum->updated_at) {
-                            $action = 'update';
-                        }
-                    }
-                }
-            } else {
-                if (
-                    $this->modelHasColumn($entityDatum, $tableName, 'created_at') &&
-                    $this->modelHasColumn($entityDatum, $tableName, 'updated_at')
-                ) {
-                    if ($entityDatum->created_at !== $entityDatum->updated_at) {
-                        $action = 'update';
-                    }
-                }
-            }
-            $syncDetails = $entityDatum->syncDetails();
-
-            CDISSync::create(
-                array(
-                    'branch_bid' => $branch->bid,
-                    'table_bid' => $entityDatum->bid,
-                    'table_name' => $tableName,
-                    'reference_bid' => $syncDetails->reference_bid ?? null,
-                    'reference_table' => $syncDetails->reference_table ?? null,
-                    'level' => 1,
-                    'group' => null,
-                    'code' => $this->generateRandomKey(10, 1, ''),
-                    'action' => $action,
-                )
-            );
-        }
-    }
-
-    /**
      * Build sync entry of {{cost and price change}} table
      * 
      * @return array
@@ -277,7 +228,7 @@ class GenerateCostAndPriceChange extends Command
 
             $costAndPriceChangeBids = $entityData->pluck('bid');
 
-            $this->buildEntitySyncEntry($entityData, $entity->table_name, $branch);
+            $this->buildEntitySyncEntry($entityData, $entity->table_name, $branch, false, false);
         }
         return $costAndPriceChangeBids;
     }
@@ -301,7 +252,7 @@ class GenerateCostAndPriceChange extends Command
 
         if (count($entityData) > 0) {
             $this->createLog(count($entityData).' '.strtolower(Str::studly($entity->table_name)));
-            $this->buildEntitySyncEntry($entityData, $entity->table_name, $branch);
+            $this->buildEntitySyncEntry($entityData, $entity->table_name, $branch, false, false);
             return true;
         }
         return false;

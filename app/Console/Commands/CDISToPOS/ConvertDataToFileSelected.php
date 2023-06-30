@@ -150,57 +150,8 @@ class ConvertDataToFileSelected extends Command
             $entityData = $entityData->get();
 
             $entityCountProgress++;
-            $progress = 0;
+            $this->buildEntitySyncEntry($entityData, $tableName, $branch, true, true);
 
-            foreach ($entityData as $entityDatum) {
-                $hasBeenCancelled = $this->hasBeenCancelledConversion();
-                if ($hasBeenCancelled) {
-                    break;
-                }
-
-                $action = 'create';
-                if ($this->modelHasColumn($entityDatum, $tableName, 'deleted_at')) {
-                    if ($entityDatum->deleted_at !== null) {
-                        $action = 'delete';
-                    } else {
-                        if (
-                            $this->modelHasColumn($entityDatum, $tableName, 'created_at') &&
-                            $this->modelHasColumn($entityDatum, $tableName, 'updated_at')
-                        ) {
-                            if ($entityDatum->created_at !== $entityDatum->updated_at) {
-                                $action = 'update';
-                            }
-                        }
-                    }
-                } else {
-                    if (
-                        $this->modelHasColumn($entityDatum, $tableName, 'created_at') &&
-                        $this->modelHasColumn($entityDatum, $tableName, 'updated_at')
-                    ) {
-                        if ($entityDatum->created_at !== $entityDatum->updated_at) {
-                            $action = 'update';
-                        }
-                    }
-                }
-                $syncDetails = $entityDatum->syncDetails();
-
-                CDISSync::create(
-                    array(
-                        'branch_bid' => $branch->bid,
-                        'table_bid' => $entityDatum->bid,
-                        'table_name' =>  $tableName,
-                        'reference_bid' => $syncDetails->reference_bid ?? null,
-                        'reference_table' => $syncDetails->reference_table ?? null,
-                        'level' => 1,
-                        'group' => null,
-                        'code' => $this->generateRandomKey(10, 1, ''),
-                        'action' => $action,
-                    )
-                );
-
-                $progress++;
-
-            }
             if ($broadcast) {
                 $this->pusher->trigger(
                     $this->cdisAndCatapultSyncChannel($branchCode), 
