@@ -44,8 +44,11 @@ class NetworkTroubleshooter extends Command
 
         $networkResolver = new CustomNetworkResolver();
 
-        $this->info(__('info.resetting_network'));
-        $networkResolver->resolve();
+        $networkResolved = config('sync.cdis.hard_resync_network_resolve');
+        if ($networkResolved) {
+            $this->info(__('info.resetting_network'));
+            $networkResolver->resolve();
+        }
 
         $this->info(__('info.flushing_network'));
         $networkResolver->flushDns();

@@ -66,7 +66,7 @@ class Listen extends Command
                 $this->connect();
             } else {
                 $this->createLog("Could not connect: No internet connection.", 'warn', true, ['CONNECTION ERROR']);
-                //$this->executeNetworkResolve();
+                $this->executeNetworkResolve();
             }
 
             sleep(5);
@@ -104,7 +104,7 @@ class Listen extends Command
                 $this->error("Could not connect: {$e->getMessage()}");
                 $loop->stop();
 
-                //$this->executeNetworkResolve();
+                $this->executeNetworkResolve();
             });
 
         $loop->run();
