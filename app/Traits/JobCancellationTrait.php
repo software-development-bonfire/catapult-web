@@ -158,7 +158,7 @@ trait JobCancellationTrait
         $resolveExecuted =  false;
         $syncDetail = SyncDetail::where('code', '=', 0)->first();
         if (! empty($syncDetail)) {
-            $resolveExecuted = ($syncDetail->state === true && $syncDetail->sync_entry > 1);
+            $resolveExecuted = ($syncDetail->state == true && $syncDetail->sync_entry > 1);
         }
         return $resolveExecuted;
     }
