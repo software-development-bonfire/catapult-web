@@ -34,4 +34,5 @@ final class CatapultSyncStatus extends Enum
     const Resyncing         = 'Resyncing';
     const Resynced          = 'Resynced';
     const Scheduling        = 'Scheduling';
+    const Forwarding        = 'Forwarding';
 }

@@ -255,6 +255,17 @@ class Listen extends Command
                     ]);
                     break;
 
+                case "App\Events\Catapult\ForwardMissingTransaction":
+                    $data = (object) json_decode($payload->data);
+                    if (! empty($data->transactions)) {
+                        $options = (object)$this->getPayloadOptions($payload);
+                        Artisan::call('cdis:missing-transaction', [
+                            '--user_bid' => $options->userBid,
+                            '--transactions' => $data->transactions
+                        ]);
+                        $this->createLog(json_encode($data), 'info', true, ['EVENT', $payload->event]);
+                    }
+                    break;
                 default:
                     $this->createLog(json_encode($payload), 'info', true, ['EVENT', $payload->event]);
                     break;
