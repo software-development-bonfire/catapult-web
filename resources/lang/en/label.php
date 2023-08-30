@@ -23,6 +23,7 @@ return [
     'batch_syncing_example' => '(Ex. 5mins interval = 60 limit, 10mins interval = 120 limit and so on.)',
     'batch_syncing_note' => 'NOTE: The entered value will apply on the 5 mins Interval setting ONLY. Limit for the other intervals will be automatically determined by the system multiplier',
     'branch' => 'Branch',
+    'branch_and_terminal' => 'Branch and Terminal',
     'branch_code' => 'Branch Code',
     'brand' => 'Brand',
     'cash_breakdown' => 'Cash Breakdown',
