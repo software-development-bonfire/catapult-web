@@ -5,6 +5,7 @@ namespace App\Console\Commands\CDISToPOS;
 use App\Entities\CDISBranch;
 use App\Enums\CatapultSyncStatus;
 use App\Exports\CDIS\DataConversionToExcel;
+use App\Exports\CDIS\MissingTransactionToExcel;
 use App\Repositories\Contracts\FileStorageSetupRepository;
 use App\Traits\DatabaseTransaction;
 use App\Traits\GenericHelper;
@@ -39,6 +40,10 @@ class CreateMissingTransaction extends Command
     protected $description = 'Create CSV file for the list of missing transactions';
 
     public $definedTargetFolder;
+
+    public $formattedContentWithHeader = false;
+
+
     /**
      * Create a new command instance.
      *
@@ -80,19 +85,24 @@ class CreateMissingTransaction extends Command
             return false;
         }
         $localDisk = Storage::disk($localDiskName);
-        $headers = ['No', 'Transactions'];
-        $rows = [];
-        $count = 1;
-        foreach ($transactions as $transaction) {
-            $rows[] = [$count, $transaction];
-            $count += 1;
-        }
-
+       
         $filename = str_replace(' ', '_', $definedTargetFilename);
         $filePath = "/{$definedTargetFolder}/{$branchCode}/{$filename}.{$this->extension}";
 
+        $headers = [];
+        $rows = [];
+        if ($this->formattedContentWithHeader) {
+            $headers = ['No', 'Transactions'];
+            $count = 1;
+            foreach ($transactions as $transaction) {
+                $rows[] = [$count, $transaction];
+                $count += 1;
+            }
+        } else {
+            $rows = $transactions;
+        }
         Excel::store(
-            new DataConversionToExcel($headers, $rows, $this->extension),
+            new MissingTransactionToExcel($headers, $rows, $this->extension),
             $filePath,
             $localDiskName
         );
