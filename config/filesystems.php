@@ -100,7 +100,7 @@ return [
     |
     */
 
-    'file_lifetime' => env('FILE_LIFETIME', '7'),
+    'file_lifetime' => env('FILE_LIFETIME', '60'),
     'file_cleanup' => env('FILE_CLEANUP', true),
 
 ];
