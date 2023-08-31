@@ -69,6 +69,7 @@ class CreateMissingTransaction extends Command
 
         $branchCode = config('configuration.branch_code');
         $definedTargetFolder = __('label.branch_and_terminal');
+        $definedTargetFilename = __('label.missing_transaction_numbers');
 
         $fileStorageSetup = app()->make(FileStorageSetupRepository::class)->where('name', 'CDIS TO POS (DEFAULT)')->first();
         $selectedDisk = $this->intializeDisk($fileStorageSetup, \App\Enums\StorageCommandSelection::CDIS_FORWARD);
@@ -87,7 +88,7 @@ class CreateMissingTransaction extends Command
             $count += 1;
         }
 
-        $filename = Carbon::now()->format('Ymd_His');
+        $filename = str_replace(' ', '_', $definedTargetFilename);
         $filePath = "/{$definedTargetFolder}/{$branchCode}/{$filename}.{$this->extension}";
 
         Excel::store(
