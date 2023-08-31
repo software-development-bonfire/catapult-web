@@ -89,4 +89,18 @@ return [
 
     ],
 
+     /*
+    |--------------------------------------------------------------------------
+    | File Lifetime
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify the number of days that the files stays
+    | in the defined folder of every Catapult processes. Files
+    | stays more than specified number of days will be deleted
+    |
+    */
+
+    'file_lifetime' => env('FILE_LIFETIME', '60'),
+    'file_cleanup' => env('FILE_CLEANUP', true),
+
 ];

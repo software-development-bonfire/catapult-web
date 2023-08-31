@@ -140,6 +140,9 @@ class SyncDataFile extends Command implements ShouldQueue
                 $remoteFetchedFolder = '/'.$entryFolderName.'/Fetched';
                 $directories = $remoteDisk->allDirectories($remoteSourcePath);
 
+                // Do the cleanup inside Fetched folder
+                $this->doCleanup($localDisk, $remoteFetchedFolder, $entryLogLabel);
+                $this->doCleanup($remoteDisk, $remoteFetchedFolder, $entryLogLabel);
 
                 if (! $directories) {
                     $this->createLog(__('message.no_data_to_sync'), 'info', true, [$entryLogLabel]);
@@ -173,6 +176,17 @@ class SyncDataFile extends Command implements ShouldQueue
             }
 
             sleep(5);
+        }
+    }
+
+    public function doCleanup($localDisk, $fetchedFolderPath, $entryLogLabel)
+    {
+        $fileCleanup = config('filesystems.file_cleanup');      
+        if ($fileCleanup) {
+            $directoryCount = $this->cleanupDirectories($localDisk, $fetchedFolderPath);
+            if ($directoryCount) {
+                $this->createLog(__('message.directory_cleaned_up', ['value' => $directoryCount]), 'info', true, [$entryLogLabel]);
+            }
         }
     }
 }
