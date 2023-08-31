@@ -253,6 +253,7 @@ export default {
             "logs": "Logs",
             "logs_description": "Logs Description",
             "mapping_type": "Mapping Type",
+            "missing_transaction_numbers": "Missing Transaction Numbers",
             "module": "Module",
             "module_or_process": "Module / Process",
             "module_permission": "Module Permission",

@@ -135,17 +135,10 @@ class ConvertDataFile extends Command
 
                 $directories = $localDisk->allDirectories($sourcePath);
 
+                $this->doCleanup($localDisk, '/'.$entryFolderName.'/Processed', $entryLogLabel);
+
                 if (! $directories) {
                     $this->createLog(__('message.no_data_to_convert_to_value', ['value' => $this->extension]), 'info', true, [$entryLogLabel]);
-                }
-
-                $fileCleanup = config('filesystems.file_cleanup');
-                if ($fileCleanup) {
-                    $processedFolderPath = "/{$entryFolderName}/Processed";
-                    $directoryCount = $this->cleanupDirectories($localDisk, $processedFolderPath);
-                    if($directoryCount) {
-                        $this->createLog(__('message.directory_cleaned_up', ['value' => $directoryCount]), 'info', true, [$entryLogLabel]);
-                    }
                 }
 
                 foreach ($directories as $directory) {
@@ -699,5 +692,16 @@ class ConvertDataFile extends Command
         $entries = $this->syncEntries;
 
         return is_null($name) ? $entries : $entries[$name];
+    }
+
+    public function doCleanup($localDisk, $processedFolderPath, $entryLogLabel)
+    {
+        $fileCleanup = config('filesystems.file_cleanup');
+        if ($fileCleanup) {
+            $directoryCount = $this->cleanupDirectories($localDisk, $processedFolderPath);
+            if ($directoryCount) {
+                $this->createLog(__('message.directory_cleaned_up', ['value' => $directoryCount]), 'info', true, [$entryLogLabel]);
+            }
+        }
     }
 }

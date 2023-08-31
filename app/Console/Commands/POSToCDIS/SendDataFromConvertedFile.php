@@ -160,6 +160,8 @@ class SendDataFromConvertedFile extends Command
                 $failedSyncUnsyncablePath = $entryFolderName.'/Converted/Failed sync/Unsyncable';
                 $failedConversionFolderPathErrors = '/'.$entryFolderName.'/Failed conversion/Errors';
 
+                $this->doCleanup($localDisk, $syncedPath, $entryLogLabel);
+
                 $files = $localDisk->allFiles($sourcePath);
 
                 if (! $files) {
@@ -417,5 +419,16 @@ class SendDataFromConvertedFile extends Command
         $this->flushOutputBuffer();
 
         sleep(5);
+    }
+
+    public function doCleanup($localDisk, $syncedFolderPath, $entryLogLabel)
+    {
+        $fileCleanup = config('filesystems.file_cleanup');
+        if ($fileCleanup) {
+            $filesCount = $this->cleanupFiles($localDisk, $syncedFolderPath);
+            if ($filesCount) {
+                $this->createLog(__('message.file_cleaned_up', ['value' => $filesCount]), 'info', true, [$entryLogLabel]);
+            }
+        }
     }
 }
