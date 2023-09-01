@@ -76,9 +76,12 @@ trait StorageTrait
         } else if ($storageCommandSelection === StorageCommandSelection::SYNC) {
             $remoteDiskName = 'pos_local_remote_sync_data_file';
             $localDiskName = 'pos_local_local_sync_data_file';
-        } else {
+        } else if ($storageCommandSelection === StorageCommandSelection::RESEND) {
             $remoteDiskName = 'pos_local_remote_resend_file';
             $localDiskName = 'pos_local_local_resend_file';
+        } else {
+            $remoteDiskName = 'cdis_local_remote_convert_data_to_file';
+            $localDiskName = 'cdis_local_remote_convert_data_to_file';
         }
 
         return [
@@ -101,9 +104,12 @@ trait StorageTrait
         } else if ($storageCommandSelection === StorageCommandSelection::SYNC) {
             $remoteDiskName = 'pos_ftp_remote_sync_data_file';
             $localDiskName = 'pos_ftp_local_sync_data_file';
-        } else {
+        } else if ($storageCommandSelection === StorageCommandSelection::RESEND) {
             $remoteDiskName = 'pos_ftp_remote_resend_file';
             $localDiskName = 'pos_ftp_local_resend_file';
+        } else {
+            $remoteDiskName = 'cdis_ftp_remote_convert_data_to_file';
+            $localDiskName = 'cdis_ftp_remote_convert_data_to_file';
         }
 
         return [
@@ -192,5 +198,66 @@ trait StorageTrait
             $disk->delete($targetFile);
         }
         $disk->copy($sourceFile, $targetFile);
+    }
+
+    /**
+     * Delete files with specified number of days
+     *
+     * @param FileSystem  $localDisk
+     * @param string  $directory
+     */
+    public function cleanupFiles($localDisk, $directory)
+    {
+        $filesCount = 0;
+        try {
+            $fileLifetime = config('filesystems.file_lifetime');
+            // Get files inside the folder more than specified days
+            $files = $localDisk->files($directory);
+            foreach ($files as $file) {
+                if ($localDisk->lastModified($file) < now()->subDays($fileLifetime)->getTimestamp()) {
+                    try {
+                        $localDisk->delete($file);
+                    } catch (\Exception $ex) {
+                    }
+                    $filesCount += 1;
+                }
+            }
+        } catch (\Exception $ex) {
+            return false;
+        }
+        return $filesCount;
+    }
+
+    /**
+     * Delete directories with specified number of days
+     *
+     * @param FileSystem  $localDisk
+     * @param string  $directory
+     */
+    public function cleanupDirectories($localDisk, $directory)
+    {
+        $directoryCount = 0;
+        try {
+            $fileLifetime = config('filesystems.file_lifetime');
+            // Get directories inside the folder more than specified days
+            $directories = $localDisk->allDirectories($directory);
+            foreach ($directories as $directory) {
+                if ($localDisk->lastModified($directory) < now()->subDays($fileLifetime)->getTimestamp()) {
+                    try {
+                        $localDisk->deleteDirectory($directory);
+                    } catch (\Exception $ex) {
+                        //If errors occured due to directory is not empty, then
+                        // We need to clear all files first before deleting the directory
+                        if ($this->cleanupFiles($localDisk, $directory)) {
+                            $localDisk->deleteDirectory($directory);
+                        }
+                    }
+                    $directoryCount += 1;
+                }
+            }
+        } catch (\Exception $ex) {
+            return false;
+        }
+        return $directoryCount;
     }
 }
