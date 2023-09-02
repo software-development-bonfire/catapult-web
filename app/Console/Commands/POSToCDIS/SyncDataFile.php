@@ -140,6 +140,7 @@ class SyncDataFile extends Command implements ShouldQueue
 
                 $remoteSourcePath = '/'.$entryFolderName.'/To fetch';
                 $remoteFetchedFolder = '/'.$entryFolderName.'/Fetched';
+                $invalidFolder = '/'.$entryFolderName.'/Invalid files';
                 $directories = $remoteDisk->allDirectories($remoteSourcePath);
 
                 // Do the cleanup inside Fetched folder
@@ -165,17 +166,23 @@ class SyncDataFile extends Command implements ShouldQueue
                         $invalidFilesCount = count($invalidFiles);
                         if ($invalidFilesCount > 0) {
                             foreach ($invalidFiles as $file) {
-                                $filename = substr($file, strrpos($file, '/') + 1);
-                                $localDisk->put($entryFolderName.'/Invalid files/'.$folderName.'/'.$filename, $remoteDisk->get($file));
+                                $filename = substr($file, strrpos($file, '/') + 1).'_INVALID';
+                                $localDisk->put("{$invalidFolder}/{$folderName}/{$filename}", $remoteDisk->get($file));
                             }
-                            $this->moveFiles($localDisk, $remoteDisk, $files, 'Invalid files', $entryFolderName, $folderName, $remoteSourcePath, $remoteFetchedFolder);
+                            $this->moveFiles($localDisk, $remoteDisk, $files, 'Invalid files', $entryFolderName, $folderName, $remoteSourcePath, $remoteFetchedFolder, true);
     
-                            $this->createLog($invalidFilesCount.' invalid files', 'info', true, [$entryLogLabel], [$directory]);
-                            continue;
+                            $this->createLog(__('message.invalid_files_found', ['count' => $invalidFilesCount]), 'info', true, [$entryLogLabel], [$directory]);
                         } else {
                             $this->moveFiles($localDisk, $remoteDisk, $files, 'To convert', $entryFolderName, $folderName, $remoteSourcePath, $remoteFetchedFolder);
                             $this->createLog(__('label.synced').'  :', 'info', true, [$entryLogLabel], [$directory]);
                         }
+                    } else {
+                        foreach ($files as $file) {
+                            $filename = substr($file, strrpos($file, '/') + 1);
+                            $localDisk->put("{$invalidFolder}/{$folderName}/{$filename}", $remoteDisk->get($file));
+                        }
+                        $errorMessage = __('message.mismatched_file_counts', ['file_count' => count($files), 'expected_count' => intval($fileCount), 'folder_name' => $folderName]);
+                        $localDisk->put("{$invalidFolder}/{$folderName}/ReadMe-Error Message.txt", $errorMessage);
                     }
                 }
             }
@@ -184,17 +191,21 @@ class SyncDataFile extends Command implements ShouldQueue
         }
     }
 
-    public function moveFiles($localDisk, $remoteDisk, $files, $destinationFolder, $entryFolderName, $folderName, $remoteSourcePath, $remoteFetchedFolder)
+    public function moveFiles($localDisk, $remoteDisk, $files, $destinationFolder, $entryFolderName, $folderName, $remoteSourcePath, $remoteFetchedFolder, $hasInvalidFiles = false)
     {
         foreach ($files as $file) {
             $filename = substr($file, strrpos($file, '/') + 1);
             $localDisk->put("{$entryFolderName}/{$destinationFolder}/{$folderName}/{$filename}", $remoteDisk->get($file));
         }
 
-        if ($remoteDisk->exists("{$remoteFetchedFolder}/{$folderName}")) {
+        if ($hasInvalidFiles) {
             $remoteDisk->deleteDirectory("{$remoteSourcePath}/{$folderName}");
         } else {
-            $remoteDisk->move("{$remoteSourcePath}/{$folderName}", "{$remoteFetchedFolder}/{$folderName}");
+            if ($remoteDisk->exists("{$remoteFetchedFolder}/{$folderName}")) {
+                $remoteDisk->deleteDirectory("{$remoteSourcePath}/{$folderName}");
+            } else {
+                $remoteDisk->move("{$remoteSourcePath}/{$folderName}", "{$remoteFetchedFolder}/{$folderName}");
+            }
         }
     }
 
