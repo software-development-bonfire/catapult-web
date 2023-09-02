@@ -231,6 +231,7 @@ export default {
             "inactive": "Inactive",
             "initiator": "Initiator",
             "instructions": "Instructions",
+            "invalid_files_found": "Invalid files found",
             "inventory_location": "Inventory Location",
             "inventory_location_tag": "Inventory Location Tag",
             "journal_reports": "Journal Reports",
