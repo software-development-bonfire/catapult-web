@@ -24,11 +24,15 @@
             version: {
                 type: String,
             },
+            loginUser: {
+                type: String,
+            },
         },
         
         created() {
             this.$store.commit('SET_USER_PERMISSIONS', this.userPermissions);
             this.$store.commit('SET_PERMISSION_LIST', this.permissionList);
+            this.$store.commit('SET_LOGIN_USER', this.loginUser);
         }
     }
 </script>

@@ -3,7 +3,6 @@
         <div>
             <div class="pull-left">
                 <table
-                    border="1"
                     class="
                         table-design
                         table-design--default">

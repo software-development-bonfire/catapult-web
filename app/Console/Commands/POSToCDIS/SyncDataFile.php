@@ -4,11 +4,13 @@ namespace App\Console\Commands\POSToCDIS;
 
 use App\Entities\Configuration;
 use App\Entities\fileStorageSetup;
+use App\Enums\ErrorStatus;
 use App\Enums\Status;
 use App\Enums\StorageType;
 use App\Repositories\Contracts\FieldMappingRepository;
 use App\Services\ErrorLogService;
 use App\Traits\CsvValidatorTrait;
+use App\Traits\ErrorLogTrait;
 use App\Traits\GenericHelper;
 use App\Traits\StorageTrait;
 use Illuminate\Console\Command;
@@ -20,7 +22,7 @@ use Illuminate\Support\Str;
 
 class SyncDataFile extends Command implements ShouldQueue
 {
-    use GenericHelper, StorageTrait, CsvValidatorTrait;
+    use GenericHelper, StorageTrait, CsvValidatorTrait, ErrorLogTrait;
 
     public $errorLogService;
 
@@ -141,6 +143,8 @@ class SyncDataFile extends Command implements ShouldQueue
                 $remoteSourcePath = '/'.$entryFolderName.'/To fetch';
                 $remoteFetchedFolder = '/'.$entryFolderName.'/Fetched';
                 $invalidFolder = '/'.$entryFolderName.'/Invalid files';
+                $failedConversionFolderPathErrors = '/'.$entryFolderName.'/Failed conversion/Errors';
+
                 $directories = $remoteDisk->allDirectories($remoteSourcePath);
 
                 // Do the cleanup inside Fetched folder
@@ -171,7 +175,9 @@ class SyncDataFile extends Command implements ShouldQueue
                             }
                             $this->moveFiles($localDisk, $remoteDisk, $files, 'Invalid files', $entryFolderName, $folderName, $remoteSourcePath, $remoteFetchedFolder, true);
     
-                            $this->createLog(__('message.invalid_files_found', ['count' => $invalidFilesCount]), 'info', true, [$entryLogLabel], [$directory]);
+                            $errorMessage = __('message.invalid_files_found', ['count' => $invalidFilesCount]);
+                            $this->createLog($errorMessage, 'info', true, [$entryLogLabel], [$directory]);
+                            $this->setErrorLog($entryLogLabel, $folderName, $directory, ErrorStatus::FILE_VALIDATION_ERROR, null, 'Invalid Files', $errorMessage);
                         } else {
                             $this->moveFiles($localDisk, $remoteDisk, $files, 'To convert', $entryFolderName, $folderName, $remoteSourcePath, $remoteFetchedFolder);
                             $this->createLog(__('label.synced').'  :', 'info', true, [$entryLogLabel], [$directory]);
@@ -182,9 +188,11 @@ class SyncDataFile extends Command implements ShouldQueue
                             $localDisk->put("{$invalidFolder}/{$folderName}/{$filename}", $remoteDisk->get($file));
                         }
                         $errorMessage = __('message.mismatched_file_counts', ['file_count' => count($files), 'expected_count' => intval($fileCount), 'folder_name' => $folderName]);
+                        $this->setErrorLog($entryLogLabel, $folderName, $directory, ErrorStatus::FILE_VALIDATION_ERROR, null, 'Invalid Files', $errorMessage);
                         $localDisk->put("{$invalidFolder}/{$folderName}/ReadMe-Error Message.txt", $errorMessage);
                     }
                 }
+                $this->createErrorLogFile($localDisk, $failedConversionFolderPathErrors, ErrorStatus::FILE_VALIDATION_ERROR);
             }
 
             sleep(5);
@@ -227,7 +235,7 @@ class SyncDataFile extends Command implements ShouldQueue
 
     public function doCleanup($localDisk, $fetchedFolderPath, $entryLogLabel)
     {
-        $fileCleanup = config('filesystems.file_cleanup');      
+        $fileCleanup = config('filesystems.file_cleanup');
         if ($fileCleanup) {
             $directoryCount = $this->cleanupDirectories($localDisk, $fetchedFolderPath);
             if ($directoryCount) {
