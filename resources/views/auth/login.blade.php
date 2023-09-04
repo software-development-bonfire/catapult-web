@@ -20,6 +20,10 @@
             >
                 <login></login>
             </core>
+            <loading :active.sync="isLoading"
+                :is-full-page="true"
+                color="#DE0900">
+            </loading>
         </div>
         <script src="{{ asset('js/app.js') }}"></script>
         <script>

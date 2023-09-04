@@ -25,8 +25,6 @@ class ErrorLogDetailRepositoryEloquent extends BaseRepository implements ErrorLo
         return ErrorLogDetail::class;
     }
 
-    
-
     /**
      * Boot up the repository, pushing criteria
      */

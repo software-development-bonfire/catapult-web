@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Repositories\Contracts\ErrorLogRepository;
+use App\Services\DashboardService;
+use App\Transformers\DashboardSummaryTransformer;
+use App\Transformers\ErrorLogTransformer;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -19,6 +23,30 @@ class DashboardController extends Controller
     {
         return view('dashboard');
     }
+
+    
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function summary(Request $request)
+    {
+        $filters = (object) stringToJson($request->get('filters'));
+        
+        $summary = app()->make(DashboardService::class)->getSummary($filters);
+        $summary = fractal($summary, DashboardSummaryTransformer::class);
+
+        $list = app()->make(ErrorLogRepository::class)->list($filters);
+
+        $list = fractal($list, ErrorLogTransformer::class);
+
+        return $this->successfulResponse([
+            'summary' => $summary,
+            'logs' => $list,
+        ]);
+    }
+
 
     /**
      * Show the form for creating a new resource.

@@ -18,11 +18,12 @@
         </script>
     </head>
     <body>
-        <div id="app">
+        <div id="app" class="vld-parent">
             <core
                 :user-permissions='{!! json_encode(Auth::user()->getPermissions()) !!}'
                 :permission-list='{!! json_encode(Auth::user()->getPermissionList()) !!}'
                 :superadmin='{!! json_encode(Auth::user()->isSuperadmin()) !!}'
+                :login-user='{!! json_encode(Auth::user()->name) !!}'
                 :version='{!! json_encode(config('app.version')) !!}'
             >
                 <top-navigation></top-navigation>
@@ -39,6 +40,14 @@
                     </div>
                 </div>
             </core>
+            <loading
+                class="flex-column"
+                background-color="#fff"
+                color="#DE0900"
+                :active.sync="isLoading"
+                :is-full-page="true"
+                :z-index="10000">
+            </loading>
         </div>
         <script>
             document.getElementsByTagName("html")[0].style.visibility = "visible";

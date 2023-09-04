@@ -61,13 +61,17 @@
         },
         methods: {
             login() {
+                this.errors = {};
+                this.$root.processing(true);
                 axios.post('/login', this.form.login)
-                .then(response => {
-                    window.location.href = response.data.redirectTo;
-                    this.errors = {}
-                }).catch(error => {
-                    this.errors = error.response.data.errors
-                })
+                    .then(response => {
+                        window.location.href = response.data.redirectTo;
+                        this.errors = {};
+                        this.$root.processing(false);
+                    }).catch(error => {
+                        this.errors = error.response.data.errors;
+                        this.$root.processing(false);
+                    })
             }
         }
     }

@@ -19,6 +19,7 @@ Route::post('/logout', 'LoginController@logout')->name('logout');
 
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/dashboard', 'DashboardController@index');
+    Route::get('/dashboard/summary', 'DashboardController@summary');
     Route::get('/configurations', 'ConfigurationsController@view');
     Route::get('/syncing-setup', 'SyncingSetupController@view');
     Route::get('/sync-interval-setting', 'SyncIntervalSettingController@view');

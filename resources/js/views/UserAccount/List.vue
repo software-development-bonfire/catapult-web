@@ -8,16 +8,15 @@
             :header-fields="table.header"
             :settings="table.settings"
             :table="table.values"
-            v-on:paginate="paginate"
-            v-on:delete-row="deleteRow">
+            v-on:paginate="paginate">
             <template slot="content">
                 <table-row
-                    type="view"
+                    type="custom-actions"
                     v-for="(tableData, tableDataIndex) in table.values.data" :key="tableDataIndex"
                     :values="tableData"
                     :settings="table.settings"
                     :rowIndex="tableDataIndex"
-                    v-on:dbl-row-click="openDetail(tableData, tableDataIndex)">
+                    v-on:dbl-row-click="editRow(tableDataIndex, tableData)">
                     <td class="datatable-cell">
                         <span v-text="tableData.id"></span>
                     </td>
@@ -28,7 +27,15 @@
                         <span v-text="tableData.name"></span>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <span v-text="tableData.status ? $t('label.active') : $t('label.inactive')"></span>
+                        <span
+                            class="status_label"
+                            :class="tableData.status ? 'status_label--active' : 'status_label--inactive'"
+                            v-text="tableData.status ? $t('label.active') : $t('label.inactive')">
+                        </span>
+                    </td>
+                    <td class="datatable-cell" align="center">
+                        <i class="fa fa-edit fa-lg row-update ml-1" @click.stop="editRow(tableDataIndex, tableData)"></i>
+                        <i class="fa fa-times-circle fa-lg row-delete ml-1 mr-1" @click.stop="deleteRow(tableDataIndex, tableData)"></i>
                     </td>
                 </table-row>
             </template>
@@ -163,13 +170,13 @@
 </template>
 
 <script>
-    import DialogBox from '../../components/Message/DialogBox.vue';
-    import Datatable from '../../components/Datatable2/Datatable.vue';
-    import TableRow from '../../components/Datatable2/TableRow.vue';
-    import Modal from '../../components/Modal/Modal.vue';
     import DatePicker from 'vue2-datepicker';
     import 'vue2-datepicker/index.css';
     import FormField from '../../components/Containers/FormField.vue';
+    import Datatable from '../../components/Datatable2/Datatable.vue';
+    import TableRow from '../../components/Datatable2/TableRow.vue';
+    import DialogBox from '../../components/Message/DialogBox.vue';
+    import Modal from '../../components/Modal/Modal.vue';
 
     export default {
         components: {
@@ -301,14 +308,16 @@
                 })
             },
             paginate(page = 1) {
+                this.$root.processing(true);
                 axios.get('user'+'?page='+page, {
                     params: {
                         itemsPerPage: this.table.settings.itemsPerPage
                     }
                 })
                 .then(response => {
-                    this.table.values.data = response.data.data.data
-                    this.table.values.meta  = response.data.data.meta
+                    this.table.values.data = response.data.data.data;
+                    this.table.values.meta  = response.data.data.meta;
+                    this.$root.processing(false);
                 })
             },
 
@@ -331,7 +340,7 @@
                 };
             },
 
-            openDetail(data, index) {
+            editRow(index, data) {
                 this.form.mode = 'update';
                 this.form.errors = {}
                 var permission = [];
@@ -372,27 +381,27 @@
             },
 
             save() {
-                if (this.form.mode === 'create') {
-                    var permission = [];
-                    this.permissions.forEach(element => {
-                        if (element.value === true) {
-                            permission.push({
-                                code: element.code
-                            })
-                        }
-                    })
-                    var config = {
-                        mode: this.form.mode,
-                        bid: this.form.values.bid,
-                        name: this.form.values.name,
-                        username: this.form.values.username,
-                        password: this.form.values.password,
-                        status: this.form.values.status,
-                        password: this.form.values.password,
-                        retype_password: this.form.values.retype_password,
-                        permission: permission
+                var permission = [];
+                this.permissions.forEach(element => {
+                    if (element.value === true) {
+                        permission.push({
+                            code: element.code
+                        })
                     }
+                })
+                var config = {
+                    mode: this.form.mode,
+                    bid: this.form.values.bid,
+                    name: this.form.values.name,
+                    username: this.form.values.username,
+                    password: this.form.values.password,
+                    status: this.form.values.status,
+                    password: this.form.values.password,
+                    retype_password: this.form.values.retype_password,
+                    permission: permission
+                }
 
+                if (this.form.mode === 'create') {
                     axios.post('user', config)
                         .then(response => {
                             this.paginate();
@@ -408,26 +417,6 @@
                             this.form.errors = error.response.data.errors;
                         })
                 } else {
-                    var permission = [];
-                    this.permission.forEach(element => {
-                        if (element.value === true) {
-                            permission.push({
-                                code: element.code
-                            })
-                        }
-                    })
-                    var config = {
-                        mode: this.form.mode,
-                        bid: this.form.values.bid,
-                        name: this.form.values.name,
-                        username: this.form.values.username,
-                        password: this.form.values.password,
-                        status: this.form.values.status,
-                        password: this.form.values.password,
-                        retype_password: this.form.values.retype_password,
-                        permission: permission
-                    }
-                    
                     axios.put('user/'+this.form.values.bid, config)
                         .then(response => {
                             this.paginate()
