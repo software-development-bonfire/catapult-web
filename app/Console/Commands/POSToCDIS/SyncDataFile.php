@@ -4,21 +4,25 @@ namespace App\Console\Commands\POSToCDIS;
 
 use App\Entities\Configuration;
 use App\Entities\fileStorageSetup;
+use App\Enums\ErrorStatus;
 use App\Enums\Status;
 use App\Enums\StorageType;
 use App\Repositories\Contracts\FieldMappingRepository;
 use App\Services\ErrorLogService;
+use App\Traits\CsvValidatorTrait;
+use App\Traits\ErrorLogTrait;
 use App\Traits\GenericHelper;
 use App\Traits\StorageTrait;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class SyncDataFile extends Command implements ShouldQueue
 {
-    use GenericHelper, StorageTrait;
+    use GenericHelper, StorageTrait, CsvValidatorTrait, ErrorLogTrait;
 
     public $errorLogService;
 
@@ -138,6 +142,9 @@ class SyncDataFile extends Command implements ShouldQueue
 
                 $remoteSourcePath = '/'.$entryFolderName.'/To fetch';
                 $remoteFetchedFolder = '/'.$entryFolderName.'/Fetched';
+                $invalidFolder = '/'.$entryFolderName.'/Failed conversion/Invalid files';
+                $failedConversionFolderPathErrors = '/'.$entryFolderName.'/Failed conversion/Errors';
+
                 $directories = $remoteDisk->allDirectories($remoteSourcePath);
 
                 // Do the cleanup inside Fetched folder
@@ -159,29 +166,83 @@ class SyncDataFile extends Command implements ShouldQueue
                     if (count($files) == $fileCount) {
                         $this->createLog(__('label.syncing').' :', 'info', true, [$entryLogLabel], [$directory]);
 
+                        $invalidFiles = $this->validateCsvFiles($remoteDisk, $files);
+                        $invalidFilesCount = count($invalidFiles);
+                        if ($invalidFilesCount > 0) {
+                            foreach ($invalidFiles as $file) {
+                                $filename = substr($file, strrpos($file, '/') + 1).'_INVALID';
+                                $localDisk->put("{$invalidFolder}/{$folderName}/{$filename}", $remoteDisk->get($file));
+                            }
+                            $this->moveFiles($localDisk, $remoteDisk, $files, 'Failed conversion/Invalid files', $entryFolderName, $folderName, $remoteSourcePath, $remoteFetchedFolder, true);
+    
+                            $errorMessage = __('message.invalid_files_found', ['count' => $invalidFilesCount]);
+                            $this->createLog($errorMessage, 'info', true, [$entryLogLabel], [$directory]);
+                            $this->setErrorLog($entryLogLabel, $folderName, $directory, ErrorStatus::FILE_VALIDATION_ERROR, null, 'Invalid Files', $errorMessage);
+                        } else {
+                            $this->moveFiles($localDisk, $remoteDisk, $files, 'To convert', $entryFolderName, $folderName, $remoteSourcePath, $remoteFetchedFolder);
+                            $this->createLog(__('label.synced').'  :', 'info', true, [$entryLogLabel], [$directory]);
+                        }
+                    } else {
                         foreach ($files as $file) {
                             $filename = substr($file, strrpos($file, '/') + 1);
-                            $localDisk->put($entryFolderName.'/To Convert/'.$folderName.'/'.$filename, $remoteDisk->get($file));
+                            $localDisk->put("{$invalidFolder}/{$folderName}/{$filename}", $remoteDisk->get($file));
                         }
+                        $errorMessage = __('message.mismatched_file_counts', ['file_count' => count($files), 'expected_count' => intval($fileCount), 'folder_name' => $folderName]);
+                        $this->setErrorLog($entryLogLabel, $folderName, $directory, ErrorStatus::FILE_VALIDATION_ERROR, null, 'Invalid Files', $errorMessage);
+                        $localDisk->put("{$invalidFolder}/{$folderName}/ReadMe-Error Message.txt", $errorMessage);
 
-                        if ($remoteDisk->exists($remoteFetchedFolder.'/'.$folderName)) {
-                            $remoteDisk->deleteDirectory($remoteSourcePath.'/'.$folderName);
-                        } else {
-                            $remoteDisk->move($remoteSourcePath.'/'.$folderName, $remoteFetchedFolder.'/'.$folderName);
+                        if ($remoteDisk->lastModified($directory) < now()->subDays(1)->getTimestamp()) {
+                            try {
+                                $this->moveFiles($localDisk, $remoteDisk, $files, 'Failed conversion/Invalid files', $entryFolderName, $folderName, $remoteSourcePath, $remoteFetchedFolder, true);
+                            } catch (\Exception $ex) {
+                            }
                         }
-
-                        $this->createLog(__('label.synced').'  :', 'info', true, [$entryLogLabel], [$directory]);
                     }
                 }
+                $this->createErrorLogFile($localDisk, $failedConversionFolderPathErrors, ErrorStatus::FILE_VALIDATION_ERROR);
             }
 
             sleep(5);
         }
     }
 
+    public function moveFiles($localDisk, $remoteDisk, $files, $destinationFolder, $entryFolderName, $folderName, $remoteSourcePath, $remoteFetchedFolder, $hasInvalidFiles = false)
+    {
+        foreach ($files as $file) {
+            $filename = substr($file, strrpos($file, '/') + 1);
+            $localDisk->put("{$entryFolderName}/{$destinationFolder}/{$folderName}/{$filename}", $remoteDisk->get($file));
+        }
+
+        if ($hasInvalidFiles) {
+            $remoteDisk->deleteDirectory("{$remoteSourcePath}/{$folderName}");
+        } else {
+            if ($remoteDisk->exists("{$remoteFetchedFolder}/{$folderName}")) {
+                $remoteDisk->deleteDirectory("{$remoteSourcePath}/{$folderName}");
+            } else {
+                $remoteDisk->move("{$remoteSourcePath}/{$folderName}", "{$remoteFetchedFolder}/{$folderName}");
+            }
+        }
+    }
+
+    public function validateCsvFiles($localDisk, $files)
+    {
+        $invalidFiles = [];
+        foreach ($files as $file) {
+            if ($this->isCsvFile($file)) {
+                $content = $localDisk->get($file);
+                if (! $this->isValidCsv($content)) {
+                    $invalidFiles[] = $file;
+                }
+            } else {
+                $invalidFiles[] = $file;
+            }
+        }
+        return $invalidFiles;
+    }
+
     public function doCleanup($localDisk, $fetchedFolderPath, $entryLogLabel)
     {
-        $fileCleanup = config('filesystems.file_cleanup');      
+        $fileCleanup = config('filesystems.file_cleanup');
         if ($fileCleanup) {
             $directoryCount = $this->cleanupDirectories($localDisk, $fetchedFolderPath);
             if ($directoryCount) {

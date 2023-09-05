@@ -28,6 +28,7 @@ class ErrorLogDetail extends Model implements Transformable
         'sheet',
         'error_type',
         'description',
+        'updated_at'
     ];
 
 }

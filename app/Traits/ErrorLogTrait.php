@@ -33,22 +33,26 @@ trait ErrorLogTrait
     public function setErrorLog($entryLogLabel, $fileName, $path, $status, $detailSheet, $detailErrorType, $detailDescription)
     {
         $filename = $this->removeRetryCount($fileName);
-        $errorLog = ErrorLog::where('filename', '=', $filename)->first();
-        if ($errorLog === null) {
-            $errorLog = ErrorLog::create(array(
-                'pos_entry' => $entryLogLabel,
-                'filename' => $filename,
-                'path' => $path,
-                'status' => $status,
-            ));
-        }
+        $data = [
+            'pos_entry' => $entryLogLabel,
+            'filename' => $filename,
+            'path' => $path,
+            'status' => $status,
+        ];
+        $errorLog = ErrorLog::updateOrCreate($data, [
+            'updated_at' => Carbon::now(),
+        ]);
 
-        ErrorLogDetail::create(array(
+        $detail = [
             'error_log_bid' => $errorLog->bid,
             'sheet' => isset($detailSheet) ? $detailSheet : '',
             'error_type' => $detailErrorType,
             'description' => $detailDescription,
-        ));
+        ];
+
+        ErrorLogDetail::updateOrCreate($detail, [
+            'updated_at' => Carbon::now(),
+        ]);
     }
 
     /**
