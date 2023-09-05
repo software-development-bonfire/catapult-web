@@ -20,7 +20,7 @@ final class DefinedDashboardCardList extends Enum
         [
             'slug' => 'to_fetch',
             'header' => 'To fetch',
-            'description' => 'file from POS queued for conversion',
+            'description' => 'files from POS queued for conversion',
         ],
         [
             'slug' => 'failed_conversion',
