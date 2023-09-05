@@ -31,8 +31,8 @@ class UserAccountRequest extends FormRequest
             'username' => ['required', 'max:15', Rule::unique('users')->ignore($this->bid)->where(function ($query) {
                 $query->where('deleted_at', null);
             })],
-            'password' => 'required|required_with:retype_password|same:retype_password|min:8|regex:/[0-9]/|regex:/[@$!%*#?&]/|regex:/[A-Z]/',
-            'retype_password' => 'required|required_with:password|same:password|min:8|regex:/[0-9]/|regex:/[@$!%*#?&]/|regex:/[A-Z]/',
+            'password' => 'required|required_with:retype_password|same:retype_password|min:8|regex:/[0-9]/|regex:/[@$!%*#?&]/|regex:/[a-zA-Z]/',
+            'retype_password' => 'required|required_with:password|same:password|min:8|regex:/[0-9]/|regex:/[@$!%*#?&]/|regex:/[a-zA-Z]/',
             'permission' => 'required'
         ];
         if ($this->mode == "update") {
@@ -42,8 +42,8 @@ class UserAccountRequest extends FormRequest
             
             $rules['username'] = 'required|unique:users,username,' . $this->bid . ',bid,deleted_at,NULL|max:15';
             if ($this->password) {
-                $rules['password'] = 'sometimes|same:retype_password|min:8|regex:/[0-9]/|regex:/[@$!%*#?&]/|regex:/[A-Z]/';
-                $rules['retype_password'] = 'sometimes|same:password|min:8|regex:/[0-9]/|regex:/[@$!%*#?&]/|regex:/[A-Z]/';
+                $rules['password'] = 'sometimes|same:retype_password|min:8|regex:/[0-9]/|regex:/[@$!%*#?&]/|regex:/[a-zA-Z]/';
+                $rules['retype_password'] = 'sometimes|same:password|min:8|regex:/[0-9]/|regex:/[@$!%*#?&]/|regex:/[a-zA-Z]/';
             }
         }
 

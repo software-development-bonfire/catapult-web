@@ -5,19 +5,22 @@
  */
 
 require('./bootstrap');
-import axios from 'axios'
-import HasPermission from '../js/mixins/HasPermission';
+import moment from 'moment';
 import Vue from 'vue';
-import Vuex from 'vuex';
 import VueInternationalization from 'vue-i18n';
-import Locale from './vue-i18n-locales.generated';
 import VueInputMask from "vue-inputmask";
-import moment from 'moment'; 
+import Loading from 'vue-loading-overlay';
+import 'vue-loading-overlay/dist/vue-loading.css';
 import vSelect from 'vue-select';
 import 'vue-select/dist/vue-select.css';
+import Vuex from 'vuex';
+import HasPermission from '../js/mixins/HasPermission';
+import Util from '../js/mixins/Util';
+import Locale from './vue-i18n-locales.generated';
 
 Vue.use(VueInternationalization);
 Vue.use(Vuex);
+Vue.use(Loading);
 Vue.component('v-select', vSelect);
 
 const lang = document.documentElement.lang.substr(0, 2);
@@ -51,6 +54,9 @@ const store = new Vuex.Store({
         SET_PERMISSION_LIST: (state, value) => {
             state.permissionList = value;
         },
+        SET_LOGIN_USER: (state, value) => {
+            state.loginUser = value;
+        },
     },
     getters: {
         userPermissions: (state) => {
@@ -58,6 +64,9 @@ const store = new Vuex.Store({
         },
         permissionList: (state) => {
             return state.permissionList
+        },        
+        loginUser: (state) => {
+            return state.loginUser
         },
     }
 });
@@ -99,5 +108,55 @@ Vue.mixin(HasPermission);
 const app = new Vue({
     el: '#app',
     store,
-    i18n
+    i18n,
+    mixins: [ Util ],
+    components: {
+        Loading
+    },
+    data() {
+        return {
+            isLoading: false,
+            moduleResponse: {},
+            tabUuid: null,
+            headerTitle: ''
+        }
+    },
+    mounted() {
+        this.tabUuid = this.uuid();
+    },
+    methods: {
+        processing(state, custom = {}) {
+            this.isLoading = state;
+
+            if (!_.isEmpty(custom)) {
+                let loadingLabel = `
+                    <div class="vld-header-title">
+                        ` + custom.headerTitle + `
+                        <div class="vld-loading-title">
+                            ` + this.$t('label.please_wait') + `<span class="vld-loading-dots"></span>
+                        </div>
+                    </div>`;
+
+                document.querySelector('.vld-background').insertAdjacentHTML('afterend', loadingLabel);
+            }
+
+            if (! state && document.querySelector('.vld-header-title') != null) {
+                document.querySelector('.vld-header-title').remove();
+            }
+        },
+        resizableWidth(type) {
+            let viewWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+
+            switch (type) {
+                case 'w':
+                    return viewWidth / 2;
+                case 'min':
+                    return viewWidth / 4;
+                case 'max':
+                    return viewWidth - (viewWidth / 4);
+                default:
+                    break;
+            }
+        },
+    },
 });

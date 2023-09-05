@@ -13,7 +13,7 @@
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle active-user" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Admin <i class="fa fa-user fa-lg"></i>
+                        {{ loginUser }} <i class="fa fa-user fa-lg"></i>
                     </a>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
                         <a class="dropdown-item" @click="logout()" href="/">{{ $t('label.logout') }}</a>
@@ -26,9 +26,32 @@
 
 <script>
     export default {
+        data (){
+            return {
+                loginUser: '',
+            }
+        },
+        mounted() {
+            this.getLoginUser();
+        },
         methods: {
             logout() {
-                axios.post('/logout')
+                let self = this;
+
+                this.$root.processing(true);
+
+                axios.post('/logout', {
+                    tabUuid: this.$root.tabUuid
+                })
+                .then(function() {
+                    window.location = '/';
+                })
+                .catch(function (error) {
+                    self.$root.processing(false);
+                });
+            },
+            getLoginUser() {
+                this.loginUser = this.$store.getters.loginUser;
             }
         }
     }

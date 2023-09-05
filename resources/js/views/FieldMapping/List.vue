@@ -369,15 +369,16 @@
         },
         methods: {
             paginate(page = 1) {
-
+                this.$root.processing(true);
                 axios.get(`${config}/field-mapping/list`+'?page='+page, {
                     params: {
                         itemsPerPage: this.table.settings.itemsPerPage
                     }
                 })
                 .then(response => {
-                    this.table.values.data = response.data.data.data
-                    this.table.values.meta  = response.data.data.meta
+                    this.table.values.data = response.data.data.data;
+                    this.table.values.meta  = response.data.data.meta;
+                    this.$root.processing(false);
                 })
             },
 

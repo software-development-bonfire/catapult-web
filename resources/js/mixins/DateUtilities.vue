@@ -35,6 +35,18 @@
                 ];
 
                 return moment.months();
+            },
+
+            getCurrentDate(format = 'MMM. D, YYYY h:mm:ss A'){
+                return moment(new Date()).format(format);
+            },
+
+            formatDate(value, format = 'MMM, D YYYY h:mm:ss A', returnEmptyIfInvalid = true){
+                let formattedDate = moment(new Date(String(value))).format(format);
+                if(returnEmptyIfInvalid && formattedDate == 'Invalid date') {
+                    return '';
+                }
+                return formattedDate;
             }
         }
     }

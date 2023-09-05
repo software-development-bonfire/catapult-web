@@ -32,6 +32,7 @@ class ErrorLog extends Model implements Transformable
         'filename',
         'path',
         'status',
+        'updated_at'
     ];
 
     public function details() {
