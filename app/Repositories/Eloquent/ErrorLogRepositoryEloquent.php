@@ -43,7 +43,7 @@ class ErrorLogRepositoryEloquent extends BaseRepository implements ErrorLogRepos
             ->with('details')
             ->where(function ($query) use ($filters) {
                 $date = parseDateTime($filters->date, 'Y-m-d', now(), true);
-                $query->whereRaw("DATE(created_at) = '{$date}'");
+                $query->whereRaw("DATE(updated_at) = '{$date}'");
             })
             ->orderBy('id', 'ASC');
 

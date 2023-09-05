@@ -142,7 +142,7 @@ class SyncDataFile extends Command implements ShouldQueue
 
                 $remoteSourcePath = '/'.$entryFolderName.'/To fetch';
                 $remoteFetchedFolder = '/'.$entryFolderName.'/Fetched';
-                $invalidFolder = '/'.$entryFolderName.'/Invalid files';
+                $invalidFolder = '/'.$entryFolderName.'/Failed conversion/Invalid files';
                 $failedConversionFolderPathErrors = '/'.$entryFolderName.'/Failed conversion/Errors';
 
                 $directories = $remoteDisk->allDirectories($remoteSourcePath);
@@ -173,7 +173,7 @@ class SyncDataFile extends Command implements ShouldQueue
                                 $filename = substr($file, strrpos($file, '/') + 1).'_INVALID';
                                 $localDisk->put("{$invalidFolder}/{$folderName}/{$filename}", $remoteDisk->get($file));
                             }
-                            $this->moveFiles($localDisk, $remoteDisk, $files, 'Invalid files', $entryFolderName, $folderName, $remoteSourcePath, $remoteFetchedFolder, true);
+                            $this->moveFiles($localDisk, $remoteDisk, $files, 'Failed conversion/Invalid files', $entryFolderName, $folderName, $remoteSourcePath, $remoteFetchedFolder, true);
     
                             $errorMessage = __('message.invalid_files_found', ['count' => $invalidFilesCount]);
                             $this->createLog($errorMessage, 'info', true, [$entryLogLabel], [$directory]);
@@ -193,7 +193,7 @@ class SyncDataFile extends Command implements ShouldQueue
 
                         if ($remoteDisk->lastModified($directory) < now()->subDays(1)->getTimestamp()) {
                             try {
-                                $this->moveFiles($localDisk, $remoteDisk, $files, 'Invalid files', $entryFolderName, $folderName, $remoteSourcePath, $remoteFetchedFolder, true);
+                                $this->moveFiles($localDisk, $remoteDisk, $files, 'Failed conversion/Invalid files', $entryFolderName, $folderName, $remoteSourcePath, $remoteFetchedFolder, true);
                             } catch (\Exception $ex) {
                             }
                         }
