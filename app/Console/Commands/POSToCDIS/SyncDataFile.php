@@ -190,6 +190,13 @@ class SyncDataFile extends Command implements ShouldQueue
                         $errorMessage = __('message.mismatched_file_counts', ['file_count' => count($files), 'expected_count' => intval($fileCount), 'folder_name' => $folderName]);
                         $this->setErrorLog($entryLogLabel, $folderName, $directory, ErrorStatus::FILE_VALIDATION_ERROR, null, 'Invalid Files', $errorMessage);
                         $localDisk->put("{$invalidFolder}/{$folderName}/ReadMe-Error Message.txt", $errorMessage);
+
+                        if ($remoteDisk->lastModified($directory) < now()->subDays(1)->getTimestamp()) {
+                            try {
+                                $this->moveFiles($localDisk, $remoteDisk, $files, 'Invalid files', $entryFolderName, $folderName, $remoteSourcePath, $remoteFetchedFolder, true);
+                            } catch (\Exception $ex) {
+                            }
+                        }
                     }
                 }
                 $this->createErrorLogFile($localDisk, $failedConversionFolderPathErrors, ErrorStatus::FILE_VALIDATION_ERROR);
