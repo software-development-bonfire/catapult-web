@@ -20,9 +20,13 @@
             >
                 <login></login>
             </core>
-            <loading :active.sync="isLoading"
-                :is-full-page="true"
-                color="#DE0900">
+            <loading 
+                :status="spinner.status" 
+                :color="spinner.color" 
+                :size="spinner.size" 
+                :depth="spinner.depth" 
+                :rotation="spinner.rotation" 
+                :speed="spinner.speed">
             </loading>
         </div>
         <script src="{{ asset('js/app.js') }}"></script>

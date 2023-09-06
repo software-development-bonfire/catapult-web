@@ -9,11 +9,10 @@ import moment from 'moment';
 import Vue from 'vue';
 import VueInternationalization from 'vue-i18n';
 import VueInputMask from "vue-inputmask";
-import Loading from 'vue-loading-overlay';
-import 'vue-loading-overlay/dist/vue-loading.css';
 import vSelect from 'vue-select';
 import 'vue-select/dist/vue-select.css';
 import Vuex from 'vuex';
+import Loading from '../js/components/Loading/Loading.vue';
 import HasPermission from '../js/mixins/HasPermission';
 import Util from '../js/mixins/Util';
 import Locale from './vue-i18n-locales.generated';
@@ -115,34 +114,25 @@ const app = new Vue({
     },
     data() {
         return {
-            isLoading: false,
             moduleResponse: {},
             tabUuid: null,
-            headerTitle: ''
+            headerTitle: '',
+            spinner: {
+                size: 80,
+                status: false,
+                color: '#a10505',
+                depth: 6,
+                rotation: true,
+                speed: 0.8,
+            },
         }
     },
     mounted() {
         this.tabUuid = this.uuid();
     },
     methods: {
-        processing(state, custom = {}) {
-            this.isLoading = state;
-
-            if (!_.isEmpty(custom)) {
-                let loadingLabel = `
-                    <div class="vld-header-title">
-                        ` + custom.headerTitle + `
-                        <div class="vld-loading-title">
-                            ` + this.$t('label.please_wait') + `<span class="vld-loading-dots"></span>
-                        </div>
-                    </div>`;
-
-                document.querySelector('.vld-background').insertAdjacentHTML('afterend', loadingLabel);
-            }
-
-            if (! state && document.querySelector('.vld-header-title') != null) {
-                document.querySelector('.vld-header-title').remove();
-            }
+        processing(state, opts = {}) {
+            this.spinner.status = state;
         },
         resizableWidth(type) {
             let viewWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
