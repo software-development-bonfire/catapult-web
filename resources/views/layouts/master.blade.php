@@ -40,13 +40,13 @@
                     </div>
                 </div>
             </core>
-            <loading
-                class="flex-column"
-                background-color="#fff"
-                color="#DE0900"
-                :active.sync="isLoading"
-                :is-full-page="true"
-                :z-index="10000">
+            <loading 
+                :status="spinner.status" 
+                :color="spinner.color" 
+                :size="spinner.size" 
+                :depth="spinner.depth" 
+                :rotation="spinner.rotation" 
+                :speed="spinner.speed">
             </loading>
         </div>
         <script>
