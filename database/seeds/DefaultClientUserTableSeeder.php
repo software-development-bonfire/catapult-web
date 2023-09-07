@@ -6,6 +6,7 @@ use App\Enums\UserType;
 use App\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class DefaultClientUserTableSeeder extends Seeder
 {
@@ -16,6 +17,7 @@ class DefaultClientUserTableSeeder extends Seeder
      */
     public function run()
     {
+        Schema::disableForeignKeyConstraints();
         $clientUser =  [
             'name' => 'Catapult User',
             'username' => 'catapult',
@@ -42,5 +44,6 @@ class DefaultClientUserTableSeeder extends Seeder
                 'updated_by' => 1,
             ));
         }
+        Schema::enableForeignKeyConstraints();
     }
 }
