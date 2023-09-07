@@ -45,6 +45,7 @@
                 })
                 .then(function() {
                     window.location = '/';
+                    self.$root.processing(false);
                 })
                 .catch(function (error) {
                     self.$root.processing(false);
