@@ -54,6 +54,8 @@ return [
     'no_file_storage_setup_detected' => 'No file storage setup detected. Please contact administrator.',
     'no_ping_response_from_host' => 'No ping response from host :value',
     'no_terminal_file_setup_detected' => 'No terminal file setup detected. Please contact administrator.',
+    'please_enter_a_valid_value' => 'Please enter a valid :value.',
+    'please_select_value' => 'Please select :value.',
     'remote_directory_not_exists' => 'Remote Directory not exists. Please contact administrator',
     'sync_interval_setting_failed_create' => 'Sync interval setting failed to create.',
     'sync_interval_setting_failed_deleted' => 'Sync intervalsetting failed to deleted.',
@@ -69,4 +71,5 @@ return [
     'user_failed_create' => 'User failed to create.',
     'user_failed_deleted' => 'User failed to deleted.',
     'user_failed_update' => 'User failed to update.',
+    'value_is_required' => ':value is required.',
 ];

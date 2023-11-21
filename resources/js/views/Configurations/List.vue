@@ -26,6 +26,11 @@
                     {{ $t('label.terminal_file_setup') }}
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" :class="activePane === 'device-settings' ? 'active' : ''" @click="activePane = 'device-settings'" id="device-settings" href="#device-settings" role="tab" aria-controls="device-settings" aria-selected="false">
+                    {{ $t('label.device_settings') }}
+                </a>
+            </li>
         </ul>
         <div class="tab-content">
             <licensing v-show="activePane === 'licensing'"></licensing>
@@ -33,6 +38,7 @@
             <catapult-db-setup v-show="activePane === 'catapult'"></catapult-db-setup>
             <api-setup v-show="activePane === 'api'"></api-setup>
             <terminal-file-setup v-show="activePane === 'terminal-file-setup'"></terminal-file-setup>
+            <device-settings v-show="activePane === 'device-settings'"></device-settings>
         </div>
     </div>
 </template>
@@ -43,6 +49,7 @@
     import CatapultDBSetup from './Tabs/CatapultDBSetup.vue';
     import APISetup from './Tabs/APISetup.vue';
     import TerminalFileSetup from './Tabs/TerminalFileSetup.vue';
+    import DeviceSettings from './Tabs/DeviceSettings.vue';
 
     export default {
         components: {
@@ -51,6 +58,7 @@
             'catapult-db-setup': CatapultDBSetup,
             'api-setup': APISetup,
             'terminal-file-setup': TerminalFileSetup,
+            'device-settings': DeviceSettings,
         },
         mounted() {
             let urlData = QueryString.parse(window.location.search.substr(1));
