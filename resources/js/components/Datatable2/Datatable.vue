@@ -385,19 +385,6 @@
                 });
             },
 
-            scrollerX(event) {
-                if (!this.settings.fixedHeaderScroll) {
-                    return;
-                }
-
-                let scrollPosLeft = event.target.scrollLeft;
-                let scrollers = document.querySelectorAll('.fixed-table-headers, .datatable-scroll');
-
-                scrollers.forEach(function(scroller) {
-                    scroller.scrollLeft = scrollPosLeft;
-                });
-            },
-
             sortColumn(event, column, index) {
                 if (event) {
                     let sorters = document.querySelectorAll('.sort-button');

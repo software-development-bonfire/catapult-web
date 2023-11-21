@@ -10,6 +10,13 @@
                 <span class="side-link-label">{{ $t('label.dashboard') }}</span>
             </a>
             <a
+                href="/item-availability"
+                class="list-group-item"
+                :class="page === 'item-availability' ? 'active' : ''">
+                <i class="side-link-icon fa fa-book fa-lg"></i>
+                <span class="side-link-label">{{ $t('label.item_availability') }}</span>
+            </a>
+            <a
                 v-if="this.$hasPermissionTo('view.configurations')"
                 href="/configurations"
                 class="list-group-item"

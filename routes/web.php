@@ -28,6 +28,9 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/field-mapping/detail', 'FieldMappingController@detail');
     Route::get('/logs', 'LogsController@view');
 
+    // Item Availability
+    Route::get('/item-availability', 'ItemAvailabilityController@index');
+
     // Field Mapping Preset
     Route::group(['prefix' => 'field-mapping-preset'], function () {
         Route::get('/', 'FieldMappingPresetController@view');
