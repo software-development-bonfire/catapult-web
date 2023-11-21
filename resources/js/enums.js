@@ -36,3 +36,9 @@ window.REPORT_FILE_TYPE = {
     OTHER_REPORTS: 3,
     Z_READING: 4,
 }
+
+window.POS = {
+    SIRIUS_POS: 1,
+    PDA: 2,
+    KIOSK: 3,
+}

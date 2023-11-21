@@ -34,6 +34,8 @@ return [
     'file_storage_setup_updated' => 'File storage setup successfully updated!',
     'generate_csv_created' => 'Generate csv successfully created!.',
     'queued_to_sync' => 'Queued to sync.',
+    'success_successfully_created' => 'Success! :value successfully created.',
+    'success_successfully_updated' => 'Success! :value successfully updated.',
     'successfully_added' => ':value successfully added.',
     'successfully_added_the_data' => 'Successfully added the data.',
     'successfully_created' => ':value successfully created.',
