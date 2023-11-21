@@ -21,7 +21,7 @@
             <td class="datatable-cell datatable-cell--row-number" v-if="settings.withRowNumbers">{{ rowNumber($attrs.rowIndex) }}</td>
             <slot></slot>
             <td class="datatable-cell datatable-cell--action" v-if="settings.hasView"><i class="fa fa-eye fa-lg row-view" @click.stop="viewRow($event)"></i></td>
-            <td class="datatable-cell datatable-cell--action">
+            <td class="datatable-cell datatable-cell--action" v-if="settings.hasEdit">
                 <i :class="[updateClass]" @click.stop="updateRow($event)"></i>
             </td>
         </template>
@@ -314,6 +314,14 @@
 
         &.sorted-cell--active {
             background-color: #f3f3f3;
+        }
+    }
+
+    .table-row {
+        &--cells-no-padding {
+            .datatable-cell {
+                padding: 0px !important;
+            }
         }
     }
 
