@@ -8,7 +8,8 @@
             :header-fields="table.header"
             :settings="table.settings"
             :table="table.values"
-            v-on:paginate="paginate">
+            v-on:paginate="paginate"
+            v-on:show-all="showAll">
             <template slot="content">
                 <table-row
                     type="custom-actions"
@@ -272,6 +273,7 @@
                     settings: {
                         itemsPerPage: 10,
                         withRowNumbers: true,
+                        withShowAll: true,
                         hasEdit: false,
                         hasDelete: false,
                     }
@@ -280,6 +282,8 @@
         },
         methods: {
             paginate() {},
+
+            showAll() {},
 
             create() {
                 this.clearForm();

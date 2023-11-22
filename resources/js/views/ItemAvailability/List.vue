@@ -62,7 +62,8 @@
                 :header-fields="table.header"
                 :settings="table.settings"
                 :table="table.values"
-                v-on:paginate="paginate">
+                v-on:paginate="paginate"
+                v-on:show-all="showAll">
                 <template slot="content">
                     <table-row
                         class="table-row--cells-no-padding"
@@ -91,7 +92,10 @@
                                     class="tc--terminal-checkbox p-2"
                                     v-for="(terminal, terminalIndex) in device.terminals"
                                     :key="terminalIndex">
-                                    <input type="checkbox" v-model="terminal.availability">
+                                    <input
+                                        type="checkbox"
+                                        v-model="terminal.availability"
+                                        @change="setItemCheckboxCooldown($event)">
                                 </div>
                             </div>
                         </td>
@@ -143,6 +147,23 @@
             border-left: 1px #ccc solid;
             &:nth-of-type(1) {
                 border-left: none;
+            }
+        }
+    }
+    .checkbox-cooldown {
+        &--red {
+            outline: 0;
+            cursor: not-allowed;
+            &::before {
+                content: " ";
+                position: relative;
+                width: 13px;
+                display: block;
+                height: 13px;
+                border-radius: 4px;
+                color: #a42323;
+                opacity: 0.3;
+                background-color: #a42323;
             }
         }
     }
@@ -1824,6 +1845,7 @@
                         itemsPerPage: 10,
                         withRowNumbers: true,
                         withTableHeaders: false,
+                        withShowAll: true,
                         withPagination: true,
                         fixedHeaderScroll: true,
                         hasEdit: false,
@@ -1852,7 +1874,20 @@
 
                 this.terminalHeaders = headers;
             },
+
             paginate() {},
+
+            showAll() {},
+
+            setItemCheckboxCooldown(event) {
+                event.target.classList.add('checkbox-cooldown--red');
+                event.target.disabled = true;
+
+                setTimeout(() => {
+                    event.target.classList.remove('checkbox-cooldown--red');
+                    event.target.disabled = false;
+                }, 5000);
+            }
         }
     }
 </script>
