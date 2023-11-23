@@ -30,6 +30,7 @@ return [
     'failed_conversion_due_to_no_field_map' => 'Failed conversion due to no field map detected.',
     'failed_to_insert_the_data' => 'Failed to insert the data.',
     'failed_to_send_data' => 'Failed to send data. Please contact administrator.',
+    'failed_to_update_the_data' => 'Failed to update the data.',
     'field_is_required' => 'The CDIS Fields is required.',
     'field_mapping_connection_failed_create' => 'Field Mapping Connection failed to create.',
     'field_mapping_connection_failed_delete' => 'Field Mapping Connection failed to delete.',

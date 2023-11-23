@@ -61,13 +61,19 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/store', 'FieldMappingController@store');
     });
 
-    
     Route::group(['prefix' => 'terminal-file-setup'], function () {
         Route::patch('/update/{bid}', 'TerminalFileSetupController@update');
         Route::delete('/destroy/{bid}', 'TerminalFileSetupController@destroy');
         Route::get('/list', 'TerminalFileSetupController@index');
         Route::post('/store', 'TerminalFileSetupController@store');
         Route::get('/chosen/endpoints', 'TerminalFileSetupController@getEndpointChosen');
+    });
+
+    Route::group(['prefix' => 'device-settings'], function () {
+        Route::get('/list', 'DeviceSettingsController@index');
+        Route::post('/store', 'DeviceSettingsController@store');
+        Route::patch('/update', 'DeviceSettingsController@update');
+        Route::delete('/delete', 'DeviceSettingsController@destroy');
     });
 
     Route::apiResources([
