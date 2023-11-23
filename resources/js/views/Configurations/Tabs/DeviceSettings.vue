@@ -388,7 +388,6 @@
                     if (error.response != undefined) {
                         // self.table.errors.code = error.response.data.errors.code ? error.response.data.errors.code[0] : '';
                         // self.table.errors.name = error.response.data.errors.name ? error.response.data.errors.name[0] : '';
-                        // self.table.errors.description = error.response.data.errors.description ? error.response.data.errors.description[0] : '';
                         // self.$forceUpdate();
                     }
                 });
