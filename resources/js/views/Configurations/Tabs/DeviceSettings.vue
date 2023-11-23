@@ -8,8 +8,7 @@
             :header-fields="table.header"
             :settings="table.settings"
             :table="table.values"
-            v-on:paginate="paginate"
-            v-on:show-all="showAll">
+            v-on:paginate="paginate">
             <template slot="content">
                 <table-row
                     type="custom-actions"
@@ -26,7 +25,7 @@
                         </span>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <span v-text="tableData.device_name"></span>
+                        <span v-text="tableData.name"></span>
                     </td>
                     <td class="datatable-cell" align="center">
                         <span v-text="tableData.ip_address"></span>
@@ -81,7 +80,7 @@
                     <input
                         type="text"
                         class="form-control"
-                        v-model="form.values.device_name"
+                        v-model="form.values.name"
                         @keypress="errors.device_name = ''"
                         :placeholder="$t('label.enter_value', { value: $t('label.device_name') })">
                 </form-field>
@@ -124,8 +123,8 @@
                     <select
                         class="form-control"
                         v-model="form.values.status">
-                        <option :value="1">{{ $t('label.active') }}</option>
-                        <option :value="0">{{ $t('label.inactive') }}</option>
+                        <option :value="status.active">{{ $t('label.active') }}</option>
+                        <option :value="status.inactive">{{ $t('label.inactive') }}</option>
                     </select>
                 </form-field>
             </template>
@@ -175,6 +174,10 @@
         },
         data() {
             return {
+                status: {
+                    active: STATUS.ACTIVE,
+                    inactive: STATUS.INACTIVE,
+                },
                 pos: {
                     sirius_pos: POS.SIRIUS_POS,
                     pda: POS.PDA,
@@ -211,12 +214,13 @@
                     index: 0,
                     mode: 'create',
                     values: {
+                        bid: '',
                         device_type: '',
-                        device_name: '',
+                        name: '',
                         ip_address: '',
                         api_endpoint: '',
                         token: '',
-                        status: 1
+                        status: STATUS.ACTIVE
                     },
                 },
                 table: {
@@ -227,7 +231,7 @@
                             width: '120'
                         },
                         {
-                            name: "device_name",
+                            name: "name",
                             label: this.$t('label.device_name'),
                             width: '200'
                         },
@@ -273,7 +277,6 @@
                     settings: {
                         itemsPerPage: 10,
                         withRowNumbers: true,
-                        withShowAll: true,
                         hasEdit: false,
                         hasDelete: false,
                     }
@@ -281,9 +284,17 @@
             }
         },
         methods: {
-            paginate() {},
-
-            showAll() {},
+            paginate(page = 1) {
+                axios.get('device-settings/list?page='+page, {
+                    params: {
+                        itemsPerPage: this.table.settings.itemsPerPage,
+                    }
+                })
+                .then(response => {
+                   this.table.values.data = response.data.data.data
+                   this.table.values.meta  = response.data.data.meta
+                })
+            },
 
             create() {
                 this.clearForm();
@@ -299,7 +310,7 @@
                 this.modal.title = this.$t('label.edit_device_settings');
 
                 this.form.values.device_type = data.device_type;
-                this.form.values.device_name = data.device_name;
+                this.form.values.name = data.name;
                 this.form.values.ip_address = data.ip_address;
                 this.form.values.api_endpoint = data.api_endpoint;
                 this.form.values.token = data.token;
@@ -325,10 +336,14 @@
             },
 
             save() {
-                let index = this.form.index;
+                let method = this.form.mode === 'create' ? 'POST' : 'PATCH',
+                    url = this.form.mode === 'create' ? 'device-settings/store' : 'device-settings/update',
+                    data = this.form.values,
+                    index = this.form.index,
+                    self = this;
 
                 this.errors.device_type = this.form.values.device_type === '' ? this.$t('error.please_select_value', { value: this.$t('label.device_type') }) : '';
-                this.errors.device_name = this.form.values.device_name === '' ? this.$t('error.value_is_required', { value: this.$t('label.device_name') }) : '';
+                this.errors.device_name = this.form.values.name === '' ? this.$t('error.value_is_required', { value: this.$t('label.device_name') }) : '';
                 this.errors.ip_address = this.form.values.ip_address === '' ? this.$t('error.value_is_required', { value: this.$t('label.ip_address') })
                     : this.validateIPAddress(this.form.values.ip_address) === false ? this.$t('error.please_enter_a_valid_value', { value: this.$t('label.ip_address') })
                     : '';
@@ -336,7 +351,7 @@
                 this.errors.token = this.form.values.token === '' ? this.$t('error.value_is_required', { value: this.$t('label.token') }) : '';
 
                 if (this.form.values.device_type === ''
-                    || this.form.values.device_name === ''
+                    || this.form.values.name === ''
                     || this.form.values.ip_address === ''
                     || this.validateIPAddress(this.form.values.ip_address) === false
                     || this.form.values.api_endpoint === ''
@@ -344,22 +359,39 @@
                     return;
                 }
 
-                if (this.form.mode === 'create') {
-                    this.table.values.data.push({...this.form.values});
-                    this.dialog.message = this.$t('success.success_successfully_created', { value: this.$t('label.device') });
-                } else {
-                    this.table.values.data[index] = {...this.form.values};
-                    this.dialog.message = this.$t('success.success_successfully_updated', { value: this.$t('label.device') });
-                }
+                return axios(url, {
+                    method: method,
+                    url: url,
+                    data: data,
+                }).then(function(response) {
 
-                this.clearForm();
+                    if (self.form.mode === 'create') {
+                        console.log(response);
+                        self.table.values.data.push({...self.form.values});
+                        self.dialog.message = self.$t('success.success_successfully_created', { value: self.$t('label.device') });
+                    } else {
+                        self.table.values.data[index] = {...self.form.values};
+                        self.dialog.message = self.$t('success.success_successfully_updated', { value: self.$t('label.device') });
+                    }
 
-                this.dialog.visible = true;
-                this.dialog.status = 'success';
-                this.dialog.ok.function = () => {
-                    this.dialog.visible = false;
-                    this.modal.visible = false;
-                };
+                    self.clearForm();
+                    self.dialog.visible = true;
+                    self.dialog.status = 'success';
+                    self.dialog.ok.function = () => {
+                        self.dialog.visible = false;
+                        self.modal.visible = false;
+                    };
+
+                    return true;
+                })
+                .catch(error => {
+                    if (error.response != undefined) {
+                        // self.table.errors.code = error.response.data.errors.code ? error.response.data.errors.code[0] : '';
+                        // self.table.errors.name = error.response.data.errors.name ? error.response.data.errors.name[0] : '';
+                        // self.table.errors.description = error.response.data.errors.description ? error.response.data.errors.description[0] : '';
+                        // self.$forceUpdate();
+                    }
+                });
             },
 
             clearFormErrors() {
@@ -377,7 +409,7 @@
                 this.form.mode = 'create';
 
                 this.form.values.device_type = '';
-                this.form.values.device_name = '';
+                this.form.values.name = '';
                 this.form.values.ip_address = '';
                 this.form.values.api_endpoint = '';
                 this.form.values.token = '';
