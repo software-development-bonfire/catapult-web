@@ -43,9 +43,8 @@ class DeviceSettingsService
     public function update($data)
     {
         $data['updated_by'] = Auth::user()->bid;
-        $result = DeviceSettings::find($data['bid'])->update($data);
-
-        return $result;
+        DeviceSettings::find($data['bid'])->update($data);
+        return true;
     }
 
     /**
@@ -55,8 +54,7 @@ class DeviceSettingsService
      */
     public function destroy($bid)
     {
-        $data = DeviceSettings::findOrFail($bid);
-        $data->delete();
-        return $data;
+        DeviceSettings::findOrFail($bid)->delete();
+        return true;
     }
 }

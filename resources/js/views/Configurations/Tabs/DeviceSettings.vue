@@ -315,6 +315,7 @@
                 this.form.values.ip_address = data.ip_address;
                 this.form.values.api_endpoint = data.api_endpoint;
                 this.form.values.token = data.token;
+                this.form.values.status = data.status;
 
                 this.modal.visible = true;
             },
