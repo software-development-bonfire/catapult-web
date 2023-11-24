@@ -4,6 +4,7 @@ namespace App\Entities;
 
 use App\Traits\BidObserverTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Prettus\Repository\Contracts\Transformable;
 use Prettus\Repository\Traits\TransformableTrait;
 
@@ -12,13 +13,11 @@ use Prettus\Repository\Traits\TransformableTrait;
  *
  * @package namespace App\Entities;
  */
-class DeviceSettings extends Model implements Transformable
+class DeviceSettings extends Base
 {
-    use TransformableTrait,
-        BidObserverTrait;
-
+    use SoftDeletes;
     protected $table = 'device_settings';
-    
+
     /**
      * The attributes that are mass assignable.
      *
@@ -34,6 +33,10 @@ class DeviceSettings extends Model implements Transformable
         'status',
         'created_by',
         'updated_by'
+    ];
+
+    protected $casts = [
+        'bid' => 'string',
     ];
 
 }

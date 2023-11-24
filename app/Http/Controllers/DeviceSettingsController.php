@@ -73,26 +73,26 @@ class DeviceSettingsController extends Controller
         );
     }
 
-    // /**
-    //  * Remove the specified resource from storage.
-    //  *
-    //  * @param  string  $bid
-    //  * @return \Illuminate\Http\Response
-    //  */
-    // public function destroy($bid)
-    // {
-    //     try {
-    //         $this->fieldMappingService->destroy($bid);
-    //     } catch (\Throwable $th) {
-    //         return $this->errorResponse(
-    //             [],
-    //             Lang::get('error.data_mapping_failed_delete')
-    //         );
-    //     }
-    //     return $this->successfulResponse(
-    //         [],
-    //         Lang::get('success.data_mapping_deleted')
-    //     );
-    // }
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  string  $bid
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy(DeviceSettingsRequest $request)
+    {
+        try {
+            $data = app()->make(DeviceSettingsService::class)->destroy($request->get('bid'));
+        } catch (\Throwable $th) {
+            return $this->errorResponse(
+                [],
+                Lang::get('error.failed_to_delete_the_data')
+            );
+        }
+        return $this->successfulResponse(
+            [],
+            Lang::get('success.value_successfully_deleted', ['value' => __('label.device_settings')])
+        );
+    }
 
 }
