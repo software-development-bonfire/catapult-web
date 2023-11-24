@@ -29,6 +29,8 @@ export default {
             "failed_conversion_due_to_no_field_map": "Failed conversion due to no field map detected.",
             "failed_to_insert_the_data": "Failed to insert the data.",
             "failed_to_send_data": "Failed to send data. Please contact administrator.",
+            "failed_to_update_the_data": "Failed to update the data.",
+            "failed_to_delete_the_data": "Failed to delete the data",
             "field_is_required": "The CDIS Fields is required.",
             "field_mapping_connection_failed_create": "Field Mapping Connection failed to create.",
             "field_mapping_connection_failed_delete": "Field Mapping Connection failed to delete.",
@@ -70,6 +72,7 @@ export default {
             "user_failed_create": "User failed to create.",
             "user_failed_deleted": "User failed to deleted.",
             "user_failed_update": "User failed to update.",
+            "value_has_already_been_taken": "{value} has already been taken.",
             "value_is_required": "{value} is required."
         },
         "info": {

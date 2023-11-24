@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Entities\DeviceSettings;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class DeviceSettingsService
 {
@@ -41,9 +43,20 @@ class DeviceSettingsService
     public function update($data)
     {
         $data['updated_by'] = Auth::user()->bid;
-        $result = DeviceSettings::find($data['bid']);
-        $result->update($data);
+        $result = DeviceSettings::find($data['bid'])->update($data);
 
         return $result;
+    }
+
+    /**
+     * Destroy data
+     *
+     * @param string $bid
+     */
+    public function destroy($bid)
+    {
+        $data = DeviceSettings::findOrFail($bid);
+        $data->delete();
+        return $data;
     }
 }

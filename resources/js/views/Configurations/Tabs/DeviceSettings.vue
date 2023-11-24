@@ -45,7 +45,7 @@
                     </td>
                     <td class="datatable-cell" align="center">
                         <i class="fa fa-edit fa-lg row-update ml-1" @click.stop="editRow(tableDataIndex, tableData)"></i>
-                        <i class="fa fa-times-circle fa-lg row-delete ml-1 mr-1" @click.stop="deleteRow(tableDataIndex, tableData)"></i>
+                        <i class="fa fa-times-circle fa-lg row-delete ml-1 mr-1" @click.stop="deleteRow(tableDataIndex, tableData.bid)"></i>
                     </td>
                 </table-row>
             </template>
@@ -309,6 +309,7 @@
                 this.form.mode = 'update';
                 this.modal.title = this.$t('label.edit_device_settings');
 
+                this.form.values.bid = data.bid;
                 this.form.values.device_type = data.device_type;
                 this.form.values.name = data.name;
                 this.form.values.ip_address = data.ip_address;
@@ -318,18 +319,27 @@
                 this.modal.visible = true;
             },
 
-            deleteRow(index) {
+            deleteRow(index, bid) {
+                let self = this;
                 this.dialog.visible = true;
                 this.dialog.status = 'confirm';
                 this.dialog.message = this.$t('message.do_you_want_to_remove_this_data');
                 this.dialog.ok.function = () => {
-                    this.table.values.data.splice(index, 1);
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_removed_the_data');
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                    };
-                };
+                    axios.delete('device-settings/delete', {
+                        data: {
+                            bid: bid
+                        }
+                    })
+                    .then(response => {
+                        self.table.values.data.splice(index, 1);
+                        self.dialog.status = 'success';
+                        self.dialog.message = response.data.message;
+                        self.dialog.ok.function = () => {
+                            self.dialog.visible = false;
+                        };
+                    })
+                }
+
                 this.dialog.cancel.function = () => {
                     this.dialog.visible = false;
                 };
@@ -342,23 +352,6 @@
                     index = this.form.index,
                     self = this;
 
-                this.errors.device_type = this.form.values.device_type === '' ? this.$t('error.please_select_value', { value: this.$t('label.device_type') }) : '';
-                this.errors.device_name = this.form.values.name === '' ? this.$t('error.value_is_required', { value: this.$t('label.device_name') }) : '';
-                this.errors.ip_address = this.form.values.ip_address === '' ? this.$t('error.value_is_required', { value: this.$t('label.ip_address') })
-                    : this.validateIPAddress(this.form.values.ip_address) === false ? this.$t('error.please_enter_a_valid_value', { value: this.$t('label.ip_address') })
-                    : '';
-                this.errors.api_endpoint = this.form.values.api_endpoint === '' ? this.$t('error.value_is_required', { value: this.$t('label.api_endpoint') }) : '';
-                this.errors.token = this.form.values.token === '' ? this.$t('error.value_is_required', { value: this.$t('label.token') }) : '';
-
-                if (this.form.values.device_type === ''
-                    || this.form.values.name === ''
-                    || this.form.values.ip_address === ''
-                    || this.validateIPAddress(this.form.values.ip_address) === false
-                    || this.form.values.api_endpoint === ''
-                    || this.form.values.token === '') {
-                    return;
-                }
-
                 return axios(url, {
                     method: method,
                     url: url,
@@ -366,8 +359,7 @@
                 }).then(function(response) {
 
                     if (self.form.mode === 'create') {
-                        console.log(response);
-                        self.table.values.data.push({...self.form.values});
+                        self.table.values.data.push(response.data.data);
                         self.dialog.message = self.$t('success.success_successfully_created', { value: self.$t('label.device') });
                     } else {
                         self.table.values.data[index] = {...self.form.values};
@@ -386,9 +378,12 @@
                 })
                 .catch(error => {
                     if (error.response != undefined) {
-                        // self.table.errors.code = error.response.data.errors.code ? error.response.data.errors.code[0] : '';
-                        // self.table.errors.name = error.response.data.errors.name ? error.response.data.errors.name[0] : '';
-                        // self.$forceUpdate();
+                        self.errors.device_type = error.response.data.errors.device_type ? error.response.data.errors.device_type[0] : '';
+                        self.errors.device_name = error.response.data.errors.name ? error.response.data.errors.name[0] : '';
+                        self.errors.ip_address = error.response.data.errors.ip_address ? error.response.data.errors.ip_address[0] : '';
+                        self.errors.api_endpoint = error.response.data.errors.api_endpoint ? error.response.data.errors.api_endpoint[0] : '';
+                        self.errors.token = error.response.data.errors.token ? error.response.data.errors.token[0] : '';
+                        self.$forceUpdate();
                     }
                 });
             },
