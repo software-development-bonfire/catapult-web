@@ -3,10 +3,13 @@
 namespace App\Repositories\Eloquent;
 
 use App\Entities\DeviceSettings;
+use App\Enums\Status;
 use App\Repositories\Contracts\DeviceSettingsRepository;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Prettus\Repository\Eloquent\BaseRepository;
 
-class DeviceSettingsRepositoryEloquent extends BaseEloquent implements DeviceSettingsRepository
+class DeviceSettingsRepositoryEloquent extends BaseRepository implements DeviceSettingsRepository
 {
     public function model()
     {
@@ -19,9 +22,20 @@ class DeviceSettingsRepositoryEloquent extends BaseEloquent implements DeviceSet
      * @param Object $filters
      * @return Collection $result.
      */
-    public function list($filters = null)
+    public function list($filters, $isForHeader)
     {
         $this->model = $this->model->select('*');
-        return $this->paginate($filters['itemsPerPage']);
+
+        if (isset($filters->device_type) && $filters->device_type != '') {
+            $this->model->where('device_type', $filters->device_type)
+                ->where('status', Status::ACTIVE)
+                ->orderBy('name', 'asc');
+        }
+
+        if ($isForHeader) {
+            $this->model->groupBy('device_type');
+        }
+
+        return $isForHeader || isset($filters->device_type) ? $this->model->get() : $this->paginate($filters['itemsPerPage']);
     }
 }

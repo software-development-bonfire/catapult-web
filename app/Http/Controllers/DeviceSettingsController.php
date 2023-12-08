@@ -19,10 +19,9 @@ class DeviceSettingsController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index(Request $request, $isForHeader = false)
     {
-        $list = app()->make(DeviceSettingsRepository::class)->list($request->all());
-
+        $list = app()->make(DeviceSettingsRepository::class)->list($request->all(), $isForHeader);
         $list = fractal($list, DeviceSettingsTransformer::class);
 
         return $this->successfulResponse($list);
