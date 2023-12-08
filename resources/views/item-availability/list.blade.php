@@ -3,5 +3,7 @@
 @section('page-link', 'item-availability')
 
 @section('content')
-    <item-availability></item-availability>
+    <item-availability
+        :header="{{$header}}"
+    ></item-availability>
 @endsection
