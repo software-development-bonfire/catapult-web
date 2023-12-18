@@ -25,10 +25,12 @@
     "dependencies": {
         "bootstrap": "4.1.0",
         "font-awesome": "^4.7.0",
-        "laravel-echo": "^1.11.3",
+        "laravel-echo": "^1.15.3",
         "moment": "^2.29.1",
         "moment-timezone": "^0.5.33",
         "pm2-windows-startup": "^1.0.3",
+        "pusher-js": "^4.4.0",
+        "socket.io-client": "^4.7.2",
         "vue-i18n": "^8.24.4",
         "vue-inputmask": "^0.2.1",
         "vue-popperjs": "^2.3.0",

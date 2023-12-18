@@ -36,7 +36,7 @@ class DeviceSettingsController extends Controller
     public function store(DeviceSettingsRequest $request)
     {
         try {
-            $data =  app()->make(DeviceSettingsService::class)->store($request->all());
+            $data = app()->make(DeviceSettingsService::class)->store($request->all());
         } catch (\Throwable $th) {
             return $this->errorResponse(
                 [],

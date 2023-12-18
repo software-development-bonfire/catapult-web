@@ -32,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(\App\Repositories\Contracts\CDIS\CashBreakdownRepository::class, \App\Repositories\Eloquent\CDIS\CashBreakdownRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\CDIS\POSAuditTrailRepository::class, \App\Repositories\Eloquent\CDIS\POSAuditTrailRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\DeviceSettingsRepository::class, \App\Repositories\Eloquent\DeviceSettingsRepositoryEloquent::class);
+        $this->app->bind(\App\Repositories\Contracts\ItemAvailabilityRepository::class, \App\Repositories\Eloquent\ItemAvailabilityRepositoryEloquent::class);
     }
 
     /**

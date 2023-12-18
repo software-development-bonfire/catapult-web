@@ -18,7 +18,7 @@
             <div class="form-inline">
                 <div class="form-group my-2 mx-3">
                     <label>{{ $t('label.search') }}:&nbsp;&nbsp;</label>
-                    <input type="text" class="form-control" v-model="filters.search">
+                    <input type="text" class="form-control" v-model="filters.search_keyword" @keypress.enter="paginate(null, null, true)">
                 </div>
             </div>
         </div>
@@ -64,11 +64,11 @@
             <datatable
                 class="
                     datatable--overflow-scroll"
-                :header-fields="table.header"
-                :settings="table.settings"
-                :table="table.values"
-                v-on:paginate="paginate"
-                v-on:show-all="showAll">
+                    :header-fields="table.header"
+                    :settings="table.settings"
+                    :table="table.values"
+                    v-on:paginate="paginate"
+                    v-on:show-all="showAll($event, table)">
                 <template slot="content">
                     <table-row
                         class="table-row--cells-no-padding"
@@ -86,7 +86,7 @@
                             <span v-text="tableData.long_description" class="p-2"></span>
                         </td>
                         <td class="datatable-cell tc--short-description">
-                            <span v-text="tableData.short_description" class="p-2"></span>
+                            <span v-text="tableData.description" class="p-2"></span>
                         </td>
                         <td
                             class="datatable-cell"
@@ -94,13 +94,11 @@
                             :key="deviceIndex">
                             <div class="d-flex">
                                 <div
-                                    class="tc--terminal-checkbox p-2"
-                                    v-for="(terminal, terminalIndex) in device.terminals"
-                                    :key="terminalIndex">
+                                    class="tc--terminal-checkbox p-2">
                                     <input
                                         type="checkbox"
-                                        v-model="terminal.availability"
-                                        @change="setItemCheckboxCooldown($event)">
+                                        v-model="device.is_available"
+                                        @change="setItemCheckboxCooldown($event, device, tableData.product_uom_bid)">
                                 </div>
                             </div>
                         </td>
@@ -203,7 +201,7 @@
         data() {
             return {
                 filters : {
-                    search: '',
+                    search_keyword: '',
                 },
                 modal: {
                     detail: {
@@ -219,7 +217,6 @@
                 },
                 summary: [],
                 errors: {},
-                // terminalHeaders: [],
                 table: {
                     header: [
                         {
@@ -244,55 +241,20 @@
                         },
                     ],
                     values: {
-                        data: [
-                            {
-                                item_code: 'PR1001',
-                                barcode: '100001',
-                                long_description: 'SIZZLING DOUBLE PORKCHOP',
-                                short_description: 'S-DOUBLE PORKCHOP',
-                                devices: [
-                                    {
-                                        name: 'Sirius POS',
-                                        terminals: [
-                                            {
-                                                name: 'Terminal 1',
-                                                availability: true
-                                            },
-                                            {
-                                                name: 'Terminal 2',
-                                                availability: true
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        name: 'PDA',
-                                        terminals: [
-                                            {
-                                                name: 'Terminal 1',
-                                                availability: true
-                                            },
-                                            {
-                                                name: 'Terminal 2',
-                                                availability: true
-                                            },
-                                        ]
-                                    },
-                                ]
-                            },
-                        ],
+                        data: [],
                         meta: {
                             pagination: {
                                 count: 1,
                                 current_page: 1,
                                 links: {},
-                                per_page: 10,
+                                per_page: 25,
                                 total: 1,
                                 total_pages: 1
                             }
                         }
                     },
                     settings: {
-                        itemsPerPage: 10,
+                        itemsPerPage: 25,
                         withRowNumbers: true,
                         withTableHeaders: false,
                         withShowAll: true,
@@ -305,38 +267,74 @@
             }
         },
         mounted() {
-            // this.generateTerminalHeaders();
+            this.paginate();
         },
         methods: {
-            // generateTerminalHeaders() {
-            //     let self = this;
-            //     let table = [...this.table.values.data];
-            //     let headers = [];
+            paginate(
+                page = 1, 
+                data = false, 
+                tableFilters = null,
+                itemsPerPage = null
+            ) {
 
-            //     table.forEach(function(item) {
-            //         item.devices.forEach(function(device) {
-            //             headers.push({
-            //                 name: device.name,
-            //                 terminals: device.terminals
-            //             })
-            //         })
-            //     });
+                let filters = itemsPerPage !== null && tableFilters !== null ? tableFilters : {...this.filters};
 
-            //     this.terminalHeaders = headers;
-            // },
+                axios.get('item-availability/list', {
+                    params: {
+                        filters: filters,
+                        page: page,
+                        itemsPerPage: itemsPerPage !== null
+                            ? itemsPerPage
+                            : this.table.settings.itemsPerPage,
+                        isTablePaginate: (data !== null) ? true : false,
+                    }
+                })
+                .then(response => {
+                   this.table.values.data = response.data.data.list.data
+                   this.table.values.meta  = response.data.data.list.meta
+                })
+            },
 
-            paginate() {},
+            async showAll(emitted, data = null) {
+                let itemsPerPage = emitted.status ? emitted.table.meta.pagination.total : this.table.settings.itemsPerPage;
+                let filters = emitted.table.filters;
+                let hasResponse = this.paginate(1, data, filters, itemsPerPage);
 
-            showAll() {},
+                if (hasResponse) {
+                    this.table.settings.itemsPerPage = itemsPerPage;
+                    emitted.done(emitted.status);
+                }
+            },
 
-            setItemCheckboxCooldown(event) {
+            setItemCheckboxCooldown(event, data, productBid) {
+                let self = this;
                 event.target.classList.add('checkbox-cooldown--red');
                 event.target.disabled = true;
 
                 setTimeout(() => {
                     event.target.classList.remove('checkbox-cooldown--red');
                     event.target.disabled = false;
-                }, 5000);
+                    self.update(data, productBid, event);
+                }, 3000);
+            },
+
+            async update(data, productBid) {
+                let method = 'PATCH',
+                    url = 'item-availability/update';
+
+                return axios(url, {
+                    method: method,
+                    url: url,
+                    data: {
+                        product_uom_bid: productBid,
+                        device: data.device_detail,
+                        item_availability_detail_bid: data.item_availability_detail_bid,
+                        is_available: data.is_available,
+                    },
+                }).then(function(response) {
+                    return true;
+                })
+                .catch(error => {});
             }
         }
     }
