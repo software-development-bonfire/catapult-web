@@ -10,6 +10,7 @@
     "require": {
         "php": "^7.1.3",
         "bensampo/laravel-enum": "^1.21",
+        "beyondcode/laravel-websockets": "^1.6",
         "doctrine/dbal": "^2.0",
         "eighty8/laravel-seeder": "^5.8",
         "fideloper/proxy": "^4.0",
@@ -21,7 +22,7 @@
         "maatwebsite/excel": "^3.1",
         "martinlindhe/laravel-vue-i18n-generator": "^0.1.46",
         "prettus/l5-repository": "^2.6",
-        "pusher/pusher-php-server": "4.0",
+        "pusher/pusher-php-server": "~3.0",
         "ratchet/pawl": "^0.4.1",
         "react/socket": "^1.11",
         "spatie/laravel-fractal": "^5.8"

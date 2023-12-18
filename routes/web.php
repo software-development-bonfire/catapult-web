@@ -29,7 +29,11 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/logs', 'LogsController@view');
 
     // Item Availability
-    Route::get('/item-availability', 'ItemAvailabilityController@index');
+    Route::group(['prefix' => 'item-availability'], function () {
+        Route::get('/', 'ItemAvailabilityController@index');
+        Route::get('/list', 'ItemAvailabilityController@list');
+        Route::patch('/update', 'ItemAvailabilityController@update');
+    });
 
     // Field Mapping Preset
     Route::group(['prefix' => 'field-mapping-preset'], function () {
