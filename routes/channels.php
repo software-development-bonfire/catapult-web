@@ -11,11 +11,10 @@
 |
 */
 
-// Broadcast::channel('App.User.{id}', function ($user, $id) {
-//     return (int) $user->id === (int) $id;
-// });
+Broadcast::channel('App.User.{id}', function ($user, $id) {
+    return (int) $user->id === (int) $id;
+});
 
-
-Broadcast::channel('products', function ($products) {
-    return $products;
+Broadcast::channel('item-availability', function ($message) {
+    return $message;
 });

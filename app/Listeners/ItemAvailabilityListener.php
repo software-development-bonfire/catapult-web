@@ -2,7 +2,7 @@
 
 namespace App\Listeners;
 
-use App\Events\Products;
+use App\Events\ItemAvailability;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
@@ -22,7 +22,7 @@ class ItemAvailabilityListener
     /**
      * Handle the event.
      *
-     * @param  Products  $event
+     * @param  ItemAvailability  $event
      * @return void
      */
     public function handle(Products $event)
