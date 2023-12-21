@@ -34,11 +34,6 @@ class ItemAvailability implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('item-availability');
-        // return ['item-availability'];
-    }
-
-    public function broadcastAs(){
-        return 'item-availability';
+        return new Channel('item-availability');
     }
 }
