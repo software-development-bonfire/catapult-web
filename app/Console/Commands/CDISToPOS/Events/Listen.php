@@ -75,11 +75,12 @@ class Listen extends Command
 
     public function connect()
     {
-        $pusherAppKey = config('broadcasting.connections.pusher.key');
+        $pusherAppKey = config('broadcasting.connections.cdis_pusher.key');
         $clientId = config('configuration.client_id');
         $branchCode = config('configuration.branch_code');
         $loop = Loop::get();
-
+        $this->createLog('wss://ws-eu.pusher.com/app/'.$pusherAppKey.'?protocol=7&client=js&version=7.0.6&flash=false', 'info', true, ['CONNECTION INIT']);
+        
         \Ratchet\Client\connect('wss://ws-eu.pusher.com/app/'.$pusherAppKey.'?protocol=7&client=js&version=7.0.6&flash=false')
             ->then(function ($connection) use ($loop, &$socketConnection, $clientId, $branchCode) {
                 $connection->send('{"event":"pusher:subscribe","data":{"auth":"","channel":"'.$this->cdisAndCatapultSyncChannel($branchCode).'"}}');

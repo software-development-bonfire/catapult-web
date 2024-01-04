@@ -37,6 +37,20 @@ return [
             'app_id' => env('PUSHER_APP_ID'),
             'options' => [
                 'cluster' => env('PUSHER_APP_CLUSTER'),
+                //'useTLS' => true,
+                'host' => '127.0.0.1', // for localhost installation
+                'port' => 6001, // standard port
+                'scheme' => 'http',
+            ],
+        ],
+        
+        'cdis_pusher' => [
+            'driver' => 'pusher',
+            'key' => env('CDIS_PUSHER_APP_KEY'),
+            'secret' => env('CDIS_PUSHER_APP_SECRET'),
+            'app_id' => env('CDIS_PUSHER_APP_ID'),
+            'options' => [
+                'cluster' => env('CDIS_PUSHER_APP_CLUSTER'),
                 'useTLS' => true,
             ],
         ],
