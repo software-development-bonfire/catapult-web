@@ -32,6 +32,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::group(['prefix' => 'item-availability'], function () {
         Route::get('/', 'ItemAvailabilityController@index');
         Route::get('/list', 'ItemAvailabilityController@list');
+        Route::post('/store', 'ItemAvailabilityController@store');
         Route::patch('/update', 'ItemAvailabilityController@update');
     });
 

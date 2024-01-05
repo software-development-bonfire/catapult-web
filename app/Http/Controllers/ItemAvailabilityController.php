@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Enums\DeviceType;
+use App\Events\MessageEvent;
 use Illuminate\Support\Facades\Lang;
 
 class ItemAvailabilityController extends Controller
@@ -99,7 +100,7 @@ class ItemAvailabilityController extends Controller
             );
         }
 
-        Log::info($data);
+        broadcast(new MessageEvent($request->all()));
         return $this->successfulResponse(
             [],
             Lang::get('success.value_successfully_updated', ['value' => __('label.item_availability')])

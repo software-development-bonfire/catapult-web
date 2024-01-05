@@ -27,7 +27,14 @@ class ItemAvailabilityService
                     ->where('ip_address', $header['ip_address'])
                     ->first();
 
-                if ($deviceSettings) {
+                if (! $deviceSettings) {
+                    $deviceSettings = DeviceSettings::create([
+                        'device_type' =>  $header['device_type'],
+                        'name' =>  $header['name'],
+                        'ip_address' =>  $header['ip_address'],
+                    ]);
+                }
+
                     foreach ($header['products'] as $product) {
 
                         $item = ItemAvailability::where('product_uom_bid', $product['product_uom_bid'])
@@ -68,7 +75,6 @@ class ItemAvailabilityService
                             }
                         }
                     }
-                }
             }
 
             return true;

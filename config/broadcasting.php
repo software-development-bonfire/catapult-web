@@ -32,16 +32,26 @@ return [
 
         'pusher' => [
             'driver' => 'pusher',
-            'key' => env('LOCAL_PUSHER_APP_KEY'),
-            'secret' => env('LOCAL_PUSHER_APP_SECRET'),
-            'app_id' => env('LOCAL_PUSHER_APP_ID'),
+            'key' => env('PUSHER_APP_KEY'),
+            'secret' => env('PUSHER_APP_SECRET'),
+            'app_id' => env('PUSHER_APP_ID'),
             'options' => [
-                'cluster' => env('LOCAL_PUSHER_APP_CLUSTER'),
-                // 'useTLS' => true,
-                'encrypted' => false,
-                'host' => '127.0.0.1',
-                'port' => 6001,
+                'cluster' => env('PUSHER_APP_CLUSTER'),
+                //'useTLS' => true,
+                'host' => '127.0.0.1', // for localhost installation
+                'port' => 6001, // standard port
                 'scheme' => 'http',
+            ],
+        ],
+        
+        'cdis_pusher' => [
+            'driver' => 'pusher',
+            'key' => env('CDIS_PUSHER_APP_KEY'),
+            'secret' => env('CDIS_PUSHER_APP_SECRET'),
+            'app_id' => env('CDIS_PUSHER_APP_ID'),
+            'options' => [
+                'cluster' => env('CDIS_PUSHER_APP_CLUSTER'),
+                'useTLS' => true,
             ],
         ],
 

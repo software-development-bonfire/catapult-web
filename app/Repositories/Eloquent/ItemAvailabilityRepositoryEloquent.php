@@ -22,7 +22,7 @@ class ItemAvailabilityRepositoryEloquent extends BaseRepository implements ItemA
      * @param Object $filters
      * @return Collection $result.
      */
-    public function list($filters, $terminals)
+    public function list($filters, $paginate = true)
     {
         $this->model = $this->model->select([
                 'item_availability.bid',
@@ -44,6 +44,9 @@ class ItemAvailabilityRepositoryEloquent extends BaseRepository implements ItemA
                 });
         }
 
-        return $this->paginate(app()->get('request')->get('itemsPerPage', 10));
+        if ($paginate) {
+            return $this->paginate(app()->get('request')->get('itemsPerPage', 10));
+        }
+        return $this->model->get();
     }
 }
