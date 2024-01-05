@@ -12,7 +12,7 @@
             </div>
         </div>
         <div class="box-row box-row--white p-2">
-            <button class="button button--light">{{ $t('label.generate_sample_csv') }}</button>
+            <button class="button button--light" @click.stop="generateSample()">{{ $t('label.generate_sample_csv') }}</button>
         </div>
         <div class="box-row box-row--white d-flex justify-content-between position-relative">
             <div class="form-inline">
@@ -331,6 +331,17 @@
                         item_availability_detail_bid: data.item_availability_detail_bid,
                         is_available: data.is_available,
                     },
+                }).then(function(response) {
+                    return true;
+                })
+                .catch(error => {});
+            },
+
+            async generateSample() {
+                let url = 'item-availability/store';
+                return axios(url, {
+                    method: 'POST',
+                    url: url
                 }).then(function(response) {
                     return true;
                 })

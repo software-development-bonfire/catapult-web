@@ -24,6 +24,11 @@ class ItemAvailability extends Base
         'product_uom_bid' => 'string',
     ];
 
+    public function detail()
+    {
+        return $this->hasMany(ItemAvailabilityDetail::class, 'head_bid', 'bid');
+    }
+
     public function itemAvailabilityDetail()
     {
         return $this->hasMany(ItemAvailabilityDetail::class, 'head_bid', 'bid');
