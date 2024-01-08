@@ -31,7 +31,7 @@ class ItemAvailabilityService
                     $deviceSettings = DeviceSettings::create([
                         'device_type' =>  $header['device_type'],
                         'name' =>  $header['name'],
-                        'ip_address' =>  $header['ip_address'],
+                        'ip_address' => $header['ip_address'],
                     ]);
                 }
 
