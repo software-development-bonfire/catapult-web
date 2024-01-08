@@ -92,13 +92,21 @@
                             class="datatable-cell"
                             v-for="(device, deviceIndex) in tableData.devices"
                             :key="deviceIndex">
-                            <div class="d-flex">
+                            <div class="d-flex" v-if="device.item_availability_detail_bid !== null">
                                 <div
                                     class="tc--terminal-checkbox p-2">
                                     <input
                                         type="checkbox"
                                         v-model="device.is_available"
                                         @change="setItemCheckboxCooldown($event, device, tableData.product_uom_bid)">
+                                </div>
+                            </div>
+                            <div class="d-flex" v-else>
+                                <div
+                                    class="tc--terminal-checkbox p-2">
+                                    <input
+                                        type="checkbox"
+                                        disabled="true">
                                 </div>
                             </div>
                         </td>
@@ -310,11 +318,11 @@
                 let self = this;
                 event.target.classList.add('checkbox-cooldown--red');
                 event.target.disabled = true;
+                self.update(data, productBid, event);
 
                 setTimeout(() => {
                     event.target.classList.remove('checkbox-cooldown--red');
                     event.target.disabled = false;
-                    self.update(data, productBid, event);
                 }, 3000);
             },
 
