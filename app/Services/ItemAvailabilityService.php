@@ -42,6 +42,7 @@ class ItemAvailabilityService
                             ->where('barcode', $product['barcode'])
                             ->where('description', $product['description'])
                             ->where('long_description', $product['long_description'])
+                            ->where('category_bid', $product['category_bid'])
                             ->first();
 
                         if (! $item) {
@@ -50,7 +51,8 @@ class ItemAvailabilityService
                                 'item_code' => $product['item_code'],
                                 'barcode' => $product['barcode'],
                                 'description' => $product['description'],
-                                'long_description' => $product['long_description']
+                                'long_description' => $product['long_description'],
+                                'category_bid' => $product['category_bid']
                             ]);
 
                             if ($itemAvailability) {

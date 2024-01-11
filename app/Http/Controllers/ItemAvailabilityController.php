@@ -122,6 +122,7 @@ class ItemAvailabilityController extends Controller
     //                 'barcode' => 'EBC001',
     //                 'description' => 'CF1 3CHEESE',
     //                 'long_description' => 'CLASSIC 3 CHEESE FONDUE',
+    //                 'category_bid' => '1000000000000000001',
     //                 'is_available' => '1',
     //             ],
     //             [
@@ -130,6 +131,7 @@ class ItemAvailabilityController extends Controller
     //                 'barcode' => 'EBC002',
     //                 'description' => 'CF2 CREAM CHEESE',
     //                 'long_description' => 'WHITE CHEESE FONDUE',
+    //                 'category_bid' => '1000000000000000001',
     //                 'is_available' => '1',
     //             ],
     //             [
@@ -138,6 +140,7 @@ class ItemAvailabilityController extends Controller
     //                 'barcode' => 'EBC003',
     //                 'description' => 'A3 SPICY FONDUE',
     //                 'long_description' => 'SPICY PIMENTO & PEPPER JACK FONDUE',
+    //                 'category_bid' => '1000000000000000001',
     //                 'is_available' => '1',
     //             ],
     //             [
@@ -146,6 +149,7 @@ class ItemAvailabilityController extends Controller
     //                 'barcode' => 'EBC004',
     //                 'description' => 'GC5 COLBY',
     //                 'long_description' => 'COLBY JACK WITH BACON GRILLED CHEESE',
+    //                 'category_bid' => '1000000000000000001',
     //                 'is_available' => '1',
     //             ],
     //             [
@@ -154,6 +158,7 @@ class ItemAvailabilityController extends Controller
     //                 'barcode' => 'EBC005',
     //                 'description' => 'GC3 BUF CRM',
     //                 'long_description' => 'CREAM CHEESE & BUFFALO CHICKEN GRILLED CHEESE',
+    //                 'category_bid' => '1000000000000000001',
     //                 'is_available' => '0',
     //             ],
     //         ]

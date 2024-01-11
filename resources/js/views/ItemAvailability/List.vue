@@ -210,6 +210,7 @@
             return {
                 filters : {
                     search_keyword: '',
+                    // category: ['1000000000000000002']
                 },
                 modal: {
                     detail: {
