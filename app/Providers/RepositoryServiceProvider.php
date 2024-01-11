@@ -27,6 +27,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(\App\Repositories\Contracts\CDIS\CashDrawerRepository::class, \App\Repositories\Eloquent\CDIS\CashDrawerRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\CDIS\CashBreakdownRepository::class, \App\Repositories\Eloquent\CDIS\CashBreakdownRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\DeviceSettingsRepository::class, \App\Repositories\Eloquent\DeviceSettingsRepositoryEloquent::class);
+        $this->app->bind(\App\Repositories\Contracts\CDISProductCategoryRepository::class, \App\Repositories\Eloquent\CDISProductCategoryRepositoryEloquent::class);
     }
 
     /**

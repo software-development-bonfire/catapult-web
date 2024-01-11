@@ -16,12 +16,14 @@ class ItemAvailability extends Base
         'item_code',
         'barcode',
         'description',
-        'long_description'
+        'long_description',
+        'category_bid'
     ];
 
     protected $casts = [
         'bid' => 'string',
         'product_uom_bid' => 'string',
+        'category_bid' => 'string',
     ];
 
     public function detail()

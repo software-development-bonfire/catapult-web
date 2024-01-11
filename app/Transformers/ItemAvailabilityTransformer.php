@@ -32,6 +32,7 @@ class ItemAvailabilityTransformer extends TransformerAbstract
             'barcode' => $model->barcode,
             'description' => $model->description,
             'long_description' => $model->long_description,
+            'category_bid' => $model->category_bid,
             'devices' => $this->setAvailability($model->product_uom_bid, $model->itemAvailabilityDetail)
         ];
 
