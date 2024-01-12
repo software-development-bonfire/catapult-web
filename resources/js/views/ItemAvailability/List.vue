@@ -112,19 +112,32 @@
                         <td class="datatable-cell tc--long-description">
                             <div v-text="tableData.long_description" class="p-2"></div>
                         </td>
-                        <td class="datatable-cell tc--category">
-                            <div class="p-2 clearfix">
-                                <div class="category-display" v-if="tableData.product_categories && tableData.product_categories.length !== 0">
-                                    <div
-                                        class="category-display-item"
-                                        v-for="(category, categoryIndex) in tableData.product_categories"
-                                        :key="categoryIndex">
-                                        {{ category.name }}
-                                        <i
-                                            class="fa fa-caret-right category-display-item-caret"
-                                            v-if="tableData.product_categories.length !== categoryIndex + 1">
-                                        </i>
-                                    </div>
+                        <td class="datatable-cell tc--category" align="center">
+                            <div
+                                class="category-display clearfix"
+                                v-if="tableData.categories !== ''">
+                                <div
+                                    class="category-display-item"
+                                    v-if="(typeof tableData.categories.category !== 'undefined')">
+                                    {{ tableData.categories.category }}
+                                    <i
+                                        class="fa fa-caret-right category-display-item-caret"
+                                        v-if="(typeof tableData.categories.sub_category_1 !== 'undefined')">
+                                    </i>
+                                </div>
+                                <div
+                                    class="category-display-item"
+                                    v-if="(typeof tableData.categories.sub_category_1 !== 'undefined')">
+                                    {{ tableData.categories.sub_category_1 }}
+                                    <i
+                                        class="fa fa-caret-right category-display-item-caret"
+                                        v-if="(typeof tableData.categories.sub_category_2 !== 'undefined')">
+                                    </i>
+                                </div>
+                                <div
+                                    class="category-display-item"
+                                    v-if="(typeof tableData.categories.sub_category_2 !== 'undefined')">
+                                    {{ tableData.categories.sub_category_2 }}
                                 </div>
                             </div>
                         </td>
@@ -296,6 +309,9 @@
         props: {
             header: {
                 type: Array
+            },
+            categories: {
+                type: Object
             }
         },
         components: {
@@ -329,7 +345,7 @@
                     search_keyword: '',
                     // category: ['1000000000000000002'],
                     category: '',
-                    category_label: ''
+                    // category_label: ''
                 },
                 modal: {
                     detail: {
@@ -339,57 +355,7 @@
                 },
                 selections: {
                     category: {
-                        options: [
-                            {
-                                label: 'Vendor A',
-                                value: 'Vendor A',
-                                bid: "1000000000000000004",
-                                text: "26 Model Dickies Brand",
-                                children: [
-                                    {
-                                        bid: "1000000000000000005",
-                                        text: "Black Pants",
-                                        children: []
-                                    },
-                                    {
-                                        bid: "1000000000000000006",
-                                        text: "Travel Shorts",
-                                        children: []
-                                    }
-                                ]
-                            },
-                            {
-                                bid: "1000000000000000001",
-                                text: "Category 1",
-                                children: [
-                                    {
-                                        bid: "1000000000000000002",
-                                        text: "Category 1.1",
-                                        children: [
-                                            {
-                                                bid: "1000000000000000003",
-                                                text: "Category 1.2",
-                                                children: []
-                                            }
-                                        ]
-                                    }
-                                ]
-                            },
-                            {
-                                label: 'Vendor B',
-                                value: 'Vendor B',
-                                bid: "1000000000000000007",
-                                text: "Hello Category",
-                                children: []
-                            },
-                            {
-                                label: 'Vendor C',
-                                value: 'Vendor C',
-                                bid: "1000000000000000008",
-                                text: "Hi",
-                                children: []
-                            }
-                        ]
+                        options: []
                     }
                 },
                 terminalHeaders: this.header,
@@ -449,9 +415,15 @@
                 },
             }
         },
+
+        created() {
+            this.selections.category.options = this.categories.data;
+        },
+
         mounted() {
             this.paginate();
         },
+
         methods: {
             paginate(
                 page = 1, 

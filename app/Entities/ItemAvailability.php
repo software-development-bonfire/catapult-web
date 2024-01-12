@@ -35,4 +35,9 @@ class ItemAvailability extends Base
     {
         return $this->hasMany(ItemAvailabilityDetail::class, 'head_bid', 'bid');
     }
+
+    public function category()
+    {
+        return $this->belongsTo(CDISProductCategory::class, 'category_bid', 'bid');
+    }
 }
