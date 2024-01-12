@@ -15,12 +15,38 @@
             <button class="button button--light" @click.stop="generateSample()">{{ $t('label.generate_sample_csv') }}</button>
         </div>
         <div class="box-row box-row--white d-flex justify-content-between position-relative">
-            <div class="form-inline">
-                <div class="form-group my-2 mx-3">
-                    <label>{{ $t('label.search') }}:&nbsp;&nbsp;</label>
-                    <input type="text" class="form-control" v-model="filters.search_keyword" @keypress.enter="paginate(null, null, true)">
-                </div>
-            </div>
+            <table class="table-layout ml-2">
+                <tr>
+                    <td><b>{{ $t('label.category') }}:</b></td>
+                    <td width="400px">
+                        <category-picker
+                            :tree.sync="selections.category.options"
+                            :selected.sync="filters.category"
+                            :width="700"
+                            @category-data="($event) => {
+                                filters.category_label = $event.label;
+                            }"
+                        />
+                    </td>
+                    <td><b>{{ $t('label.search') }}:</b></td>
+                    <td width="200px">
+                        <input
+                            type="text"
+                            class="form-control"
+                            v-model="filters.search_keyword"
+                            :placeholder="$t('label.filter_keyword')"
+                            @keypress.enter="paginate(null, null, true)">
+                    </td>
+                    <td>
+                        <button
+                            class="button button--light"
+                            @click="paginate(null, null, true)"
+                            @keypress.enter="paginate(null, null, true)">
+                            {{ $t('label.search') }}
+                        </button>
+                    </td>
+                </tr>
+            </table>
         </div>
         <div class="fixed-table-headers">
             <table border="1" cellpadding="4">
@@ -30,7 +56,7 @@
                         <td rowspan="2" class="tc--item-code">{{ $t('label.item_code') }}</td>
                         <td rowspan="2" class="tc--barcode">{{ $t('label.barcode') }}</td>
                         <td rowspan="2" class="tc--long-description">{{ $t('label.long_description') }}</td>
-                        <td rowspan="2" class="tc--short-description">{{ $t('label.short_description') }}</td>
+                        <td rowspan="2" class="tc--category">{{ $t('label.category') }}</td>
                         <td
                             v-for="(header, headerIndex) in terminalHeaders"
                             :key="headerIndex">
@@ -85,8 +111,21 @@
                         <td class="datatable-cell tc--long-description">
                             <span v-text="tableData.long_description" class="p-2"></span>
                         </td>
-                        <td class="datatable-cell tc--short-description">
-                            <span v-text="tableData.description" class="p-2"></span>
+                        <td class="datatable-cell tc--category">
+                            <div class="p-2 clearfix">
+                                <div class="category-display" v-if="tableData.product_categories && tableData.product_categories.length !== 0">
+                                    <div
+                                        class="category-display-item"
+                                        v-for="(category, categoryIndex) in tableData.product_categories"
+                                        :key="categoryIndex">
+                                        {{ category.name }}
+                                        <i
+                                            class="fa fa-caret-right category-display-item-caret"
+                                            v-if="tableData.product_categories.length !== categoryIndex + 1">
+                                        </i>
+                                    </div>
+                                </div>
+                            </div>
                         </td>
                         <td
                             class="datatable-cell"
@@ -147,9 +186,9 @@
             min-width: 200px;
             max-width: 200px;
         }
-        &--short-description {
-            min-width: 200px;
-            max-width: 200px;
+        &--category {
+            min-width: 300px;
+            max-width: 300px;
         }
         &--terminal-checkbox {
             min-width: 120px;
@@ -158,6 +197,44 @@
             border-left: 1px #ccc solid;
             &:nth-of-type(1) {
                 border-left: none;
+            }
+        }
+    }
+    .category-display {
+        display: flex;
+        border: 1px #adadad solid;
+        float: left;
+        &-item {
+            float: left;
+            text-align: left;
+            padding: 5px 10px;
+            font-size: 12px;
+            white-space: nowrap;
+            position: relative;
+            &-caret {
+                font-size: 48px;
+                position: absolute;
+                top: -9px;
+                z-index: 1;
+            }
+            &:nth-of-type(1) {
+                background-color: #eaeaea;
+                .category-display-item-caret {
+                    color: #eaeaea;
+                    right: -16px;
+                }
+            }
+            &:nth-of-type(2) {
+                padding-left: 25px;
+                background-color: #f5f5f5;
+                .category-display-item-caret {
+                    color: #f5f5f5;
+                    right: -16px;
+                }
+            }
+            &:nth-of-type(3) {
+                padding-left: 25px;
+                background-color: #ddd;
             }
         }
     }
@@ -189,6 +266,7 @@
     import TableRow from '../../components/Datatable2/TableRow.vue';
     import DialogBox from '../../components/Message/DialogBox.vue';
     import Modal from '../../components/Modal/Modal.vue';
+    import CategoryPicker from '../../components/Forms/CategoryPicker.vue';
     import Util from '../../mixins/Util.vue';
 
     export default {
@@ -203,19 +281,77 @@
             DialogBox,
             Modal,
             Popper,
-            DatePicker
+            DatePicker,
+            CategoryPicker
         },
         mixins: [ Util ],
         data() {
             return {
                 filters : {
                     search_keyword: '',
-                    // category: ['1000000000000000002']
+                    // category: ['1000000000000000002'],
+                    category: '',
+                    category_label: ''
                 },
                 modal: {
                     detail: {
                         visible: false,
                         data: {},
+                    }
+                },
+                selections: {
+                    category: {
+                        options: [
+                            {
+                                label: 'Vendor A',
+                                value: 'Vendor A',
+                                bid: "1000000000000000004",
+                                text: "26 Model Dickies Brand",
+                                children: [
+                                    {
+                                        bid: "1000000000000000005",
+                                        text: "Black Pants",
+                                        children: []
+                                    },
+                                    {
+                                        bid: "1000000000000000006",
+                                        text: "Travel Shorts",
+                                        children: []
+                                    }
+                                ]
+                            },
+                            {
+                                bid: "1000000000000000001",
+                                text: "Category 1",
+                                children: [
+                                    {
+                                        bid: "1000000000000000002",
+                                        text: "Category 1.1",
+                                        children: [
+                                            {
+                                                bid: "1000000000000000003",
+                                                text: "Category 1.2",
+                                                children: []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                label: 'Vendor B',
+                                value: 'Vendor B',
+                                bid: "1000000000000000007",
+                                text: "Hello Category",
+                                children: []
+                            },
+                            {
+                                label: 'Vendor C',
+                                value: 'Vendor C',
+                                bid: "1000000000000000008",
+                                text: "Hi",
+                                children: []
+                            }
+                        ]
                     }
                 },
                 terminalHeaders: this.header,
@@ -299,8 +435,8 @@
                     }
                 })
                 .then(response => {
-                   this.table.values.data = response.data.data.list.data
-                   this.table.values.meta  = response.data.data.list.meta
+                    this.table.values.data = response.data.data.list.data;
+                    this.table.values.meta = response.data.data.list.meta;
                 })
             },
 
