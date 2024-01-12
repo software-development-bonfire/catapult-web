@@ -67,6 +67,7 @@
                                 : ''
                             }}
                         </td>
+                        <td rowspan="2" class="tc--action">{{ $t('label.action') }}</td>
                     </tr>
                     <tr>
                         <td
@@ -75,8 +76,8 @@
                             :key="headerIndex">
                             <div class="d-flex">
                                 <div
-                                    v-for="(terminal, terminalIndex) in header.terminals"
                                     class="tc--terminal-checkbox"
+                                    v-for="(terminal, terminalIndex) in header.terminals"
                                     :key="terminalIndex">
                                     {{ terminal.name }}
                                 </div>
@@ -103,13 +104,13 @@
                         :settings="table.settings"
                         :rowIndex="tableDataIndex">
                         <td class="datatable-cell tc--item-code">
-                            <span v-text="tableData.item_code" class="p-2"></span>
+                            <div v-text="tableData.item_code" class="p-2"></div>
                         </td>
                         <td class="datatable-cell tc--barcode">
-                            <span v-text="tableData.barcode" class="p-2"></span>
+                            <div v-text="tableData.barcode" class="p-2"></div>
                         </td>
                         <td class="datatable-cell tc--long-description">
-                            <span v-text="tableData.long_description" class="p-2"></span>
+                            <div v-text="tableData.long_description" class="p-2"></div>
                         </td>
                         <td class="datatable-cell tc--category">
                             <div class="p-2 clearfix">
@@ -128,31 +129,50 @@
                             </div>
                         </td>
                         <td
-                            class="datatable-cell"
+                            class="datatable-cell p-0 tc--terminal-checkbox"
                             v-for="(device, deviceIndex) in tableData.devices"
                             :key="deviceIndex">
-                            <div class="d-flex" v-if="device.item_availability_detail_bid !== null">
-                                <div
-                                    class="tc--terminal-checkbox p-2">
-                                    <input
-                                        type="checkbox"
-                                        v-model="device.is_available"
-                                        @change="setItemCheckboxCooldown($event, device, tableData.product_uom_bid)">
-                                </div>
+                            <div
+                                class="tc--terminal-checkbox"
+                                v-if="device.item_availability_detail_bid !== null && tableData.edit">
+                                <input
+                                    type="checkbox"
+                                    v-model="device.is_available"
+                                    @change="setItemCheckboxCooldown($event, device, tableData.product_uom_bid)">
                             </div>
-                            <div class="d-flex" v-else>
-                                <div
-                                    class="tc--terminal-checkbox p-2">
-                                    <input
-                                        type="checkbox"
-                                        disabled="true">
-                                </div>
+                            <div class="tc--terminal-checkbox" v-else>
+                                <input
+                                    type="checkbox"
+                                    disabled="true">
+                            </div>
+                        </td>
+                        <td class="datatable-cell tc--action" align="center">
+                            <div class="d-flex justify-content-around p-2">
+                                <i
+                                    class="fa fa-lg"
+                                    :class="tableData.edit ? 'fa-save row-save' : 'fa-gear row-update'"
+                                    @click="tableData.edit ? saveRow(tableDataIndex) : editRow(tableDataIndex)">
+                                </i>
+                                <i
+                                    class="fa fa-lg fa-trash row-delete"
+                                    @click="deleteRow(tableDataIndex)">
+                                </i>
                             </div>
                         </td>
                     </table-row>
                 </template>
             </datatable>
         </div>
+        <dialog-box
+            :status="dialog.status"
+            :type="dialog.type"
+            :visible.sync="dialog.visible"
+            @ok="dialog.ok.function"
+            @cancel="dialog.cancel.function">
+            <template slot="message">
+                <span v-text="dialog.message"></span>
+            </template>
+        </dialog-box>
     </div>
 </template>
 
@@ -191,13 +211,16 @@
             max-width: 300px;
         }
         &--terminal-checkbox {
-            min-width: 120px;
-            min-width: 120px;
+            width: 120px;
             text-align: center;
             border-left: 1px #ccc solid;
             &:nth-of-type(1) {
                 border-left: none;
             }
+        }
+        &--action {
+            min-width: 90px;
+            max-width: 90px;
         }
     }
     .category-display {
@@ -287,6 +310,21 @@
         mixins: [ Util ],
         data() {
             return {
+                dialog: {
+                    visible: false,
+                    type: '',
+                    message: '',
+                    ok: {
+                        function: () => {},
+                        function: () => {}
+                    },
+                    cancel: {
+                        function: () => {
+                            this.dialog.visible = false;
+                        },
+                        function: () => {}
+                    },
+                },
                 filters : {
                     search_keyword: '',
                     // category: ['1000000000000000002'],
@@ -438,6 +476,38 @@
                     this.table.values.data = response.data.data.list.data;
                     this.table.values.meta = response.data.data.list.meta;
                 })
+            },
+
+            editRow(i) {
+                this.table.values.data[i].edit = true;
+            },
+
+            saveRow(i) {
+                this.table.values.data[i].edit = false;
+
+                this.dialog.visible = true;
+                this.dialog.status = 'success';
+                this.dialog.message = this.$t('success.successfully_updated_the_data');
+                this.dialog.ok.function = () => {
+                    this.dialog.visible = false;
+                };
+            },
+
+            deleteRow(index) {
+                this.dialog.visible = true;
+                this.dialog.status = 'confirm';
+                this.dialog.message = this.$t('message.do_you_want_to_remove_this_data');
+                this.dialog.ok.function = () => {
+                    this.table.values.data.splice(index, 1);
+                    this.dialog.status = 'success';
+                    this.dialog.message = this.$t('success.successfully_removed_the_data');
+                    this.dialog.ok.function = () => {
+                        this.dialog.visible = false;
+                    };
+                };
+                this.dialog.cancel.function = () => {
+                    this.dialog.visible = false;
+                };
             },
 
             async showAll(emitted, data = null) {

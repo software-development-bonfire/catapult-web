@@ -188,7 +188,8 @@
 }
 
 .row {
-    &-add {
+    &-add,
+    &-save {
         color: #00aa27;
         &:hover {
             color: darken(#00aa27, 5%);
