@@ -29,7 +29,6 @@ class ItemAvailabilityTransformer extends TransformerAbstract
     public function transform(ItemAvailability $model)
     {
         $data = [
-            'edit' => false,
             'bid' => $model->bid,
             'product_uom_bid' => $model->product_uom_bid,
             'item_code' => $model->item_code,

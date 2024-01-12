@@ -67,7 +67,6 @@
                                 : ''
                             }}
                         </td>
-                        <td rowspan="2" class="tc--action">{{ $t('label.action') }}</td>
                     </tr>
                     <tr>
                         <td
@@ -147,7 +146,7 @@
                             :key="deviceIndex">
                             <div
                                 class="tc--terminal-checkbox"
-                                v-if="device.item_availability_detail_bid !== null && tableData.edit">
+                                v-if="device.item_availability_detail_bid !== null">
                                 <input
                                     type="checkbox"
                                     v-model="device.is_available"
@@ -157,19 +156,6 @@
                                 <input
                                     type="checkbox"
                                     disabled="true">
-                            </div>
-                        </td>
-                        <td class="datatable-cell tc--action" align="center">
-                            <div class="d-flex justify-content-around p-2">
-                                <i
-                                    class="fa fa-lg"
-                                    :class="tableData.edit ? 'fa-save row-save' : 'fa-gear row-update'"
-                                    @click="tableData.edit ? saveRow(tableDataIndex) : editRow(tableDataIndex)">
-                                </i>
-                                <i
-                                    class="fa fa-lg fa-trash row-delete"
-                                    @click="deleteRow(tableDataIndex)">
-                                </i>
                             </div>
                         </td>
                     </table-row>
@@ -448,38 +434,6 @@
                     this.table.values.data = response.data.data.list.data;
                     this.table.values.meta = response.data.data.list.meta;
                 })
-            },
-
-            editRow(i) {
-                this.table.values.data[i].edit = true;
-            },
-
-            saveRow(i) {
-                this.table.values.data[i].edit = false;
-
-                this.dialog.visible = true;
-                this.dialog.status = 'success';
-                this.dialog.message = this.$t('success.successfully_updated_the_data');
-                this.dialog.ok.function = () => {
-                    this.dialog.visible = false;
-                };
-            },
-
-            deleteRow(index) {
-                this.dialog.visible = true;
-                this.dialog.status = 'confirm';
-                this.dialog.message = this.$t('message.do_you_want_to_remove_this_data');
-                this.dialog.ok.function = () => {
-                    this.table.values.data.splice(index, 1);
-                    this.dialog.status = 'success';
-                    this.dialog.message = this.$t('success.successfully_removed_the_data');
-                    this.dialog.ok.function = () => {
-                        this.dialog.visible = false;
-                    };
-                };
-                this.dialog.cancel.function = () => {
-                    this.dialog.visible = false;
-                };
             },
 
             async showAll(emitted, data = null) {
