@@ -118,7 +118,7 @@
 </template>
 
 <script>
-    import Pagination from './Pagination';
+    import Pagination from './Pagination.vue';
     import NoDataAvailable from './NoDataAvailable';
     import Util from '../../mixins/Util';
 
