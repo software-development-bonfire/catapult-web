@@ -5,16 +5,19 @@ namespace App\Transformers;
 use App\Entities\ItemAvailability;
 use App\Entities\DeviceSettings;
 use App\Repositories\Contracts\DeviceSettingsRepository;
+use App\Repositories\Contracts\CDISProductCategoryRepository;
 use App\Enums\Status;
 use League\Fractal\TransformerAbstract;
 
 class ItemAvailabilityTransformer extends TransformerAbstract
 {
     private $terminals;
+    private $categories;
 
     public function __construct($terminals)
     {
         $this->terminals = $terminals;
+        $this->categories = [];
     }
 
     /**
@@ -34,10 +37,39 @@ class ItemAvailabilityTransformer extends TransformerAbstract
             'description' => $model->description,
             'long_description' => $model->long_description,
             'category_bid' => $model->category_bid,
+            'categories' => $this->setCategory($model->category),
             'devices' => $this->setAvailability($model->product_uom_bid, $model->itemAvailabilityDetail)
         ];
 
         return $data;
+    }
+
+    /**
+     * set category
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function setCategory($data)
+    {
+        if ($data['level'] != 0) {
+            (object) $productCategories = app()->make(CDISProductCategoryRepository::class)
+                ->where('bid', $data['parent_bid'])
+                ->where('level', $data['level'] - 1)
+                ->first();
+
+            if ($productCategories['level'] == 0) {
+                $this->categories['category'] = $productCategories['name'];
+                $this->categories['sub_category_1'] = $data['name'];
+            } else {
+
+                $this->categories['sub_category_2'] = $data['name'];
+                $this->setCategory($productCategories);
+            }
+        } else {
+            $this->categories['category'] = $data['name'];
+        }
+
+        return $this->categories;
     }
 
     public function setAvailability($productUomBid, $detail)

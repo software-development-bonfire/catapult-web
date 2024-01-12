@@ -5,5 +5,6 @@
 @section('content')
     <item-availability
         :header="{{$header}}"
+        :categories="{{$productCategories}}"
     ></item-availability>
 @endsection
