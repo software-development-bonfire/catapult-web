@@ -101,3 +101,7 @@ npm cache clean --force # to clean npm cache
      - [✔] indicates everything is configured properly or working fine
      - [✖] it means configuration needs to be checked and re-configuration is required 
      - [⚠] is just a warning and can be ignored;
+
+```
+Additional Configuration
+Run as administrator the catapult-allow-port-6001.bat file
