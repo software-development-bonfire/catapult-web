@@ -6,15 +6,19 @@
         <datatable
             class="datatable--hoverable"
             :header-fields="table.header"
-            :settings="table.settings"
-            :table="table.values"
-            v-on:paginate="paginate">
+            :settings="devices.settings !== undefined
+                ? devices.settings
+                : $set(devices, 'settings', {...table.settings})
+            "
+            :table="devices.values"
+            v-on:paginate="paginate"
+            v-on:show-all="showAll($event, devices)">
             <template slot="content">
                 <table-row
                     type="custom-actions"
-                    v-for="(tableData, tableDataIndex) in table.values.data" :key="tableDataIndex"
+                    v-for="(tableData, tableDataIndex) in devices.values.data" :key="tableDataIndex"
                     :values="tableData"
-                    :settings="table.settings"
+                    :settings="devices.settings"
                     :rowIndex="tableDataIndex"
                     v-on:dbl-row-click="editRow(tableDataIndex, tableData)">
                     <td class="datatable-cell" align="center">
@@ -169,9 +173,6 @@
                 type: Boolean
             }
         },
-        mounted() {
-            this.paginate();
-        },
         data() {
             return {
                 status: {
@@ -261,6 +262,16 @@
                             width: '50'
                         }
                     ],
+                    settings: {
+                        itemsPerPage: 25,
+                        withShowAll: true,
+                        withRowNumbers: true,
+                        hasEdit: false,
+                        hasDelete: false,
+                    }
+                },
+
+                devices: {
                     values: {
                         data: [],
                         meta: {
@@ -274,27 +285,63 @@
                             }
                         }
                     },
-                    settings: {
-                        itemsPerPage: 10,
-                        withRowNumbers: true,
-                        hasEdit: false,
-                        hasDelete: false,
-                    }
-                },
+                }
             }
         },
+
+        created() {
+            this.setItemsPerPage();
+        },
+
+        mounted() {
+            this.paginate();
+        },
+
         methods: {
-            paginate(page = 1) {
-                axios.get('device-settings/list?page='+page, {
+            setItemsPerPage() {
+                this.table.settings.itemsPerPage = 25;
+            },
+
+            async paginate(
+                page = 1,
+                data = false,
+                tableFilters = null,
+                itemsPerPage = null
+            ) {
+                let filters = itemsPerPage !== null && tableFilters !== null ? tableFilters : {...this.filters},
+                    self = this;
+
+                return await axios.get('device-settings/list', {
                     params: {
-                        itemsPerPage: this.table.settings.itemsPerPage,
+                        filters: filters,
+                        page: page,
+                        itemsPerPage: itemsPerPage !== null
+                            ? itemsPerPage
+                            : self.devices.settings.itemsPerPage,
+                        isTablePaginate: (data !== null) ? true : false,
                     }
                 })
                 .then(response => {
-                   this.table.values.data = response.data.data.data
-                   this.table.values.meta  = response.data.data.meta
+                   this.devices.values.data = response.data.data.data;
+                   this.devices.values.meta  = response.data.data.meta;
+
+                   return true;
                 })
             },
+
+            async showAll(emitted, data = null) {
+                let itemsPerPage = emitted.status ? emitted.table.meta.pagination.total : this.table.settings.itemsPerPage;
+                let filters = emitted.table.filters;
+                let hasResponse = await this.paginate(1, data, filters, itemsPerPage);
+
+                if (hasResponse) {
+                    this.devices.settings.itemsPerPage = itemsPerPage;
+                    emitted.done(emitted.status);
+                }
+
+                this.show_all = emitted.status;
+            },
+
 
             create() {
                 this.clearForm();

@@ -53,7 +53,6 @@
                 <thead>
                     <tr>
                         <td rowspan="2" class="tc--row-number">#</td>
-                        <td rowspan="2" class="tc--item-code">{{ $t('label.item_code') }}</td>
                         <td rowspan="2" class="tc--barcode">{{ $t('label.barcode') }}</td>
                         <td rowspan="2" class="tc--long-description">{{ $t('label.long_description') }}</td>
                         <td rowspan="2" class="tc--category">{{ $t('label.category') }}</td>
@@ -91,20 +90,20 @@
                 class="
                     datatable--overflow-scroll"
                     :header-fields="table.header"
-                    :settings="table.settings"
-                    :table="table.values"
+                    :settings="item.settings !== undefined
+                        ? item.settings
+                        : $set(item, 'settings', {...table.settings})
+                    "
+                    :table="item.values"
                     v-on:paginate="paginate"
-                    v-on:show-all="showAll($event, table)">
+                    v-on:show-all="showAll($event, item)">
                 <template slot="content">
                     <table-row
                         class="table-row--cells-no-padding"
-                        v-for="(tableData, tableDataIndex) in table.values.data" :key="tableDataIndex"
+                        v-for="(tableData, tableDataIndex) in item.values.data" :key="tableDataIndex"
                         :values="tableData"
-                        :settings="table.settings"
+                        :settings="item.settings"
                         :rowIndex="tableDataIndex">
-                        <td class="datatable-cell tc--item-code">
-                            <div v-text="tableData.item_code" class="p-2"></div>
-                        </td>
                         <td class="datatable-cell tc--barcode">
                             <div v-text="tableData.barcode" class="p-2"></div>
                         </td>
@@ -329,9 +328,7 @@
                 },
                 filters : {
                     search_keyword: '',
-                    // category: ['1000000000000000002'],
                     category: '',
-                    // category_label: ''
                 },
                 modal: {
                     detail: {
@@ -375,6 +372,18 @@
                             width: '180'
                         },
                     ],
+                    settings: {
+                        itemsPerPage: 25,
+                        withRowNumbers: true,
+                        withTableHeaders: false,
+                        withShowAll: true,
+                        fixedHeaderScroll: true,
+                        hasEdit: false,
+                        hasDelete: false
+                    }
+                },
+
+                item: {
                     values: {
                         data: [],
                         meta: {
@@ -388,63 +397,62 @@
                             }
                         }
                     },
-                    settings: {
-                        itemsPerPage: 25,
-                        withRowNumbers: true,
-                        withTableHeaders: false,
-                        withShowAll: true,
-                        withPagination: true,
-                        fixedHeaderScroll: true,
-                        hasEdit: false,
-                        hasDelete: false
-                    }
-                },
+                }
             }
         },
 
         created() {
             this.selections.category.options = this.categories.data;
         },
-
+        created() {
+            this.setItemsPerPage();
+        },
         mounted() {
             this.paginate();
         },
 
         methods: {
-            paginate(
+            setItemsPerPage() {
+                this.table.settings.itemsPerPage = 25;
+            },
+
+            async paginate(
                 page = 1, 
                 data = false, 
                 tableFilters = null,
                 itemsPerPage = null
             ) {
+                let filters = itemsPerPage !== null && tableFilters !== null ? tableFilters : {...this.filters},
+                    self = this;
 
-                let filters = itemsPerPage !== null && tableFilters !== null ? tableFilters : {...this.filters};
-
-                axios.get('item-availability/list', {
+                return await axios.get('item-availability/list', {
                     params: {
                         filters: filters,
                         page: page,
                         itemsPerPage: itemsPerPage !== null
                             ? itemsPerPage
-                            : this.table.settings.itemsPerPage,
+                            : self.item.settings.itemsPerPage,
                         isTablePaginate: (data !== null) ? true : false,
                     }
                 })
                 .then(response => {
-                    this.table.values.data = response.data.data.list.data;
-                    this.table.values.meta = response.data.data.list.meta;
+                    this.item.values.data = response.data.data.list.data;
+                    this.item.values.meta = response.data.data.list.meta;
+                    return true;
                 })
             },
 
             async showAll(emitted, data = null) {
                 let itemsPerPage = emitted.status ? emitted.table.meta.pagination.total : this.table.settings.itemsPerPage;
                 let filters = emitted.table.filters;
-                let hasResponse = this.paginate(1, data, filters, itemsPerPage);
+                let hasResponse = await this.paginate(1, data, filters, itemsPerPage);
 
                 if (hasResponse) {
-                    this.table.settings.itemsPerPage = itemsPerPage;
+                    this.item.settings.itemsPerPage = itemsPerPage;
                     emitted.done(emitted.status);
                 }
+
+                this.show_all = emitted.status;
             },
 
             setItemCheckboxCooldown(event, data, productBid) {
