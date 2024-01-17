@@ -49,8 +49,7 @@ class ItemAvailabilityRepositoryEloquent extends BaseRepository implements ItemA
         if (isset($filters->search_keyword) && ! is_null($filters->search_keyword)) {
             $this->model = $this->model
                 ->where(function($model) use ($filters) {
-                    $model->where('item_code', 'LIKE', '%'.$filters->search_keyword.'%')
-                        ->orWhere('barcode', 'LIKE', '%'.$filters->search_keyword.'%')
+                    $model->where('barcode', 'LIKE', '%'.$filters->search_keyword.'%')
                         ->orWhere('description', 'LIKE', '%'.$filters->search_keyword.'%')
                         ->orWhere('long_description', 'LIKE', '%'.$filters->search_keyword.'%')
                     ;
