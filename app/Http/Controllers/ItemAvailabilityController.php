@@ -81,7 +81,6 @@ class ItemAvailabilityController extends Controller
             );
         }
 
-        Log::info(env('QUEUE_CONNECTION', 'sync'));
         broadcast(new MessageEvent($request->all()));
         return $this->successfulResponse(
             [],

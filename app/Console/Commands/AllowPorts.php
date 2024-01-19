@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
-class CatapultAllowPort extends Command
+class AllowPorts extends Command
 {
     /**
      * The name and signature of the console command.
@@ -19,7 +19,7 @@ class CatapultAllowPort extends Command
      *
      * @var string
      */
-    protected $description = 'Create new firewall rule with port 6001.';
+    protected $description = 'Create new firewall rule with port {port?}';
 
     /**
      * Create a new command instance.
@@ -38,7 +38,16 @@ class CatapultAllowPort extends Command
      */
     public function handle()
     {
-        $runAsAdmin = exec(base_path('allow-port-6001.bat'), $output, $return);
-        $this->info('Success!');
+        $fileContent = file_get_contents(base_path('allow-ports.bat'));
+        $fileContent = str_replace("6001", env('PUSHER_APP_PORT'), $fileContent);
+        $fileContent = str_replace("80", env('CATAPULT_PORT'), $fileContent);
+        $newFile = file_put_contents(base_path('allow-ports.bat'), $fileContent);
+
+        if ($newFile) {
+            exec(base_path('allow-ports.bat'), $output, $return);
+            $this->info('Success!');
+        } else {
+            $this->info('Failed!');
+        }
     }
 }
