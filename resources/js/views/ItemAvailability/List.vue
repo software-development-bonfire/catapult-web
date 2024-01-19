@@ -403,10 +403,9 @@
 
         created() {
             this.selections.category.options = this.categories.data;
-        },
-        created() {
             this.setItemsPerPage();
         },
+
         mounted() {
             this.paginate();
         },
