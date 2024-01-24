@@ -54,7 +54,7 @@ class DeviceSettingsService
      */
     public function destroy($bid)
     {
-        DeviceSettings::findOrFail($bid)->delete();
+        DeviceSettings::find($bid)->delete();
         return true;
     }
 }

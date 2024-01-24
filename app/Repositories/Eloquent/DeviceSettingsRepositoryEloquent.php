@@ -33,7 +33,8 @@ class DeviceSettingsRepositoryEloquent extends BaseRepository implements DeviceS
         }
 
         if ($isForHeader) {
-            $this->model->groupBy('device_type');
+            $this->model->where('status', Status::ACTIVE)
+                ->groupBy('device_type');
         }
 
         return $isForHeader || isset($filters->device_type) ? $this->model->get() : $this->paginate($filters['itemsPerPage']);
