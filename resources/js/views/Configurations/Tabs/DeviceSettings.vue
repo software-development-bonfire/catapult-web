@@ -379,7 +379,7 @@
                         }
                     })
                     .then(response => {
-                        self.table.values.data.splice(index, 1);
+                        self.devices.values.data.splice(index, 1);
                         self.dialog.status = 'success';
                         self.dialog.message = response.data.message;
                         self.dialog.ok.function = () => {
@@ -407,10 +407,10 @@
                 }).then(function(response) {
 
                     if (self.form.mode === 'create') {
-                        self.table.values.data.push(response.data.data);
+                        self.devices.values.data.push(response.data.data);
                         self.dialog.message = self.$t('success.success_successfully_created', { value: self.$t('label.device') });
                     } else {
-                        self.table.values.data[index] = {...self.form.values};
+                        self.devices.values.data[index] = {...self.form.values};
                         self.dialog.message = self.$t('success.success_successfully_updated', { value: self.$t('label.device') });
                     }
 
