@@ -11,9 +11,6 @@
                 </div>
             </div>
         </div>
-        <div class="box-row box-row--white p-2">
-            <button class="button button--light" @click.stop="generateSample()">{{ $t('label.generate_sample_csv') }}</button>
-        </div>
         <div class="box-row box-row--white d-flex justify-content-between position-relative">
             <table class="table-layout ml-2">
                 <tr>
