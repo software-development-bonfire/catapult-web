@@ -65,7 +65,7 @@ class ItemAvailabilityService
                         } else {
                             $itemDetail = ItemAvailabilityDetail::where('head_bid', $item->bid)->where('device_settings_bid', $deviceSettings->bid)->first();
 
-                            if ($item && ! $itemDetail) {
+                            if (! $itemDetail) {
                                 ItemAvailabilityDetail::create([
                                     'head_bid' => $item->bid,
                                     'device_settings_bid' => $deviceSettings->bid,
