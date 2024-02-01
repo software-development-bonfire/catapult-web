@@ -96,9 +96,9 @@ if (! function_exists('getDomain')) {
     }
 }
 
-if (! function_exists('snakeCase')) {
+if (! function_exists('removeNonAlphaNumeric')) {
 
-    function snakeCase($value)
+    function removeNonAlphaNumeric($value)
     {
         $string = preg_replace('/[^a-zA-Z0-9\']/', '_', strtolower($value));
         $string = preg_replace('/[^A-Za-z0-9\-]/', '', strtolower($string));

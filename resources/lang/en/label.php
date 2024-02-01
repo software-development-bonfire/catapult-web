@@ -122,7 +122,6 @@ return [
     'inventory_location_tag' => 'Inventory Location Tag',
     'ip_address' => 'IP Address',
     'item_availability' => 'Item Availability',
-    'item_availability' => 'Item Availability',
     'item_code' => 'Item Code',
     'journal_reports' => 'Journal Reports',
     'kiosk' => 'Kiosk',
