@@ -28,6 +28,14 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/field-mapping/detail', 'FieldMappingController@detail');
     Route::get('/logs', 'LogsController@view');
 
+    // Item Availability
+    Route::group(['prefix' => 'item-availability'], function () {
+        Route::get('/', 'ItemAvailabilityController@index');
+        Route::get('/list', 'ItemAvailabilityController@list');
+        Route::post('/store', 'ItemAvailabilityController@store');
+        Route::patch('/update', 'ItemAvailabilityController@update');
+    });
+
     // Field Mapping Preset
     Route::group(['prefix' => 'field-mapping-preset'], function () {
         Route::get('/', 'FieldMappingPresetController@view');
@@ -58,13 +66,19 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/store', 'FieldMappingController@store');
     });
 
-    
     Route::group(['prefix' => 'terminal-file-setup'], function () {
         Route::patch('/update/{bid}', 'TerminalFileSetupController@update');
         Route::delete('/destroy/{bid}', 'TerminalFileSetupController@destroy');
         Route::get('/list', 'TerminalFileSetupController@index');
         Route::post('/store', 'TerminalFileSetupController@store');
         Route::get('/chosen/endpoints', 'TerminalFileSetupController@getEndpointChosen');
+    });
+
+    Route::group(['prefix' => 'device-settings'], function () {
+        Route::get('/list', 'DeviceSettingsController@index');
+        Route::post('/store', 'DeviceSettingsController@store');
+        Route::patch('/update', 'DeviceSettingsController@update');
+        Route::delete('/delete', 'DeviceSettingsController@destroy');
     });
 
     Route::apiResources([

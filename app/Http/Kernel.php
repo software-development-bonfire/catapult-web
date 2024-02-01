@@ -47,6 +47,12 @@ class Kernel extends HttpKernel
             'bindings',
             \App\Http\Middleware\AccessToken\KDS::class,
         ],
+
+        'pos-token' => [
+            'throttle:60,1',
+            'bindings',
+           // \App\Http\Middleware\AccessToken\POS::class, temporarily removed, to bypass token
+        ],
     ];
 
     /**

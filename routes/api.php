@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,5 +28,18 @@ Route::group([
         Route::post('order/menu/move-station', 'KitchenDisplayController@moveMenu');
         Route::delete('order/remove', 'KitchenDisplayController@removeOrder');
         Route::delete('menu/remove', 'KitchenDisplayController@removeMenu');
+    });
+});
+
+Route::group([
+    'prefix' => 'pos/v1',
+    'namespace' => 'POS\v1'
+], function () {
+    Route::post('login', [\App\Http\Controllers\POS\v1\LoginController::class, 'login']);
+    Route::post('logout', [\App\Http\Controllers\POS\v1\LoginController::class, 'logout']);
+
+    Route::group(['middleware' => 'pos-token'], function () {
+        Route::post('item-availability/store',  [\App\Http\Controllers\POS\v1\ItemAvailabilityController::class, 'store']);
+        Route::get('item-availability/list',  [\App\Http\Controllers\POS\v1\ItemAvailabilityController::class, 'list']);
     });
 });
