@@ -1,0 +1,68 @@
+<?php
+
+namespace App\Entities;
+
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class POSTerminalTransaction extends Base
+{
+    use SoftDeletes;
+
+    protected $table = 'pos_terminal_transactions';
+
+    protected $fillable = [
+        'branch_bid',
+        'terminal_bid',
+        'transaction_id',
+        'log_date',
+        'or_number',
+        'split_number',
+        'is_first_transaction',
+        'type',
+        'status',
+        'gross_sales',
+        'net_sales',
+        'total_quantity',
+        'total_free_items_amount',
+        'total_local_tax_amount',
+        'total_tax_amount',
+        'total_discount_amount',
+        'total_vat_deduct_amount',
+        'total_vat_exempt_amount',
+        'total_vatable_sales',
+        'total_zero_rated_sales',
+        'total_tender',
+        'eligible_amount_to_earn_points',
+        'guest_count',
+        'service_charge',
+        'order_number',
+        'table_number',
+        'customer_type',
+        'customer_bid',
+        'customer_name',
+        'customer_address',
+        'cashier_bid',
+        'cashier_name',
+        'remarks',
+        'created_at',
+        'updated_at',
+        'change',
+        'payment',
+        'is_reset',
+        'receipt',
+    ];
+
+    protected $casts = [
+        'bid' => 'string',
+        'branch_bid' => 'string',
+        'terminal_bid' => 'string',
+        'transaction_bid' => 'string',
+        'cashier_bid' => 'string',
+        'customer_bid' => 'string',
+    ];
+
+    public function details()
+    {
+        return $this->hasMany(POSTerminalTransactionProduct::class, 'terminal_transaction_bid', 'transaction_id');
+    }
+}

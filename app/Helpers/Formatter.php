@@ -40,6 +40,25 @@ if (! function_exists('toBooleanOrInt')) {
     }
 }
 
+if (! function_exists('toSafeArray')) {
+
+    function toSafeArray($value)
+    {
+        if (isset($value)) {
+            return is_array($value) ? $value : array($value);
+        }
+        return array();
+    }
+}
+
+if (! function_exists('isValidStringOrArray')) {
+
+    function isValidStringOrArray($value)
+    {
+        return (is_array($value) && count($value) > 0) || (is_string($value) && $value != '');
+    }
+}
+
 if (! function_exists('parseDateTime')) {
 
     function parseDateTime($value, $format, $defaultValue = '', $defaultWillBeParsed = false)
