@@ -17,7 +17,6 @@ class ItemAvailabilityController extends Controller
     {
         $data = (object) stringToJson($request->all());
 
-        Log::info(json_encode($data));
         $result = app()->make(ItemAvailabilityService::class)->store($data->data);
         return $this->successfulResponse(
             $data,
