@@ -10,10 +10,10 @@ trait PusherTrait
 
     private function initializePusher()
     {
-        $pusherAppId = config()->get('broadcasting.connections.pusher.app_id');
-        $pusherAppKey = config()->get('broadcasting.connections.pusher.key');
-        $pusherAppSecret = config()->get('broadcasting.connections.pusher.secret');
-        $pusherAppCluster = config()->get('broadcasting.connections.pusher.options.cluster');
+        $pusherAppId = config()->get('broadcasting.connections.cdis_pusher.app_id');
+        $pusherAppKey = config()->get('broadcasting.connections.cdis_pusher.key');
+        $pusherAppSecret = config()->get('broadcasting.connections.cdis_pusher.secret');
+        $pusherAppCluster = config()->get('broadcasting.connections.cdis_pusher.options.cluster');
 
         $options = [
             'cluster' => $pusherAppCluster,

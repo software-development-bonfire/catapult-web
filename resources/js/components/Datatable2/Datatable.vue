@@ -118,7 +118,7 @@
 </template>
 
 <script>
-    import Pagination from './Pagination';
+    import Pagination from './Pagination.vue';
     import NoDataAvailable from './NoDataAvailable';
     import Util from '../../mixins/Util';
 
@@ -382,19 +382,6 @@
                     done: (value) => {
                         this.isShowAll = !value;
                     }
-                });
-            },
-
-            scrollerX(event) {
-                if (!this.settings.fixedHeaderScroll) {
-                    return;
-                }
-
-                let scrollPosLeft = event.target.scrollLeft;
-                let scrollers = document.querySelectorAll('.fixed-table-headers, .datatable-scroll');
-
-                scrollers.forEach(function(scroller) {
-                    scroller.scrollLeft = scrollPosLeft;
                 });
             },
 

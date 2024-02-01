@@ -101,3 +101,21 @@ npm cache clean --force # to clean npm cache
      - [✔] indicates everything is configured properly or working fine
      - [✖] it means configuration needs to be checked and re-configuration is required 
      - [⚠] is just a warning and can be ignored;
+
+```
+
+IMPORTANT:
+version 2.1.0.11 + must use updated .env.example from
+
+PUSHER_APP_ID="1355368"
+PUSHER_APP_KEY="182c58278217ab48deab"
+PUSHER_APP_SECRET="61870452e11b3e2897ba"
+PUSHER_APP_CLUSTER=eu
+
+to
+
+CDIS_PUSHER_APP_ID="1355368"
+CDIS_PUSHER_APP_KEY="182c58278217ab48deab"
+CDIS_PUSHER_APP_SECRET="61870452e11b3e2897ba"
+CDIS_PUSHER_APP_CLUSTER=eu
+
