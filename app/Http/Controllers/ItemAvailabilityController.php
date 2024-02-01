@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Enums\Status;
 use App\Entities\DeviceSettings;
-use App\Listeners\ProductListListener;
 use App\Repositories\Contracts\DeviceSettingsRepository;
 use App\Repositories\Contracts\CDISProductCategoryRepository;
 use App\Repositories\Contracts\ItemAvailabilityRepository;
