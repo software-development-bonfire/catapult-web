@@ -131,7 +131,7 @@ class ConvertDataFile extends Command
 
                 $failedConversionFolderPathErrors = '/'.$entryFolderName.'/Failed conversion/Errors';
               
-                app()['config']->set('logging.channels.bonfire.path',  $failedConversionFolderPathErrors);
+                app()['config']->set('logging.channels.bonfire.path', $failedConversionFolderPathErrors);
 
                 $directories = $localDisk->allDirectories($sourcePath);
 
@@ -272,7 +272,7 @@ class ConvertDataFile extends Command
                                             ) {
                                                 $headReferenceEntryAcronym = 'AD';
                                                 $headReferenceEntryFieldName = 'id';
-    
+
                                                 $discountAddon = true;
                                             }
                                         } catch(Exception $exception) {
@@ -448,14 +448,13 @@ class ConvertDataFile extends Command
         }
     }
 
-    private function moveTransactionFolder($localDisk, $failedConversionFolderPath, $targetDirectory, $entryLogLabel)
+    private function moveTransactionFolder($localDisk, $failedConversionFolderPath, $sourceDirectory, $entryLogLabel)
     {
         try {
             if ($localDisk->exists($failedConversionFolderPath)) {
                 $localDisk->deleteDirectory($failedConversionFolderPath);
-            } else {
-                $localDisk->move($targetDirectory, $failedConversionFolderPath);
             }
+            $localDisk->move($sourceDirectory, $failedConversionFolderPath);
         } catch (\Exception $exception) {
             $this->createLog(
                 $exception->getMessage().' in '.$exception->getFile().' at line '.$exception->getLine(),
@@ -469,15 +468,15 @@ class ConvertDataFile extends Command
     /**
      * Convert to file.
      *
-     * @param  array  $hierarchyReferences
-     * @param  string  $entry
-     * @param  array  $entryContent
-     * @param  string  $fileName
-     * @param  string  $entryFolderName
-     * @param  string  $directory
-     * @param  Filesystem  $disk
-     * @param  string  $entryLogLabel
-     * @param  mixed  $serviceClass
+     * @param array $hierarchyReferences
+     * @param string $entry
+     * @param array $entryContent
+     * @param string $fileName
+     * @param string $entryFolderName
+     * @param string $directory
+     * @param Filesystem $disk
+     * @param string $entryLogLabel
+     * @param mixed $serviceClass
      *
      * @return bool
      */
@@ -531,11 +530,10 @@ class ConvertDataFile extends Command
             if ($isMoved) {
                 if ($disk->exists($processedFolderPath)) {
                     $disk->deleteDirectory($processedFolderPath);
-                } else {
-                    $disk->move($directory, $processedFolderPath);
                 }
+                $disk->move($directory, $processedFolderPath);
 
-                $this->createLog(__('label.converted').'  :', 'info', true, [$entryLogLabel], [$fileName]);
+                $this->createLog(__('label.converted').' :', 'info', true, [$entryLogLabel], [$fileName]);
             }
         } catch(\Throwable $exception) {
             $errorMessage = $exception->getMessage().' in '.$exception->getFile(). ' at line '.$exception->getLine();
@@ -556,12 +554,7 @@ class ConvertDataFile extends Command
                 'Failed conversion',
                 $errorMessage,
             );
-
-            if ($disk->exists($failedConversionFolderPath)) {
-                $disk->deleteDirectory($failedConversionFolderPath);
-            } else {
-                $disk->move($directory, $failedConversionFolderPath);
-            }
+            $this->moveTransactionFolder($disk, $failedConversionFolderPath, $directory, $entryLogLabel);
 
             return false;
         }
@@ -572,12 +565,12 @@ class ConvertDataFile extends Command
     /**
      * Set value from array path.
      *
-     * @param  array  $hierarchyReferences
-     * @param  array  $reference
-     * @param  array  $fileContent
-     * @param  array  $data
-     * @param  array  $path
-     * @param  int  $dataIndex
+     * @param array $hierarchyReferences
+     * @param array $reference
+     * @param array $fileContent
+     * @param array $data
+     * @param array $path
+     * @param int $dataIndex
      *
      * @return array
      */
@@ -621,7 +614,7 @@ class ConvertDataFile extends Command
             }
 
             if ($lastKeyPath === 'discount') {
-                $finalPath = $this->resolveAddonDiscountKeyIndexPath($fileContent, $data, $addonKeyPath, $lastKeyPath, $finalPath);               
+                $finalPath = $this->resolveAddonDiscountKeyIndexPath($fileContent, $data, $addonKeyPath, $lastKeyPath, $finalPath);
             }
 
             Arr::set($fileContent, $finalPath, $data);
@@ -714,7 +707,7 @@ class ConvertDataFile extends Command
     /**
      * Get sync entry alias.
      *
-     * @param  string  $name
+     * @param string $name
      * @return string
      */
     public function getSyncEntryAlias($name = null)
