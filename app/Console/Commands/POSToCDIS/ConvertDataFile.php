@@ -372,7 +372,10 @@ class ConvertDataFile extends Command
                     }
 
                     if (! $mappingErrors) {
-                        try{
+                        //Wrapped with try catch to handle unexpected exception
+                        //This solution is temporary only, must be checked of what is/are the
+                        //root cause(s) of the exception encountered
+                        try {
                             $this->convertToFile(
                                 $hierarchyReferences,
                                 $entry,
@@ -535,8 +538,9 @@ class ConvertDataFile extends Command
                 $this->createLog(__('label.converted').'  :', 'info', true, [$entryLogLabel], [$fileName]);
             }
         } catch(\Throwable $exception) {
+            $errorMessage = $exception->getMessage().' in '.$exception->getFile(). ' at line '.$exception->getLine();
             $this->createLog(
-                $exception->getMessage().' in '.$exception->getFile(). ' at line '. $exception->getLine(),
+                $errorMessage,
                 'error',
                 true,
                 [$entryLogLabel],
@@ -550,7 +554,7 @@ class ConvertDataFile extends Command
                 ErrorStatus::CONVERSION_ERROR,
                 '', 
                 'Failed conversion',
-                $exception->getMessage().' in '.$exception->getFile().' at line '.$exception->getLine()
+                $errorMessage,
             );
 
             if ($disk->exists($failedConversionFolderPath)) {
@@ -687,7 +691,7 @@ class ConvertDataFile extends Command
         $resolvedAddonDiscountKeyPath = $finalPath;
         if ($referenceAcronym === 'AD') {
             $addonDiscountKeyPath = Str::substr($addonKeyPathDotNotation, 0, -2);
-            $dataArrayAddon =  Arr::get($fileContent, $addonDiscountKeyPath);
+            $dataArrayAddon = Arr::get($fileContent, $addonDiscountKeyPath);
 
             if (isset($dataArrayAddon)) {
                 $addonIndex = array_search( $referenceValue, array_column($dataArrayAddon,'id'));
