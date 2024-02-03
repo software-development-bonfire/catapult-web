@@ -372,16 +372,38 @@ class ConvertDataFile extends Command
                     }
 
                     if (! $mappingErrors) {
-                        $this->convertToFile(
-                            $hierarchyReferences,
-                            $entry,
-                            $entryContent,
-                            $folderName,
-                            $entryFolderName,
-                            $directory,
-                            $localDisk,
-                            $entryLogLabel,
-                            $serviceClass);
+                        try{
+                            $this->convertToFile(
+                                $hierarchyReferences,
+                                $entry,
+                                $entryContent,
+                                $folderName,
+                                $entryFolderName,
+                                $directory,
+                                $localDisk,
+                                $entryLogLabel,
+                                $serviceClass);
+                        } catch (\Exception $exception) {
+                            $failedConversionFolderPath = '/'.$entryFolderName.'/Failed conversion/'.$folderName;
+                            $errorMessage = $exception->getMessage().' in '.$exception->getFile().' at line '.$exception->getLine();
+                            $this->createLog(
+                                $errorMessage,
+                                'error',
+                                true,
+                                [$entryLogLabel]
+                            );
+                            $this->setErrorLog(
+                                $entryLogLabel, 
+                                $folderName, 
+                                $directory, 
+                                ErrorStatus::CONVERSION_ERROR,
+                                '', 
+                                'Failed conversion',
+                                $errorMessage
+                            );
+                            $this->moveTransactionFolder($localDisk, $failedConversionFolderPath, $directory, $entryLogLabel);
+                        }
+
                     } else {
                         $failedConversionFolderPath = '/'.$entryFolderName.'/Failed conversion/'.$folderName;
 
@@ -412,21 +434,7 @@ class ConvertDataFile extends Command
                                 $this->setErrorLog($entryLogLabel, $error['filename'], $directory, ErrorStatus::CONVERSION_ERROR, $key, $error['error_type'], $error['description']);
                             }
                         }
-
-                        try {
-                            if ($localDisk->exists($failedConversionFolderPath)) {
-                                $localDisk->deleteDirectory($failedConversionFolderPath);
-                            } else {
-                                $localDisk->move($directory, $failedConversionFolderPath);
-                            }
-                        } catch (\Exception $exception) {
-                            $this->createLog(
-                                $exception->getMessage().' in '.$exception->getFile(). ' at line '. $exception->getLine(),
-                                'error',
-                                true,
-                                [$entryLogLabel]
-                            );
-                        }
+                        $this->moveTransactionFolder($localDisk, $failedConversionFolderPath, $directory, $entryLogLabel);
 
                         $this->createErrorLogFile($localDisk, $failedConversionFolderPathErrors, ErrorStatus::CONVERSION_ERROR);
                     }
@@ -434,6 +442,24 @@ class ConvertDataFile extends Command
             }
 
             sleep(3);
+        }
+    }
+
+    private function moveTransactionFolder($localDisk, $failedConversionFolderPath, $targetDirectory, $entryLogLabel)
+    {
+        try {
+            if ($localDisk->exists($failedConversionFolderPath)) {
+                $localDisk->deleteDirectory($failedConversionFolderPath);
+            } else {
+                $localDisk->move($targetDirectory, $failedConversionFolderPath);
+            }
+        } catch (\Exception $exception) {
+            $this->createLog(
+                $exception->getMessage().' in '.$exception->getFile().' at line '.$exception->getLine(),
+                'error',
+                true,
+                [$entryLogLabel]
+            );
         }
     }
 
