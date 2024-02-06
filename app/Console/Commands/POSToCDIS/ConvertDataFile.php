@@ -131,7 +131,7 @@ class ConvertDataFile extends Command
 
                 $failedConversionFolderPathErrors = '/'.$entryFolderName.'/Failed conversion/Errors';
               
-                app()['config']->set('logging.channels.bonfire.path',  $failedConversionFolderPathErrors);
+                app()['config']->set('logging.channels.bonfire.path', $failedConversionFolderPathErrors);
 
                 $directories = $localDisk->allDirectories($sourcePath);
 
@@ -272,14 +272,14 @@ class ConvertDataFile extends Command
                                             ) {
                                                 $headReferenceEntryAcronym = 'AD';
                                                 $headReferenceEntryFieldName = 'id';
-    
+
                                                 $discountAddon = true;
                                             }
                                         } catch(Exception $exception) {
                                             $mappingErrors[$entryAcronym][] = array(
                                                 'error_type' => 'Reference error',
-                                                'description' => $mapping['column_name'].' not found in CSV file',                                                
-                                                'meta' => [$mapping['file_name'].'.'.$mapping['reference_column_name'],  $objectName.'.'.$mapping['column_name'], $folderName],
+                                                'description' => $mapping['column_name'].' not found in CSV file',
+                                                'meta' => [$mapping['file_name'].'.'.$mapping['reference_column_name'], $objectName.'.'.$mapping['column_name'], $folderName],
                                                 'filename' => $filename,
                                             );
                                             continue;
@@ -296,7 +296,7 @@ class ConvertDataFile extends Command
                                             $mappingErrors[$entryAcronym][] = array(
                                                 'error_type' => 'Reference error',
                                                 'description' => $mapping['head_reference'].' with a value of '.$referenceValue.' not found.',
-                                                'meta' => [$mapping['file_name'].'.'.$mapping['reference_column_name'],  $objectName.'.'.$mapping['column_name'], $folderName],
+                                                'meta' => [$mapping['file_name'].'.'.$mapping['reference_column_name'], $objectName.'.'.$mapping['column_name'], $folderName],
                                                 'filename' => $filename,
                                             );
                                         }
@@ -308,7 +308,7 @@ class ConvertDataFile extends Command
                                         'entry_acronym' => $entryAcronym,
                                         'reference_key_name' => $entryDetail['key'],
                                         'reference_column' => $mapping['reference_column_name'],
-                                        'id' =>  $entryDatum->id,
+                                        'id' => $entryDatum->id,
                                         'reference_value' => $referenceValue,
                                         'head_reference_entry_acronym' => $headReferenceEntryAcronym,
                                         'head_reference_entry_index' => $headReferenceIndex,
@@ -372,16 +372,41 @@ class ConvertDataFile extends Command
                     }
 
                     if (! $mappingErrors) {
-                        $this->convertToFile(
-                            $hierarchyReferences,
-                            $entry,
-                            $entryContent,
-                            $folderName,
-                            $entryFolderName,
-                            $directory,
-                            $localDisk,
-                            $entryLogLabel,
-                            $serviceClass);
+                        //Wrapped with try catch to handle unexpected exception
+                        //This solution is temporary only, must be checked of what is/are the
+                        //root cause(s) of the exception encountered
+                        try {
+                            $this->convertToFile(
+                                $hierarchyReferences,
+                                $entry,
+                                $entryContent,
+                                $folderName,
+                                $entryFolderName,
+                                $directory,
+                                $localDisk,
+                                $entryLogLabel,
+                                $serviceClass);
+                        } catch (\Exception $exception) {
+                            $failedConversionFolderPath = '/'.$entryFolderName.'/Failed conversion/'.$folderName;
+                            $errorMessage = $exception->getMessage().' in '.$exception->getFile().' at line '.$exception->getLine();
+                            $this->createLog(
+                                $errorMessage,
+                                'error',
+                                true,
+                                [$entryLogLabel]
+                            );
+                            $this->setErrorLog(
+                                $entryLogLabel, 
+                                $folderName, 
+                                $directory, 
+                                ErrorStatus::CONVERSION_ERROR,
+                                '', 
+                                'Failed conversion',
+                                $errorMessage
+                            );
+                            $this->moveTransactionFolder($localDisk, $failedConversionFolderPath, $directory, $entryLogLabel);
+                        }
+
                     } else {
                         $failedConversionFolderPath = '/'.$entryFolderName.'/Failed conversion/'.$folderName;
 
@@ -412,21 +437,7 @@ class ConvertDataFile extends Command
                                 $this->setErrorLog($entryLogLabel, $error['filename'], $directory, ErrorStatus::CONVERSION_ERROR, $key, $error['error_type'], $error['description']);
                             }
                         }
-
-                        try {
-                            if ($localDisk->exists($failedConversionFolderPath)) {
-                                $localDisk->deleteDirectory($failedConversionFolderPath);
-                            } else {
-                                $localDisk->move($directory, $failedConversionFolderPath);
-                            }
-                        } catch (\Exception $exception) {
-                            $this->createLog(
-                                $exception->getMessage().' in '.$exception->getFile(). ' at line '. $exception->getLine(),
-                                'error',
-                                true,
-                                [$entryLogLabel]
-                            );
-                        }
+                        $this->moveTransactionFolder($localDisk, $failedConversionFolderPath, $directory, $entryLogLabel);
 
                         $this->createErrorLogFile($localDisk, $failedConversionFolderPathErrors, ErrorStatus::CONVERSION_ERROR);
                     }
@@ -437,18 +448,35 @@ class ConvertDataFile extends Command
         }
     }
 
+    private function moveTransactionFolder($localDisk, $failedConversionFolderPath, $sourceDirectory, $entryLogLabel)
+    {
+        try {
+            if ($localDisk->exists($failedConversionFolderPath)) {
+                $localDisk->deleteDirectory($failedConversionFolderPath);
+            }
+            $localDisk->move($sourceDirectory, $failedConversionFolderPath);
+        } catch (\Exception $exception) {
+            $this->createLog(
+                $exception->getMessage().' in '.$exception->getFile().' at line '.$exception->getLine(),
+                'error',
+                true,
+                [$entryLogLabel]
+            );
+        }
+    }
+
     /**
      * Convert to file.
      *
-     * @param  array  $hierarchyReferences
-     * @param  string  $entry
-     * @param  array  $entryContent
-     * @param  string  $fileName
-     * @param  string  $entryFolderName
-     * @param  string  $directory
-     * @param  Filesystem  $disk
-     * @param  string  $entryLogLabel
-     * @param  mixed  $serviceClass
+     * @param array $hierarchyReferences
+     * @param string $entry
+     * @param array $entryContent
+     * @param string $fileName
+     * @param string $entryFolderName
+     * @param string $directory
+     * @param Filesystem $disk
+     * @param string $entryLogLabel
+     * @param mixed $serviceClass
      *
      * @return bool
      */
@@ -502,15 +530,15 @@ class ConvertDataFile extends Command
             if ($isMoved) {
                 if ($disk->exists($processedFolderPath)) {
                     $disk->deleteDirectory($processedFolderPath);
-                } else {
-                    $disk->move($directory, $processedFolderPath);
                 }
+                $disk->move($directory, $processedFolderPath);
 
-                $this->createLog(__('label.converted').'  :', 'info', true, [$entryLogLabel], [$fileName]);
+                $this->createLog(__('label.converted').' :', 'info', true, [$entryLogLabel], [$fileName]);
             }
         } catch(\Throwable $exception) {
+            $errorMessage = $exception->getMessage().' in '.$exception->getFile(). ' at line '.$exception->getLine();
             $this->createLog(
-                $exception->getMessage().' in '.$exception->getFile(). ' at line '. $exception->getLine(),
+                $errorMessage,
                 'error',
                 true,
                 [$entryLogLabel],
@@ -524,14 +552,9 @@ class ConvertDataFile extends Command
                 ErrorStatus::CONVERSION_ERROR,
                 '', 
                 'Failed conversion',
-                $exception->getMessage().' in '.$exception->getFile().' at line '.$exception->getLine()
+                $errorMessage,
             );
-
-            if ($disk->exists($failedConversionFolderPath)) {
-                $disk->deleteDirectory($failedConversionFolderPath);
-            } else {
-                $disk->move($directory, $failedConversionFolderPath);
-            }
+            $this->moveTransactionFolder($disk, $failedConversionFolderPath, $directory, $entryLogLabel);
 
             return false;
         }
@@ -542,12 +565,12 @@ class ConvertDataFile extends Command
     /**
      * Set value from array path.
      *
-     * @param  array  $hierarchyReferences
-     * @param  array  $reference
-     * @param  array  $fileContent
-     * @param  array  $data
-     * @param  array  $path
-     * @param  int  $dataIndex
+     * @param array $hierarchyReferences
+     * @param array $reference
+     * @param array $fileContent
+     * @param array $data
+     * @param array $path
+     * @param int $dataIndex
      *
      * @return array
      */
@@ -591,7 +614,7 @@ class ConvertDataFile extends Command
             }
 
             if ($lastKeyPath === 'discount') {
-                $finalPath = $this->resolveAddonDiscountKeyIndexPath($fileContent, $data, $addonKeyPath, $lastKeyPath, $finalPath);               
+                $finalPath = $this->resolveAddonDiscountKeyIndexPath($fileContent, $data, $addonKeyPath, $lastKeyPath, $finalPath);
             }
 
             Arr::set($fileContent, $finalPath, $data);
@@ -661,7 +684,7 @@ class ConvertDataFile extends Command
         $resolvedAddonDiscountKeyPath = $finalPath;
         if ($referenceAcronym === 'AD') {
             $addonDiscountKeyPath = Str::substr($addonKeyPathDotNotation, 0, -2);
-            $dataArrayAddon =  Arr::get($fileContent, $addonDiscountKeyPath);
+            $dataArrayAddon = Arr::get($fileContent, $addonDiscountKeyPath);
 
             if (isset($dataArrayAddon)) {
                 $addonIndex = array_search( $referenceValue, array_column($dataArrayAddon,'id'));
@@ -684,7 +707,7 @@ class ConvertDataFile extends Command
     /**
      * Get sync entry alias.
      *
-     * @param  string  $name
+     * @param string $name
      * @return string
      */
     public function getSyncEntryAlias($name = null)
