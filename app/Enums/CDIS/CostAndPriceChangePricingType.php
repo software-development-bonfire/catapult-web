@@ -9,4 +9,5 @@ final class CostAndPriceChangePricingType extends Enum implements LocalizedEnum
 {
     const COST = 1;
     const PRICE = 2;
+    const PRICE_TO_BRANCH = 3;
 }
