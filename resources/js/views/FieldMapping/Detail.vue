@@ -1,5 +1,5 @@
 <template>
-    <div class="module-container overflow-auto">
+    <div class="module-container overflow-y-auto">
         <div class="box-row box-row--white p-1 d-flex justify-content-between align-content-center">
             <a href="#" class="back-to-list ml-2" @click="backToList">
                 <i class="fa fa-arrow-circle-left fa-lg"></i>
@@ -120,7 +120,7 @@
                         <button class="button button--light module-action-button" :disabled="this.form.mode === 'create'" @click="saveMapping">{{ $t('label.save_mapping') }}</button>
                     </div>
                 </div>
-                <div class="row">
+                <div class="row form-group">
                     <table class="table-layout pull-left col-xl-4">
                         <tr v-if="form.connection_setup.is_customized_mapping === 0">
                             <td valign="top" align="right">{{ $t('label.select_entry_to_map') }}</td>
@@ -204,10 +204,7 @@
                 </div>
             </div>
             <datatable
-                class="
-                    overflow-initial
-                    datatable--overflow-initial
-                    datatable--font-sm"
+                class="datatable--font-sm"
                 :header-fields="
                     form.connection_setup.mapping_type === 2
                         ? table.pos_to_cdis.header
@@ -333,7 +330,6 @@
                                    v-on:input="removeError(errors, `fields.${tableDataIndex}.head_reference`)">
                         </table-data>
                     </table-row>
-
                     <table-row
                         class="datatable-row--sm"
                         type="add"
@@ -663,7 +659,7 @@
                             {
                                 name: "fields",
                                 label: this.$t('label.cdis_fields'),
-                                width: '320'
+                                width: '260'
                             },
                             {
                                 name: "description",
@@ -692,17 +688,17 @@
                             {
                                 name: "csv_column_name",
                                 label: this.$t('label.csv_column_name'),
-                                width: '200'
+                                width: '150'
                             },
                             {
                                 name: "reference_column_name",
                                 label: this.$t('label.reference_column_name'),
-                                width: '200'
+                                width: '150'
                             },
                             {
                                 name: "head_reference",
                                 label: this.$t('label.head_reference'),
-                                width: '320'
+                                width: '260'
                             },
                         ],
                     },
