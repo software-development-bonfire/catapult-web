@@ -5,10 +5,19 @@
     &-initial {
         overflow: initial !important;
     }
+    &-auto {
+        overflow: auto !important;
+    }
+    &-x-auto {
+        overflow-x: auto !important;
+    }
+    &-y-auto {
+        overflow-y: auto !important;
+    }
+    &-hidden {
+        overflow: hidden !important;
+    }
 }
 .ws-nowrap {
     white-space: nowrap !important;
-}
-.overflow-hidden {
-    overflow: hidden !important;
 }
