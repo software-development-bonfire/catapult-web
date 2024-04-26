@@ -31,15 +31,6 @@ class TerminalTransactionController extends Controller
         $filters = stringToJson($request->get('filters'));
         $transactions = app()->make(TerminalTransactionRepository::class)->list($filters);
 
-        $data = [];
-        foreach ($transactions as $transaction) {
-            $transaction = (object) $transaction;
-            $details = app()->make(TerminalTransactionRepository::class)->details((object) [
-                'terminal_transaction_bid' => $transaction->transaction_id
-            ]);
-            $transaction->details = $details;
-        }
-
         return $this->successfulResponse($transactions);
     }
 }

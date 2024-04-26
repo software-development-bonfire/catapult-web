@@ -19,6 +19,7 @@ class CreatePOSTerminalTransactionsTable extends Migration
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('bid')->index();
                 $table->unsignedBigInteger('terminal_bid');
+                $table->string('device_code');
                 $table->unsignedBigInteger('branch_bid');
                 $table->string('transaction_id');
                 $table->timestamp('log_date')->nullable();
@@ -55,6 +56,7 @@ class CreatePOSTerminalTransactionsTable extends Migration
                 $table->decimal('payment', 23, 6)->default(0.000000);
                 $table->tinyInteger('is_reset');
                 $table->string('receipt');
+                $table->string('order_slip_number');
                 $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
                 $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
                 $table->timestamp('deleted_at')->nullable();

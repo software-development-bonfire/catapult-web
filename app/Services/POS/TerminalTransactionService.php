@@ -2,6 +2,7 @@
 
 namespace App\Services\POS;
 
+use App\Entities\POSPayment;
 use App\Entities\POSTerminalTransaction;
 use App\Entities\POSTerminalTransactionProduct;
 use App\Traits\DatabaseTransaction;
@@ -19,7 +20,7 @@ class TerminalTransactionService
     public function store($data)
     {
         return $this->transaction(function () use ($data) {
-            $data = (object) $data;
+            $data = (object) stringToJson($data);
 
             $transactionData = [
                 'branch_bid' => $data->branch_bid,
@@ -66,17 +67,21 @@ class TerminalTransactionService
             $posTransaction = POSTerminalTransaction::where('terminal_bid', '=', $data->terminal_bid)
                 ->where('log_date', $data->log_date)
                 ->where('transaction_id', $data->transaction_id)
+                ->where('transaction_id', $data->transaction_id)
                 ->where('or_number', $data->or_number)
                 ->first();
 
             if ($posTransaction) {
                 $posTransaction->update($transactionData);
             } else {
-                POSTerminalTransaction::create($transactionData);
+                $posTransaction = POSTerminalTransaction::create($transactionData);
             }
 
             if (isset($data->details) && count($data->details) > 0) {
                 $this->storeDetail($data->details);
+            }
+            if (isset($data->payments) && count($data->payments) > 0) {
+                $this->storePayment($data->payments);
             }
 
             return $posTransaction;
@@ -142,10 +147,41 @@ class TerminalTransactionService
                 if ($posTransactionProduct) {
                     $posTransactionProduct->update($transactionData);
                 } else {
-                    POSTerminalTransactionProduct::create($transactionData);
+                    $posTransactionProduct = POSTerminalTransactionProduct::create($transactionData);
                 }
             }
             return $posTransactionProduct;
+        });
+    }
+
+    public function storePayment($payments)
+    {
+        return $this->transaction(function () use ($payments) {
+            foreach ($payments as $data) {
+                $data = (object) $data;
+                $paymentData = [
+                    'terminal_transaction_bid' => $data->terminal_transaction_bid,
+                    'payment_method_bid' => $data->payment_method_bid,
+                    'title' => $data->title,
+                    'amount' => $data->amount,
+                    'status' => $data->status,
+                    'created_at' => $data->created_at,
+                    'log_date' => $data->log_date,
+                    'account_number' => $data->account_number,
+                    'remarks' => $data->remarks,
+                ];
+                $posPayment = POSPayment::where('payment_method_bid', $data->payment_method_bid)
+                    ->where('log_date', $data->log_date)
+                    ->where('terminal_transaction_bid', $data->terminal_transaction_bid)
+                    ->first();
+
+                if ($posPayment) {
+                    $posPayment->update($paymentData);
+                } else {
+                    $posPayment = POSPayment::create($paymentData);
+                }
+            }
+            return $posPayment;
         });
     }
 }

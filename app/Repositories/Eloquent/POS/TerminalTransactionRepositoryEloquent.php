@@ -28,7 +28,7 @@ class TerminalTransactionRepositoryEloquent extends BaseRepository implements Te
 
     public function list($filters = [])
     {
-        $this->model = $this->model->orderBy('bid', 'ASC');
+        $this->model = $this->model->with(['details', 'payments'])->orderBy('bid', 'ASC');
 
         $this->pushCriteria(new TerminalTransactionListCriteria($filters))->applyCriteria();
 

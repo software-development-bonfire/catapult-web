@@ -37,12 +37,20 @@ class ListCriteria implements CriteriaInterface
     {
         $filters = $this->filters;
 
-        if (! empty($filters->transaction_bid)) {
-            $model->where('pos_terminal_transactions.transaction_id', $filters->transaction_bid);
+        if (! empty($filters->transaction_id)) {
+            $model->where('pos_terminal_transactions.transaction_id', $filters->transaction_id);
+        }
+
+        if (! empty($filters->or_number)) {
+            $model->where('pos_terminal_transactions.or_number', $filters->or_number);
         }
 
         if (! empty($filters->terminal_bid)) {
             $model->where('pos_terminal_transactions.terminal_bid', $filters->terminal_bid);
+        }
+
+        if (! empty($filters->device_code)) {
+            $model->where('pos_terminal_transactions.device_code', $filters->device_code);
         }
 
         if (! empty($filters->type)) {
@@ -53,6 +61,10 @@ class ListCriteria implements CriteriaInterface
             $model->where('pos_terminal_transactions.transaction_type', $filters->transaction_type);
         }
 
+        if (! empty($filters->order_slip_number)) {
+            $model->where('pos_terminal_transactions.order_slip_number', $filters->order_slip_number);
+        }
+        
         return $model;
     }
 }
