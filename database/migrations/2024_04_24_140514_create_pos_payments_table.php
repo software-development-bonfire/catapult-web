@@ -20,7 +20,7 @@ class CreatePosPaymentsTable extends Migration
                 $table->string('terminal_transaction_bid');
                 $table->unsignedBigInteger('payment_method_bid');
                 $table->string('title');
-                $table->string('account_number');
+                $table->string('account_number')->nullable();
                 $table->decimal('amount', 23, 6)->default(0.000000);
                 $table->tinyInteger('status');
                 $table->timestamp('created_at')->nullable();
