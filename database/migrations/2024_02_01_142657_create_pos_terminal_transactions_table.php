@@ -44,6 +44,7 @@ class CreatePOSTerminalTransactionsTable extends Migration
                 $table->decimal('guest_count', 23, 6)->default(0.000000);
                 $table->decimal('service_charge', 23, 6)->default(0.000000);
                 $table->string('order_number');
+                $table->string('order_status')->default(0);
                 $table->string('table_number')->nullable();
                 $table->tinyInteger('customer_type')->nullable();
                 $table->unsignedBigInteger('customer_bid')->nullable();

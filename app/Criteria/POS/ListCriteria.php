@@ -35,7 +35,7 @@ class ListCriteria implements CriteriaInterface
      */
     public function apply($model, RepositoryInterface $repository)
     {
-        $filters = $this->filters;
+        $filters = (object) $this->filters;
 
         if (! empty($filters->transaction_id)) {
             $model->where('pos_terminal_transactions.transaction_id', $filters->transaction_id);
@@ -61,8 +61,12 @@ class ListCriteria implements CriteriaInterface
             $model->where('pos_terminal_transactions.transaction_type', $filters->transaction_type);
         }
 
-        if (! empty($filters->order_slip_number)) {
-            $model->where('pos_terminal_transactions.order_slip_number', $filters->order_slip_number);
+        if (! empty($filters->order_number)) {
+            $model->where('pos_terminal_transactions.order_number', $filters->order_number);
+        }
+        
+        if (isset($filters->order_status) && $filters->order_status != '') {
+            $model->where('pos_terminal_transactions.order_status', $filters->order_status);
         }
         
         return $model;

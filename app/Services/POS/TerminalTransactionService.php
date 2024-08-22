@@ -5,6 +5,7 @@ namespace App\Services\POS;
 use App\Entities\POSPayment;
 use App\Entities\POSTerminalTransaction;
 use App\Entities\POSTerminalTransactionProduct;
+use App\Enums\Status;
 use App\Traits\DatabaseTransaction;
 
 class TerminalTransactionService
@@ -67,9 +68,9 @@ class TerminalTransactionService
             $posTransaction = POSTerminalTransaction::where('terminal_bid', '=', $data->terminal_bid)
                 ->where('log_date', $data->log_date)
                 ->where('transaction_id', $data->transaction_id)
-                ->where('transaction_id', $data->transaction_id)
                 ->where('or_number', $data->or_number)
-                ->first();
+                ->where('order_number', $data->order_number)
+                ->where('order_status', Status::INACTIVE);
 
             if ($posTransaction) {
                 $posTransaction->update($transactionData);
@@ -141,8 +142,7 @@ class TerminalTransactionService
                 $posTransactionProduct = POSTerminalTransactionProduct::where('cart_bid', $data->cart_bid)
                     ->where('log_date', $data->log_date)
                     ->where('terminal_transaction_bid', $data->terminal_transaction_bid)
-                    ->where('product_bid', $data->product_bid)
-                    ->first();
+                    ->where('product_bid', $data->product_bid);
 
                 if ($posTransactionProduct) {
                     $posTransactionProduct->update($transactionData);
@@ -172,8 +172,7 @@ class TerminalTransactionService
                 ];
                 $posPayment = POSPayment::where('payment_method_bid', $data->payment_method_bid)
                     ->where('log_date', $data->log_date)
-                    ->where('terminal_transaction_bid', $data->terminal_transaction_bid)
-                    ->first();
+                    ->where('terminal_transaction_bid', $data->terminal_transaction_bid);
 
                 if ($posPayment) {
                     $posPayment->update($paymentData);
@@ -182,6 +181,29 @@ class TerminalTransactionService
                 }
             }
             return $posPayment;
+        });
+    }
+
+    public function updateStatus($data)
+    {
+        return $this->transaction(function () use ($data) {
+            $data = (object) stringToJson($data);
+            $posTransaction = POSTerminalTransaction::where('terminal_bid', '=', $data->terminal_bid)
+                ->where('log_date', $data->log_date)
+                ->where('transaction_id', $data->transaction_id)
+                ->where('or_number', $data->or_number)
+                ->where('order_number', $data->order_number)
+                ->where('order_status', Status::INACTIVE);
+
+            $posTransactionData = $posTransaction->first();
+            if ($posTransactionData) {
+                if ($posTransaction->update([
+                    'order_status' => Status::ACTIVE,
+                ])) {
+                    $posTransactionData = POSTerminalTransaction::where('bid', '=', $posTransactionData->bid)->get();
+                }
+            }
+            return $posTransactionData;
         });
     }
 }
