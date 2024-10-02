@@ -20,7 +20,7 @@ class TerminalTransactionService
      */
     public function store($data)
     {
-        return $this->transaction(function () use ($data) {
+       // return $this->transaction(function () use ($data) {
             $data = (object) stringToJson($data);
 
             $transactionData = [
@@ -86,7 +86,7 @@ class TerminalTransactionService
             }
 
             return $posTransaction;
-        });
+       // });
     }
 
     public function storeDetail($details)

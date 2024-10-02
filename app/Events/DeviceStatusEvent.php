@@ -2,24 +2,25 @@
 
 namespace App\Events;
 
+use App\Enums\POS\EventMessageType;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Queue\SerializesModels;
 
-class KioskTransactionEvent implements ShouldBroadcast
+class DeviceStatusEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $transaction = '';
+    public $data = '';
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct($message)
+    public function __construct($data)
     {
-        $this->transaction = $message;
+        $this->data = $data;
     }
 
     /**
@@ -29,11 +30,12 @@ class KioskTransactionEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return ['kiosk-transaction'];
+        //return new Channel('transaction-channel');
+        return ['device-channel'];
     }
 
     public function broadcastAs()
     {
-        return 'kiosk-transaction-event';
+        return 'device-event';
     }
 }

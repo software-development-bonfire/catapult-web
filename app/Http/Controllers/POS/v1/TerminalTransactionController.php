@@ -4,6 +4,7 @@ namespace App\Http\Controllers\POS\v1;
 
 use App\Enums\Status;
 use App\Events\KioskTransactionEvent;
+use App\Events\TransactionEvent;
 use App\Http\Controllers\Controller;
 use App\Repositories\Contracts\POS\TerminalTransactionRepository;
 use App\Services\POS\TerminalTransactionService;
@@ -24,7 +25,7 @@ class TerminalTransactionController extends Controller
         }
 
         Log::alert(json_encode($data));
-        broadcast(new KioskTransactionEvent($data));
+        broadcast(new TransactionEvent($data));
         return $this->successfulResponse(
             $result,
             Lang::get('success.successfully_created', ['value' => __('label.terminal_transaction')])
