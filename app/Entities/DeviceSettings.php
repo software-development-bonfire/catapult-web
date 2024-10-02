@@ -9,7 +9,7 @@ use Prettus\Repository\Contracts\Transformable;
 use Prettus\Repository\Traits\TransformableTrait;
 
 /**
- * Class FieldMappingDetail.
+ * Class DeviceSettings.
  *
  * @package namespace App\Entities;
  */
@@ -25,6 +25,8 @@ class DeviceSettings extends Base
      */
     protected $fillable = [
         'bid',
+        'terminal_code',
+        'device_code',
         'device_type',
         'name',
         'ip_address',

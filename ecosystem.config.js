@@ -113,7 +113,7 @@ module.exports = {
         {
             name : "CPLT-POS-SOCKET",
             script: "artisan",
-            args: ["websocket:serve"],
+            args: ["websocket:serve", "--port=6001"],
             exec_interpreter: "php",
             exec_mode : "fork",
             max_memory_restart : "5G",

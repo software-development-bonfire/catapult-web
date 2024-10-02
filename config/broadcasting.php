@@ -37,10 +37,15 @@ return [
             'app_id' => env('PUSHER_APP_ID'),
             'options' => [
                 'cluster' => env('PUSHER_APP_CLUSTER'),
-                'useTLS' => false,
+                'useTLS' => false, // True if you want to enable PusherAuth on other client devices
+                'encrypted' => false, // True if you want to enable PusherAuth on other client devices
                 'host' => '127.0.0.1', // for localhost installation
                 'port' => env('PUSHER_APP_PORT'),
                 'scheme' => 'http',
+                'curl_options' => [
+                    CURLOPT_SSL_VERIFYHOST => 0,
+                    CURLOPT_SSL_VERIFYPEER => 0,
+                ],
             ],
         ],
         

@@ -67,7 +67,7 @@ In backgound it execute windows command [ **_netsh int ip reset_** ] and [ **ipc
 - ``` php artisan pos:upload```  *#automatically upload all files and it depends on the configuration of Terminal File Setup;*
 
 - ``` php artisan pos:pm2```  *#Simply restart the running pm2, but **optimize** is called to make sure it would take effects if there are configurations in Catapult;*
-     **Above command is equivalent to;**
+     **This command is equivalent to;**
 ```
 pm2 stop all
 php artisan optimize
@@ -75,7 +75,7 @@ pm2 restart all
 ```
 
 - ``` php artisan pos:pm2 install --with=startup```  *#to install pm2 and automatically save processes inside ecosystem.config.js. This include also installation of pm2-windows-startup*
-     **Above command is equivalent to;**
+     **This command is equivalent to;**
 ```
 npm install pm2 -g
 npm install pm2-windows-startup -g
@@ -84,8 +84,8 @@ pm2 save
 pm2-startup install
 pm2 save
 ```
-- ```php artisan pos:pm2 uninstall --with=startup```  *#to uninstall pm2, this will automatically remove pm2-startup in registry, stop all processes, then remove configuration*
-**Above command is equivalent to;**
+- ```php artisan pos:pm2 uninstall --with=startup```  *#to uninstall pm2, this will automatically remove pm2-startup in registry, stop all processes, then remove configuration and caches*
+**This command is equivalent to;**
 ```
 pm2-startup uninstall #Disable startup:
 pm2 kill #Kill the daemon process
@@ -102,10 +102,14 @@ npm cache clean --force # to clean npm cache
      - [✖] it means configuration needs to be checked and re-configuration is required 
      - [⚠] is just a warning and can be ignored;
 
-```
+# Catapult Enabling Websockets
 
-IMPORTANT:
-version 2.1.0.11 + must use updated .env.example from
+💡**NOTE** (Must check the .ENV file if below *IMPORTANT* exist and change if necessary)
+
+
+_IMPORTANT: This changes is for CDIS pusher configuration_
+```
+#version 2.1.0.11 + must use updated .env.example from
 
 PUSHER_APP_ID="1355368"
 PUSHER_APP_KEY="182c58278217ab48deab"
@@ -118,4 +122,16 @@ CDIS_PUSHER_APP_ID="1355368"
 CDIS_PUSHER_APP_KEY="182c58278217ab48deab"
 CDIS_PUSHER_APP_SECRET="61870452e11b3e2897ba"
 CDIS_PUSHER_APP_CLUSTER=eu
-
+```
+_This section of .ENV configuration will be the websocket configuration locally_
+```
+PUSHER_APP_ID="CATAPULT_20240104"
+PUSHER_APP_KEY="kKkRUSBBCKCqrLSYNTbclA"
+PUSHER_APP_SECRET="JhcHBfaWQiOiJjYXRhcHVsdCIsIm5h"
+PUSHER_APP_CLUSTER=mt1
+PUSHER_APP_PORT=6100
+```
+💡NOTE : To enable the websockets features and its capability, you must consider instruction below;
+- Configure firewall rules to allow inbound and outbound connection for port **6100**. Or just run ```allow-ports.bat``` to automatically execute the script allowing the port 6100.
+- Run the command ```php artisan websocket:serve --port=6100``` to start websocket server with port *6100*.
+- 

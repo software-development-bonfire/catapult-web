@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Enums\POS\APIDefinedScopes;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Laravel\Passport\Passport;
@@ -27,8 +28,9 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         Passport::routes();
-        Passport::tokensCan([
-            'kds' => 'Kitchen Display API',
-        ]);
+        Passport::tokensExpireIn(now()->addYears(1));
+        Passport::refreshTokensExpireIn(now()->addYears(1));
+        Passport::personalAccessTokensExpireIn(now()->addYears(1));
+        Passport::tokensCan(APIDefinedScopes::SCOPES);
     }
 }

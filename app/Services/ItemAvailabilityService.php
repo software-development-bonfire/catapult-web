@@ -24,12 +24,15 @@ class ItemAvailabilityService
             foreach ($data as $header) {
                 $deviceSettings = DeviceSettings::where('device_type', $header['device_type'])
                     ->where('name', $header['name'])
-                    ->where('ip_address', $header['ip_address'])
+                    ->where('terminal_code', $header['terminal_code'])
+                    ->where('device_code', $header['device_code'])
                     ->first();
 
                 if (! $deviceSettings) {
                     $deviceSettings = DeviceSettings::create([
                         'device_type' =>  $header['device_type'],
+                        'terminal_code' =>  $header['terminal_code'],
+                        'device_code' =>  $header['device_code'],
                         'name' =>  $header['name'],
                         'ip_address' => $header['ip_address'],
                     ]);

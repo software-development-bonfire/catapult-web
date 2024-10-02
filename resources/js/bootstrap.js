@@ -37,13 +37,14 @@ window.Echo = new Echo({
     broadcaster: 'pusher',
     key: process.env.MIX_PUSHER_APP_KEY,
     cluster: process.env.MIX_PUSHER_APP_CLUSTER,
-    encrypted: false,
+    encrypted: false, // true if you want to enable PusherAuth on other client devices
     wsHost: window.location.hostname,
     wsPort: process.env.PUSHER_APP_PORT,
     wssPort: process.env.PUSHER_APP_PORT,
-    forceTLS: false,
+    forceTLS: false,  // true if you want to enable PusherAuth on other client devices
     disableStats: true,
     enabledTransports: ['ws', 'wss'],
+   // authEndpoint: '/broadcasting/auth',  // uncomment if you want to enable PusherAuth on other client devices
 });
 
 import './enums';

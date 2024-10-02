@@ -37,9 +37,15 @@ Route::group([
 ], function () {
     Route::post('login', [\App\Http\Controllers\POS\v1\LoginController::class, 'login']);
     Route::post('logout', [\App\Http\Controllers\POS\v1\LoginController::class, 'logout']);
+    Route::post('trigger-event',  [\App\Http\Controllers\POS\v1\LoginController::class, 'trigger']);
 
     Route::group(['middleware' => 'pos-token'], function () {
         Route::post('item-availability/store',  [\App\Http\Controllers\POS\v1\ItemAvailabilityController::class, 'store']);
         Route::get('item-availability/list',  [\App\Http\Controllers\POS\v1\ItemAvailabilityController::class, 'list']);
+        
+        Route::post('transaction/store',  [\App\Http\Controllers\POS\v1\TerminalTransactionController::class, 'store']);
+        Route::post('transaction/update',  [\App\Http\Controllers\POS\v1\TerminalTransactionController::class, 'update']);
+        Route::post('transaction/search',  [\App\Http\Controllers\POS\v1\TerminalTransactionController::class, 'search']);
+        Route::get('transaction/list',  [\App\Http\Controllers\POS\v1\TerminalTransactionController::class, 'list']);
     });
 });

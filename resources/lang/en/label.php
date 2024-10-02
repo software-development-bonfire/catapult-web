@@ -240,6 +240,7 @@ return [
     'terminal_file_setup' => 'Terminal File Setup',
     'terminal_path' => 'Terminal Path',
     'terminal_receipt_name' => 'Terminal Receipt Name',
+    'terminal_transaction' => 'Terminal Transaction',
     'timestamp' => 'Timestamp',
     'to_convert' => 'To convert',
     'to_fetch' => 'To fetch',

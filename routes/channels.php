@@ -11,10 +11,16 @@
 |
 */
 
+use Illuminate\Support\Facades\Broadcast;
+
 Broadcast::channel('App.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
 Broadcast::channel('item-availability', function ($message) {
     return $message;
+});
+
+Broadcast::channel('presence-channel-name', function ($user) {
+    return ['id' => $user->id, 'name' => $user->name];
 });

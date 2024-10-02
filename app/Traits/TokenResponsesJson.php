@@ -85,4 +85,29 @@ trait TokenResponsesJson
             Response::HTTP_OK,
             TokenResponseCode::TOKEN_GENERATED);
     }
+
+    public function successTokenResponse($data = null, $message = 'Access granted')
+    {
+        return $this->response(
+            true,
+            $data,
+            $message,
+            array(),
+            Response::HTTP_OK,
+            TokenResponseCode::TOKEN_VALID
+        );
+    }
+
+    public function errorTokenResponse($data = null, $message = 'Errors occured', $errors = [])
+    {
+        return $this->response(
+            false,
+            $data,
+            $message,
+            $errors,
+            Response::HTTP_BAD_REQUEST,
+            TokenResponseCode::TOKEN_ERROR,
+        );
+    }
+
 }

@@ -11,12 +11,14 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Arr;
+use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable
 {
     use Notifiable,
         SoftDeletes,
-        BidObserverTrait;
+        BidObserverTrait,
+        HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
