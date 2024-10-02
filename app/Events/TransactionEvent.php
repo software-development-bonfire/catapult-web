@@ -13,7 +13,6 @@ class TransactionEvent implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $data = '';
-    //public $type = EventMessageType::KIOSK_TRANSACTION;
     /**
      * Create a new event instance.
      *

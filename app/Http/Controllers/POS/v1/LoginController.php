@@ -89,7 +89,7 @@ class LoginController extends POSBaseController
     public function logout(Request $request)
     {
         try {
-            $tokenName = $this->appName . '-' . $request->getHost();
+            $tokenName = $this->appName.'-'.$request->getHost();
 
             Passport::token()->where('name', $tokenName)->delete();
 
@@ -102,10 +102,7 @@ class LoginController extends POSBaseController
     public function trigger(Request $request)
     {
         $data = (object) stringToJson($request->all());
-        //event(new PresenceMessageSent($data));
-        //event(new PrivateMessageSent($data->message, $data->channel));
 
-        //broadcast(new PresenceMessageSent($data));
         broadcast(new PrivateMessageSent($data->message, $data->channel));
         return $this->successfulResponse($data, 'Private message sent!');
     }

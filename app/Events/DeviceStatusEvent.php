@@ -30,7 +30,6 @@ class DeviceStatusEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        //return new Channel('transaction-channel');
         return ['device-channel'];
     }
 

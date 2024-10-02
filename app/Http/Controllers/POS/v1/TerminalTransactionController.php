@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers\POS\v1;
 
-use App\Enums\Status;
-use App\Events\KioskTransactionEvent;
 use App\Events\TransactionEvent;
 use App\Http\Controllers\Controller;
 use App\Repositories\Contracts\POS\TerminalTransactionRepository;
 use App\Services\POS\TerminalTransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
-use Illuminate\Support\Facades\Log;
 
 class TerminalTransactionController extends Controller
 {
@@ -24,7 +21,6 @@ class TerminalTransactionController extends Controller
             return $this->errorResponse([], 'Missing request parameters');
         }
 
-        Log::alert(json_encode($data));
         broadcast(new TransactionEvent($data));
         return $this->successfulResponse(
             $result,
@@ -57,7 +53,6 @@ class TerminalTransactionController extends Controller
         $result = null;
         $data = (object) stringToJson($request->all());
         if (! empty($data->filters)) {
-            \Illuminate\Support\Facades\Log::alert(json_encode($data->filters));
             $result = app()->make(TerminalTransactionRepository::class)->list($data->filters);
         } else {
             return $this->errorResponse([], 'Missing request parameters');
