@@ -19,12 +19,16 @@ class DeviceSettingsTransformer extends TransformerAbstract
     {
         return [
             'bid' => $model->bid,
+            'terminal_code' => $model->terminal_code,
+            'device_code' => $model->device_code,
             'device_type' => $model->device_type,
             'name' => $model->name,
             'ip_address' => $model->ip_address,
-            'api_endpoint' => $model->api_endpoint,
+            'socket_status' => $model->socket_status,
+            'print_invoice' => $model->print_invoice,
             'token' => $model->token,
             'status' => $model->status,
+            'deleted_at' => $model->deleted_at,
         ];
     }
 }

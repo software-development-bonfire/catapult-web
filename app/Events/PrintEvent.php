@@ -7,7 +7,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class DeviceStatusEvent implements ShouldBroadcast
+class PrintEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -29,11 +29,11 @@ class DeviceStatusEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return ['device-channel'];
+        return ['print-channel'];
     }
 
     public function broadcastAs()
     {
-        return 'device-event';
+        return 'print-event';
     }
 }

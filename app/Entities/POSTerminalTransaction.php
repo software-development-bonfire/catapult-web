@@ -12,6 +12,7 @@ class POSTerminalTransaction extends Base
 
     protected $fillable = [
         'branch_bid',
+        'device_code',
         'terminal_bid',
         'transaction_id',
         'log_date',

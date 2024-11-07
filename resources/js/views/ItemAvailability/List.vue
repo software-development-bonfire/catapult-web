@@ -149,9 +149,7 @@
                                     @change="setItemCheckboxCooldown($event, device, tableData.product_uom_bid)">
                             </div>
                             <div class="tc--terminal-checkbox" v-else>
-                                <input
-                                    type="checkbox"
-                                    disabled="true">
+                                <span class="badge badge-warning">Not Available</span>
                             </div>
                         </td>
                     </table-row>
@@ -282,9 +280,9 @@
     import 'vue2-datepicker/index.css';
     import Datatable from '../../components/Datatable2/Datatable.vue';
     import TableRow from '../../components/Datatable2/TableRow.vue';
+    import CategoryPicker from '../../components/Forms/CategoryPicker.vue';
     import DialogBox from '../../components/Message/DialogBox.vue';
     import Modal from '../../components/Modal/Modal.vue';
-    import CategoryPicker from '../../components/Forms/CategoryPicker.vue';
     import Util from '../../mixins/Util.vue';
 
     export default {

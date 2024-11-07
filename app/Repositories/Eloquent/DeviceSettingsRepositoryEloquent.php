@@ -5,8 +5,6 @@ namespace App\Repositories\Eloquent;
 use App\Entities\DeviceSettings;
 use App\Enums\Status;
 use App\Repositories\Contracts\DeviceSettingsRepository;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Prettus\Repository\Eloquent\BaseRepository;
 
 class DeviceSettingsRepositoryEloquent extends BaseRepository implements DeviceSettingsRepository

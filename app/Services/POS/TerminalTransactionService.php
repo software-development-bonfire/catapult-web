@@ -18,12 +18,13 @@ class TerminalTransactionService
      * @param array  $data
      * @return mixed
      */
-    public function store($data)
+    public function store($deviceCode, $data)
     {
-        return $this->transaction(function () use ($data) {
+       // return $this->transaction(function () use ($data) {
             $data = (object) stringToJson($data);
 
             $transactionData = [
+                'device_code' => $deviceCode,
                 'branch_bid' => $data->branch_bid,
                 'terminal_bid' => $data->terminal_bid,
                 'transaction_id' => $data->transaction_id,
@@ -70,10 +71,11 @@ class TerminalTransactionService
                 ->where('transaction_id', $data->transaction_id)
                 ->where('or_number', $data->or_number)
                 ->where('order_number', $data->order_number)
-                ->where('order_status', Status::INACTIVE);
+                ->where('order_status', Status::INACTIVE)
+                ->first();
 
             if ($posTransaction) {
-                $posTransaction->update($transactionData);
+                $posTransaction = tap($posTransaction)->update($transactionData);
             } else {
                 $posTransaction = POSTerminalTransaction::create($transactionData);
             }
@@ -86,12 +88,12 @@ class TerminalTransactionService
             }
 
             return $posTransaction;
-        });
+       // });
     }
 
     public function storeDetail($details)
     {
-        return $this->transaction(function () use ($details) {
+        //return $this->transaction(function () use ($details) {
             foreach ($details as $data) {
                 $data = (object) $data;
                 $transactionData = [
@@ -142,21 +144,23 @@ class TerminalTransactionService
                 $posTransactionProduct = POSTerminalTransactionProduct::where('cart_bid', $data->cart_bid)
                     ->where('log_date', $data->log_date)
                     ->where('terminal_transaction_bid', $data->terminal_transaction_bid)
-                    ->where('product_bid', $data->product_bid);
+                    ->where('product_bid', $data->product_bid)
+                    ->first();
 
                 if ($posTransactionProduct) {
-                    $posTransactionProduct->update($transactionData);
+
+                    $posTransactionProduct = tap($posTransactionProduct)->update($transactionData);
                 } else {
                     $posTransactionProduct = POSTerminalTransactionProduct::create($transactionData);
                 }
             }
             return $posTransactionProduct;
-        });
+        //});
     }
 
     public function storePayment($payments)
     {
-        return $this->transaction(function () use ($payments) {
+        //return $this->transaction(function () use ($payments) {
             foreach ($payments as $data) {
                 $data = (object) $data;
                 $paymentData = [
@@ -172,16 +176,17 @@ class TerminalTransactionService
                 ];
                 $posPayment = POSPayment::where('payment_method_bid', $data->payment_method_bid)
                     ->where('log_date', $data->log_date)
-                    ->where('terminal_transaction_bid', $data->terminal_transaction_bid);
+                    ->where('terminal_transaction_bid', $data->terminal_transaction_bid)
+                    ->first();
 
                 if ($posPayment) {
-                    $posPayment->update($paymentData);
+                    $posPayment = tap($posPayment)->update($paymentData);
                 } else {
                     $posPayment = POSPayment::create($paymentData);
                 }
             }
             return $posPayment;
-        });
+       // });
     }
 
     public function updateStatus($data)
@@ -193,17 +198,15 @@ class TerminalTransactionService
                 ->where('transaction_id', $data->transaction_id)
                 ->where('or_number', $data->or_number)
                 ->where('order_number', $data->order_number)
-                ->where('order_status', Status::INACTIVE);
+                ->where('order_status', Status::INACTIVE)
+                ->first();
 
-            $posTransactionData = $posTransaction->first();
-            if ($posTransactionData) {
-                if ($posTransaction->update([
+            if ($posTransaction) {
+                $posTransaction = tap($posTransaction)->update([
                     'order_status' => Status::ACTIVE,
-                ])) {
-                    $posTransactionData = POSTerminalTransaction::where('bid', '=', $posTransactionData->bid)->get();
-                }
+                ]);
             }
-            return $posTransactionData;
+            return $posTransaction;
         });
     }
 }

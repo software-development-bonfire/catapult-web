@@ -33,6 +33,9 @@ class DeviceSettings extends Base
         'api_endpoint',
         'token',
         'status',
+        'socket_status',
+        'last_connected_at',
+        'print_invoice',
         'created_by',
         'updated_by'
     ];

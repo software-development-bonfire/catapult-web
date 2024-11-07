@@ -50,6 +50,7 @@ class LoginController extends POSBaseController
                     'session' => $token,
                     'user' => $user,
                     'auth_type' => $this->authType,
+                    'device' => $devices,
                 ];
                 return $this->tokenGeneratedResponse($response);
             }
@@ -97,13 +98,5 @@ class LoginController extends POSBaseController
         } catch (\Exception $ex) {
             return $this->errorResponse();
         }
-    }
-
-    public function trigger(Request $request)
-    {
-        $data = (object) stringToJson($request->all());
-
-        broadcast(new PrivateMessageSent($data->message, $data->channel));
-        return $this->successfulResponse($data, 'Private message sent!');
     }
 }

@@ -3,27 +3,37 @@
 namespace App\Http\Controllers\POS\v1;
 
 use App\Events\TransactionEvent;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\POS\POSBaseController;
 use App\Repositories\Contracts\POS\TerminalTransactionRepository;
 use App\Services\POS\TerminalTransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
 
-class TerminalTransactionController extends Controller
+class TerminalTransactionController extends POSBaseController
 {
 
     public function store(Request $request)
     {
         $data = (object) stringToJson($request->all());
         if (! empty($data->data)) {
-            $result = app()->make(TerminalTransactionService::class)->store($data->data);
+            $result = app()->make(TerminalTransactionService::class)->store($data->device_code, $data->data);
         } else {
             return $this->errorResponse([], 'Missing request parameters');
         }
 
-        broadcast(new TransactionEvent($data));
+        unset($data->access_token);
+        // Send transaction to POS if there is payment in the OTS
+        if (isset($data->data['payments'])) {
+            $payments = $data->data['payments'];
+            if (isset($payments[0])) {
+                $payment = (object) stringToJson($payments[0]);
+                if ($payment->title !== 'CASH') {
+                    broadcast(new TransactionEvent($data));
+                }
+            }
+        }
         return $this->successfulResponse(
-            $result,
+            $data,
             Lang::get('success.successfully_created', ['value' => __('label.terminal_transaction')])
         );
     }
