@@ -14,6 +14,14 @@ use Spatie\Fractalistic\ArraySerializer;
 
 class KitchenDisplayController extends Controller
 {
+    public function storeMenu(Request $request) {
+
+    }
+
+    public function storeOrder(Request $request) {
+        
+    }
+
     /**
      * Get menu list.
      *

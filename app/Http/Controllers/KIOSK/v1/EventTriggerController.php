@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Controllers\POS\v1;
+namespace App\Http\Controllers\KIOSK\v1;
 
 use App\Events\PrivateMessageSent;
-use App\Http\Controllers\POS\POSBaseController;
+use App\Http\Controllers\KIOSK\KioskBaseController;
 use Illuminate\Http\Request;
 
-class EventTriggerController extends POSBaseController
+class EventTriggerController extends KioskBaseController
 {
     public function trigger(Request $request)
     {

@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\KDS\v1;
 
+use App\Enums\API\APIDefinedScopes;
 use App\Enums\Status;
 use App\Http\Controllers\Controller;
 use App\Repositories\Contracts\CDISKitchenUserRepository;
+use App\Traits\APIRequestTrait;
 use App\Traits\TokenResponsesJson;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -12,7 +14,7 @@ use Laravel\Passport\Passport;
 
 class LoginController extends Controller
 {
-    use TokenResponsesJson;
+    use TokenResponsesJson, APIRequestTrait;
 
     /**
      * Authenticate user and provide access token for KDS API
@@ -30,18 +32,17 @@ class LoginController extends Controller
 
         if ($user && Hash::check($credentials['password'], $user->password)) {
             if ($user->status === Status::ACTIVE) {
-
-                $tokenName = 'KDS-'. $request->getHost();
-
-                Passport::token()->where('name', $tokenName)->delete();
-
-                $token = $user->createToken($tokenName, ['kds']);
-
-                return $this->tokenGeneratedResponse($token);
+                $token = $this->generateNewUserToken($user, $request, false, false, array_keys(APIDefinedScopes::SCOPES));
+                $response = [
+                    'session' => $token,
+                    'user' => $user,
+                    'auth_type' => 'user',
+                ];
+                return $this->tokenGeneratedResponse($response);
             }
         }
 
-        return $this->errorResponse([], __('auth.failed'));
+        return $this->errorTokenResponse(null, __('auth.failed'));
     }
 
     /**

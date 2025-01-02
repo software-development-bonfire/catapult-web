@@ -2,211 +2,328 @@
 
 namespace App\Services\POS;
 
-use App\Entities\POSPayment;
-use App\Entities\POSTerminalTransaction;
-use App\Entities\POSTerminalTransactionProduct;
-use App\Enums\Status;
+use App\Entities\CDISInventoryLocationTag;
+use App\Entities\CDISTerminal;
+use App\Entities\CDISTerminalTransaction;
+use App\Enums\InventoryLocationTagType;
+use App\Repositories\Contracts\CDIS\TerminalTransactionRepository;
+use App\Repositories\Contracts\KitchenItemSetupRepository;
+use Illuminate\Support\Facades\Log;
 use App\Traits\DatabaseTransaction;
+use App\Traits\KitchenDisplayTrait;
+use App\Traits\QueryHelper;
+use App\Traits\TerminalTransactionDiscountTrait;
 
 class TerminalTransactionService
 {
     use DatabaseTransaction;
+    use QueryHelper;
+    use TerminalTransactionDiscountTrait;
+    use KitchenDisplayTrait;
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param array  $data
-     * @return mixed
-     */
-    public function store($deviceCode, $data)
+    public function store($data)
     {
-       // return $this->transaction(function () use ($data) {
-            $data = (object) stringToJson($data);
+        //$this->transaction(function () use ($data) {
+            foreach ($data as $datum) {
+                $datum = (object) $datum;
+        
+                //$branchBid = CDISTerminal::find($datum->terminal_bid)->branch->bid;
 
-            $transactionData = [
-                'device_code' => $deviceCode,
-                'branch_bid' => $data->branch_bid,
-                'terminal_bid' => $data->terminal_bid,
-                'transaction_id' => $data->transaction_id,
-                'log_date' => $data->log_date,
-                'or_number' => $data->or_number,
-                'split_number' => $data->split_number,
-                'is_first_transaction' => $data->is_first_transaction,
-                'type' => $data->type,
-                'status' => $data->status,
-                'gross_sales' => $data->gross_sales,
-                'net_sales' => $data->net_sales,
-                'total_quantity' => $data->total_quantity,
-                'total_free_items_amount' => $data->total_free_items_amount,
-                'total_local_tax_amount' => $data->total_local_tax_amount,
-                'total_tax_amount' => $data->total_tax_amount,
-                'total_discount_amount' => $data->total_discount_amount,
-                'total_vat_deduct_amount' => $data->total_vat_deduct_amount,
-                'total_vat_exempt_amount' => $data->total_vat_exempt_amount,
-                'total_vatable_sales' => $data->total_vatable_sales,
-                'total_zero_rated_sales' => $data->total_zero_rated_sales,
-                'total_tender' => $data->total_tender,
-                'eligible_amount_to_earn_points' => $data->eligible_amount_to_earn_points,
-                'guest_count' => $data->guest_count,
-                'service_charge' => $data->service_charge,
-                'order_number' => $data->order_number,
-                'table_number' => $data->table_number,
-                'customer_type' => $data->customer_type,
-                'customer_bid' => $data->customer_bid,
-                'customer_name' => $data->customer_name,
-                'customer_address' => $data->customer_address,
-                'cashier_bid' => $data->cashier_bid,
-                'cashier_name' => $data->cashier_name,
-                'remarks' => $data->remarks,
-                'created_at' => $data->created_at,
-                'updated_at' => $data->updated_at,
-                'change' => $data->change,
-                'payment' => $data->payment,
-                'is_reset' => $data->is_reset,
-                'receipt' => $data->receipt,
-            ];
-
-            $posTransaction = POSTerminalTransaction::where('terminal_bid', '=', $data->terminal_bid)
-                ->where('log_date', $data->log_date)
-                ->where('transaction_id', $data->transaction_id)
-                ->where('or_number', $data->or_number)
-                ->where('order_number', $data->order_number)
-                ->where('order_status', Status::INACTIVE)
-                ->first();
-
-            if ($posTransaction) {
-                $posTransaction = tap($posTransaction)->update($transactionData);
-            } else {
-                $posTransaction = POSTerminalTransaction::create($transactionData);
-            }
-
-            if (isset($data->details) && count($data->details) > 0) {
-                $this->storeDetail($data->details);
-            }
-            if (isset($data->payments) && count($data->payments) > 0) {
-                $this->storePayment($data->payments);
-            }
-
-            return $posTransaction;
-       // });
-    }
-
-    public function storeDetail($details)
-    {
-        //return $this->transaction(function () use ($details) {
-            foreach ($details as $data) {
-                $data = (object) $data;
-                $transactionData = [
-                    'cart_bid' => $data->cart_bid,
-                    'terminal_transaction_bid' => $data->terminal_transaction_bid,
-                    'usage_type' => $data->usage_type,
-                    'product_bid' => $data->product_bid,
-                    'name' => $data->name,
-                    'description' => $data->description,
-                    'long_description' => $data->long_description,
-                    'menu_code' => $data->menu_code,
-                    'category_bid' => $data->category_bid,
-                    'quantity' => $data->quantity,
-                    'tax_percentage' => $data->tax_percentage,
-                    'order_type_id' => $data->order_type_id,
-                    'order_type_name' => $data->order_type_name,
-                    'is_free' => $data->is_free,
-                    'tax_code' => $data->tax_code,
-                    'original_price' => $data->original_price,
-                    'price' => $data->price,
-                    'individual_total_amount' => $data->individual_total_amount,
-                    'individual_total_discount' => $data->individual_total_discount,
-                    'entire_discount' => $data->entire_discount,
-                    'entire_amount' => $data->entire_amount,
-                    'vatable_sales' => $data->vatable_sales,
-                    'zero_rated_sales' => $data->zero_rated_sales,
-                    'tax' => $data->tax,
-                    'vat_deduct' => $data->vat_deduct,
-                    'vat_exempt' => $data->vat_exempt,
-                    'remarks' => $data->remarks,
-                    'supervisor_bid' => $data->supervisor_bid,
-                    'supervisor_name' => $data->supervisor_name,
-                    'created_at' => $data->created_at,
-                    'parent_id' => $data->parent_id,
-                    'add_on' => $data->add_on,
-                    'take_home' => $data->take_home,
-                    'sub_total' => $data->sub_total,
-                    'gross_total' => $data->gross_total,
-                    'net_total' => $data->net_total,
-                    'transaction_date' => $data->transaction_date,
-                    'log_date' => $data->log_date,
-                    'cashier_bid' => $data->cashier_bid,
-                    'cashier_name' => $data->cashier_name,
-                    'discount_bid' => $data->discount_bid,
-                    'discount_value' => $data->discount_value,
-                    'is_reset' => $data->is_reset,
+                $primaryHeadData = [
+                    'terminal_bid' => $datum->terminal_bid,
+                    'date' => $datum->date,
+                    'transaction_id' => $datum->transaction_id,
+                    'transaction_type' => $datum->transaction_type,
+                    'log_date' => $datum->log_date,
                 ];
-                $posTransactionProduct = POSTerminalTransactionProduct::where('cart_bid', $data->cart_bid)
-                    ->where('log_date', $data->log_date)
-                    ->where('terminal_transaction_bid', $data->terminal_transaction_bid)
-                    ->where('product_bid', $data->product_bid)
-                    ->first();
 
-                if ($posTransactionProduct) {
+                $terminalTransaction = app()->make(TerminalTransactionRepository::class)
+                    ->where($primaryHeadData);
 
-                    $posTransactionProduct = tap($posTransactionProduct)->update($transactionData);
-                } else {
-                    $posTransactionProduct = POSTerminalTransactionProduct::create($transactionData);
+                if ($terminalTransaction->count() > 0 ?? false) {
+                    $this->deleteRelatedDiscounts($terminalTransaction);
+                    $terminalTransaction->forceDelete();
+                }
+
+                $secondaryHeadData = [
+                    'bid' => $datum->bid,
+                    'amount' => $datum->amount,
+                    'is_zread' => $datum->is_zread,
+                    'type' => $datum->type,
+                    'status' => $datum->status,
+                    'gross' => $datum->gross,
+                    'total_quantity' => $datum->total_quantity,
+                    'total_free_items_amount' => $datum->total_free_items_amount,
+                    'total_tax_amount' => $datum->total_tax_amount,
+                    'total_local_tax_amount' => $datum->total_local_tax_amount,
+                    'total_discount_amount' => $datum->total_discount_amount,
+                    'total_vat_deduct_amount' => $datum->total_vat_deduct_amount,
+                    'total_vat_exempt_amount' => $datum->total_vat_exempt_amount,
+                    'total_vatable_sales' => $datum->total_vatable_sales,
+                    'total_zero_rated_sales' => $datum->total_zero_rated_sales,
+                    'order_number' => $datum->order_number,
+                    'table_number' => $datum->table_number,
+                    'guest_count' => $datum->guest_count,
+                ];
+
+                $headData = array_merge($primaryHeadData, $secondaryHeadData);
+
+                $headData['created_by'] = $datum->created_by;
+                $headData['updated_by'] = $datum->updated_by;
+                $headData['created_at'] = $datum->created_at;
+                $headData['updated_at'] = $datum->updated_at;
+                $headData['deleted_at'] = $datum->deleted_at;
+
+                $terminalTransaction = CDISTerminalTransaction::create($headData);
+
+                foreach ($datum->official_receipt as $officialReceipt) {
+                    $officialReceipt = (object) $officialReceipt;
+
+                    $terminalTransactionDetail = $terminalTransaction->details()->create([
+                        'transaction_head_bid' => $officialReceipt->transaction_head_bid,
+                        'or_number' => $officialReceipt->number,
+                        'split_number' => $officialReceipt->split_number,
+                        'total' => $officialReceipt->total,
+                        'discount_amount' => $officialReceipt->discount_amount,
+                        'free_items_amount' => $officialReceipt->free_items_amount,
+                        'vat_deduct_amount' => $officialReceipt->vat_deduct_amount,
+                        'vat_exempt_amount' => $officialReceipt->vat_exempt_amount,
+                        'original_amount' => $officialReceipt->original_amount,
+                        'quantity' => $officialReceipt->quantity,
+                        'local_tax_amount' => $officialReceipt->local_tax_amount,
+                        'tax_amount' => $officialReceipt->tax_amount,
+                        'service_charge' => $officialReceipt->service_charge,
+                        'vatable_sales' => $officialReceipt->vatable_sales,
+                        'zero_rated_sales' => $officialReceipt->zero_rated_sales,
+                        'eligible_amount_to_earn_points' => $officialReceipt->eligible_amount_to_earn_points,
+                        'total_tender' => $officialReceipt->total_tender,
+                        'customer_type' => $officialReceipt->customer_type,
+                        'customer_bid' => $officialReceipt->customer_bid,
+                        'customer_name' => $officialReceipt->customer_name,
+                        'customer_address' => $officialReceipt->customer_address,
+                        'cashier_bid' => $officialReceipt->cashier_bid,
+                        'cashier_name' => $officialReceipt->cashier_name,
+                        'created_at' => $officialReceipt->created_at,
+                        'updated_at' => $officialReceipt->updated_at,
+                        'deleted_at' => $officialReceipt->deleted_at,
+                    ]);
+
+                    if (isset($officialReceipt->discount)) {
+                        foreach ($officialReceipt->discount as $discount) {
+                            $discount = (object) $discount;
+
+                            $terminalTransactionDetail->discounts()->create([
+                                'bid' => $discount->bid,
+                                'transaction_product_bid' => $discount->transaction_product_bid,
+                                'discount_bid' => $discount->discount_bid,
+                                'title' => $discount->title,
+                                'total' => $discount->total,
+                                'amount_discount' => $discount->amount_discount,
+                                'vat_deduct' => $discount->vat_deduct,
+                                'mandated' => $discount->mandated,
+                                'created_at' => $officialReceipt->created_at,
+                                'updated_at' => $officialReceipt->updated_at,
+                                'deleted_at' => $officialReceipt->deleted_at,
+                            ]);
+                        }
+                    }
+
+                    if (isset($officialReceipt->payment_method)) {
+                        foreach ($officialReceipt->payment_method as $paymentMethod) {
+                            $paymentMethod = (object) $paymentMethod;
+
+                            $terminalTransactionDetail->paymentMethods()->create([
+                                'bid' => $paymentMethod->bid,
+                                'transaction_detail_bid' => $paymentMethod->transaction_detail_bid,
+                                'title' => $paymentMethod->title,
+                                'total' => $paymentMethod->total,
+                                'account_number' => $paymentMethod->account_number,
+                                'created_at' => $officialReceipt->created_at,
+                                'updated_at' => $officialReceipt->updated_at,
+                                'deleted_at' => $officialReceipt->deleted_at,
+                            ]);
+                        }
+                    }
+
+                    foreach ($officialReceipt->product as $key => $product) {
+                        $product = (object) $product;
+
+                        $terminalTransactionDetailProduct = $terminalTransactionDetail->products()->create([
+                           // 'bid' => $product->bid,
+                            'transaction_detail_bid' => $product->transaction_detail_bid,
+                            'product_bid' => $product->id,
+                            'name' => $product->name,
+                            'description' => $product->description,
+                            'long_description' => $product->long_description,
+                            'menu_code' => $product->menu_code,
+                            'category_bid' => $product->category_bid,
+                            'category_name' => $product->category_name,
+                            'quantity' => $product->quantity,
+                            'tax_percentage' => $product->tax_percentage,
+                            'order_type_id' => $product->order_type_id,
+                            'order_type_name' => $product->order_type_name,
+                            'is_free' => $product->is_free,
+                            'is_vatable' => $product->is_vatable,
+                            'original_price' => $product->original_price,
+                            'price' => $product->price,
+                            'total_addon' => $product->total_addon,
+                            'total_amount' => $product->total_amount,
+                            'entire_discount' => $product->entire_discount,
+                            'amount_discount' => $product->amount_discount,
+                            'vatable_sales' => $product->vatable_sales,
+                            'zero_rated_sales' => $product->zero_rated_sales,
+                            'tax' => $product->tax,
+                            'vat_deduct' => $product->vat_deduct,
+                            'vat_exempt' => $product->vat_exempt,
+                            'split_number' => $product->split_number,
+                            'supervisor_bid' => $product->supervisor_bid,
+                            'supervisor_name' => $product->supervisor_name,
+                            'created_at' => $officialReceipt->created_at,
+                            'updated_at' => $officialReceipt->updated_at,
+                            'deleted_at' => $officialReceipt->deleted_at,
+                        ]);
+
+                        $productDetail = [
+                            'bid' => $product->bid,
+                            'menu_code' => $product->menu_code,
+                            'description' => $product->description,
+                            'long_description' => $product->long_description
+                        ];
+
+                        if (isset($product->price_override_details)) {
+                            $terminalTransactionDetail->priceOverride()->create([
+                                'transaction_detail_bid' => $product->price_override_details['transaction_detail_bid'],
+                                'transaction_product_bid' => $product->price_override_details['transaction_product_bid'],
+                                'product_bid' => $product->price_override_details['product_bid'],
+                                'product_name' => $product->price_override_details['product_name'],
+                                'product_description' => $product->price_override_details['product_description'],
+                                'product_code' => $product->price_override_details['product_code'],
+                                'old_price' => $product->price_override_details['old_price'],
+                                'new_price' => $product->price_override_details['new_price'],
+                                'quantity' => $product->price_override_details['quantity'],
+                                'approved_by' => $product->price_override_details['approved_by'],
+                                'approved_date' => $product->price_override_details['approved_date'],
+                            ]);
+                        }
+
+                        foreach ($product->addon as $addon) {
+                            $addon = (object) $addon;
+
+                            $terminalTransactionAddon = $terminalTransactionDetailProduct->addons()->create([
+                                'bid' => $addon->bid,
+                                'transaction_detail_bid' => $addon->transaction_detail_bid,
+                                'product_bid' => $addon->product_bid,
+                                'name' => $addon->name,
+                                'description' => $addon->description,
+                                'long_description' => $addon->long_description,
+                                'menu_code' => $addon->menu_code,
+                                'category_bid' => $addon->category_bid,
+                                'category_name' => $addon->category_name,
+                                'quantity' => $addon->quantity,
+                                'tax_percentage' => $addon->tax_percentage,
+                                'order_type_id' => $addon->order_type_id,
+                                'order_type_name' => $addon->order_type_name,
+                                'is_free' => $addon->is_free,
+                                'is_vatable' => $addon->is_vatable,
+                                'original_price' => $addon->original_price,
+                                'price' => $addon->price,
+                                'total_amount' => $addon->total_amount,
+                                'vatable_sales' => $addon->vatable_sales,
+                                'zero_rated_sales' => $addon->zero_rated_sales,
+                                'amount_discount' => $addon->amount_discount,
+                                'tax' => $addon->tax,
+                                'vat_deduct' => $addon->vat_deduct,
+                                'vat_exempt' => $addon->vat_exempt,
+                                'split_number' => $addon->split_number,
+                                'remarks' => $addon->remarks,
+                                'usage_type' => $addon->usage_type,
+                                'supervisor_bid' => $addon->supervisor_bid,
+                                'supervisor_name' => $addon->supervisor_name,
+                                'created_at' => $officialReceipt->created_at,
+                                'updated_at' => $officialReceipt->updated_at,
+                                'deleted_at' => $officialReceipt->deleted_at,
+                            ]);
+
+                            $productDetail = [
+                                'bid' => $product->bid,
+                                'menu_code' => $addon->menu_code,
+                                'description' => $addon->description,
+                                'long_description' => $addon->long_description
+                            ];
+
+                            $this->disableForeignKeyChecks();
+
+                            if (isset($addon->discount)) {
+                                foreach ($addon->discount as $discount) {
+                                    $discount = (object) $discount;
+
+                                    $terminalTransactionDiscount = $terminalTransactionDetailProduct->discounts()->create([
+                                        'bid' => $addon->bid,
+                                        'transaction_product_bid' => $terminalTransactionAddon->bid,
+                                        'discount_bid' => $discount->discount_bid,
+                                        'title' => $discount->title,
+                                        'total' => $discount->total,
+                                        'amount_discount' => $discount->amount_discount,
+                                        'vat_deduct' => $discount->vat_deduct,
+                                        'vat_exempt' => $discount->vat_exempt,
+                                        'mandated' => $discount->mandated,
+                                        'usage_type' => $discount->usage_type,
+                                        'created_at' => $officialReceipt->created_at,
+                                        'updated_at' => $officialReceipt->updated_at,
+                                        'deleted_at' => $officialReceipt->deleted_at,
+                                    ]);
+
+                                    if ($terminalTransactionDiscount) {
+                                        $terminalTransactionDiscount->transaction_product_bid = $terminalTransactionAddon->bid;
+                                        $terminalTransactionDiscount->save();
+                                    }
+                                }
+                            }
+                            $this->enableForeignKeyChecks();
+                        }
+
+                        $this->disableForeignKeyChecks();
+
+                        foreach ($product->discount as $discount) {
+                            $discount = (object) $discount;
+
+                            $terminalTransactionDetailProduct->discounts()->create([
+                                'bid' => $discount->bid,
+                                'transaction_product_bid' => $discount->transaction_product_bid,
+                                'discount_bid' => $discount->discount_bid,
+                                'title' => $discount->title,
+                                'total' => $discount->total,
+                                'amount_discount' => $discount->amount_discount,
+                                'vat_deduct' => $discount->vat_deduct,
+                                'vat_exempt' => $discount->vat_exempt,
+                                'mandated' => $discount->mandated,
+                                'usage_type' => $discount->usage_type,
+                                'created_at' => $officialReceipt->created_at,
+                                'updated_at' => $officialReceipt->updated_at,
+                                'deleted_at' => $officialReceipt->deleted_at,
+                            ]);
+                        }
+                      
+                        $kitchenItemSetup = app()->make(KitchenItemSetupRepository::class)->details((object)[
+                            'transaction_product_bid' =>  $terminalTransactionDetailProduct->product_bid,
+                        ]);
+
+                        \Illuminate\Support\Facades\Log::alert(json_encode($kitchenItemSetup));
+
+                        if ($kitchenItemSetup && isset($kitchenItemSetup[0])) {
+                            $this->buildKitchenDisplay($terminalTransactionDetail->bid, [
+                                'transaction_product_bid' => $terminalTransactionDetailProduct->bid,
+                                'remaining_quantity' => $terminalTransactionDetailProduct->quantity,
+                                'kitchen_station_bid' => $kitchenItemSetup[0]['kitchen_station_process_bid'],
+                            ]);
+                        }
+                        
+                        $this->enableForeignKeyChecks();
+                    }
                 }
             }
-            return $posTransactionProduct;
+
+        //    return true;
         //});
-    }
-
-    public function storePayment($payments)
-    {
-        //return $this->transaction(function () use ($payments) {
-            foreach ($payments as $data) {
-                $data = (object) $data;
-                $paymentData = [
-                    'terminal_transaction_bid' => $data->terminal_transaction_bid,
-                    'payment_method_bid' => $data->payment_method_bid,
-                    'title' => $data->title,
-                    'amount' => $data->amount,
-                    'status' => $data->status,
-                    'created_at' => $data->created_at,
-                    'log_date' => $data->log_date,
-                    'account_number' => $data->account_number,
-                    'remarks' => $data->remarks,
-                ];
-                $posPayment = POSPayment::where('payment_method_bid', $data->payment_method_bid)
-                    ->where('log_date', $data->log_date)
-                    ->where('terminal_transaction_bid', $data->terminal_transaction_bid)
-                    ->first();
-
-                if ($posPayment) {
-                    $posPayment = tap($posPayment)->update($paymentData);
-                } else {
-                    $posPayment = POSPayment::create($paymentData);
-                }
-            }
-            return $posPayment;
-       // });
-    }
-
-    public function updateStatus($data)
-    {
-        return $this->transaction(function () use ($data) {
-            $data = (object) stringToJson($data);
-            $posTransaction = POSTerminalTransaction::where('terminal_bid', '=', $data->terminal_bid)
-                ->where('log_date', $data->log_date)
-                ->where('transaction_id', $data->transaction_id)
-                ->where('or_number', $data->or_number)
-                ->where('order_number', $data->order_number)
-                ->where('order_status', Status::INACTIVE)
-                ->first();
-
-            if ($posTransaction) {
-                $posTransaction = tap($posTransaction)->update([
-                    'order_status' => Status::ACTIVE,
-                ]);
-            }
-            return $posTransaction;
-        });
     }
 }

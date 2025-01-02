@@ -10,13 +10,9 @@ use App\Repositories\Contracts\ItemAvailabilityRepository;
 use App\Services\ItemAvailabilityService;
 use App\Transformers\ItemAvailabilityTransformer;
 use App\Transformers\CDISProductCategoryChosenTransformer;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Enums\DeviceType;
-use App\Enums\KDS\EventMessageType;
 use App\Events\MessageEvent;
-use App\Events\TransactionEvent;
 use Illuminate\Support\Facades\Lang;
 
 class ItemAvailabilityController extends Controller

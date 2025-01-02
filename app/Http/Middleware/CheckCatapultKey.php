@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware\CDIS\API;
 
-use App\Enums\POS\APIDefinedScopes;
+use App\Enums\API\APIDefinedScopes;
 use App\Traits\APIRequestTrait;
 use App\Traits\TokenResponsesJson;
 use Closure;

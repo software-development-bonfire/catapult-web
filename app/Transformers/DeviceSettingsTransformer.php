@@ -3,8 +3,6 @@
 namespace App\Transformers;
 
 use App\Entities\DeviceSettings;
-use App\Enums\DeviceType;
-use App\Enums\Status;
 use League\Fractal\TransformerAbstract;
 
 class DeviceSettingsTransformer extends TransformerAbstract

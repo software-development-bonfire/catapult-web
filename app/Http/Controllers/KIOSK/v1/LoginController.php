@@ -1,21 +1,18 @@
 <?php
 
-namespace App\Http\Controllers\POS\v1;
+namespace App\Http\Controllers\KIOSK\v1;
 
 use App\Enums\API\APIDefinedScopes;
 use App\Enums\Status;
 use App\Enums\UserType;
-use App\Events\PresenceMessageSent;
-use App\Events\PrivateMessageSent;
-use App\Http\Controllers\DeviceSettingsController;
-use App\Http\Controllers\POS\POSBaseController;
+use App\Http\Controllers\KIOSK\KioskBaseController;
 use App\Repositories\Contracts\DeviceSettingsRepository;
 use App\Repositories\Contracts\UserAccountRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Passport\Passport;
 
-class LoginController extends POSBaseController
+class LoginController extends KioskBaseController
 {
     private $appName;
     private $authType;
@@ -34,12 +31,8 @@ class LoginController extends POSBaseController
      */
     public function login(Request $request)
     {
-        $data = (object) stringToJson($request->all());
-        if (! empty($data->auth_type)) {
-            $this->authType = $data->auth_type;
-        }
-
         if ($this->authType == 'device') {
+            $data = (object) stringToJson($request->all());
             $devices = app()->make(DeviceSettingsRepository::class)->where([
                 'device_code' => $data->device_code,
                 'device_type' => $data->device_type,

@@ -25,6 +25,8 @@ class SyncEntryRepositoryEloquent extends BaseRepository implements SyncEntryRep
 
     public function list($filters = [])
     {
+        $filters = (object) $filters;
+
         $this->model = $this->model
             ->orderBy('name', 'ASC');
 

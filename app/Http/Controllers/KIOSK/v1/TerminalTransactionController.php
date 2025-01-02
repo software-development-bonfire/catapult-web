@@ -1,29 +1,28 @@
 <?php
 
-namespace App\Http\Controllers\POS\v1;
+namespace App\Http\Controllers\KIOSK\v1;
 
 use App\Events\TransactionEvent;
-use App\Http\Controllers\POS\POSBaseController;
+use App\Http\Controllers\KIOSK\KioskBaseController;
 use App\Repositories\Contracts\POS\TerminalTransactionRepository;
-use App\Services\POS\TerminalTransactionService;
+use App\Services\KIOSK\KioskTerminalTransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
 
-class TerminalTransactionController extends POSBaseController
+class TerminalTransactionController extends KioskBaseController
 {
 
     public function store(Request $request)
     {
-        \Illuminate\Support\Facades\Log::alert(json_encode($request->all()));
-        if (! empty($request->transaction)) {
-            $result = app()->make(TerminalTransactionService::class)->store($request->transaction);         
+        $data = (object) stringToJson($request->all());
+        if (! empty($data->data)) {
+            $result = app()->make(KioskTerminalTransactionService::class)->store($data->device_code, $data->data);
         } else {
             return $this->errorResponse([], 'Missing request parameters');
         }
 
-        unset($request->access_token);
+        unset($data->access_token);
         // Send transaction to POS if there is payment in the OTS
-        /*
         if (isset($data->data['payments'])) {
             $payments = $data->data['payments'];
             if (isset($payments[0])) {
@@ -32,9 +31,9 @@ class TerminalTransactionController extends POSBaseController
                     broadcast(new TransactionEvent($data));
                 }
             }
-        }*/
+        }
         return $this->successfulResponse(
-            $request,
+            $data,
             Lang::get('success.successfully_created', ['value' => __('label.terminal_transaction')])
         );
     }
@@ -43,7 +42,7 @@ class TerminalTransactionController extends POSBaseController
     {
         $data = (object) stringToJson($request->all());
         if (! empty($data->data)) {
-            $result = app()->make(TerminalTransactionService::class)->updateStatus($data->data);
+            $result = app()->make(KioskTerminalTransactionService::class)->updateStatus($data->data);
         } else {
             return $this->errorResponse([], 'Missing request parameters');
         }

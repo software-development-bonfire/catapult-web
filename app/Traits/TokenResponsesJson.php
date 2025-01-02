@@ -78,7 +78,7 @@ trait TokenResponsesJson
     public function tokenGeneratedResponse($data = null, $message = 'Token Generated')
     {
         return $this->response(
-            false,
+            true,
             $data,
             $message,
             array(),
