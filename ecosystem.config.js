@@ -34,6 +34,10 @@ module.exports = {
         //     autorestart: true,
         // },
         {
+            name : "POS-TO-CDIS-FILES",
+            script: "./POSToCDISFiles.js",
+        },
+        {
             name : "CPLT-CDIS-EL",
             script: "artisan",
             args: ["cdis:event-listen"],
