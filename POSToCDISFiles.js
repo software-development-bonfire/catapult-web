@@ -16,6 +16,7 @@ const option = {
 ChildDirectory.forEach(item => {
     chokidar.watch(sourceParentDirectory + item, option)
         .on('add', path => copyFile(path, item))
+        .on('change', path => copyFile(path, item))
 });
 
 function copyFile(srcFilePath, folderName) {
