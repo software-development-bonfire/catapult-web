@@ -10,7 +10,7 @@ const sourceParentDirectory = process.env.POS_FILES_LOCAL_PATH;
 const ChildDirectory = process.env.POS_DIRECTORIES.split(",");
 
 const option = {
-    ignoreInitial: true,
+    ignoreInitial: process.env.POS_TO_CDIS_IGNORE_INITIALS,
 }
     
 ChildDirectory.forEach(item => {
@@ -23,7 +23,11 @@ function copyFile(srcFilePath, folderName) {
     
     let srcPath = srcFilePath.replace(/\\/g, '/');
     let fileName = srcPath.replace(sourceParentDirectory+folderName, '');
-   
+    
+    if (folderName == 'RECEIPTS/') {
+        fileName = fileName.substring(fileName.indexOf("/") + 1)
+    }
+    
     fs.cp(srcPath, destinationParentDirectory + folderName + fileName, (err) => {
         if (err) {
             console.log(err);
