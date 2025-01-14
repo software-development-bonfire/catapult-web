@@ -8,10 +8,16 @@ const destinationParentDirectory = process.env.CDIS_FILES_LOCAL_PATH;
 const sourceParentDirectory = process.env.POS_FILES_LOCAL_PATH;
 
 const ChildDirectory = process.env.POS_DIRECTORIES.split(",");
-
+const daysDelay = 7;
 const option = {
-    ignoreInitial: process.env.POS_TO_CDIS_IGNORE_INITIALS,
+    ignoreInitial: false,
 }
+
+let fileNames = 'FetchedPOSFiles.json';
+let transfered = JSON.parse(fs.readFileSync(fileNames).toString());
+
+let givenDate = new Date();
+    givenDate = givenDate.setDate(givenDate.getDate() - daysDelay);
     
 ChildDirectory.forEach(item => {
     chokidar.watch(sourceParentDirectory + item, option)
@@ -23,14 +29,27 @@ function copyFile(srcFilePath, folderName) {
     
     let srcPath = srcFilePath.replace(/\\/g, '/');
     let fileName = srcPath.replace(sourceParentDirectory+folderName, '');
-    
     if (folderName == 'RECEIPTS/') {
         fileName = fileName.substring(fileName.indexOf("/") + 1)
     }
     
-    fs.cp(srcPath, destinationParentDirectory + folderName + fileName, (err) => {
-        if (err) {
-            console.log(err);
-        }
-    })
+    if (! transfered.file_name.includes(fileName)) {
+        fs.stat(srcPath, (error, stats) => {
+            if (error) {
+                console.log(error);
+                return;
+            }
+            if (stats.birthtime >= givenDate) {
+                
+                fs.cp(srcPath, destinationParentDirectory + folderName + fileName, (err) => {
+                    if (err) {
+                        console.log(err);
+                        return;
+                    }
+                    transfered.fileName.push(fileName)
+                    fs.writeFileSync(fileNames, JSON.stringify(transfered));
+                })
+            }
+        })
+    }
 }
