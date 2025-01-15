@@ -46,7 +46,7 @@ function copyFile(srcFilePath, folderName) {
                         console.log(err);
                         return;
                     }
-                    transfered.fileName.push(fileName)
+                    transfered.file_name.push(fileName)
                     fs.writeFileSync(fileNames, JSON.stringify(transfered));
                 })
             }
