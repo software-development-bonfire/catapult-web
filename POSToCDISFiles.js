@@ -10,7 +10,7 @@ const sourceParentDirectory = process.env.POS_FILES_LOCAL_PATH;
 const childDirectory = process.env.POS_DIRECTORIES.split(",");
 const daysDelay = 7;
 const option = {
-    ignoreInitial: false,
+    ignoreInitial: process.env.POS_TO_CDIS_IGNORE_INITIALS,
 }
 
 let fileNames = 'FetchedPOSFiles.json';
