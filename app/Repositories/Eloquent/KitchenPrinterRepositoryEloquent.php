@@ -49,8 +49,6 @@ class KitchenPrinterRepositoryEloquent extends BaseEloquent implements KitchenPr
      */
     public function getMenuPrinters($filters)
     {
-        $filters = (object) $filters;
-        \Illuminate\Support\Facades\Log::alert(json_encode($filters));
         // Query for cdis_terminal_transaction_product
         $productQuery = DB::table('cdis_terminal_transaction_product')
             ->select([
@@ -128,8 +126,6 @@ class KitchenPrinterRepositoryEloquent extends BaseEloquent implements KitchenPr
 
     public function getMenuPrintersX($filters)
     {
-        $filters = (object) $filters;
-        \Illuminate\Support\Facades\Log::alert(json_encode($filters));
         // Query for cdis_terminal_transaction_product
         $productQuery = DB::table('cdis_terminal_transaction_product')
             ->select([

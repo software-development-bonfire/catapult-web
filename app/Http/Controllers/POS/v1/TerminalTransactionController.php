@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers\POS\v1;
 
-use App\Events\TransactionEvent;
-use App\Helpers\IP;
 use App\Http\Controllers\POS\POSBaseController;
 use App\Jobs\KDS\PrintToKitchenPrinter as KDSPrintToKitchenPrinter;
 use App\Repositories\Contracts\KitchenPrinterRepository;
@@ -35,8 +33,8 @@ class TerminalTransactionController extends POSBaseController
 
         $groupedPrinters = collect($kitchenTransactions)->groupBy('local_printer');
         foreach ($groupedPrinters->toArray() as $printerHost => $items) {
-            //$this->printKitchen($printerHost, $items, $transactions);
-            KDSPrintToKitchenPrinter::dispatch($printerHost, $items, $transactions);
+            $this->printKitchen($printerHost, $items, $transactions);
+            //KDSPrintToKitchenPrinter::dispatch($printerHost, $items, $transactions);
         }
 
         return $this->successfulResponse(
