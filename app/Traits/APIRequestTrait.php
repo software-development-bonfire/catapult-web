@@ -43,7 +43,6 @@ trait APIRequestTrait
         $appName = config('app.name');
 
         $tokenName = "{$appName}-{$request->getHost()}";
-        \Illuminate\Support\Facades\Log::alert(json_encode($scopes));
         return $user->createToken($tokenName, $scopes);
     }
 

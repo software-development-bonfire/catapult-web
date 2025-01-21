@@ -23,10 +23,11 @@ class TerminalTransactionService
 
     public function store($data)
     {
-        //$this->transaction(function () use ($data) {
+        $this->transaction(function () use ($data) {
+            $transactions = [];
             foreach ($data as $datum) {
                 $datum = (object) $datum;
-        
+
                 //$branchBid = CDISTerminal::find($datum->terminal_bid)->branch->bid;
 
                 $primaryHeadData = [
@@ -76,6 +77,10 @@ class TerminalTransactionService
 
                 $terminalTransaction = CDISTerminalTransaction::create($headData);
 
+                $transactions = collect($terminalTransaction);
+
+                $official_receipt = [];
+
                 foreach ($datum->official_receipt as $officialReceipt) {
                     $officialReceipt = (object) $officialReceipt;
 
@@ -107,6 +112,8 @@ class TerminalTransactionService
                         'updated_at' => $officialReceipt->updated_at,
                         'deleted_at' => $officialReceipt->deleted_at,
                     ]);
+
+                    $official_receipt = $terminalTransactionDetail;
 
                     if (isset($officialReceipt->discount)) {
                         foreach ($officialReceipt->discount as $discount) {
@@ -145,11 +152,14 @@ class TerminalTransactionService
                         }
                     }
 
+                    $products = [];
                     foreach ($officialReceipt->product as $key => $product) {
                         $product = (object) $product;
 
+                        $this->disableForeignKeyChecks();
+
                         $terminalTransactionDetailProduct = $terminalTransactionDetail->products()->create([
-                           // 'bid' => $product->bid,
+                            // 'bid' => $product->bid,
                             'transaction_detail_bid' => $product->transaction_detail_bid,
                             'product_bid' => $product->id,
                             'name' => $product->name,
@@ -183,6 +193,8 @@ class TerminalTransactionService
                             'deleted_at' => $officialReceipt->deleted_at,
                         ]);
 
+                        $products[] = $terminalTransactionDetailProduct;
+
                         $productDetail = [
                             'bid' => $product->bid,
                             'menu_code' => $product->menu_code,
@@ -206,6 +218,7 @@ class TerminalTransactionService
                             ]);
                         }
 
+                        $addons = [];
                         foreach ($product->addon as $addon) {
                             $addon = (object) $addon;
 
@@ -243,6 +256,8 @@ class TerminalTransactionService
                                 'updated_at' => $officialReceipt->updated_at,
                                 'deleted_at' => $officialReceipt->deleted_at,
                             ]);
+
+                            $products['addons'] = $terminalTransactionAddon;
 
                             $productDetail = [
                                 'bid' => $product->bid,
@@ -282,7 +297,6 @@ class TerminalTransactionService
                             $this->enableForeignKeyChecks();
                         }
 
-                        $this->disableForeignKeyChecks();
 
                         foreach ($product->discount as $discount) {
                             $discount = (object) $discount;
@@ -303,12 +317,10 @@ class TerminalTransactionService
                                 'deleted_at' => $officialReceipt->deleted_at,
                             ]);
                         }
-                      
+
                         $kitchenItemSetup = app()->make(KitchenItemSetupRepository::class)->details((object)[
                             'transaction_product_bid' =>  $terminalTransactionDetailProduct->product_bid,
                         ]);
-
-                        \Illuminate\Support\Facades\Log::alert(json_encode($kitchenItemSetup));
 
                         if ($kitchenItemSetup && isset($kitchenItemSetup[0])) {
                             $this->buildKitchenDisplay($terminalTransactionDetail->bid, [
@@ -317,13 +329,16 @@ class TerminalTransactionService
                                 'kitchen_station_bid' => $kitchenItemSetup[0]['kitchen_station_process_bid'],
                             ]);
                         }
-                        
+
                         $this->enableForeignKeyChecks();
                     }
+                    $official_receipt['products'] = $products;
                 }
+
+                $transactions['official_receipt'] = $official_receipt;
             }
 
-        //    return true;
-        //});
+            return $transactions;
+        });
     }
 }

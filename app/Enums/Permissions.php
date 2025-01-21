@@ -11,6 +11,7 @@ final class Permissions extends Enum
             'dashboard' => 110101,
             'logs' => 110201,
             'user_account' => 110301,
+            'kitchen_device_printer' => 110401,
         ],
         'general.administrator' => 100001,
     ];

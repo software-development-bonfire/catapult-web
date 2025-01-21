@@ -33,6 +33,14 @@
                 <span class="side-link-label">{{ $t('label.field_mapping') }}</span>
             </a>
             <a
+                v-if="this.$hasPermissionTo('view.kitchen-device-printer')"
+                href="/kitchen-device-printer"
+                class="list-group-item"
+                :class="page === 'kitchen-device-printer' ? 'active' : ''">
+                <i class="side-link-icon fa fa-podcast fa-lg"></i>
+                <span class="side-link-label">{{ $t('label.kitchen_device_printer') }}</span>
+            </a>
+            <a
                 v-if="this.$hasPermissionTo('view.sync_interval_setting')"
                 href="/sync-interval-setting"
                 class="list-group-item"

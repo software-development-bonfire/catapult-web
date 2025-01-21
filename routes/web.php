@@ -27,6 +27,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/field-mapping', 'FieldMappingController@view');
     Route::get('/field-mapping/detail', 'FieldMappingController@detail');
     Route::get('/logs', 'LogsController@view');
+    Route::get('/kitchen-device-printer', 'KitchenDevicePrinterController@view');
 
     // Item Availability
     Route::group(['prefix' => 'item-availability'], function () {
@@ -87,6 +88,7 @@ Route::group(['middleware' => 'auth'], function () {
         'api-setup' => 'ApiSetupController',
         'syncing' => 'SyncingSetupController',
         'user' => 'UserAccountController',
+        'kitchen-printer' => 'KitchenDevicePrinterController',
         'field-mapping-list' => 'FieldMappingController',
     ]);
 

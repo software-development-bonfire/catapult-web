@@ -3,38 +3,44 @@
 namespace App\Http\Controllers\POS\v1;
 
 use App\Events\TransactionEvent;
+use App\Helpers\IP;
 use App\Http\Controllers\POS\POSBaseController;
+use App\Jobs\KDS\PrintToKitchenPrinter as KDSPrintToKitchenPrinter;
+use App\Repositories\Contracts\KitchenPrinterRepository;
 use App\Repositories\Contracts\POS\TerminalTransactionRepository;
 use App\Services\POS\TerminalTransactionService;
+use App\Traits\KitchenDisplayTrait;
+use App\Traits\KitchenPrinterTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
 
 class TerminalTransactionController extends POSBaseController
 {
+    use KitchenDisplayTrait;
+    use KitchenPrinterTrait;
+
 
     public function store(Request $request)
     {
-        \Illuminate\Support\Facades\Log::alert(json_encode($request->all()));
+        $transactions = [];
         if (! empty($request->transaction)) {
-            $result = app()->make(TerminalTransactionService::class)->store($request->transaction);         
+            $transactions = app()->make(TerminalTransactionService::class)->store($request->transaction);
         } else {
             return $this->errorResponse([], 'Missing request parameters');
         }
 
         unset($request->access_token);
-        // Send transaction to POS if there is payment in the OTS
-        /*
-        if (isset($data->data['payments'])) {
-            $payments = $data->data['payments'];
-            if (isset($payments[0])) {
-                $payment = (object) stringToJson($payments[0]);
-                if ($payment->title !== 'CASH') {
-                    broadcast(new TransactionEvent($data));
-                }
-            }
-        }*/
+
+        $kitchenTransactions = app()->make(KitchenPrinterRepository::class)->getMenuPrinters(stringToJson($transactions));
+
+        $groupedPrinters = collect($kitchenTransactions)->groupBy('local_printer');
+        foreach ($groupedPrinters->toArray() as $printerHost => $items) {
+            //$this->printKitchen($printerHost, $items, $transactions);
+            KDSPrintToKitchenPrinter::dispatch($printerHost, $items, $transactions);
+        }
+
         return $this->successfulResponse(
-            $request,
+            $transactions,
             Lang::get('success.successfully_created', ['value' => __('label.terminal_transaction')])
         );
     }

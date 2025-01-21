@@ -19,6 +19,7 @@ class CDISKitchenDevicePrinter extends BaseModel
         'printer_host',
         'is_printer_dispatch_copy',
         'status',
+        'local_printer',
         'created_by',
         'updated_by',
     ];

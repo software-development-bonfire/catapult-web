@@ -10,6 +10,29 @@ if (! function_exists('moneyToFloat')) {
     }
 }
 
+
+if (! function_exists('floatToMoney')) {
+
+    function floatToMoney($value, $currencyDecimal = 2, $withThousandSeparator = true)
+    {
+        $thousandSeparator = $withThousandSeparator ? ',' : '';
+        return number_format(moneyToFloat($value), $currencyDecimal, '.', $thousandSeparator);
+    }
+}
+
+if (! function_exists('floatToNullMoney')) {
+
+    function floatToNullMoney($value, $currencyDecimal = 2, $defaultValue = '', $withThousandSeparator = true)
+    {
+        $thousandSeparator = $withThousandSeparator ? ',' : '';
+        $numericValue = moneyToFloat($value);
+        if ($numericValue <> 0) {
+            return number_format($numericValue, $currencyDecimal, '.', $thousandSeparator);
+        }
+        return $defaultValue;
+    }
+}
+
 if (! function_exists('toSafeValue')) {
 
     function toSafeValue($value, $defaultValue)

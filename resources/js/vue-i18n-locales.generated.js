@@ -2,7 +2,8 @@ export default {
     "en": {
         "auth": {
             "failed": "These credentials do not match our records.",
-            "throttle": "Too many login attempts. Please try again in {seconds} seconds."
+            "throttle": "Too many login attempts. Please try again in {seconds} seconds.",
+            "unknown_auth_type": "Unknown authentication type."
         },
         "enums": {
             "App\\Enums\\StorageType": {
@@ -45,9 +46,13 @@ export default {
             "file_storage_setup_failed_deleted": "File Storage Setup failed to deleted",
             "file_storage_setup_failed_update": "File Storage Setup failed to update",
             "generate_csv_failed_create": "Generate csv failed to create.",
+            "invalid_app_id": "app_id is invalid or does not exist",
             "invalid_license": "Invalid License",
             "invalid_token": "Invalid Token",
             "malformed_token": "Malformed Token",
+            "missing_api_request": "Mising API request.",
+            "missing_api_request_such": "Mising API request such; {value}.",
+            "missing_app_key_or_invalid": "app_key is missing or invalid",
             "no_api_setup_detected": "No api setup detected. Please contact administrator.",
             "no_column_found": "No column found, Please add configuration in Field Mapping.",
             "no_endpoint_configured": "No endpoint configured. Please contact administrator.",
@@ -180,6 +185,7 @@ export default {
             "checking_interval": "Checking Interval",
             "client_id": "Client ID",
             "close": "Close",
+            "code": "Code",
             "configurations": "Configurations",
             "connection_setup": "Connection Setup",
             "converted": "Converted",
@@ -207,6 +213,7 @@ export default {
             "description": "Description",
             "device": "Device",
             "device_name": "Device Name",
+            "device_printer": "Device Printer",
             "device_settings": "Device Settings",
             "device_type": "Device Type",
             "discounts": "Discounts",
@@ -273,6 +280,7 @@ export default {
             "load": "Load",
             "local_network": "Local network",
             "local_path": "Local path",
+            "local_printer_configuration": "Local Printer Configuration",
             "log_type": "Log Type",
             "login": "Login",
             "logout": "Logout",
@@ -306,6 +314,7 @@ export default {
             "price_override": "Price Override",
             "primary_key": "Primary Key",
             "primary_table": "Primary Table",
+            "printer_host": "Printer Host",
             "product": "Product",
             "product_branch_availability": "Product Branch Availability",
             "product_branch_price": "Product Branch Price",
@@ -374,6 +383,7 @@ export default {
             "terminal_file_setup": "Terminal File Setup",
             "terminal_path": "Terminal Path",
             "terminal_receipt_name": "Terminal Receipt Name",
+            "terminal_transaction": "Terminal Transaction",
             "timestamp": "Timestamp",
             "to_convert": "To convert",
             "to_fetch": "To fetch",

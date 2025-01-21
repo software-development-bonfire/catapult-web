@@ -133,5 +133,6 @@ PUSHER_APP_PORT=6100
 ```
 💡NOTE : To enable the websockets features and its capability, you must consider instruction below;
 - Configure firewall rules to allow inbound and outbound connection for port **6100**. Or just run ```allow-ports.bat``` to automatically execute the script allowing the port 6100.
-- Run the command ```php artisan websocket:serve --port=6100``` to start websocket server with port *6100*.
+- Run the command ```php artisan websocket:serve --port=6001``` to start websocket server with port *6001*.
+     💡**NOTE** (If ```pm2``` already started, there's no need to run this command. This command is included on running the ```pm2```, unlesss it is commented/excluded in the `ecosystem.config.js`)
 - 
