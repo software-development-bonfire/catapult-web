@@ -31,6 +31,7 @@ class StickerPrinter
 
     //Action related command
     const TEXT = "TEXT";
+    const BARCODE = "BARCODE";
     const BEEP = "BEEP";
     const SOUND = "SOUND";
     const BITMAP = "BITMAP";
@@ -247,7 +248,7 @@ class StickerPrinter
         $str .= self::SEPARATOR;
         $str .= $y;
         $str .= self::SEPARATOR;
-        $str .= '"' . $font . '"'; // Wrap $font in double quotes
+        $str .= '"' . $font . '"';
         $str .= self::SEPARATOR;
         $str .= $rotation;
         $str .= self::SEPARATOR;
@@ -259,7 +260,33 @@ class StickerPrinter
             //$str .= $alignment;
         }
         $str .= self::SEPARATOR;
-        $str .= '"' . addslashes($text) . '"'; // Wrap $font in double quotes
+        $str .= '"' . addslashes($text) . '"';
+        return $str;
+    }
+
+    public function getBarcodeCommand($x, $y, $type, $height, $humanReadable, $rotation, $narrow, $wide, $alignment, $text)
+    {
+        $str = self::BARCODE;
+        $str .= self::SPACE;
+        $str .= $x;
+        $str .= self::SEPARATOR;
+        $str .= $y;
+        $str .= self::SEPARATOR;
+        $str .= '"' . $type . '"';
+        $str .= self::SEPARATOR;
+        $str .= $height;
+        $str .= self::SEPARATOR;
+        $str .= $humanReadable;
+        $str .= self::SEPARATOR;
+        $str .= $rotation;
+        $str .= self::SEPARATOR;
+        $str .= $narrow;
+        $str .= self::SEPARATOR;
+        $str .= $wide;
+        $str .= self::SEPARATOR;
+        $str .= $alignment;
+        $str .= self::SEPARATOR;
+        $str .= '"' . addslashes($text) . '"';
         return $str;
     }
 
@@ -272,6 +299,16 @@ class StickerPrinter
             $str .= self::SEPARATOR;
             $str .= $copy;
         }
+        return $str;
+    }
+
+    public function getBeepCommand($level, $interval)
+    {
+        $str = self::SOUND;
+        $str .= self::SPACE;
+        $str .= $level;
+        $str .= self::SEPARATOR;
+        $str .= $interval;
         return $str;
     }
 
@@ -310,9 +347,21 @@ class StickerPrinter
         return $commands;
     }
 
-    public function beep()
+    public function getPrintBarcodeCommands($x, $y, $type, $height, $humanReadable, $rotation, $narrow, $wide, $alignment, $text)
     {
-        $this->sendCommands([self::BEEP]);
+        $commands = [];
+        array_push($commands, $this->getBarcodeCommand($x, $y, $type, $height, $humanReadable, $rotation, $narrow, $wide, $alignment, $text));
+        array_push($commands, $this->getPrintCommand(1, 1));
+        array_push($commands, self::EOP);
+
+        return $commands;
+    }
+
+    public function beep($level = 5, $interval = 100)
+    {
+        //$this->sendCommands([self::BEEP]);
+        $commands = $this->getBeepCommand($level, $interval);
+        $this->sendCommands([$commands]);
     }
 
     public function bitImageRasterFormat(TsplImage $image, $x = 0, $y = 0, $mode = 0)
@@ -324,6 +373,12 @@ class StickerPrinter
     public function text($text, $x = 0, $y = 0, $font = 0, $rotation = 0, $xMultiplication = 0, $yMultiplication = 0, $alignment = null)
     {
         $commands = $this->getPrintTextCommands($x, $y, $font, $rotation, $xMultiplication, $yMultiplication, $alignment, $text);
+        $this->sendCommands($commands);
+    }
+
+    public function barcode($text, $x, $y, $type = '128', $height = 50, $humanReadable = 1, $rotation = 0, $narrow = 2, $wide = 2, $alignment = 2)
+    {
+        $commands = $this->getPrintBarcodeCommands($x, $y, $type, $height, $humanReadable, $rotation, $narrow, $wide, $alignment, $text);
         $this->sendCommands($commands);
     }
 
