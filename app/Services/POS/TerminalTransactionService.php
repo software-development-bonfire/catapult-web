@@ -23,7 +23,7 @@ class TerminalTransactionService
 
     public function store($data)
     {
-        $this->transaction(function () use ($data) {
+        //$this->transaction(function () use ($data) {
             $transactions = [];
             foreach ($data as $datum) {
                 $datum = (object) $datum;
@@ -77,7 +77,7 @@ class TerminalTransactionService
 
                 $terminalTransaction = CDISTerminalTransaction::create($headData);
 
-                $transactions = collect($terminalTransaction);
+                $transactions = $terminalTransaction;
 
                 $official_receipt = [];
 
@@ -153,13 +153,13 @@ class TerminalTransactionService
                     }
 
                     $products = [];
+                    $flattenProducts = [];
                     foreach ($officialReceipt->product as $key => $product) {
                         $product = (object) $product;
 
                         $this->disableForeignKeyChecks();
 
                         $terminalTransactionDetailProduct = $terminalTransactionDetail->products()->create([
-                            // 'bid' => $product->bid,
                             'transaction_detail_bid' => $product->transaction_detail_bid,
                             'product_bid' => $product->id,
                             'name' => $product->name,
@@ -192,15 +192,15 @@ class TerminalTransactionService
                             'updated_at' => $officialReceipt->updated_at,
                             'deleted_at' => $officialReceipt->deleted_at,
                         ]);
-
-                        $products[] = $terminalTransactionDetailProduct;
-
                         $productDetail = [
                             'bid' => $product->bid,
+                            'product_bid' => $product->product_bid,
                             'menu_code' => $product->menu_code,
                             'description' => $product->description,
-                            'long_description' => $product->long_description
+                            'long_description' => $product->long_description,
+                            'is_addon' => false,
                         ];
+                        $flattenProducts[] = $productDetail;
 
                         if (isset($product->price_override_details)) {
                             $terminalTransactionDetail->priceOverride()->create([
@@ -257,14 +257,17 @@ class TerminalTransactionService
                                 'deleted_at' => $officialReceipt->deleted_at,
                             ]);
 
-                            $products['addons'] = $terminalTransactionAddon;
+                            $addons[] = $terminalTransactionAddon;
 
                             $productDetail = [
-                                'bid' => $product->bid,
+                                'bid' => $addon->bid,
+                                'product_bid' => $addon->product_bid,
                                 'menu_code' => $addon->menu_code,
                                 'description' => $addon->description,
-                                'long_description' => $addon->long_description
+                                'long_description' => $addon->long_description,
+                                'is_addon' => true,
                             ];
+                            $flattenProducts[] = $productDetail;
 
                             $this->disableForeignKeyChecks();
 
@@ -296,6 +299,10 @@ class TerminalTransactionService
                             }
                             $this->enableForeignKeyChecks();
                         }
+                        $terminalTransactionDetailProduct->addons = $addons;
+
+                        
+                        $products[] = $terminalTransactionDetailProduct;
 
 
                         foreach ($product->discount as $discount) {
@@ -333,12 +340,13 @@ class TerminalTransactionService
                         $this->enableForeignKeyChecks();
                     }
                     $official_receipt['products'] = $products;
+                    $official_receipt['flatten_products'] = $flattenProducts;
                 }
 
                 $transactions['official_receipt'] = $official_receipt;
             }
 
             return $transactions;
-        });
+       // });
     }
 }

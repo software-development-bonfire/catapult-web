@@ -8,4 +8,5 @@ final class DeviceType extends Enum
 {
     const KITCHEN_DISPLAY = 1;
     const KITCHEN_PRINTER = 2;
+    const STICKER_PRINTER = 3;
 }

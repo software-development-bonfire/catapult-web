@@ -30,4 +30,8 @@ return [
         */
         'auth_type' => 'device'
     ],
+
+    'printers' => [
+        'sticker' => env('PRINTER_STICKER', NULL),
+    ],
 ];

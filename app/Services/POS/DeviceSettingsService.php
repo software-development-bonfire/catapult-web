@@ -33,10 +33,10 @@ class DeviceSettingsService
                     'device_type' => $data->device_type,
                     'device_code' => $data->device_code,
                     'terminal_code' => $data->terminal_code,
-                    'name' => $data->name,
+                    'name' => isset($data->name) ? $data->name : (isset($data->device_name) ? $data->device_name : ''),
                     'ip_address' => $data->ip_address,
                     'status' => $data->status,
-                    ]);
+                ]);
             }
             return $deviceSetting;
         });

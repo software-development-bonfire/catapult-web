@@ -309,7 +309,7 @@ abstract class TsplImage
      *  libraries. Items can be 'imagick', 'gd', 'native'.
      * @throws Exception
      *  Where no suitable library could be found for the type of file being loaded.
-     * @return EscposImage
+     * @return TsplImage
      *
      */
     public static function load(

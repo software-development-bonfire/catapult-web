@@ -60,7 +60,7 @@ class KitchenItemSetupRepositoryEloquent extends BaseEloquent implements Kitchen
         $this->model->groupBy([
             'cdis_kitchen_item_setup_detail.bid'
         ]);
-\Illuminate\Support\Facades\Log::alert($this->getSqlWithBindings($this->model));
+//\Illuminate\Support\Facades\Log::alert($this->getSqlWithBindings($this->model));
 
         return $this->model->get();
     }

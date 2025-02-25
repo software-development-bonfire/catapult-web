@@ -14,7 +14,7 @@ use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
 
 /* A wrapper to do organise item names & prices into columns */
 
-class item
+class MenuItem
 {
     private $quantity;
     private $name;
@@ -49,7 +49,7 @@ class item
  */
 trait KitchenPrinterTrait
 {
-    function printKitchen($printerName, $data, $transaction, $cut = true, $openCashdrawer = true)
+    function printKitchen($printerName, $productItems, $transaction, $cut = true, $openCashdrawer = true)
     {
         /* Information for the receipt */
         $date = parseDateTime(Carbon::now(), 'l jS \of F Y h:i:s A');
@@ -58,8 +58,8 @@ trait KitchenPrinterTrait
         $orderNumber = "Order #: " . $transaction['order_number'];
 
         $items = [];
-        foreach ($data as $item) {
-            $items[] = new Item(floatToMoney($item['quantity']), $item['name'], $item['is_addon']);
+        foreach ($productItems as $item) {
+            $items[] = new MenuItem(floatToMoney($item['quantity']), $item['name'], $item['is_addon']);
         }
 
         /* Start the printer */
@@ -73,7 +73,7 @@ trait KitchenPrinterTrait
         }
         $printer = new Printer($connector);
 
-        //$logo = EscposImage::load("public/storage/logo/hapimoo.png", false);
+       // $logo = EscposImage::load("public/storage/logo/hapimoo.png", false);
         /* Print top logo */
         $printer->setJustification(Printer::JUSTIFY_CENTER);
         //$printer->graphics($logo);

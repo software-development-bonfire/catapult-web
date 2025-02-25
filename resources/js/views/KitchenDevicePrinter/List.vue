@@ -2,6 +2,7 @@
     <div class="module-container">
         <div class="box-row box-row--white p-1" align="right">
             You only allowed to update printer name, you cannot add new kitchen
+            <button class="button button--primary module-action-button" @click="create">{{ $t('label.add_new') }}</button>
         </div>
         <datatable
             class="datatable--hoverable"
@@ -240,6 +241,11 @@ import Modal from '../../components/Modal/Modal.vue';
                     this.table.values.meta  = response.data.data.meta;
                     this.$root.processing(false);
                 })
+            },
+
+            create() {
+                this.clearFields();
+                this.modal.detail.visible = true;
             },
 
             clearFields() {
