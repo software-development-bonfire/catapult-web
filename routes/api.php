@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,7 +30,10 @@ Route::group([
         Route::post('order/menu/move-station', 'KitchenDisplayController@moveMenu');
         Route::delete('order/remove', 'KitchenDisplayController@removeOrder');
         Route::delete('menu/remove', 'KitchenDisplayController@removeMenu');
+
+        Route::post('broadcasting/auth', [\App\Http\Controllers\KDS\v1\PusherAuthenticateController::class, 'authChannel']);
     });
+
 });
 
 Route::group([
@@ -37,20 +42,20 @@ Route::group([
 ], function () {
     Route::post('login', [\App\Http\Controllers\KIOSK\v1\LoginController::class, 'login']);
     Route::post('logout', [\App\Http\Controllers\KIOSK\v1\LoginController::class, 'logout']);
-    Route::post('trigger-event',  [\App\Http\Controllers\KIOSK\v1\EventTriggerController::class, 'trigger']);
+    Route::post('trigger-event', [\App\Http\Controllers\KIOSK\v1\EventTriggerController::class, 'trigger']);
 
     Route::group(['middleware' => 'pos-token'], function () {
-        Route::post('item-availability/store',  [\App\Http\Controllers\KIOSK\v1\ItemAvailabilityController::class, 'store']);
-        Route::get('item-availability/list',  [\App\Http\Controllers\KIOSK\v1\ItemAvailabilityController::class, 'list']);
+        Route::post('item-availability/store', [\App\Http\Controllers\KIOSK\v1\ItemAvailabilityController::class, 'store']);
+        Route::get('item-availability/list', [\App\Http\Controllers\KIOSK\v1\ItemAvailabilityController::class, 'list']);
 
-        Route::post('transaction/store',  [\App\Http\Controllers\KIOSK\v1\TerminalTransactionController::class, 'store']);
-        Route::post('transaction/update',  [\App\Http\Controllers\KIOSK\v1\TerminalTransactionController::class, 'update']);
-        Route::post('transaction/search',  [\App\Http\Controllers\KIOSK\v1\TerminalTransactionController::class, 'search']);
-        Route::get('transaction/list',  [\App\Http\Controllers\KIOSK\v1\TerminalTransactionController::class, 'list']);
+        Route::post('transaction/store', [\App\Http\Controllers\KIOSK\v1\TerminalTransactionController::class, 'store']);
+        Route::post('transaction/update', [\App\Http\Controllers\KIOSK\v1\TerminalTransactionController::class, 'update']);
+        Route::post('transaction/search', [\App\Http\Controllers\KIOSK\v1\TerminalTransactionController::class, 'search']);
+        Route::get('transaction/list', [\App\Http\Controllers\KIOSK\v1\TerminalTransactionController::class, 'list']);
 
-        Route::post('device-settings/device-status',  [\App\Http\Controllers\KIOSK\v1\DeviceSettingsController::class, 'deviceStatus']);
-        Route::post('device-settings/print-status',  [\App\Http\Controllers\KIOSK\v1\DeviceSettingsController::class, 'devicePrintStatus']);
-        Route::get('device-settings/list',  [\App\Http\Controllers\KIOSK\v1\DeviceSettingsController::class, 'list']);
+        Route::post('device-settings/device-status', [\App\Http\Controllers\KIOSK\v1\DeviceSettingsController::class, 'deviceStatus']);
+        Route::post('device-settings/print-status', [\App\Http\Controllers\KIOSK\v1\DeviceSettingsController::class, 'devicePrintStatus']);
+        Route::get('device-settings/list', [\App\Http\Controllers\KIOSK\v1\DeviceSettingsController::class, 'list']);
     });
 });
 
@@ -62,16 +67,16 @@ Route::group([
     Route::post('logout', [\App\Http\Controllers\POS\v1\LoginController::class, 'logout']);
 
     Route::group(['middleware' => 'pos-token'], function () {
-        Route::post('item-availability/store',  [\App\Http\Controllers\POS\v1\ItemAvailabilityController::class, 'store']);
-        Route::get('item-availability/list',  [\App\Http\Controllers\POS\v1\ItemAvailabilityController::class, 'list']);
+        Route::post('item-availability/store', [\App\Http\Controllers\POS\v1\ItemAvailabilityController::class, 'store']);
+        Route::get('item-availability/list', [\App\Http\Controllers\POS\v1\ItemAvailabilityController::class, 'list']);
 
-        Route::post('transaction/store',  [\App\Http\Controllers\POS\v1\TerminalTransactionController::class, 'store']);
-        Route::post('transaction/update',  [\App\Http\Controllers\POS\v1\TerminalTransactionController::class, 'update']);
-        Route::post('transaction/search',  [\App\Http\Controllers\POS\v1\TerminalTransactionController::class, 'search']);
-        Route::get('transaction/list',  [\App\Http\Controllers\POS\v1\TerminalTransactionController::class, 'list']);
+        Route::post('transaction/store', [\App\Http\Controllers\POS\v1\TerminalTransactionController::class, 'store']);
+        Route::post('transaction/update', [\App\Http\Controllers\POS\v1\TerminalTransactionController::class, 'update']);
+        Route::post('transaction/search', [\App\Http\Controllers\POS\v1\TerminalTransactionController::class, 'search']);
+        Route::get('transaction/list', [\App\Http\Controllers\POS\v1\TerminalTransactionController::class, 'list']);
 
-        Route::post('device-settings/device-status',  [\App\Http\Controllers\POS\v1\DeviceSettingsController::class, 'deviceStatus']);
-        Route::post('device-settings/print-status',  [\App\Http\Controllers\POS\v1\DeviceSettingsController::class, 'devicePrintStatus']);
-        Route::get('device-settings/list',  [\App\Http\Controllers\POS\v1\DeviceSettingsController::class, 'list']);
+        Route::post('device-settings/device-status', [\App\Http\Controllers\POS\v1\DeviceSettingsController::class, 'deviceStatus']);
+        Route::post('device-settings/print-status', [\App\Http\Controllers\POS\v1\DeviceSettingsController::class, 'devicePrintStatus']);
+        Route::get('device-settings/list', [\App\Http\Controllers\POS\v1\DeviceSettingsController::class, 'list']);
     });
 });

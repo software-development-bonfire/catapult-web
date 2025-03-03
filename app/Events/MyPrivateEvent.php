@@ -2,19 +2,19 @@
 
 namespace App\Events;
 
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-/**
- * Triggered on device settings status
- */
-class DeviceStatusEvent implements ShouldBroadcast
+class MyPrivateEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $data = '';
+    public $data;
     /**
      * Create a new event instance.
      *
@@ -23,6 +23,7 @@ class DeviceStatusEvent implements ShouldBroadcast
     public function __construct($data)
     {
         $this->data = $data;
+        \Illuminate\Support\Facades\Log::alert("Constructed Event Data: " . json_encode($data));
     }
 
     /**
@@ -32,11 +33,14 @@ class DeviceStatusEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return ['device-channel'];
+        return new PrivateChannel('my-channel');
     }
-
     public function broadcastAs()
     {
-        return 'device-event';
+        return 'my-event';
+    }
+    public function broadcastWith()
+    {
+        return ['data' => $this->data];
     }
 }

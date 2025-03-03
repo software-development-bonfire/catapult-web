@@ -41,6 +41,9 @@
                         <span v-text="tableData.token"></span>
                     </td>
                     <td class="datatable-cell" align="center">
+                        <span v-text="tableDataIndex + 1"></span>
+                    </td>
+                    <td class="datatable-cell" align="center">
                         <span
                             class="status_label"
                             :class="tableData.status ? 'status_label--active' : 'status_label--inactive'"
@@ -122,6 +125,17 @@
                         :placeholder="$t('label.enter_value', { value: $t('label.token') })">
                 </form-field>
                 <form-field
+                    class="form-group"
+                    :error="errors.process_priority">
+                    <label>{{ $t('label.background_process_priority') }} <span class="required">*</span></label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        v-model="form.values.process_priority"
+                        @keypress="errors.process_priority = ''"
+                        :placeholder="$t('label.enter_value', { value: $t('label.background_process_priority') })">
+                </form-field>
+                <form-field
                     class="form-group">
                     <label>{{ $t('label.status') }}</label>
                     <select
@@ -152,11 +166,11 @@
 </template>
 
 <script>
+    import FormField from '../../../components/Containers/FormField.vue';
     import Datatable from '../../../components/Datatable2/Datatable.vue';
     import TableRow from '../../../components/Datatable2/TableRow.vue';
-    import Modal from '../../../components/Modal/Modal.vue';
     import DialogBox from '../../../components/Message/DialogBox.vue';
-    import FormField from '../../../components/Containers/FormField.vue';
+    import Modal from '../../../components/Modal/Modal.vue';
     import Util from '../../../mixins/Util.vue';
 
     export default {
@@ -190,6 +204,7 @@
                     ip_address: '',
                     api_endpoint: '',
                     token: '',
+                    process_priority: 1,
                 },
                 filters: {},
                 dialog: {
@@ -221,7 +236,8 @@
                         ip_address: '',
                         api_endpoint: '',
                         token: '',
-                        status: STATUS.ACTIVE
+                        status: STATUS.ACTIVE,
+                        process_priority: 1,
                     },
                 },
                 table: {
@@ -250,6 +266,11 @@
                             name: "token",
                             label: this.$t('label.token'),
                             width: '150'
+                        },
+                        {
+                            name: "priority",
+                            label: this.$t('label.background_process_priority'),
+                            width: '210'
                         },
                         {
                             name: "status",
@@ -323,7 +344,7 @@
                 })
                 .then(response => {
                    this.devices.values.data = response.data.data.data;
-                   this.devices.values.meta  = response.data.data.meta;
+                   this.devices.values.meta = response.data.data.meta;
 
                    return true;
                 })

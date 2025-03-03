@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\POS\v1;
 
+use App\Enums\CDIS\TerminalTransactionType;
 use App\Http\Controllers\POS\POSBaseController;
 use App\Jobs\KDS\PrintToKitchenPrinter as KDSPrintToKitchenPrinter;
 use App\Repositories\Contracts\KitchenPrinterRepository;
@@ -21,6 +22,7 @@ class TerminalTransactionController extends POSBaseController
 
     public function store(Request $request)
     {
+        \Illuminate\Support\Facades\Log::alert(json_encode($request->all()));
         $transactions = [];
         if (! empty($request->transaction)) {
             $transactions = app()->make(TerminalTransactionService::class)->store($request->transaction);
@@ -30,43 +32,44 @@ class TerminalTransactionController extends POSBaseController
 
         unset($request->access_token);
 
-        $transactionProducts = [];
-        $transactionStickersProducts = [];
-        if (isset($transactions['official_receipt']['products'])) {
-            foreach ($transactions['official_receipt']['products'] as $product) {
-                $transactionProducts[] = $product;
+        // Print only SALES transaction type on Sticker/Kitchen Printer
+        //if ((isset($transactions->type) && $transactions->type == TerminalTransactionType::SALES) && empty($transactions->is_reprint)) {
+            $transactionProducts = [];
+            $transactionStickersProducts = [];
+            if (isset($transactions['official_receipt']['products'])) {
+                foreach ($transactions['official_receipt']['products'] as $product) {
+                    $transactionProducts[] = $product;
 
-                // Validate product if enabled for printing sticker
-                $productPackaging = app()->make(KitchenPrinterRepository::class)->getProductIsPrintSticker($product['product_bid']);
-                if ($productPackaging && (isset($productPackaging->is_print_sticker) && $productPackaging->is_print_sticker == 1)) {
-                    $transactionStickersProducts[] = $product;
+                    // Validate product if enabled for printing sticker
+                    $productPackaging = app()->make(KitchenPrinterRepository::class)->getProductIsPrintSticker($product['product_bid']);
+                    if ($productPackaging && (isset($productPackaging->is_print_sticker) && $productPackaging->is_print_sticker == 1)) {
+                        $transactionStickersProducts[] = $product;
+                    }
                 }
             }
-        }
-        $flattenProducts = [];
-        if (isset($transactions['official_receipt']['flatten_products'])) {
-            foreach ($transactions['official_receipt']['flatten_products'] as $product) {
-                $flattenProducts[] = $product;
+            $flattenProducts = [];
+            if (isset($transactions['official_receipt']['flatten_products'])) {
+                foreach ($transactions['official_receipt']['flatten_products'] as $product) {
+                    $kitchenPrinter = app()->make(KitchenPrinterRepository::class)->getProductKitchenPrinter($product['product_bid']);
+
+                    $flattenProducts[] = collect($product)->merge($kitchenPrinter);
+                }
             }
-        }
+            // Get configured local printer of each products
+            $groupedPrinters = collect($flattenProducts)->groupBy('local_printer');
+            foreach ($groupedPrinters->toArray() as $printerHost => $items) {
+                // Reconstruct transaction product list to be printed on Kitchen Printer
 
-        // Get configured local printer of each products
-        $kitchenTransactions = app()->make(KitchenPrinterRepository::class)->getMenuPrinters($transactionProducts);
-        $groupedPrinters = collect($kitchenTransactions)->groupBy('local_printer');
-        foreach ($groupedPrinters->toArray() as $printerHost => $items) {
-            // Reconstruct transaction product list to be printed on Kitchen Printer
-            $products = collect($transactionProducts)->whereIn('product_bid', collect($items)->pluck('product_uom_packaging_bid'));
-
-            if (! empty($printerHost)) {
-                $this->printKitchen($printerHost, $products, $transactions); // Call print directly
-                //KDSPrintToKitchenPrinter::dispatch($printerHost, $products, $transactions); // Add kitchen printing on the queue
+                if (! empty($printerHost) && count($items) > 0) {
+                    $this->printKitchen($printerHost, $items, $transactions); // Call print directly
+                    //KDSPrintToKitchenPrinter::dispatch($printerHost, $products, $transactions); // Add kitchen printing on the queue
+                }
             }
-        }
-        // Call sticker printing when printable for stickers are present
-        if (count($transactionStickersProducts) > 0) {
-            $this->printSticker($printerHost, $transactionStickersProducts, $transactions);
-        }
-
+            // Call sticker printing when printable for stickers are present
+            if (count($transactionStickersProducts) > 0) {
+                $this->printSticker($printerHost, $transactionStickersProducts, $transactions);
+            }
+        //}
         return $this->successfulResponse(
             $transactions,
             Lang::get('success.successfully_created', ['value' => __('label.terminal_transaction')])

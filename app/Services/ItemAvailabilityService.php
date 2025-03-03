@@ -23,7 +23,7 @@ class ItemAvailabilityService
         return $this->transaction(function () use ($data) {
             foreach ($data as $header) {
                 $deviceSettings = DeviceSettings::where('device_type', $header['device_type'])
-                    ->where('name', $header['name'])
+                    //->where('name', $header['name'])
                     ->where('terminal_code', $header['terminal_code'])
                     ->where('device_code', $header['device_code'])
                     ->first();

@@ -24,3 +24,7 @@ Broadcast::channel('item-availability', function ($message) {
 Broadcast::channel('presence-channel-name', function ($user) {
     return ['id' => $user->id, 'name' => $user->name];
 });
+Broadcast::channel('private-my-channel', function ($user) {
+    \Illuminate\Support\Facades\Log::info("User authenticated for private channel", ['user' => $user]);
+    return true;
+});

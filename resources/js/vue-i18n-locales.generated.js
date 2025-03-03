@@ -159,6 +159,7 @@ export default {
             "audit_trail": "Audit Trail",
             "authenticate": "Authenticate",
             "back_to_list": "Back to List",
+            "background_process_priority": "Background Process Priority",
             "barcode": "Barcode",
             "batch_syncing": "Batch Syncing",
             "batch_syncing_example": "(Ex. 5mins interval = 60 limit, 10mins interval = 120 limit and so on.)",

@@ -41,11 +41,7 @@ trait StickerPrinterTrait
 
         /* Information for the receipt */
         $date = parseDateTime(Carbon::now(), 'l jS \of F Y h:i:s A');
-        $headerSeparator = str_repeat("-", 48);
         $orderNumber =  "#". $transaction['order_number'];
-
-        $request = '';
-        $items = [];
 
         $printer = new StickerPrinterss($connector);
 
@@ -94,20 +90,21 @@ trait StickerPrinterTrait
 
                 $y = $y + 30;
                 /* This section is for REQUEST */
-                $requestChunks = str_split($request, $requestSize);
-                // Print the chunks
-                foreach ($requestChunks as $chunk) {
-                    if (!empty(trim($chunk))) {
-                        $printer->text($chunk, 2, $y, 1, 0, 1);
-                        $y = $y + 20;
-                        if ($y >= $expectedY) { // If the request exceed
-                            // Print the 
-                            $printer->print();
-                            $y = 30; //reset the Y
+                if (! empty($item['name'])) {
+                    $requestChunks = str_split($item['special_request'], $requestSize);
+                    // Print the chunks
+                    foreach ($requestChunks as $chunk) {
+                        if (!empty(trim($chunk))) {
+                            $printer->text($chunk, 2, $y, 1, 0, 1);
+                            $y = $y + 20;
+                            if ($y >= $expectedY) { // If the request exceed
+                                // Print the 
+                                $printer->print();
+                                $y = 30; //reset the Y
+                            }
                         }
                     }
                 }
-
                
                 $y = $y + 30;
                 //$printer->qrcode('Bonfire', 210, $y - 40);

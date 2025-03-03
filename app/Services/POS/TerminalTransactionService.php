@@ -44,6 +44,11 @@ class TerminalTransactionService
                 if ($terminalTransaction->count() > 0 ?? false) {
                     $this->deleteRelatedDiscounts($terminalTransaction);
                     $terminalTransaction->forceDelete();
+
+                    // Added to add indentifier to if terminal is already resent
+                    // Perhaps it reprint or retried sending
+                    // Use to validate and restrict reprinting kitchen and sticker printing
+                    $transactions['is_reprint'] = true;
                 }
 
                 $secondaryHeadData = [
@@ -154,6 +159,7 @@ class TerminalTransactionService
 
                     $products = [];
                     $flattenProducts = [];
+                    $flattenIndex = 0;
                     foreach ($officialReceipt->product as $key => $product) {
                         $product = (object) $product;
 
@@ -193,11 +199,16 @@ class TerminalTransactionService
                             'deleted_at' => $officialReceipt->deleted_at,
                         ]);
                         $productDetail = [
+                            'index' => $flattenIndex,
                             'bid' => $product->bid,
                             'product_bid' => $product->product_bid,
+                            'name' => $product->name,
                             'menu_code' => $product->menu_code,
                             'description' => $product->description,
                             'long_description' => $product->long_description,
+                            'quantity' => $product->quantity,
+                            'usage_type' => '',
+                            'special_request' => $product->special_request ?? '',
                             'is_addon' => false,
                         ];
                         $flattenProducts[] = $productDetail;
@@ -259,12 +270,18 @@ class TerminalTransactionService
 
                             $addons[] = $terminalTransactionAddon;
 
+                            $flattenIndex += 1;
                             $productDetail = [
+                                'index' => $flattenIndex,
                                 'bid' => $addon->bid,
                                 'product_bid' => $addon->product_bid,
+                                'name' => $addon->name,
                                 'menu_code' => $addon->menu_code,
                                 'description' => $addon->description,
                                 'long_description' => $addon->long_description,
+                                'quantity' => $addon->quantity,
+                                'usage_type' => $addon->usage_type,
+                                'special_request' => $addon->special_request,
                                 'is_addon' => true,
                             ];
                             $flattenProducts[] = $productDetail;
@@ -303,7 +320,7 @@ class TerminalTransactionService
 
                         
                         $products[] = $terminalTransactionDetailProduct;
-
+                        $flattenIndex += 1;
 
                         foreach ($product->discount as $discount) {
                             $discount = (object) $discount;

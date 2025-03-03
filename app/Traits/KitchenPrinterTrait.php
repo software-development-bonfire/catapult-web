@@ -2,7 +2,9 @@
 
 namespace App\Traits;
 
+use App\Enums\CDIS\TerminalTransactionType;
 use App\Enums\KDS\OrderType;
+use App\Enums\UsageType;
 use App\Helpers\IP;
 use Illuminate\Support\Carbon;
 use Mike42\Escpos\Printer;
@@ -19,12 +21,14 @@ class MenuItem
     private $quantity;
     private $name;
     private $isIndented;
+    private $prefix;
 
-    public function __construct($quantity = 1, $name = '', $isIndented = false)
+    public function __construct($quantity = 1, $name = '', $isIndented = false, $prefix = '')
     {
         $this->quantity = $quantity;
         $this->name = $name;
         $this->isIndented = $isIndented;
+        $this->prefix = $prefix;
     }
 
     public function __toString()
@@ -36,7 +40,7 @@ class MenuItem
         }
         $left = str_pad($this->quantity, $leftCols);
 
-        $indented = ($this->isIndented ? '    ' : '');
+        $indented = ($this->isIndented ? ('   '.$this->prefix) : '');
         //$right = str_pad($indented . $this->name, $rightCols, ' ', STR_PAD_RIGHT);
         $right = $indented . $this->name;
         return "$left$right\n";
@@ -59,7 +63,19 @@ trait KitchenPrinterTrait
 
         $items = [];
         foreach ($productItems as $item) {
-            $items[] = new MenuItem(floatToMoney($item['quantity']), $item['name'], $item['is_addon']);
+            $usageType = $item['usage_type'];
+            $specialRequest = $item['special_request'];
+            
+            $prefix = '';
+            if ($usageType == UsageType::ADDON) {
+                $prefix = '(A)';
+            } else if ($usageType == UsageType::BUNDLE) { // This enum stands for MODIFIER
+                $prefix = '(MOD)';
+            }
+            $items[] = new MenuItem(floatToMoney($item['quantity'] ?? 0), $item['name'], $item['is_addon'], $prefix);
+            if (! empty($specialRequest)) {
+                $items[] = new MenuItem('', "**{$specialRequest}**", $item['is_addon'], '');
+            }
         }
 
         /* Start the printer */
@@ -77,6 +93,9 @@ trait KitchenPrinterTrait
         /* Print top logo */
         $printer->setJustification(Printer::JUSTIFY_CENTER);
         //$printer->graphics($logo);
+        if ($transaction['transaction_type'] != TerminalTransactionType::SALES) {
+            $printer->text('PLEASE DO NOT PREPARE');
+        }
 
         $printer->feed();
 
