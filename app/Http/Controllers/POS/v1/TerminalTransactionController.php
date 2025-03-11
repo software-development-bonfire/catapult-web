@@ -62,6 +62,7 @@ class TerminalTransactionController extends POSBaseController
 
                 if (! empty($printerHost) && count($items) > 0) {
                     $this->printKitchen($printerHost, $items, $transactions); // Call print directly
+                    // Uncomment below code if you want to QUEUE kitchen printing, instead of calling $this->printKitchen
                     //KDSPrintToKitchenPrinter::dispatch($printerHost, $products, $transactions); // Add kitchen printing on the queue
                 }
             }

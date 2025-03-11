@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\DB;
 
 class AddNecessaryColumnsInDeviceSettingsTable extends Migration
 {
@@ -26,12 +27,11 @@ class AddNecessaryColumnsInDeviceSettingsTable extends Migration
                     $table->tinyInteger('socket_status')->after('status')->default(0);
                 }
                 if (! Schema::hasColumn($this->table, 'last_connected_at')) {
-                    $table->timestamp('last_connected_at')->after('socket_status')->nullable();
+                    $table->timestamp('last_connected_at')->after('socket_status')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))->nullable();
                 }
                 if (! Schema::hasColumn($this->table, 'print_invoice')) {
                     $table->tinyInteger('print_invoice')->after('last_connected_at')->default(0);
                 }
-                
             });
         }
     }

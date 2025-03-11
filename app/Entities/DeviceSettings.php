@@ -26,6 +26,7 @@ class DeviceSettings extends Base
     protected $fillable = [
         'bid',
         'terminal_code',
+        'device_uid',
         'device_code',
         'device_type',
         'name',

@@ -10,24 +10,21 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class PresenceMessageSent implements ShouldBroadcast
+class MyPresenceEvent implements ShouldBroadcast
 {
     use InteractsWithSockets, SerializesModels;
 
     public $message;
+    public $roomId;
 
-    public function __construct($message)
+    public function __construct($roomId, $message)
     {
+        $this->roomId = $roomId;
         $this->message = $message;
     }
 
     public function broadcastOn()
     {
-        return new PresenceChannel('presence-channel-name');
-    }
-
-    public function broadcastAs()
-    {
-        return 'presence-message';
+        return new PresenceChannel('chat.' . $this->roomId);
     }
 }

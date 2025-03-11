@@ -317,6 +317,7 @@ class TerminalTransactionService
                             $this->enableForeignKeyChecks();
                         }
                         $terminalTransactionDetailProduct->addons = $addons;
+                        $terminalTransactionDetailProduct->special_request = $product->special_request;
 
                         
                         $products[] = $terminalTransactionDetailProduct;

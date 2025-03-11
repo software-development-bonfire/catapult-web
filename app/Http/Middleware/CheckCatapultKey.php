@@ -7,7 +7,7 @@ use App\Traits\APIRequestTrait;
 use App\Traits\TokenResponsesJson;
 use Closure;
 
-class CheckCDISAppKey
+class CheckCatapultKey
 {
     use TokenResponsesJson, APIRequestTrait;
 

@@ -23,7 +23,6 @@ class MyPrivateEvent
     public function __construct($data)
     {
         $this->data = $data;
-        \Illuminate\Support\Facades\Log::alert("Constructed Event Data: " . json_encode($data));
     }
 
     /**

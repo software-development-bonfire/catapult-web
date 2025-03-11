@@ -18,6 +18,7 @@ class DeviceSettingsTransformer extends TransformerAbstract
         return [
             'bid' => $model->bid,
             'terminal_code' => $model->terminal_code,
+            'device_uid' => $model->device_uid,
             'device_code' => $model->device_code,
             'device_type' => $model->device_type,
             'name' => $model->name,

@@ -5,7 +5,7 @@ namespace App\Traits;
 use App\Enums\KDS\OrderType;
 use App\Helpers\IP;
 use App\Helpers\StickerLabel\PrintImages\TsplImage;
-use App\Helpers\StickerLabel\StickerPrinterss;
+use App\Helpers\StickerLabel\StickerPrinter;
 use App\Http\Requests\KitchenPrinterRequest;
 use App\Repositories\Contracts\KitchenPrinterRepository;
 use Illuminate\Support\Carbon;
@@ -42,8 +42,9 @@ trait StickerPrinterTrait
         /* Information for the receipt */
         $date = parseDateTime(Carbon::now(), 'l jS \of F Y h:i:s A');
         $orderNumber =  "#". $transaction['order_number'];
+        $orderType = strtoupper(OrderType::getDescription($transaction['type']));
 
-        $printer = new StickerPrinterss($connector);
+        $printer = new StickerPrinter($connector);
 
         $index = 1;
         $totalCount = count($data);
@@ -90,7 +91,7 @@ trait StickerPrinterTrait
 
                 $y = $y + 30;
                 /* This section is for REQUEST */
-                if (! empty($item['name'])) {
+                if (! empty($item['special_request'])) {
                     $requestChunks = str_split($item['special_request'], $requestSize);
                     // Print the chunks
                     foreach ($requestChunks as $chunk) {
@@ -112,7 +113,7 @@ trait StickerPrinterTrait
                 $printer->text('TO: WALKIN', 2, 180, 1, 0, 1);
                 
                 $y = $y + 30;
-                $printer->text('DINE-IN', 2, 200, 1, 0, 1);
+                $printer->text($orderType, 2, 200, 1, 0, 1);
                 $y = $y + 30;
                 $printer->text(now(), 2, 220, 1, 0, 1);
                 $printer->print();

@@ -16,6 +16,7 @@ class LoginController extends Controller
 {
     use TokenResponsesJson, APIRequestTrait;
 
+    private $authenticatedPasscodeOnly = true;
     /**
      * Authenticate user and provide access token for KDS API
      *
@@ -24,21 +25,38 @@ class LoginController extends Controller
      */
     public function login(Request $request)
     {
-        $credentials = $request->only('username', 'password');
+        // Due to some changes on CDIS, passcode only validation is implemented
+        if ($this->authenticatedPasscodeOnly) {
+            $user = app()->make(CDISKitchenUserRepository::class)->where([
+                'passcode' => $request->get('passcode')
+            ])->first();
 
-        $user = app()->make(CDISKitchenUserRepository::class)->where([
-            'username' => $credentials['username']
-        ])->first();
-
-        if ($user && Hash::check($credentials['password'], $user->password)) {
-            if ($user->status === Status::ACTIVE) {
+            if ($user && $user->status === Status::ACTIVE) {
                 $token = $this->generateNewUserToken($user, $request, false, false, array_keys(APIDefinedScopes::SCOPES));
                 $response = [
                     'session' => $token,
                     'user' => $user,
-                    'auth_type' => 'user',
+                    'auth_type' => 'passcode',
                 ];
                 return $this->tokenGeneratedResponse($response);
+            }
+        } else {
+            $credentials = $request->only('username', 'password');
+
+            $user = app()->make(CDISKitchenUserRepository::class)->where([
+                'username' => $credentials['username']
+            ])->first();
+
+            if ($user && Hash::check($credentials['password'], $user->password)) {
+                if ($user->status === Status::ACTIVE) {
+                    $token = $this->generateNewUserToken($user, $request, false, false, array_keys(APIDefinedScopes::SCOPES));
+                    $response = [
+                        'session' => $token,
+                        'user' => $user,
+                        'auth_type' => 'user',
+                    ];
+                    return $this->tokenGeneratedResponse($response);
+                }
             }
         }
 

@@ -33,6 +33,7 @@ class ItemAvailabilityService
                         'device_type' =>  $header['device_type'],
                         'terminal_code' =>  $header['terminal_code'],
                         'device_code' =>  $header['device_code'],
+                        'device_uid' =>  $header['device_uid'],
                         'name' =>  $header['name'],
                         'ip_address' => $header['ip_address'],
                     ]);

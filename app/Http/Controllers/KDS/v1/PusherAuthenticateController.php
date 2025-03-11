@@ -25,13 +25,16 @@ class PusherAuthenticateController extends Controller
          * and then reconstruct the PusherBroadcaster
          * using our own app selection.
          */
-        $app = App::findById($request->header('x-app-id'));
+        //$app = App::findById($request->header('x-app-id'));
+        $app = App::findByKey($request->header('x-app-key'));
 
         $broadcaster = new PusherBroadcaster(new Pusher(
             $app->key,
             $app->secret,
             $app->id,
-            []
+            [
+                'debug' => true,
+            ]
         ));
 
         /*

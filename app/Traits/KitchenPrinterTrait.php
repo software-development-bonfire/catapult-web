@@ -59,6 +59,7 @@ trait KitchenPrinterTrait
         $date = parseDateTime(Carbon::now(), 'l jS \of F Y h:i:s A');
         $headerSeparator = str_repeat("-", 48);
         $orderType = strtoupper(OrderType::getDescription($transaction['type']));
+        $transactionNo = "Transaction #: " . $transaction['transaction_id'];
         $orderNumber = "Order #: " . $transaction['order_number'];
 
         $items = [];
@@ -101,6 +102,7 @@ trait KitchenPrinterTrait
 
         /* Title of receipt */
         $printer->setEmphasis(true);
+        $printer->text($this->headerLine('', $transactionNo));
         $printer->text($this->headerLine($orderType, $orderNumber));
         $printer->selectPrintMode();
 
