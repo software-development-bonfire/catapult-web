@@ -14,14 +14,6 @@ use Spatie\Fractalistic\ArraySerializer;
 
 class KitchenDisplayController extends Controller
 {
-    public function storeMenu(Request $request) {
-
-    }
-
-    public function storeOrder(Request $request) {
-        
-    }
-
     /**
      * Get menu list.
      *
@@ -60,10 +52,101 @@ class KitchenDisplayController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return JsonResponse $result
      */
+    public function moveOrder(Request $request)
+    {
+        $order = app()->make(KitchenDisplayService::class)->moveOrder($request->all());
+
+        return $this->successfulResponse($order);
+    }
+
+
+    /**
+     * Move menu to other station.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return JsonResponse $result
+     */
+    public function doneOrder(Request $request)
+    {
+        $order = app()->make(KitchenDisplayService::class)->doneOrder($request->all());
+
+        return $this->successfulResponse($order);
+    }
+
+
+    /**
+     * Move menu to other station.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return JsonResponse $result
+     */
+    public function doneMenu(Request $request)
+    {
+        $order = app()->make(KitchenDisplayService::class)->doneMenu($request->all());
+
+        return $this->successfulResponse($order);
+    }
+
+
+    /**
+     * Move menu to other station.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return JsonResponse $result
+     */
+    public function releaseOrder(Request $request)
+    {
+        $order = app()->make(KitchenDisplayService::class)->releaseOrder($request->all());
+
+        return $this->successfulResponse($order);
+    }
+
+
+    /**
+     * Move menu to other station.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return JsonResponse $result
+     */
+    public function releaseMenu(Request $request)
+    {
+        $order = app()->make(KitchenDisplayService::class)->releaseMenu($request->all());
+
+        return $this->successfulResponse($order);
+    }
+
+    /**
+     * Move menu to other station.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return JsonResponse $result
+     */
     public function moveMenu(Request $request)
+    {    //try {
+        $moveMenu = app()->make(KitchenDisplayService::class)->moveMenu($request->all());
+        /*
+            if (! $moveMenu) {
+                return $this->errorResponse([]);
+            }
+        } catch (\Exception $ex) {
+            return $this->errorResponse([]);
+        }
+            */
+
+        return $this->successfulResponse($moveMenu);
+    }
+
+
+    /**
+     * Move menu to other station.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return JsonResponse $result
+     */
+    public function moveItem(Request $request)
     {
         try {
-            $moveMenu = app()->make(KitchenDisplayService::class)->moveMenu($request->all());
+            $moveMenu = app()->make(KitchenDisplayService::class)->moveItem($request->all());
 
             if (! $moveMenu) {
                 return $this->errorResponse([]);

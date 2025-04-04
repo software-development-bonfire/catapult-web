@@ -32,6 +32,19 @@
             }
         }
     }
+    &--red {
+        border: 1px #8e1616 solid;
+        background: #a31313;
+        &:hover {
+            background: darken(#db3f3f, 5%);
+        }
+        &.button-link {
+            color: $black;
+            &:hover {
+                color: $black;
+            }
+        }
+    }
     &--dark {
         color: #fff;
         border: 1px #57606f solid;

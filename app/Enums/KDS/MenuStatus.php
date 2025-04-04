@@ -10,4 +10,5 @@ final class MenuStatus extends Enum
     const ON_PROCESS = 1;
     const DELETED = 2;
     const DONE = 3;
+    const RELEASING = 4;
 }

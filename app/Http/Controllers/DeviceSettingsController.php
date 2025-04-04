@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Entities\DeviceSettings;
+use App\Http\Requests\DeviceSettingsNewRequest;
 use App\Http\Requests\DeviceSettingsRequest;
 use App\Repositories\Contracts\DeviceSettingsRepository;
 use App\Services\DeviceSettingsService;
 use App\Transformers\DeviceSettingsTransformer;
+use App\Transformers\KitchenStationsTransformer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
@@ -56,16 +58,16 @@ class DeviceSettingsController extends Controller
      * @param  string  $bid
      * @return \Illuminate\Http\Response
      */
-    public function update(DeviceSettingsRequest $request)
+    public function update(DeviceSettingsNewRequest $request)
     {
-        try {
+       // try {
             $data = app()->make(DeviceSettingsService::class)->update($request->all());
-        } catch (\Throwable $th) {
-            return $this->errorResponse(
-                [],
-                Lang::get('error.failed_to_update_the_data')
-            );
-        }
+        // } catch (\Throwable $th) {
+        //     return $this->errorResponse(
+        //         [],
+        //         Lang::get('error.failed_to_update_the_data')
+        //     );
+        // }
         return $this->successfulResponse(
             [],
             Lang::get('success.value_successfully_updated', ['value' => __('label.device_settings')])
@@ -92,6 +94,14 @@ class DeviceSettingsController extends Controller
             [],
             Lang::get('success.value_successfully_deleted', ['value' => __('label.device_settings')])
         );
+    }
+
+    public function getKitchenStations(Request $request)
+    {
+        $list = app()->make(DeviceSettingsRepository::class)->getKitchenStations();
+        $list = fractal($list, KitchenStationsTransformer::class);
+
+        return $this->successfulResponse($list);
     }
 
 }

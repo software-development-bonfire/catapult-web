@@ -41,4 +41,7 @@ window.POS = {
     SIRIUS_POS: 1,
     PDA: 2,
     KIOSK: 3,
+    QR_MOBILE: 4,
+    KDS: 5,
+    QUEUEING: 6,
 }

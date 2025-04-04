@@ -37,6 +37,8 @@ class DeviceSettings extends Base
         'socket_status',
         'last_connected_at',
         'print_invoice',
+        'kitchen_station_bid',
+        'background_process_priority',
         'created_by',
         'updated_by'
     ];

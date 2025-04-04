@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\KDS\v1;
 
 use App\Http\Controllers\Controller;
+use App\Repositories\Contracts\DeviceSettingsRepository;
 use App\Repositories\Contracts\KitchenStationProcessRepository;
 use App\Repositories\Contracts\KitchenStationRepository;
+use App\Transformers\CDIS\KitchenStation\DeviceStationTransformer;
 use App\Transformers\CDIS\KitchenStation\ListTransformer;
 use App\Transformers\CDIS\KitchenStation\ProcessListTransformer;
 use Illuminate\Http\JsonResponse;
@@ -53,4 +55,23 @@ class KitchenStationController extends Controller
             'station_process' => $stationProcesses
         ]);
     }
+
+     /**
+     * Get station list
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return JsonResponse $result
+     */
+    public function device(Request $request)
+    {
+        $filters = stringToJson($request->get('filters'));
+
+        $stations = app()->make(DeviceSettingsRepository::class)->getKitchenStation($filters);
+
+        $stations = fractal($stations, DeviceStationTransformer::class)->serializeWith(new ArraySerializer());
+
+
+        return $this->successfulResponse($stations);
+    }
+
 }

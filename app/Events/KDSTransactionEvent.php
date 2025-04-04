@@ -2,16 +2,13 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
+use App\Enums\POS\EventMessageType;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Support\Facades\Log;
 
-class MyPrivateEvent implements ShouldBroadcast
+class KDSTransactionEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets;
 
@@ -19,17 +16,19 @@ class MyPrivateEvent implements ShouldBroadcast
     public $transaction;
     public $items;
     public $releasing;
+    public $type;
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct($device, $transaction, $items, $releasing)
+    public function __construct($device, $transaction, $items, $releasing, $type)
     {
         $this->device = $device;
         $this->transaction = $transaction;
         $this->items = $items;
         $this->releasing = $releasing;
+        $this->type = $type;
     }
 
     /**
@@ -39,10 +38,11 @@ class MyPrivateEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('my-channel');
+        return ['kds-channel'];
     }
+
     public function broadcastAs()
     {
-        return 'my-event';
+        return 'kds-event';
     }
 }

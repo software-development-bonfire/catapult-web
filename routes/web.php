@@ -80,6 +80,7 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/store', 'DeviceSettingsController@store');
         Route::patch('/update', 'DeviceSettingsController@update');
         Route::delete('/delete', 'DeviceSettingsController@destroy');
+        Route::get('/kitchen-stations', 'DeviceSettingsController@getKitchenStations');
     });
 
     Route::apiResources([

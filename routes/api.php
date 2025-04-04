@@ -25,11 +25,22 @@ Route::group([
 
     Route::group(['middleware' => 'access-token'], function () {
         Route::get('station/list', 'KitchenStationController@list');
+        Route::get('station/device', 'KitchenStationController@device');
+        Route::post('station/device', 'KitchenStationController@device');
+       // Route::match(array('GET','POST'),'station/device', 'KitchenStationController@device');
+
         Route::get('station/process/list', 'KitchenStationController@stationProcessList');
         Route::get('order/menu/list', 'KitchenDisplayController@getMenuList');
         Route::post('order/menu/move-station', 'KitchenDisplayController@moveMenu');
         Route::delete('order/remove', 'KitchenDisplayController@removeOrder');
         Route::delete('menu/remove', 'KitchenDisplayController@removeMenu');
+        Route::post('order/move', 'KitchenDisplayController@moveOrder');
+        Route::post('menu/move', 'KitchenDisplayController@moveMenu');
+        Route::post('item/move', 'KitchenDisplayController@moveItem');
+        Route::post('order/done', 'KitchenDisplayController@doneOrder');
+        Route::post('menu/done', 'KitchenDisplayController@doneMenu');
+        Route::post('order/release', 'KitchenDisplayController@releaseOrder');
+        Route::post('menu/release', 'KitchenDisplayController@releaseMenu');
 
         Route::post('broadcasting/auth', [\App\Http\Controllers\KDS\v1\PusherAuthenticateController::class, 'authChannel']);
     });

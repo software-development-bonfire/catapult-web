@@ -10,6 +10,7 @@ class CDISKitchenStation extends BaseModel
         'bid',
         'code',
         'name',
+        'order_type',
         'queueing_group_type',
         'screen_prioritization',
         'status'

@@ -21,27 +21,52 @@
                     :settings="devices.settings"
                     :rowIndex="tableDataIndex"
                     v-on:dbl-row-click="editRow(tableDataIndex, tableData)">
-                    <td class="datatable-cell" align="center">
-                        <span v-text="tableData.device_type === pos.sirius_pos ? $t('label.sirius_pos')
-                            : tableData.device_type === pos.pda ? $t('label.pda')
-                            : tableData.device_type === pos.kiosk ? $t('label.kiosk')
-                            : ''">
+                    <td class="datatable-cell" align="left">
+                        <span 
+                            class="device-type device-type--box"
+                            :class="tableData.device_type === pos.sirius_pos ? 'device-type--pos'
+                                : tableData.device_type === pos.pda ?  'device-type--pda'
+                                : tableData.device_type === pos.kiosk ?  'device-type--kiosk'
+                                : tableData.device_type === pos.qr_mobile ?  'device-type--mobile'
+                                : tableData.device_type === pos.kds ?  'device-type--kds'
+                                : ''"
+                            v-text="tableData.device_type === pos.sirius_pos ? $t('label.sirius_pos')
+                                : tableData.device_type === pos.pda ? $t('label.pda')
+                                : tableData.device_type === pos.kiosk ? $t('label.kiosk')
+                                : tableData.device_type === pos.qr_mobile ? $t('label.qr_mobile')
+                                : tableData.device_type === pos.kds ? $t('label.kds')
+                                : ''">
                         </span>
                     </td>
-                    <td class="datatable-cell" align="center">
-                        <span v-text="tableData.name"></span>
+                    <td class="datatable-cell" align="left">
+                        
+                        <div class="device--ip"> <i
+                            class="fa fa-circle"
+                            :class="tableData.socket_status ? 
+                                'status--green': 
+                                'status--gray'"
+                        ></i>
+                            <span v-text="tableData.name"></span>
+                        </div>
+                        <i class="device--uid" v-text="tableData.device_uid"></i>
                     </td>
                     <td class="datatable-cell" align="center">
-                        <span v-text="tableData.ip_address"></span>
+                        <div class="device--ip" v-text="tableData.ip_address"></div>
                     </td>
+                    <!--
                     <td class="datatable-cell" align="center">
                         <span v-text="tableData.api_endpoint"></span>
                     </td>
                     <td class="datatable-cell" align="center">
                         <span v-text="tableData.token"></span>
                     </td>
+                    -->
                     <td class="datatable-cell" align="center">
-                        <span v-text="tableDataIndex + 1"></span>
+                        <span v-if="tableData.device_type === pos.sirius_pos" v-text="tableData.background_process_priority"></span>
+                        <span v-else></span>
+                    </td>
+                    <td class="datatable-cell" align="center">
+                        <span v-text="tableData.kitchen_station_name"></span>
                     </td>
                     <td class="datatable-cell" align="center">
                         <span
@@ -66,6 +91,7 @@
                 {{ modal.title }}
             </template>
             <template slot="content">
+                <!--
                 <form-field
                     class="form-group"
                     :error="errors.device_type">
@@ -78,6 +104,8 @@
                         <option :value="pos.sirius_pos">{{ $t('label.sirius_pos') }}</option>
                         <option :value="pos.pda">{{ $t('label.pda') }}</option>
                         <option :value="pos.kiosk">{{ $t('label.kiosk') }}</option>
+                        <option :value="pos.qr_mobile">{{ $t('label.qr_mobile') }}</option>
+                        <option :value="pos.kds">{{ $t('label.kds') }}</option>
                     </select>
                 </form-field>
                 <form-field
@@ -124,15 +152,36 @@
                         @keypress="errors.token = ''"
                         :placeholder="$t('label.enter_value', { value: $t('label.token') })">
                 </form-field>
-                <form-field
+                --->
+                <form-field v-if="form.values.device_type === pos.kds"
                     class="form-group"
-                    :error="errors.process_priority">
+                    :error="errors.kitchen_station_bid">
+                    <label>{{ $t('label.kitchen_station') }} <span class="required">*</span></label>
+                    <v-select
+                        class="v-select--hide-selected"
+                        :clearable="false"
+                        v-model="form.values.kitchen_station"
+                        :options="selections.kitchen_station.options"
+                        @option:selected="onSelectedKitchenStation($event)">
+                        >
+                    </v-select>
+                </form-field>
+                <form-field v-if="form.values.device_type === pos.sirius_pos"
+                    class="form-group"
+                    :error="errors.background_process_priority">
                     <label>{{ $t('label.background_process_priority') }} <span class="required">*</span></label>
                     <input
                         type="text"
-                        class="form-control"
-                        v-model="form.values.process_priority"
-                        @keypress="errors.process_priority = ''"
+                        class="form-control text-left"
+                        v-model.number="form.values.background_process_priority"
+                        v-mask="{
+                            alias: 'integer',
+                            autoGroup: true,
+                            digitsOptional: false,
+                            showMaskOnHover: false,
+                            showMaskOnFocus : false,
+                        }"
+                        @keypress="errors.background_process_priority = ''"
                         :placeholder="$t('label.enter_value', { value: $t('label.background_process_priority') })">
                 </form-field>
                 <form-field
@@ -147,8 +196,9 @@
                 </form-field>
             </template>
             <template slot="footer">
-                <div align="center" v-if="form.mode !== 'view'">
-                    <button class="button button--light" @click="save">{{ $t('label.save') }}</button>
+                <div align="right" v-if="form.mode !== 'view'">
+                    <button class="button button--primary" @click="save">{{ $t('label.save') }}</button>
+                    <button class="button button--red" @click="modal.visible = false">{{ $t('label.close') }}</button>
                 </div>
             </template>
         </modal>
@@ -167,11 +217,11 @@
 
 <script>
     import FormField from '../../../components/Containers/FormField.vue';
-    import Datatable from '../../../components/Datatable2/Datatable.vue';
-    import TableRow from '../../../components/Datatable2/TableRow.vue';
-    import DialogBox from '../../../components/Message/DialogBox.vue';
-    import Modal from '../../../components/Modal/Modal.vue';
-    import Util from '../../../mixins/Util.vue';
+import Datatable from '../../../components/Datatable2/Datatable.vue';
+import TableRow from '../../../components/Datatable2/TableRow.vue';
+import DialogBox from '../../../components/Message/DialogBox.vue';
+import Modal from '../../../components/Modal/Modal.vue';
+import Util from '../../../mixins/Util.vue';
 
     export default {
         components: {
@@ -197,6 +247,9 @@
                     sirius_pos: POS.SIRIUS_POS,
                     pda: POS.PDA,
                     kiosk: POS.KIOSK,
+                    qr_mobile: POS.QR_MOBILE,
+                    kds: POS.KDS,
+                    queueing: POS.QUEUEING,
                 },
                 errors: {
                     device_type: '',
@@ -204,7 +257,9 @@
                     ip_address: '',
                     api_endpoint: '',
                     token: '',
-                    process_priority: 1,
+                    kitchen_station: {},
+                    kitchen_station_bid: '',
+                    background_process_priority: '',
                 },
                 filters: {},
                 dialog: {
@@ -236,9 +291,12 @@
                         ip_address: '',
                         api_endpoint: '',
                         token: '',
+                        kitchen_station: {},
+                        kitchen_station_bid: '',
                         status: STATUS.ACTIVE,
-                        process_priority: 1,
+                        background_process_priority: 1,
                     },
+                    kitchen_stations: 1,
                 },
                 table: {
                     header: [
@@ -257,6 +315,7 @@
                             label: this.$t('label.ip_address'),
                             width: '150'
                         },
+                        /*
                         {
                             name: "api_endpoint",
                             label: this.$t('label.api_endpoint'),
@@ -267,10 +326,16 @@
                             label: this.$t('label.token'),
                             width: '150'
                         },
+                        */
                         {
                             name: "priority",
                             label: this.$t('label.background_process_priority'),
                             width: '210'
+                        },
+                        {
+                            name: "kitchen_station_name",
+                            label: this.$t('label.kitchen_station_name'),
+                            width: '180'
                         },
                         {
                             name: "status",
@@ -306,6 +371,11 @@
                             }
                         }
                     },
+                },
+                selections: {
+                    kitchen_station: {
+                        options: []
+                    },
                 }
             }
         },
@@ -316,6 +386,7 @@
 
         mounted() {
             this.paginate();
+            this.getKitchenStations();
         },
 
         methods: {
@@ -383,6 +454,8 @@
                 this.form.values.ip_address = data.ip_address;
                 this.form.values.api_endpoint = data.api_endpoint;
                 this.form.values.token = data.token;
+                this.form.values.background_process_priority = data.background_process_priority;
+                this.form.values.kitchen_station_bid = data.kitchen_station_bid;
                 this.form.values.status = data.status;
 
                 this.modal.visible = true;
@@ -435,6 +508,7 @@
                         self.dialog.message = self.$t('success.success_successfully_updated', { value: self.$t('label.device') });
                     }
 
+                    self.paginate();
                     self.clearForm();
                     self.dialog.visible = true;
                     self.dialog.status = 'success';
@@ -452,6 +526,8 @@
                         self.errors.ip_address = error.response.data.errors.ip_address ? error.response.data.errors.ip_address[0] : '';
                         self.errors.api_endpoint = error.response.data.errors.api_endpoint ? error.response.data.errors.api_endpoint[0] : '';
                         self.errors.token = error.response.data.errors.token ? error.response.data.errors.token[0] : '';
+                        self.errors.kitchen_station_bid = error.response.data.errors.kitchen_station_bid ? error.response.data.errors.kitchen_station_bid[0] : '';
+                        self.errors.background_process_priority = error.response.data.errors.background_process_priority ? error.response.data.errors.background_process_priority[0] : '';
                         self.$forceUpdate();
                     }
                 });
@@ -463,6 +539,8 @@
                 this.errors.ip_address = '';
                 this.errors.api_endpoint = '';
                 this.errors.token = '';
+                this.errors.kitchen_station_bid = '';
+                this.errors.background_process_priority = '';
             },
 
             clearForm() {
@@ -476,6 +554,25 @@
                 this.form.values.ip_address = '';
                 this.form.values.api_endpoint = '';
                 this.form.values.token = '';
+                this.form.values.kitchen_station_bid = '';
+                this.form.values.background_process_priority = '';
+            },
+
+            onSelectedKitchenStation(event) {
+                console.log(event);
+                this.errors.kitchen_station_bid = '';
+                this.form.values.kitchen_station = event;
+                this.form.values.kitchen_station_bid = event.value;
+            },
+
+            async getKitchenStations() {
+                let self = this;
+
+                await axios.get('device-settings/kitchen-stations', {
+                    params: {}
+                }).then(function(response) {
+                    self.$set(self.selections.kitchen_station, 'options', response.data.data.data);
+                });
             },
         }
     }
@@ -492,6 +589,77 @@
             }
         }
         &-description {
+            color: #979797;
+            &:hover {
+                color: darken(#1178f7, 5%);
+                cursor: pointer;
+            }
+        }
+    }
+    .status {
+
+        &--green {
+            color: green;
+        }
+        &--red {
+            color: red;
+        }
+        &--gray {
+            color: rgb(152, 152, 152);
+        }
+    }
+    .device-type {
+        display: inline-block;
+        padding: 5px 8px;
+        border-radius: 4px;
+        color: #fff;
+        text-align: center;
+        border: 1px transparent solid;
+        text-transform: uppercase;
+        width: 100%;
+        &--box {
+            width: 100%;
+            padding: 5px 8px;
+            border-radius: 0px;
+            color: #fff;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+        &--pos {
+            background-color: #155c61;
+            border-color: darken(#155c61, 15%);
+        }
+        &--pda {
+            background-color: #7f8c8d;
+            border-color: darken(#7f8c8d, 15%);
+        }
+        &--mobile {
+            background-color: #ff7686;
+            border-color: darken(#ff7686, 15%);
+        }
+        &--kiosk {
+            background-color: #f39c12;
+            border-color: darken(#f39c12, 15%);
+        }
+        &--kds {
+            background-color: #0051ff;
+            border-color: darken(#0051ff, 4%);
+        }
+        &--queueing {
+            background-color: #8e4fb0;
+            border-color: darken(#8e4fb0, 4%);
+        }
+    }
+    .device {
+        &--ip {
+            color: #001e07;
+            font-weight: bold;
+            &:hover {
+                color: darken(#00aa27, 5%);
+                cursor: pointer;
+            }
+        }
+        &--uid {
             color: #979797;
             &:hover {
                 color: darken(#1178f7, 5%);

@@ -12,10 +12,21 @@ class KitchenDisplayDetail extends Base
 
     protected $fillable = [
         'head_bid',
+        'transaction_id',
         'transaction_product_bid',
+        'product_uom_packaging_bid',
+        'name',
         'remaining_quantity',
         'kitchen_station_bid',
-        'status'
+        'kitchen_station_index',
+        'status',
+        'usage_type',
+        'order_type_name',
+        'special_request',
+        'is_addon',
+        'addons',
+        'terminal_number',
+
     ];
 
     protected $casts = [
@@ -23,6 +34,8 @@ class KitchenDisplayDetail extends Base
         'head_bid' => 'string',
         'transaction_product_bid' => 'string',
         'kitchen_station_bid' => 'string',
+        'product_uom_packaging_bid' => 'string',
+        'transaction_id' => 'string',
     ];
 
     public function head()

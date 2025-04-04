@@ -21,6 +21,11 @@ Broadcast::channel('item-availability', function ($message) {
     return $message;
 });
 
+Broadcast::channel('private-my-channel', function ($data) {
+    \Illuminate\Support\Facades\Log::alert(json_encode($data));
+    return $data;
+});
+
 Broadcast::channel('chat.{roomId}', function ($user, $roomId) {
     return ['id' => $user->id, 'name' => $user->name];
 });

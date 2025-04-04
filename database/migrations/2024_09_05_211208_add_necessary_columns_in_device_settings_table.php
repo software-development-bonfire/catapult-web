@@ -32,6 +32,12 @@ class AddNecessaryColumnsInDeviceSettingsTable extends Migration
                 if (! Schema::hasColumn($this->table, 'print_invoice')) {
                     $table->tinyInteger('print_invoice')->after('last_connected_at')->default(0);
                 }
+                if (! Schema::hasColumn($this->table, 'background_process_priority')) {
+                    $table->tinyInteger('background_process_priority')->after('print_invoice')->nullable();
+                }
+                if (! Schema::hasColumn($this->table, 'kitchen_station_bid')) {
+                    $table->bigInteger('kitchen_station_bid')->after('background_process_priority')->nullable();
+                }
             });
         }
     }
@@ -57,8 +63,11 @@ class AddNecessaryColumnsInDeviceSettingsTable extends Migration
                 if (Schema::hasColumn($this->table, 'last_connected_at')) {
                     $table->dropColumn('last_connected_at');
                 }
-                if (Schema::hasColumn($this->table, 'print_invoice')) {
-                    $table->dropColumn('print_invoice');
+                if (Schema::hasColumn($this->table, 'background_process_priority')) {
+                    $table->dropColumn('background_process_priority');
+                }
+                if (Schema::hasColumn($this->table, 'kitchen_station_bid')) {
+                    $table->dropColumn('kitchen_station_bid');
                 }
             });
         }
