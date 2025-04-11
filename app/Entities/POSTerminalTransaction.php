@@ -20,6 +20,7 @@ class POSTerminalTransaction extends Base
         'split_number',
         'is_first_transaction',
         'type',
+        'device_type',
         'status',
         'gross_sales',
         'net_sales',

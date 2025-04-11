@@ -22,10 +22,11 @@
             <core
                 :user-permissions='{!! json_encode(Auth::user()->getPermissions()) !!}'
                 :permission-list='{!! json_encode(Auth::user()->getPermissionList()) !!}'
+                :branch-code='{!! json_encode(Session::get('branch_code')['value']) !!}'
                 :superadmin='{!! json_encode(Auth::user()->isSuperadmin()) !!}'
                 :login-user='{!! json_encode(Auth::user()->name) !!}'
                 :version='{!! json_encode(config('app.version')) !!}'
-            >
+            >   
                 <top-navigation></top-navigation>
                 <div class="page">
                     <side-navigation

@@ -43,7 +43,8 @@ const store = new Vuex.Store({
         userPermissions: Array,
         permissionList: Array,
         decimalPlaces: Array,
-        subscription: Array
+        subscription: Array,
+        branchCode: String
     },
     mutations: {
         SET_USER_PERMISSIONS: (state, value) => {
@@ -56,6 +57,9 @@ const store = new Vuex.Store({
         SET_LOGIN_USER: (state, value) => {
             state.loginUser = value;
         },
+        SET_BRANCH_CODE: (state, value) => {
+            state.branchCode = value;
+        },
     },
     getters: {
         userPermissions: (state) => {
@@ -66,6 +70,9 @@ const store = new Vuex.Store({
         },        
         loginUser: (state) => {
             return state.loginUser
+        },
+        branchCode: (state) => {
+            return state.branchCode
         },
     }
 });

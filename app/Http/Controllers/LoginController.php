@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\Status;
 use App\Traits\HasPermission;
+use App\Entities\Configuration;
 use App\User;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
@@ -42,7 +43,7 @@ class LoginController extends Controller
         if (Auth::attempt($credentials)) {
             if ($this->guard()->user()->status === Status::ACTIVE) {
                 $request->session()->put('permissions', $this->guard()->user()->getPermissions());
-    
+                $request->session()->put('branch_code', Configuration:: where('attribute', 'branch_code')->first());
                 $link = $this->redirectUserTo();
                 
                 return response()->json(['redirectTo' => $link], 200); 

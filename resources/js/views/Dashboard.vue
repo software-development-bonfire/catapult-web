@@ -38,8 +38,10 @@
                         </div>
                         <i slot="reference" class="fa fa-question-circle fa-lg icon-gray"></i>
                     </popper>
+                    <label>{{ $t('label.ecommerce') }}:&nbsp;&nbsp;</label>
+                    <button @click="toggle">{{ isOn ? 'ON' : 'OFF' }}</button>
                 </div>
-            </div>
+            </div>  
         </div>
         <datatable
             :header-fields="table.header"
@@ -209,6 +211,10 @@
         mixins: [ Util, DateUtilities ],
         data() {
             return {
+                isOn: true,
+                base_url: process.env.MIX_CDIS_URL,
+                app_key: process.env.MIX_CDIS_KEY,
+                branch_code: process.env.MIX_CDIS_BRANCH_CODE,
                 filters : {
                     date: new Date(),
                 },
@@ -273,8 +279,34 @@
             this.filters.date = this.getCurrentDate('YYYY-MM-DD');
         },
         mounted() {
+            console.log(this.$store.state.branchCode);
         },
         methods: {
+            async toggle () {
+                let self = this;
+                this.isOn = !this.isOn;
+
+                let url = this.base_url + '/api/catapult/v2/branch/availability'
+                let params = {
+                    app_key : this.app_key,
+                    branch: {
+                        branch_code: this.$store.state.branchCode,
+                        branch_status: this.isOn
+                    }
+                }
+
+                return await axios.post(url, params, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                }
+                }).then(function(response){
+                    console.log(response);
+                }).catch(function(error){
+
+                })
+            },
+
             async paginate(page = 1) {
                 let self = this;
                 this.errors = {};

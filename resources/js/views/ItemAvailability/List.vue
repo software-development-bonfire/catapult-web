@@ -63,6 +63,7 @@
                                 : ''
                             }}
                         </td>
+                        <td>{{ $t('label.web_app') }}</td>
                     </tr>
                     <tr>
                         <td
@@ -75,6 +76,13 @@
                                     v-for="(terminal, terminalIndex) in header.terminals"
                                     :key="terminalIndex">
                                     {{ terminal.name }}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-0">
+                            <div class="d-flex">
+                                <div class="tc--web-app-checkbox">
+                                    {{ $t('label.e-commerce') }}
                                 </div>
                             </div>
                         </td>
@@ -152,6 +160,22 @@
                                 <span class="badge badge-warning">Not Available</span>
                             </div>
                         </td>
+                        <td
+                            class="datatable-cell p-0 tc--web-app-checkbox"
+                            v-for="(device, deviceIndex) in tableData.devices"
+                            :key="deviceIndex">
+                            <div
+                                class="tc--web-app-checkbox"
+                                v-if="device.item_availability_detail_bid !== null">
+                                <input
+                                    type="checkbox"
+                                    v-model="device.is_available"
+                                    @change="setItemCheckboxCooldown($event, device, tableData.product_uom_bid)">
+                            </div>
+                            <div class="tc--web-app-checkbox" v-else>
+                                <span class="badge badge-warning">Not Available</span>
+                            </div>
+                        </td>
                     </table-row>
                 </template>
             </datatable>
@@ -204,6 +228,14 @@
             max-width: 300px;
         }
         &--terminal-checkbox {
+            width: 120px;
+            text-align: center;
+            border-left: 1px #ccc solid;
+            &:nth-of-type(1) {
+                border-left: none;
+            }
+        }
+        &--web-app-checkbox {
             width: 120px;
             text-align: center;
             border-left: 1px #ccc solid;

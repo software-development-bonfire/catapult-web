@@ -27,12 +27,16 @@
             loginUser: {
                 type: String,
             },
+            branchCode: {
+                type: String,
+            }
         },
         
         created() {
             this.$store.commit('SET_USER_PERMISSIONS', this.userPermissions);
             this.$store.commit('SET_PERMISSION_LIST', this.permissionList);
             this.$store.commit('SET_LOGIN_USER', this.loginUser);
+            this.$store.commit('SET_BRANCH_CODE', this.branchCode)
         }
     }
 </script>

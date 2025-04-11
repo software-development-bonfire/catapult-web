@@ -6,6 +6,7 @@ use App\Entities\POSPayment;
 use App\Entities\POSTerminalTransaction;
 use App\Entities\POSTerminalTransactionProduct;
 use App\Enums\Status;
+use App\Enums\deviceType;
 use App\Traits\DatabaseTransaction;
 
 class KioskTerminalTransactionService
@@ -18,7 +19,7 @@ class KioskTerminalTransactionService
      * @param array  $data
      * @return mixed
      */
-    public function store($deviceCode, $data)
+    public function store($deviceCode, $data, $deviceType = DeviceType::POS)
     {
        // return $this->transaction(function () use ($data) {
             $data = (object) stringToJson($data);
@@ -33,6 +34,7 @@ class KioskTerminalTransactionService
                 'split_number' => $data->split_number,
                 'is_first_transaction' => $data->is_first_transaction,
                 'type' => $data->type,
+                'device_type' => $deviceType,
                 'status' => $data->status,
                 'gross_sales' => $data->gross_sales,
                 'net_sales' => $data->net_sales,

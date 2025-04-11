@@ -8,6 +8,7 @@ use App\Repositories\Contracts\POS\TerminalTransactionRepository;
 use App\Services\KIOSK\KioskTerminalTransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
+use App\Enums\DeviceType;
 
 class TerminalTransactionController extends KioskBaseController
 {
@@ -16,7 +17,7 @@ class TerminalTransactionController extends KioskBaseController
     {
         $data = (object) stringToJson($request->all());
         if (! empty($data->data)) {
-            $result = app()->make(KioskTerminalTransactionService::class)->store($data->device_code, $data->data);
+            $result = app()->make(KioskTerminalTransactionService::class)->store($data->device_code, $data->data, DeviceType::KIOSK);
         } else {
             return $this->errorResponse([], 'Missing request parameters');
         }
