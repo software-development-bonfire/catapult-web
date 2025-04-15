@@ -5,6 +5,7 @@ namespace App\Http\Controllers\POS\v1;
 use App\Enums\CDIS\TerminalTransactionType;
 use App\Events\KDSTransactionEvent;
 use App\Events\MyPrivateEvent;
+use App\Events\PrintEvent;
 use App\Http\Controllers\POS\POSBaseController;
 use App\Jobs\KDS\PrintToKitchenPrinter as KDSPrintToKitchenPrinter;
 use App\Repositories\Contracts\DeviceSettingsRepository;
@@ -147,5 +148,14 @@ class TerminalTransactionController extends POSBaseController
         }
 
         return $this->successfulResponse($result);
+    }
+
+    public function printReceipt(Request $request)
+    {
+        $data = stringToJson($request->all());
+        // If done processing on Sirius POS then send back to Kiosk the constructed RECEIPT
+        // <source> should be the device identifier of the KIOSK
+        broadcast(new PrintEvent($data->source, $data->content));
+        return $this->successfulResponse($data);
     }
 }

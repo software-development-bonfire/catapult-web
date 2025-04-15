@@ -2,25 +2,30 @@
 
 namespace App\Events;
 
-use App\Enums\POS\EventMessageType;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
+// This event is use to broadcast transaction data from KIOSK
+// after receiving it, if the transaction from KIOSK is already paid
 class TransactionEvent implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable, InteractsWithSockets;
 
-    public $data = '';
+    public $source;
+    public $target;
+    public $transaction;
+
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct($data)
+    public function __construct($source, $target,  $transaction)
     {
-        $this->data = $data;
+        $this->source = $source;
+        $this->target = $target;
+        $this->transaction = $transaction;
     }
 
     /**

@@ -34,7 +34,7 @@ class LoginController extends KioskBaseController
         if ($this->authType == 'device') {
             $data = (object) stringToJson($request->all());
             $devices = app()->make(DeviceSettingsRepository::class)->where([
-                'device_code' => $data->device_code,
+                'device_uid' => $data->device_uid,
                 'device_type' => $data->device_type,
             ])->first();
             if ($devices) {
@@ -72,10 +72,10 @@ class LoginController extends KioskBaseController
                 }
             }
         } else {
-            return $this->errorResponse([], __('auth.unknown_auth_type'));
+            return $this->errorTokenResponse([], __('auth.unknown_auth_type'));
         }
 
-        return $this->errorResponse([], __('auth.failed'));
+        return $this->errorTokenResponse([], __('auth.failed'));
     }
 
     /**

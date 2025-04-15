@@ -60,6 +60,17 @@ class DeviceSettingsRepositoryEloquent extends BaseRepository implements DeviceS
         return $isForHeader || isset($filters->device_type) ? $this->model->get() : $this->paginate($filters['itemsPerPage']);
     }
 
+    public function getActivePOS()
+    {
+        $this->model = $this->model->where('device_settings.device_type', DeviceType::SIRIUS_POS)
+            ->where('device_settings.socket_status', Status::ACTIVE)
+            ->where('device_settings.status', Status::ACTIVE)
+            ->whereNull('device_settings.deleted_at')
+            ->orderBy('device_settings.background_process_priority', 'ASC');
+
+        return $this->model->get();
+    }
+
     /**
      * Get kitchen stations
      *

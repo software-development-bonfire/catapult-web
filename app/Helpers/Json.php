@@ -8,6 +8,16 @@ if (! function_exists('stringToJson')) {
     }
 }
 
+
+if (! function_exists('stringToObject')) {
+    function stringToObject($array)
+    {
+        return collect($array)->map(function ($item) {
+            return is_array($item) ? stringToObject($item) : $item;
+        })->toArray();
+    }
+}
+
 if (! function_exists('isValidJson')) {
 
     function isValidJson($data)
