@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Status;
+use App\Enums\API\DeviceType;
 use App\Entities\DeviceSettings;
 use App\Repositories\Contracts\DeviceSettingsRepository;
 use App\Repositories\Contracts\CDISProductCategoryRepository;
@@ -33,7 +34,10 @@ class ItemAvailabilityController extends Controller
         $header = $this->getTerminals($header);
         $header = json_encode($header['header']);
 
+        $webAppHeader = app()->make(DeviceSettingsRepository::class)->list(['device_type' => DeviceType::ECOMMERCE], false);
+
         return view('item-availability.list', compact(
+            'webAppHeader',
             'header',
             'productCategories'
         ));
@@ -52,11 +56,13 @@ class ItemAvailabilityController extends Controller
         $header = $this->getTerminals($header);
         $terminals = $header['terminals'];
 
+        $webApp = app()->make(DeviceSettingsRepository::class)->list(['device_type' => DeviceType::ECOMMERCE], false);
+
         $category = $this->setCategory($filters->category);
         $filters->category = (array) $category;
 
         $list = app()->make(ItemAvailabilityRepository::class)->list($filters, $terminals);
-        $list = fractal($list, new ItemAvailabilityTransformer($terminals));
+        $list = fractal($list, new ItemAvailabilityTransformer($terminals, $webApp));
         return $this->successfulResponse(['list' => $list, 'filters' => $filters]);
     }
 
@@ -70,6 +76,7 @@ class ItemAvailabilityController extends Controller
     public function update(Request $request)
     {
         try {
+
             $data = app()->make(ItemAvailabilityService::class)->update($request->all());
         } catch (\Throwable $th) {
             return $this->errorResponse(

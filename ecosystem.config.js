@@ -121,5 +121,16 @@ module.exports = {
             merge_logs: true,
             autorestart: true,
         },
+        {
+            name : "ECOM-CPLT-ORDER",
+            script: "artisan",
+            args: ["ecom:event-listen"],
+            exec_interpreter: "php",
+            exec_mode : "fork",
+            max_memory_restart : "5G",
+            watch: false,
+            merge_logs: true,
+            autorestart: true,
+        },
     ]
 }

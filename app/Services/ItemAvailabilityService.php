@@ -6,6 +6,8 @@ use App\Entities\ItemAvailability;
 use App\Entities\DeviceSettings;
 use App\Entities\ItemAvailabilityDetail;
 use Carbon\Carbon;
+use App\Enums\API\DeviceType;
+use App\Enums\Status;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Traits\DatabaseTransaction;
@@ -35,6 +37,76 @@ class ItemAvailabilityService
                         'device_uid' =>  $header['device_uid'],
                         'name' =>  $header['name'],
                         'ip_address' => $header['ip_address'],
+                    ]);
+                }
+
+                    foreach ($header['products'] as $product) {
+
+                        $item = ItemAvailability::where('product_uom_bid', $product['product_uom_bid'])
+                            ->where('item_code', $product['item_code'])
+                            ->where('barcode', $product['barcode'])
+                            ->where('description', $product['description'])
+                            ->where('long_description', $product['long_description'])
+                            ->where('category_bid', $product['category_bid'])
+                            ->first();
+
+                        if (! $item) {
+                            $itemAvailability = ItemAvailability::create([
+                                'product_uom_bid' => $product['product_uom_bid'],
+                                'item_code' => $product['item_code'],
+                                'barcode' => $product['barcode'],
+                                'description' => $product['description'],
+                                'long_description' => $product['long_description'],
+                                'category_bid' => $product['category_bid']
+                            ]);
+
+                            if ($itemAvailability) {
+                                $itemAvailability->detail()->create([
+                                    'head_bid' => $itemAvailability->bid,
+                                    'device_settings_bid' => $deviceSettings->bid,
+                                    'is_available' => $product['is_available']
+                                ]);
+                            }
+                        } else {
+                            $itemDetail = ItemAvailabilityDetail::where('head_bid', $item->bid)->where('device_settings_bid', $deviceSettings->bid)->first();
+
+                            if (! $itemDetail) {
+                                ItemAvailabilityDetail::create([
+                                    'head_bid' => $item->bid,
+                                    'device_settings_bid' => $deviceSettings->bid,
+                                    'is_available' => $product['is_available'],
+                                ]);
+                            } else {
+                                ItemAvailabilityDetail::where('head_bid', $item->bid)->where('device_settings_bid', $deviceSettings->bid)
+                                    ->update(['is_available' => $product['is_available']]);
+                            }
+                        }
+                    }
+            }
+            $this->storeEcomAvailability($data);
+            return true;
+        });
+    }
+
+    public function storeEcomAvailability($data)
+    {
+        return $this->transaction(function () use ($data) {
+            foreach ($data as $header) {
+                $deviceSettings = DeviceSettings::where('device_type', DeviceType::ECOMMERCE)
+                    ->first();
+
+                if (! $deviceSettings) {
+                    $deviceSettings = DeviceSettings::create([
+                        'terminal_code' => null,
+                        'device_code' => null,
+                        'device_uid' => 'WA-001',
+                        'device_type' => DeviceType::ECOMMERCE,
+                        'name' => 'E-Commerce',
+                        'ip_address' => '-',
+                        'api_endpoint' => '-',
+                        'token' => '-',
+                        'status' => Status::ACTIVE,
+                        'socket_status' => Status::ACTIVE,
                     ]);
                 }
 

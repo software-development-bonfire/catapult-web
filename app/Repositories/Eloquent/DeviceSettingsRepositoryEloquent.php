@@ -24,6 +24,8 @@ class DeviceSettingsRepositoryEloquent extends BaseRepository implements DeviceS
      */
     public function list($filters, $isForHeader)
     {
+        $filters = (object) $filters;
+        
         $this->model = $this->model
             ->select([
                 // 'device_settings.*',

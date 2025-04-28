@@ -12,4 +12,5 @@ final class DeviceType extends Enum
     const QR_MOBILE     =  4;
     const KDS           =  5;
     const QUEUEING      =  6;
+    const ECOMMERCE     =  7;
 }

@@ -8,7 +8,7 @@ use App\Repositories\Contracts\POS\TerminalTransactionRepository;
 use App\Services\KIOSK\KioskTerminalTransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
-use App\Enums\DeviceType;
+use App\Enums\API\DeviceType;
 
 class TerminalTransactionController extends KioskBaseController
 {

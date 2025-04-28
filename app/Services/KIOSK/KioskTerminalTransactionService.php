@@ -6,7 +6,7 @@ use App\Entities\POSPayment;
 use App\Entities\POSTerminalTransaction;
 use App\Entities\POSTerminalTransactionProduct;
 use App\Enums\Status;
-use App\Enums\deviceType;
+use App\Enums\API\deviceType;
 use App\Traits\DatabaseTransaction;
 
 class KioskTerminalTransactionService
@@ -19,7 +19,7 @@ class KioskTerminalTransactionService
      * @param array  $data
      * @return mixed
      */
-    public function store($deviceCode, $data, $deviceType = DeviceType::POS)
+    public function store($deviceCode, $data, $deviceType = DeviceType::SIRIUS_POS)
     {
        // return $this->transaction(function () use ($data) {
             $data = (object) stringToJson($data);

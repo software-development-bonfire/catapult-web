@@ -79,10 +79,16 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="p-0">
+                        <td
+                            class="p-0"
+                            v-for="(header, headerIndex) in webAppHeader"
+                            :key="headerIndex">
                             <div class="d-flex">
-                                <div class="tc--web-app-checkbox">
-                                    {{ $t('label.e-commerce') }}
+                                <div
+                                    class="tc--terminal-checkbox"
+                                    v-for="(webApp, webAppIndex) in webAppHeader"
+                                    :key="webAppIndex">
+                                    {{ webApp.name }}
                                 </div>
                             </div>
                         </td>
@@ -162,15 +168,15 @@
                         </td>
                         <td
                             class="datatable-cell p-0 tc--web-app-checkbox"
-                            v-for="(device, deviceIndex) in tableData.devices"
-                            :key="deviceIndex">
+                            v-for="(wepApp, wepAppIndex) in tableData.web_app"
+                            :key="wepAppIndex">
                             <div
                                 class="tc--web-app-checkbox"
-                                v-if="device.item_availability_detail_bid !== null">
+                                v-if="wepApp.item_availability_detail_bid !== null">
                                 <input
                                     type="checkbox"
-                                    v-model="device.is_available"
-                                    @change="setItemCheckboxCooldown($event, device, tableData.product_uom_bid)">
+                                    v-model="wepApp.is_available"
+                                    @change="setItemCheckboxCooldown($event, wepApp, tableData.product_uom_bid)">
                             </div>
                             <div class="tc--web-app-checkbox" v-else>
                                 <span class="badge badge-warning">Not Available</span>
@@ -322,6 +328,9 @@
             header: {
                 type: Array
             },
+            webApp: {
+                type: Object
+            },
             categories: {
                 type: Object
             }
@@ -369,6 +378,7 @@
                     }
                 },
                 terminalHeaders: this.header,
+                webAppHeader: this.webApp,
                 deviceType: {
                     sirius_pos: POS.SIRIUS_POS,
                     pda: POS.PDA,
