@@ -63,6 +63,22 @@ if (! function_exists('toBooleanOrInt')) {
     }
 }
 
+
+if (! function_exists('toSafeBoolean')) {
+    function toSafeBoolean($value, $defaultValue)
+    {
+        $value = filter_var($value, FILTER_VALIDATE_BOOLEAN)
+            ? $defaultValue
+            : ((int) $value
+                ? filter_var($value, FILTER_VALIDATE_INT)
+                : false
+            );
+
+        return $value;
+    }
+}
+
+
 if (! function_exists('toSafeArray')) {
 
     function toSafeArray($value)

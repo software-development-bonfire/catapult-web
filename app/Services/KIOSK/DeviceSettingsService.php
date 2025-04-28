@@ -13,10 +13,14 @@ class DeviceSettingsService
     {
         return $this->transaction(function () use ($data) {
             $data = (object) stringToJson($data);
+            /*
             $deviceSetting = DeviceSettings::where('device_code', '=', $data->device_code)
                 ->where('device_type', $data->device_type)
                 ->where('terminal_code', $data->terminal_code)
                 ->first();
+            */
+            $deviceSetting = DeviceSettings::where('device_uid', $data->device_uid)->first();
+        
 
             if ($deviceSetting) {
                 $updateData = [
@@ -29,6 +33,7 @@ class DeviceSettingsService
                 $deviceSetting = tap($deviceSetting)->update($updateData);
             } else {
                 $deviceSetting = DeviceSettings::create([
+                    'device_uid' => $data->device_uid,
                     'device_type' => $data->device_type,
                     'device_code' => $data->device_code,
                     'terminal_code' => $data->terminal_code,

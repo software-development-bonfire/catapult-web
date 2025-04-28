@@ -9,19 +9,21 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
 class PrintEvent implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable, InteractsWithSockets;
 
-    public $data = '';
+    public $device;
+    public $content;
+
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct($data)
+    public function __construct($device,  $content)
     {
-        $this->data = $data;
+        $this->device = $device;
+        $this->content = $content;
     }
-
     /**
      * Get the channels the event should broadcast on.
      *
