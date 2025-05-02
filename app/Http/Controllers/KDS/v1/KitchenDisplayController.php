@@ -122,16 +122,16 @@ class KitchenDisplayController extends Controller
      * @return JsonResponse $result
      */
     public function moveMenu(Request $request)
-    {    //try {
-        $moveMenu = app()->make(KitchenDisplayService::class)->moveMenu($request->all());
-        /*
+    {
+        try {
+            $moveMenu = app()->make(KitchenDisplayService::class)->moveMenu($request->all());
+
             if (! $moveMenu) {
                 return $this->errorResponse([]);
             }
         } catch (\Exception $ex) {
             return $this->errorResponse([]);
         }
-            */
 
         return $this->successfulResponse($moveMenu);
     }
@@ -146,16 +146,16 @@ class KitchenDisplayController extends Controller
     public function moveItem(Request $request)
     {
         try {
-            $moveMenu = app()->make(KitchenDisplayService::class)->moveItem($request->all());
+            $movedItem = app()->make(KitchenDisplayService::class)->moveRowItem($request->all());
 
-            if (! $moveMenu) {
+            if (! $movedItem) {
                 return $this->errorResponse([]);
             }
         } catch (\Exception $ex) {
             return $this->errorResponse([]);
         }
 
-        return $this->successfulResponse();
+        return $this->successfulResponse($movedItem);
     }
 
     /**

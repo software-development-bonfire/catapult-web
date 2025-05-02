@@ -286,6 +286,7 @@ import Util from '../../../mixins/Util.vue';
                     mode: 'create',
                     values: {
                         bid: '',
+                        device_uid: '',
                         device_type: '',
                         name: '',
                         ip_address: '',
@@ -449,6 +450,7 @@ import Util from '../../../mixins/Util.vue';
                 this.modal.title = this.$t('label.edit_device_settings');
 
                 this.form.values.bid = data.bid;
+                this.form.values.device_uid = data.device_uid;
                 this.form.values.device_type = data.device_type;
                 this.form.values.name = data.name;
                 this.form.values.ip_address = data.ip_address;
@@ -549,6 +551,7 @@ import Util from '../../../mixins/Util.vue';
                 this.form.index = 0;
                 this.form.mode = 'create';
 
+                this.form.values.device_uid = '';
                 this.form.values.device_type = '';
                 this.form.values.name = '';
                 this.form.values.ip_address = '';

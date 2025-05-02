@@ -31,6 +31,7 @@ trait StickerPrinterTrait
 
     function printSticker($printerName, $data, $transaction, $cut = true, $openCashdrawer = true)
     {
+        try{
         /* Start the printer */
         $validIPs = IP::extract($printerName);
         if (isset($validIPs[0]) && IP::validate($validIPs[0])) {
@@ -117,11 +118,16 @@ trait StickerPrinterTrait
                 $y = $y + 30;
                 $printer->text(now(), 2, 220, 1, 0, 1);
                 $printer->print();
+            } catch (\Exception $e) {
+
             } finally {
                 $printer->close();
             }
             $index++;
         }
+    } catch(\Exception $e) {
+        
+    }
     }
 
     function printSeparate()

@@ -37,7 +37,7 @@ trait KitchenDisplayTrait
             }
         }
             */
-
+/*
         for ($index = 0; $index <= 4; $index++) {
             $kitchenItemSetup = $index == 0 ? [] : app()->make(KitchenItemSetupRepository::class)->getKitchenStation($transactionDetailProduct->product_bid, $index);
             if ($kitchenItemSetup || $index == 0) {
@@ -61,6 +61,33 @@ trait KitchenDisplayTrait
                 ]);
             }
         }
+            */
+
+        
+        for ($index = 1; $index <= 4; $index++) {
+            $kitchenItemSetup = app()->make(KitchenItemSetupRepository::class)->getKitchenStation($transactionDetailProduct->product_bid, $index);
+            if ($kitchenItemSetup || $index == 0) {
+                $this->buildKitchenDisplay($transactionDetail->bid, [
+                    'transaction_product_bid' => $transactionDetailProduct->bid,
+                    'product_uom_packaging_bid' => $transactionDetailProduct->product_bid,
+                    'remaining_quantity' => ($index != 1) ? 0 : $transactionDetailProduct->quantity,
+                    'kitchen_station_bid' => ($index == 0) ? 0 : $kitchenItemSetup['station_bid_' . $index],
+                    'kitchen_station_index' => $index,
+                    'usage_type' => $transactionDetailProduct->usage_type,
+                    'order_type_name' => $transactionDetailProduct->order_type_name,
+                    'name' => $transactionDetailProduct->name,
+                    'special_request' => $product->special_request,
+                    'is_addon' => $product->is_addon,
+                    'transaction_id' => $product->transaction_id,
+                    'order_type_name' => $product->order_type_name,
+                    'terminal_number' => $product->terminal_number,
+                    'addons' => $product->addons,
+                    'kitchen_station_index' => $index,
+                    'status' => $index == 0 ? MenuStatus::RELEASING : MenuStatus::ON_PROCESS,
+                ]);
+            }
+        }
+
     }
 
     private function buildKitchenDisplay($transactionDetailBid, $data)

@@ -13,6 +13,10 @@ class DeviceSettingsController extends KioskBaseController
 {
     public function list(Request $request)
     {
+        // Update all devices that haven't connected in the last 5 minutes
+        // If there are devices request to get the list of devices
+        DeviceSettings::where('last_connected_at', '<', now()->subMinutes(5))->update(['socket_status' => 0]);
+
         $list = DeviceSettings::get();
         $list = fractal($list, DeviceSettingsTransformer::class);
 
@@ -23,7 +27,7 @@ class DeviceSettingsController extends KioskBaseController
     {
         $data = (object) stringToJson($request->all());
         $result = app()->make(DeviceSettingsService::class)->updateStatus($data);
-      
+
         $result = fractal($result, DeviceSettingsTransformer::class);
         $result = $result->toArray()['data'];
 
@@ -37,7 +41,7 @@ class DeviceSettingsController extends KioskBaseController
         $data = (object) stringToJson($request->all());
 
         $result = app()->make(DeviceSettingsService::class)->updatePrintStatus($data);
-        
+
         $result = fractal($result, DeviceSettingsTransformer::class);
         $result = $result->toArray()['data'];
 

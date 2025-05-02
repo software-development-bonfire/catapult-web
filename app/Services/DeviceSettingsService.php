@@ -43,8 +43,7 @@ class DeviceSettingsService
     public function update($data)
     {
         $data['updated_by'] = Auth::user()->bid;
-        DeviceSettings::find($data['bid'])->update($data);
-        return true;
+        return DeviceSettings::find($data['bid'])->update($data);
     }
 
     /**

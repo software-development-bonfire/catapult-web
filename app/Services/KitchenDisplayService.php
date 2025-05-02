@@ -402,6 +402,7 @@ class KitchenDisplayService
                     'kitchen_station_index' => $nextStationIndex
                 ])->first();
 
+                $newQuantity = 0;
                 $kitchenOrderStatus = MenuStatus::ON_PROCESS;
                 if ($kitchenDisplayDetails2) {
                     // If next station is present then we need to update remaining quantity
@@ -411,7 +412,9 @@ class KitchenDisplayService
                     }
                     $kitchenDisplayDetails2->update(['remaining_quantity' => $newQuantity]);
                     $kitchenDisplay = app()->make(KitchenItemSetupRepository::class)->getKitchenStation($kitchenDisplayDetail->product_uom_packaging_bid, $nextStationIndex);
-                    $clonedItem->remaining_quantity = $data->quantity;
+                    $clonedItem->remaining_quantity = $newQuantity;
+                    $clonedItem->quantity = $newQuantity;
+                    $clonedItem->kitchen_station_index = $nextStationIndex;
                     $nextStationDetails[] = collect($clonedItem)->merge($kitchenDisplay);
                 } else {
                     // If no next station then we need to put this on releasing station

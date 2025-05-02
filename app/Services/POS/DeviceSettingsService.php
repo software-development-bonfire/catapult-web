@@ -3,7 +3,7 @@
 namespace App\Services\POS;
 
 use App\Entities\DeviceSettings;
-use App\Enums\Status;
+use App\Enums\API\DeviceType;
 use App\Traits\DatabaseTransaction;
 
 class DeviceSettingsService
@@ -14,14 +14,17 @@ class DeviceSettingsService
     {
         return $this->transaction(function () use ($data) {
             $data = (object) stringToJson($data);
-            $deviceSetting = DeviceSettings::where('device_code', '=', $data->device_code)
-                ->where('device_type', $data->device_type)
-                ->where('terminal_code', $data->terminal_code)
-                ->first();
+
+            // Update all devices that haven't connected in the last 5 minutes
+            DeviceSettings::where('last_connected_at', '<', now()->subMinutes(5))
+                ->update(['socket_status' => 0]);
+
+            // Check if the device already exists
+            $deviceSetting = DeviceSettings::where('device_uid', $data->device_uid)->first();
 
             if ($deviceSetting) {
                 $updateData = [
-                    'socket_status' => $data->status,
+                    'socket_status' => $data->socket_status,
                     'last_connected_at' => now()
                 ];
                 if (!empty($data->ip_address)) {
@@ -30,6 +33,7 @@ class DeviceSettingsService
                 $deviceSetting = tap($deviceSetting)->update($updateData);
             } else {
                 $deviceSetting = DeviceSettings::create([
+                    'device_uid' => $data->device_uid,
                     'device_type' => $data->device_type,
                     'device_code' => $data->device_code,
                     'terminal_code' => $data->terminal_code,

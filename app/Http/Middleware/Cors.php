@@ -17,7 +17,7 @@ class Cors
         $response = $next($request);
         $response->headers->set('Access-Control-Allow-Origin' , '*');
         $response->headers->set('Access-Control-Allow-Methods', 'POST, GET');
-        $response->headers->set('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, ApplicationID, Authorization, x-csrf-token');
+        $response->headers->set('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, ApplicationID, Authorization, x-csrf-token, x-app-key');
 
         return $response;
     }

@@ -235,13 +235,17 @@ class TerminalTransactionService
                             'transaction_product_bid' => $terminalTransactionDetailProduct->bid,
                             'order_type_name' => $product->order_type_name,
                             'terminal_number' => $terminal->number,
-                            'addons' => implode(', ', $addonNames),
+                            'addons' => empty($addonNames) ? '' : implode(', ', $addonNames),
+                            'has_addon' => count($product->addon) > 0,
                             'kitchen_station_index' => 1, // We need to set a default kitchen station index for new transaction
                         ];
                         $flattenProducts[] = $productDetail;
                         
                         // Validated Kitchen Item Setup and Build Kitchen Display
-                        $this->validateKitchenDisplay($terminalTransactionDetail, $terminalTransactionDetailProduct, $productDetail);
+                        // Add only product without addons
+                        if (count($product->addon) <= 0) {
+                            $this->validateKitchenDisplay($terminalTransactionDetail, $terminalTransactionDetailProduct, $productDetail);
+                        }
 
                         if (isset($product->price_override_details)) {
                             $terminalTransactionDetail->priceOverride()->create([
@@ -321,7 +325,9 @@ class TerminalTransactionService
                                 'transaction_product_bid' => $terminalTransactionAddon->bid,
                                 'order_type_name' => $addon->order_type_name,
                                 'terminal_number' => $terminal->number,
-                                'addons' => '',
+                               // 'addons' => '',
+                                'addons' => $product->name,
+                                'has_addon' => false,
                                 'kitchen_station_index' => 1, // We need to set a default kitchen station index for new transaction
                             ];
                             $flattenProducts[] = $productDetail;

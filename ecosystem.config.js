@@ -99,6 +99,7 @@ module.exports = {
             merge_logs: true,
             autorestart: true,
         },
+        /*
         {
             name : "CPLT-POS-SCHED",
             script: "artisan",
@@ -110,6 +111,7 @@ module.exports = {
             merge_logs: true,
             autorestart: true,
         },
+        */
         {
             name : "CPLT-POS-SOCKET",
             script: "artisan",
@@ -122,9 +124,20 @@ module.exports = {
             autorestart: true,
         },
         {
-            name : "ECOM-CPLT-ORDER",
+            name : "CPLT-ECOM-ORDER",
             script: "artisan",
             args: ["ecom:event-listen"],
+            exec_interpreter: "php",
+            exec_mode : "fork",
+            max_memory_restart : "5G",
+            watch: false,
+            merge_logs: true,
+            autorestart: true,
+        },
+        {
+            name : "CPLT-ECOM-SIM",
+            script: "artisan",
+            args: ["ecom:send-item-availability"],
             exec_interpreter: "php",
             exec_mode : "fork",
             max_memory_restart : "5G",
