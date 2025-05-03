@@ -59,7 +59,7 @@ class DeviceSettingsRepositoryEloquent extends BaseRepository implements DeviceS
                 ->groupBy('device_settings.device_type');
         }
 
-        return $isForHeader || isset($filters->device_type) ? $this->model->get() : $this->paginate($filters['itemsPerPage']);
+        return $isForHeader || isset($filters->device_type) ? $this->model->get() : $this->paginate($filters->itemsPerPage);
     }
 
     public function getActivePOS()
