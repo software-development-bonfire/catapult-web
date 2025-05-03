@@ -44,4 +44,5 @@ window.POS = {
     QR_MOBILE: 4,
     KDS: 5,
     QUEUEING: 6,
+    ECOMMERCE: 7,
 }

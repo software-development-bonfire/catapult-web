@@ -87,4 +87,28 @@ class ItemAvailabilityRepositoryEloquent extends BaseRepository implements ItemA
             return (array) $category;
         }
     }
+
+
+    /**
+     * Get device item availability
+     *
+     * @param Object $filters
+     * @return Collection $result.
+     */
+    public function getDeviceAvailability($deviceSettingsBid)
+    {
+        $this->model =  DB::table('item_availability_detail')
+            ->select([
+                DB::raw('item_availability_detail.is_available as `is_available`'),
+                DB::raw('item_availability.product_uom_bid as `product_uom_bid`'),
+            ])
+            ->leftJoin('item_availability', 'item_availability.bid', '=', 'item_availability_detail.head_bid')
+            ->where('item_availability_detail.device_settings_bid', $deviceSettingsBid)
+            ->groupBy(['item_availability.product_uom_bid']);
+
+        $result = $this->model->get();
+        $this->resetModel();
+
+        return $result;
+    }
 }

@@ -12,13 +12,11 @@ use League\Fractal\TransformerAbstract;
 class ItemAvailabilityTransformer extends TransformerAbstract
 {
     private $terminals;
-    private $webApps;
     private $categories;
 
-    public function __construct($terminals, $webApps)
+    public function __construct($terminals)
     {
         $this->terminals = $terminals;
-        $this->webApps = $webApps;
         $this->categories = [];
     }
 
@@ -40,7 +38,6 @@ class ItemAvailabilityTransformer extends TransformerAbstract
             'category_bid' => $model->category_bid,
             'categories' => $this->setCategory($model->category),
             'devices' => $this->setAvailability($model->product_uom_bid, $model->itemAvailabilityDetail),
-            'web_app' => $this->webAppAvailability($model->product_uom_bid, $model->itemAvailabilityDetail),
         ];
 
         return $data;
@@ -102,34 +99,4 @@ class ItemAvailabilityTransformer extends TransformerAbstract
 
         return $data;
     }
-
-    public function webAppAvailability($productUomBid, $detail)
-    {
-        $data = [];
-
-        foreach ($this->webApps as $webApp) {
-            $webApp = (object) $webApp;
-            $data[] = ! $this->getWebAvailabilityDetail($webApp->bid, $detail)
-                ? ['device_detail' => $webApp, 'item_availability_detail_bid' => null, 'is_available' => 0]
-                : $this->getWebAvailabilityDetail($webApp->bid, $detail);
-        }
-
-        return $data;
-    }
-
-    public function getWebAvailabilityDetail($deviceBid, $detail)
-    {
-        $data = [];
-        foreach ($detail as $item) {
-            $item = (object) $item;
-            if ($item->device_settings_bid == $deviceBid) {
-                $data['device_detail'] = $item->device;
-                $data['item_availability_detail_bid'] = $item->bid;
-                $data['is_available'] = 1;
-            }
-        }
-
-        return $data;
-    }
-
 }

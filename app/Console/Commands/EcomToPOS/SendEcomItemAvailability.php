@@ -5,9 +5,12 @@ namespace App\Console\Commands\EcomToPOS;
 use App\Entities\CDISBranch;
 use App\Entities\DeviceSettings;
 use App\Entities\ItemAvailability;
+use App\Entities\ItemAvailabilityDetail;
 use App\Enums\API\DeviceType;
+use App\Repositories\Contracts\ItemAvailabilityRepository;
 use App\Traits\CDISRequestTrait;
 use App\Traits\ConsoleCommandTrait;
+use App\Traits\EcomAvailabilityTrait;
 use App\Traits\ErrorLogTrait;
 use App\Traits\FilenameRetryCounterTrait;
 use App\Traits\GenericHelper;
@@ -23,9 +26,8 @@ use Illuminate\Support\Str;
 
 class SendEcomItemAvailability extends Command
 {
-    use GenericHelper, StorageTrait, ErrorLogTrait, FilenameRetryCounterTrait, OutputBufferTrait, CDISRequestTrait, ConsoleCommandTrait;
+    use GenericHelper, StorageTrait, ErrorLogTrait, OutputBufferTrait, EcomAvailabilityTrait;
 
-    public $extension = '.json';
     /**
      * The name and signature of the console command.
      *
@@ -39,8 +41,6 @@ class SendEcomItemAvailability extends Command
      * @var string
      */
     protected $description = 'Send item availability to CDIS';
-
-    private $fileContentErrors = [];
 
     /**
      * Create a new command instance.
@@ -83,81 +83,56 @@ class SendEcomItemAvailability extends Command
 
         while (true) {
             if (! $this->hasInternetConnection() && ! $this->hasInternetConnection($cdisUrl)) {
-                $this->setErrorLineLog(__('message.no_internet_connection'));
+                $this->createLog(__('message.no_internet_connection'), 'error', true, []);
                 sleep(10); // wait a bit before retrying
                 continue;
             }
 
             $lastSent = Cache::get('ecom_item_availability_last_sent');
             $now = Carbon::now();
-
+            
             if ($lastSent && $now->diffInSeconds(Carbon::parse($lastSent)) < 300) {
                 sleep(10); // not yet 5 minutes, sleep and retry
                 continue;
+            }
+
+
+            $branch = CDISBranch::where('code', $branchCode)->first();
+            if (! $branch) {
+                return;
             }
 
             $deviceSettings = DeviceSettings::where('device_type', DeviceType::ECOMMERCE)->first();
             if (!$deviceSettings) {
                 return;
             }
-            $branch = CDISBranch::where('code', $branchCode)->first();
-            if (! $branch) {
-                return;
-            }
 
-            $items = ItemAvailability::with('itemAvailabilityDetail')
-                ->whereHas('itemAvailabilityDetail', function ($query) use ($deviceSettings) {
-                    $query->where('device_settings_bid', $deviceSettings->bid);
-                })
-                ->get();
-
+            $items = app()->make(ItemAvailabilityRepository::class)->getDeviceAvailability($deviceSettings->bid);
             $products = [];
             foreach ($items as $item) {
                 $products[] = [
-                    "product_uom_bid" => $item['product_uom_bid'],
+                    "type" => "AUTO",
+                    "product_uom_bid" => $item->product_uom_bid,
                     "branch_bid" => $branch->bid,
-                    "ecomm_stock_availability" => $item['is_available'],
+                    "ecomm_stock_availability" => $item->is_available,
                 ];
             }
             $this->createLog('Start sending to: ' . $url, 'info', true, [
                 'payload_count' => count($products)
             ]);
-            $this->send($products, $url);
+            $response = $this->sendRequest($products, $url);
+
+            $status = $response->getStatusCode();
+            $body = $response->getBody()->getContents();
+
+            $this->createLog($body, 'warn', true, [
+                'status' => $status,
+            ]);
 
             Cache::put('ecom_item_availability_last_sent', $now);
 
             $this->flushOutputBuffer();
-            sleep(10); // Optional: avoid tight loop
+            sleep(10); //avoid tight loop
         }
-    }
-
-    public function send($content, $uri)
-    {
-        $client = new Client([
-            'verify' => false,
-            'http_errors' => false,
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/json'
-        ]);
-
-        $options = [
-            'json' => [
-                'data' => $content
-            ],
-            'headers' => [
-                'Accept' => 'application/json',
-            ]
-        ];
-
-        $response = $client->request('POST', $uri, $options);
-
-        $status = $response->getStatusCode();
-        $body = $response->getBody()->getContents();
-
-        $this->createLog($body, 'warn', true, [
-            'status' => $status,
-        ]);
-
-        return $response;
     }
 }

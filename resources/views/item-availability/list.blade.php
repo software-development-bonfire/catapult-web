@@ -4,7 +4,6 @@
 
 @section('content')
     <item-availability
-        :web-app="{{$webAppHeader}}"
         :header="{{$header}}"
         :categories="{{$productCategories}}"
     ></item-availability>

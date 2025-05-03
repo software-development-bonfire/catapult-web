@@ -11,10 +11,12 @@ use App\Enums\Status;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Traits\DatabaseTransaction;
+use App\Traits\EcomAvailabilityTrait;
 
 class ItemAvailabilityService
 {
     use DatabaseTransaction;
+    use EcomAvailabilityTrait;
     /**
      * Store data
      *
@@ -169,7 +171,14 @@ class ItemAvailabilityService
         $isAvailable = $data['is_available'] == 1 ? 0 : 1;
 
         $data['updated_by'] = Auth::user()->bid;
-        $result = ItemAvailabilityDetail::find($data['item_availability_detail_bid'])->update(['is_available' => $data['is_available']]);
+        $itemAvailability = ItemAvailabilityDetail::find($data['item_availability_detail_bid']);
+        if ($itemAvailability) {
+            $result =  $itemAvailability->update(['is_available' => $data['is_available']]);
+
+            if ($data['device']['device_type'] == DeviceType::ECOMMERCE) {
+                $this->sendItemAvailability($data['product_uom_bid'], $data['is_available']);
+            }
+        }
         return $result;
     }
 }

@@ -50,12 +50,12 @@ class DeviceSettingsRepositoryEloquent extends BaseRepository implements DeviceS
         if (isset($filters->device_type) && $filters->device_type != '') {
             $this->model->where('device_settings.device_type', $filters->device_type)
                 ->where('device_settings.status', Status::ACTIVE)
-                ->orderBy('device_settings.name', 'asc');
+                ->orderBy('device_settings.name', 'ASC');
         }
 
         if ($isForHeader) {
             $this->model->where('device_settings.status', Status::ACTIVE)
-                ->whereIn('device_settings.device_type', [DeviceType::KIOSK, DeviceType::SIRIUS_POS])
+                ->whereIn('device_settings.device_type', [DeviceType::KIOSK, DeviceType::SIRIUS_POS, DeviceType::ECOMMERCE])
                 ->groupBy('device_settings.device_type');
         }
 
