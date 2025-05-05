@@ -75,6 +75,8 @@ class CustomWebSocketHandler extends BaseWebSocketHandler
             app()->make(POSDeviceSettingsService::class)->updateStatus($deviceInfo);
         } elseif ($deviceInfo->device_type == DeviceType::KIOSK) {
             app()->make(KIOSKDeviceSettingsService::class)->updateStatus($deviceInfo);
+        } else {
+            //@TODO: handle here other device type
         }
     }
 }

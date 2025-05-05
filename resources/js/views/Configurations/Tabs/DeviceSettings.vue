@@ -29,12 +29,14 @@
                                 : tableData.device_type === pos.kiosk ?  'device-type--kiosk'
                                 : tableData.device_type === pos.qr_mobile ?  'device-type--mobile'
                                 : tableData.device_type === pos.kds ?  'device-type--kds'
+                                : tableData.device_type === pos.ecommerce ?  'device-type--ecommerce'
                                 : ''"
                             v-text="tableData.device_type === pos.sirius_pos ? $t('label.sirius_pos')
                                 : tableData.device_type === pos.pda ? $t('label.pda')
                                 : tableData.device_type === pos.kiosk ? $t('label.kiosk')
                                 : tableData.device_type === pos.qr_mobile ? $t('label.qr_mobile')
                                 : tableData.device_type === pos.kds ? $t('label.kds')
+                                : tableData.device_type === pos.ecommerce ? $t('label.ecommerce')
                                 : ''">
                         </span>
                     </td>
@@ -250,6 +252,7 @@ import Util from '../../../mixins/Util.vue';
                     qr_mobile: POS.QR_MOBILE,
                     kds: POS.KDS,
                     queueing: POS.QUEUEING,
+                    ecommerce: POS.ECOMMERCE,
                 },
                 errors: {
                     device_type: '',
@@ -651,6 +654,10 @@ import Util from '../../../mixins/Util.vue';
         &--queueing {
             background-color: #8e4fb0;
             border-color: darken(#8e4fb0, 4%);
+        }
+        &--ecommerce {
+            background-color: #f73803;
+            border-color: darken(#f73803, 4%);
         }
     }
     .device {
