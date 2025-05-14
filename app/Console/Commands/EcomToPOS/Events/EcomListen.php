@@ -57,12 +57,11 @@ class EcomListen extends Command
 
         \Ratchet\Client\connect('wss://ws-'.$pusherCluster.'.pusher.com/app/'.$pusherAppKey.'?protocol=7&client=js&version=7.0.6&flash=false')
             ->then(function ($connection) use ($loop, &$socketConnection, $clientId, $branchCode) {
-                $connection->send('{"event":"pusher:subscribe","data":{"auth":"","channel":"ecommerce"}}');
-
+                $connection->send('{"event":"pusher:subscribe","data":{"auth":"","channel":"ecommerce-'.$branchCode.'"}}');
                 $connection->on('message', function (MessageInterface $message) use ($loop, $connection, &$pingTimer, $clientId, $branchCode) {
                     $this->eventListener($message, $connection, $clientId, $branchCode);
                 });
-
+                
                 $connection->on('close', function ($code = null, $reason = null) use ($loop, &$pingTimer) {
                     $this->createLog($reason, 'warn', true, ['CONNECTION CLOSED'], [$code]);
                     $loop->stop();
@@ -81,11 +80,15 @@ class EcomListen extends Command
     public function eventListener($message, $connection, $clientId, $branchCode)
     {
         $payload = json_decode($message);
-       
         if (isset($payload->event)) {
             switch($payload->event) {
                 case 'order' :
                     $result = app()->make(TerminalTransactionController::class)->store($payload->data);
+                break;
+
+                case 'payment' :
+                    log::info($payload->data);
+                    $result = app()->make(TerminalTransactionController::class)->update($payload->data);
                 break;
 
                 default: 

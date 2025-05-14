@@ -50,6 +50,7 @@ class POSTerminalTransaction extends Base
         'updated_at',
         'change',
         'payment',
+        'payment_status',
         'is_reset',
         'receipt',
     ];

@@ -16,10 +16,24 @@ class TerminalTransactionController extends EcomBaseController
 
     public function store($data)
     {
-        
         if (! empty($data)) {
             $data = json_decode($data);
             $result = app()->make(EcomTerminalTransactionService::class)->store($data->orderInformation->data, DeviceType::ECOMMERCE);
+        } else {
+            return $this->errorResponse([], 'Missing request parameters');
+        }
+
+        return $this->successfulResponse(
+            $data,
+            Lang::get('success.successfully_created', ['value' => __('label.terminal_transaction')])
+        );
+    }
+
+    public function update($data)
+    {
+        if (! empty($data)) {
+            $data = json_decode($data);
+            $result = app()->make(EcomTerminalTransactionService::class)->updateOrder($data);
         } else {
             return $this->errorResponse([], 'Missing request parameters');
         }

@@ -127,55 +127,19 @@ class EcomTerminalTransactionService
         //});
     }
 
-    public function storePayment($payments)
+    public function updateOrder($data)
     {
-        //return $this->transaction(function () use ($payments) {
-            foreach ($payments as $data) {
-                $data = (object) $data;
-                $paymentData = [
-                    'terminal_transaction_bid' => $data->terminal_transaction_bid,
-                    'payment_method_bid' => $data->payment_method_bid,
-                    'title' => $data->title,
-                    'amount' => $data->amount,
-                    'status' => $data->status,
-                    'created_at' => $data->created_at,
-                    'log_date' => $data->log_date,
-                    'account_number' => $data->account_number,
-                    'remarks' => $data->remarks,
-                ];
-                $posPayment = POSPayment::where('payment_method_bid', $data->payment_method_bid)
-                    ->where('log_date', $data->log_date)
-                    ->where('terminal_transaction_bid', $data->terminal_transaction_bid)
-                    ->first();
+        $data = (object) $data->transaction;
+        $transaction = POSTerminalTransaction::where('order_number', $data->reference_number);
 
-                if ($posPayment) {
-                    $posPayment = tap($posPayment)->update($paymentData);
-                } else {
-                    $posPayment = POSPayment::create($paymentData);
-                }
-            }
-            return $posPayment;
-       // });
+        if ($transaction) {
+            $transaction->update([
+                'payment_status' => $data->payment_status,
+            ]);
+        }
+
+        return $transaction;
     }
 
-    public function updateStatus($data)
-    {
-        return $this->transaction(function () use ($data) {
-            $data = (object) stringToJson($data);
-            $posTransaction = POSTerminalTransaction::where('terminal_bid', '=', $data->terminal_bid)
-                ->where('log_date', $data->log_date)
-                ->where('transaction_id', $data->transaction_id)
-                ->where('or_number', $data->or_number)
-                ->where('order_number', $data->order_number)
-                ->where('order_status', Status::INACTIVE)
-                ->first();
 
-            if ($posTransaction) {
-                $posTransaction = tap($posTransaction)->update([
-                    'order_status' => Status::ACTIVE,
-                ]);
-            }
-            return $posTransaction;
-        });
-    }
 }
