@@ -38,6 +38,8 @@ class POSTerminalTransaction extends Base
         'guest_count',
         'service_charge',
         'order_number',
+        'order_type',
+        'order_schedule',
         'table_number',
         'customer_type',
         'customer_bid',

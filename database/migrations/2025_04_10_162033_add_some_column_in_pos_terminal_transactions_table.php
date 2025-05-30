@@ -5,6 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 use App\Enums\API\DeviceType;
 use App\Enums\PaymentStatus;
+use App\Enums\KDS\OrderType;
 
 class AddSomeColumnInPosTerminalTransactionsTable extends Migration
 {
@@ -23,6 +24,12 @@ class AddSomeColumnInPosTerminalTransactionsTable extends Migration
                 if (! Schema::hasColumn('pos_terminal_transactions', 'payment_status')) {
                     $table->tinyInteger('payment_status')->default(PaymentStatus::CREATED)->after('payment');
                 }
+                if (! Schema::hasColumn('pos_terminal_transactions', 'order_type')) {
+                    $table->tinyInteger('order_type')->default(OrderType::DINE_IN)->after('order_status');
+                }
+                if (! Schema::hasColumn('pos_terminal_transactions', 'order_schedule')) {
+                    $table->timestamp('order_schedule')->nullable()->after('order_type');
+                }
             });
         }
     }
@@ -40,6 +47,12 @@ class AddSomeColumnInPosTerminalTransactionsTable extends Migration
             }
             if (Schema::hasColumn('pos_terminal_transactions', 'payment_status')) {
                 $table->dropColumn('payment_status');
+            }
+            if (! Schema::hasColumn('pos_terminal_transactions', 'order_type')) {
+                    $table->tinyInteger('order_type');
+            }
+            if (! Schema::hasColumn('pos_terminal_transactions', 'order_schedule')) {
+                $table->tinyInteger('order_schedule');
             }
         });
     }

@@ -24,6 +24,7 @@ class EcomTerminalTransactionService
     {
        // return $this->transaction(function () use ($data) {
             $transaction = $data->order_information->values;
+            $orderType = $transaction->order_type ?? OrderType::DELIVERY;
             $detail = $data->cart;
             $transactionData = [
                 'device_code' => $transaction->device_code,
@@ -53,6 +54,8 @@ class EcomTerminalTransactionService
                 'guest_count' => 0,
                 'service_charge' => 0,
                 'order_number' => $transaction->order_number,
+                'order_type' => $orderType,
+                'order_schedule' => $transaction->order_schedule ?? null,
                 'table_number' => 0,
                 'customer_type' => null,
                 'customer_bid' => null,
@@ -71,14 +74,14 @@ class EcomTerminalTransactionService
 
 
             if (isset($detail) && count($detail)) {
-                $this->storeDetail($detail, $posTransaction->bid);
+                $this->storeDetail($detail, $posTransaction->bid, $orderType);
             }
             
             return $posTransaction;
        // });
     }
 
-    public function storeDetail($details, $terminalTransactionBid)
+    public function storeDetail($details, $terminalTransactionBid, $orderType = OrderType::DELIVERY)
     {
         //return $this->transaction(function () use ($details) {
             foreach ($details as $data) {
@@ -95,8 +98,8 @@ class EcomTerminalTransactionService
                     'category_bid' => $data->category_bid,
                     'quantity' => $data->qty,
                     'tax_percentage' => 0,
-                    'order_type_id' => OrderType::DELIVERY,
-                    'order_type_name' => 'DELIVERY',
+                    'order_type_id' => $orderType,
+                    'order_type_name' => OrderType::getDescription($orderType),
                     'is_free' => 0,
                     'tax_code' => 0,
                     'original_price' => $data->total,
