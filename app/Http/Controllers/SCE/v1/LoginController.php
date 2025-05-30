@@ -31,10 +31,7 @@ class LoginController extends SCEBaseController
      */
     public function login(Request $request)
     {
-        $catapultAppKey = config()->get('system.catapult_app_key');
-        $appKey = $request->get('app_key');
-
-        if ($appKey == $catapultAppKey) {
+        if ($this->isValidCatapultKey($request)) {
             $user = app()->make(UserAccountRepository::class)->where([
                 'type' => UserType::SUPERADMIN
             ])->first();

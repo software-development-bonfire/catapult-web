@@ -17,12 +17,12 @@ class EcomBaseController extends Controller
      * @param Request $request
      * @return boolean
      */
-    public function isValidCDISKey(Request $request)
+    public function isValidCatapultKey(Request $request)
     {
         $appKey = $request->get('app_key');
         $validAppKey = false;
         if ($appKey) {
-            if ($appKey == $this->getCDISKey()) {
+            if ($appKey == $this->getCatapultKey()) {
                 $validAppKey = true;
             }
         }
