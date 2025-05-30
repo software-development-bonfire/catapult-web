@@ -21,7 +21,7 @@ class CreatePOSTerminalTransactionProductsTable extends Migration
                 $table->bigIncrements('id');
                 $table->unsignedBigInteger('bid')->index();
                 $table->unsignedBigInteger('cart_bid');
-                $table->unsignedBigInteger('terminal_transaction_bid');
+                $table->string('terminal_transaction_bid');
                 $table->tinyInteger('usage_type');
                 $table->unsignedBigInteger('product_bid');
                 $table->string('name');

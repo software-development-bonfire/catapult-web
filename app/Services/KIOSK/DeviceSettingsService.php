@@ -4,6 +4,7 @@ namespace App\Services\KIOSK;
 
 use App\Entities\DeviceSettings;
 use App\Enums\API\DeviceType;
+use App\Enums\Status;
 use App\Traits\DatabaseTransaction;
 
 class DeviceSettingsService
@@ -39,7 +40,7 @@ class DeviceSettingsService
                     'terminal_code' => $data->terminal_code,
                     'name' => isset($data->name) ? $data->name : (isset($data->device_name) ? $data->device_name : ''),
                     'ip_address' => $data->ip_address,
-                    'status' => $data->status,
+                    'status' => isset($data->status) ? $data->status : Status::ACTIVE,
                 ]);
             }
             return $deviceSetting;

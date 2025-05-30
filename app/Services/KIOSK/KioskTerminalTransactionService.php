@@ -83,24 +83,24 @@ class KioskTerminalTransactionService
             }
 
             if (isset($data->details) && count($data->details) > 0) {
-                $this->storeDetail($data->details);
+                $this->storeDetail($data->details, $posTransaction->bid);
             }
             if (isset($data->payments) && count($data->payments) > 0) {
-                $this->storePayment($data->payments);
+                $this->storePayment($data->payments, $posTransaction->bid);
             }
 
             return $posTransaction;
        // });
     }
 
-    public function storeDetail($details)
+    public function storeDetail($details, $terminal_transaction_bid)
     {
         //return $this->transaction(function () use ($details) {
             foreach ($details as $data) {
                 $data = (object) $data;
                 $transactionData = [
                     'cart_bid' => $data->cart_bid,
-                    'terminal_transaction_bid' => $data->terminal_transaction_bid,
+                    'terminal_transaction_bid' => $terminal_transaction_bid,
                     'usage_type' => $data->usage_type,
                     'product_bid' => $data->product_bid,
                     'name' => $data->name,
@@ -160,13 +160,13 @@ class KioskTerminalTransactionService
         //});
     }
 
-    public function storePayment($payments)
+    public function storePayment($payments, $terminal_transaction_bid)
     {
         //return $this->transaction(function () use ($payments) {
             foreach ($payments as $data) {
                 $data = (object) $data;
                 $paymentData = [
-                    'terminal_transaction_bid' => $data->terminal_transaction_bid,
+                    'terminal_transaction_bid' => $terminal_transaction_bid,
                     'payment_method_bid' => $data->payment_method_bid,
                     'title' => $data->title,
                     'amount' => $data->amount,

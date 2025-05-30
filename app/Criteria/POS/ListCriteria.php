@@ -62,7 +62,8 @@ class ListCriteria implements CriteriaInterface
         }
 
         if (! empty($filters->order_number)) {
-            $model->where('pos_terminal_transactions.order_number', $filters->order_number);
+            //$model->where('pos_terminal_transactions.order_number', $filters->order_number);
+            $model->where('pos_terminal_transactions.order_number', 'LIKE', '%'.$filters->order_number.'%');
         }
         
         if (isset($filters->order_status) && $filters->order_status != '') {

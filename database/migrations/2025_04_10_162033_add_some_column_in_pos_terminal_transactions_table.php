@@ -19,7 +19,7 @@ class AddSomeColumnInPosTerminalTransactionsTable extends Migration
         if (Schema::hasTable('pos_terminal_transactions')) {
             Schema::table('pos_terminal_transactions', function (Blueprint $table) {
                 if (! Schema::hasColumn('pos_terminal_transactions', 'device_type')) {
-                    $table->tinyInteger('device_type')->default(DeviceType::POS)->after('type');
+                    $table->tinyInteger('device_type')->default(DeviceType::SIRIUS_POS)->after('type');
                 }
                 if (! Schema::hasColumn('pos_terminal_transactions', 'payment_status')) {
                     $table->tinyInteger('payment_status')->default(PaymentStatus::CREATED)->after('payment');
