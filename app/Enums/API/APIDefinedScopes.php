@@ -13,5 +13,6 @@ final class APIDefinedScopes extends Enum
         'mobile' => 'QR Mobile',
         'kds' => 'Kitchen Display',
         'queueing' => 'Queueing System',
+        'sce' => 'Sirius Computation Engine'
     ];
 }

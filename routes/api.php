@@ -92,3 +92,14 @@ Route::group([
         Route::get('device-settings/list', [\App\Http\Controllers\POS\v1\DeviceSettingsController::class, 'list']);
     });
 });
+
+
+Route::group([
+    'prefix' => 'sce/v1',
+    'namescpace' => 'SCE\v1'
+], function() {
+    Route::post('login', [\App\Http\Controllers\SCE\v1\LoginController::class, 'login']);
+    Route::post('logout', [\App\Http\Controllers\SCE\v1\LoginController::class, 'logout']);
+
+    
+});

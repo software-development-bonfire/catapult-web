@@ -5,6 +5,8 @@ return [
     'catapult_port' => env('CATAPULT_PORT', NULL),
     'catapult_key' => env('CATAPULT_KEY', NULL),
 
+    'catapult_app_key' => env('CATAPULT_APP_KEY', NULL),
+
     'api' => [
         /*
         |--------------------------------------------------------------------------
@@ -16,6 +18,7 @@ return [
             'pda' => 'PDA',
             'kiosk' => 'Kiosk OTS',
             'mobile' => 'QR Mobile',
+            'sce' => 'Sirius Computation Engine'
         ],
 
         /*
