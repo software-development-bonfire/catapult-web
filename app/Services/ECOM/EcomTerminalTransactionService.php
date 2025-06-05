@@ -94,17 +94,17 @@ class EcomTerminalTransactionService
                     'name' => $data->name,
                     'description' => $data->description,
                     'long_description' => $data->long_description,
-                    'menu_code' => $data->item_code ?? '-',
+                    'menu_code' => $data->barcode ?? '-',
                     'category_bid' => $data->category_bid,
-                    'quantity' => $data->qty,
+                    'quantity' => (integer) $data->qty,
                     'tax_percentage' => 0,
                     'order_type_id' => $orderType,
                     'order_type_name' => OrderType::getDescription($orderType),
                     'is_free' => 0,
                     'tax_code' => 0,
-                    'original_price' => $data->total,
-                    'price' => $data->total,
-                    'individual_total_amount' => $data->total,
+                    'original_price' => $data->price,
+                    'price' => $data->price,
+                    'individual_total_amount' => $data->price,
                     'individual_total_discount' => 0,
                     'entire_discount' => 0,
                     'entire_amount' => 0,
@@ -116,9 +116,59 @@ class EcomTerminalTransactionService
                     'parent_id' => 0,
                     'add_on' => 0,
                     'take_home' => 0,
-                    'sub_total' => $data->total,
-                    'gross_total' => $data->total,
-                    'net_total' => $data->total,
+                    'sub_total' => $data->price,
+                    'gross_total' => $data->price,
+                    'net_total' => $data->price,
+                    'discount_value' => 0,
+                    'is_reset' => 0,
+                ];
+               
+                $posTransactionProduct = POSTerminalTransactionProduct::create($transactionData);
+
+                $this->storeModifier($data->modifiers, $terminalTransactionBid, $orderType = OrderType::DELIVERY);
+
+            }
+            return $posTransactionProduct;
+        //});
+    }
+
+    public function storeModifier($details, $terminalTransactionBid, $orderType = OrderType::DELIVERY)
+    {
+        foreach ($details as $data) {
+                $data = (object) $data;
+                $transactionData = [
+                    'cart_bid' => 0,
+                    'terminal_transaction_bid' => $terminalTransactionBid,
+                    'usage_type' => $data->usage,
+                    'product_bid' => $data->bid,
+                    'name' => $data->description,
+                    'description' => $data->description,
+                    'long_description' => $data->long_description,
+                    'menu_code' => $data->item_code ?? '-',
+                    'category_bid' => $data->category_bid ?? 1,
+                    'quantity' => (integer) $data->quantity,
+                    'tax_percentage' => 0,
+                    'order_type_id' => $orderType,
+                    'order_type_name' => OrderType::getDescription($orderType),
+                    'is_free' => 0,
+                    'tax_code' => 0,
+                    'original_price' => $data->price,
+                    'price' => $data->price,
+                    'individual_total_amount' => $data->price,
+                    'individual_total_discount' => 0,
+                    'entire_discount' => 0,
+                    'entire_amount' => 0,
+                    'vatable_sales' => 0,
+                    'zero_rated_sales' => 0,
+                    'tax' => 0,
+                    'vat_deduct' => 0,
+                    'vat_exempt' => 0,
+                    'parent_id' => 0,
+                    'add_on' => 0,
+                    'take_home' => 0,
+                    'sub_total' => $data->price,
+                    'gross_total' => $data->price,
+                    'net_total' => $data->price,
                     'discount_value' => 0,
                     'is_reset' => 0,
                 ];
@@ -126,8 +176,6 @@ class EcomTerminalTransactionService
                 $posTransactionProduct = POSTerminalTransactionProduct::create($transactionData);
 
             }
-            return $posTransactionProduct;
-        //});
     }
 
     public function updateOrder($data)
