@@ -279,13 +279,39 @@
             this.filters.date = this.getCurrentDate('YYYY-MM-DD');
         },
         mounted() {
-            console.log(this.$store.state.branchCode);
+            this.isBranchAvailable();
         },
         methods: {
+
+            async isBranchAvailable() {
+                let self = this;
+                 this.$root.processing(true);
+                let url = this.base_url + '/api/catapult/v2/branch/available'
+                let params = {
+                    app_key : this.app_key,
+                    branch: {
+                        branch_code: this.$store.state.branchCode,
+                    }
+                }
+
+                return await axios.post(url, params, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                }
+                }).then(function(response){
+                    self.$root.processing(false);
+                    self.isOn = response.data.data.is_available;
+                }).catch(function(error){
+                    self.$root.processing(false);
+                })
+
+            },
+
             async toggle () {
                 let self = this;
                 this.isOn = !this.isOn;
-
+                this.$root.processing(true);
                 let url = this.base_url + '/api/catapult/v2/branch/availability'
                 let params = {
                     app_key : this.app_key,
@@ -301,9 +327,9 @@
                     'Content-Type': 'application/json',
                 }
                 }).then(function(response){
-                    console.log(response);
+                    self.$root.processing(false);
                 }).catch(function(error){
-
+                    self.$root.processing(false);
                 })
             },
 
