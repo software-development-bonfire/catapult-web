@@ -83,6 +83,11 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/kitchen-stations', 'DeviceSettingsController@getKitchenStations');
     });
 
+    Route::group(['prefix' => 'branch-universal-order-summary'], function () {
+        Route::get('/', 'BranchUniversalOrderSummaryController@index');
+        Route::get('/list', 'BranchUniversalOrderSummaryController@list');
+    });
+
     Route::apiResources([
         'file-storage-setup' => 'FileStorageSetupController',
         'catapult-db-setup' => 'CatapultDbSetupController',
