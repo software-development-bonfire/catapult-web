@@ -5,6 +5,7 @@ namespace App\Services\ECOM;
 use App\Entities\POSPayment;
 use App\Entities\POSTerminalTransaction;
 use App\Entities\POSTerminalTransactionProduct;
+use App\Entities\DeliveryTransaction;
 use App\Enums\Status;
 use App\Enums\API\deviceType;
 use App\Enums\KDS\OrderType;
@@ -24,6 +25,7 @@ class EcomTerminalTransactionService
     {
        // return $this->transaction(function () use ($data) {
             $transaction = $data->order_information->values;
+            $customer = (object) $data->customer;
             $orderType = $transaction->order_type ?? OrderType::DELIVERY;
             $detail = $data->cart;
             $transactionData = [
@@ -58,9 +60,9 @@ class EcomTerminalTransactionService
                 'order_schedule' => $transaction->order_schedule ?? null,
                 'table_number' => 0,
                 'customer_type' => null,
-                'customer_bid' => null,
+                'customer_bid' => $customer->bid,
                 'customer_name' => null,
-                'customer_address' => null,
+                'customer_address' => $customer->address,
                 'cashier_bid' => null,
                 'cashier_name' => null,
                 'remarks' => null,
@@ -71,8 +73,11 @@ class EcomTerminalTransactionService
             ];
 
             $posTransaction = POSTerminalTransaction::create($transactionData);
-
-
+            
+            if (isset($customer)) {
+                $this->storeDeliveryTransaction($customer, $posTransaction->bid);
+            }
+            
             if (isset($detail) && count($detail)) {
                 $this->storeDetail($detail, $posTransaction->bid, $orderType);
             }
@@ -177,6 +182,22 @@ class EcomTerminalTransactionService
                 $posTransactionProduct = POSTerminalTransactionProduct::create($transactionData);
 
             }
+    }
+
+    public function storeDeliveryTransaction($data, $bid)
+    {
+        $deliveryData = [
+            'pos_terminal_transaction_bid' => $bid,
+            'email_address' => $data->email_address,
+            'contact_number' => $data->contact_number,
+            'address' => $data->address,
+            'no_bldng_lot_street' => $data->no_bldg_lot_street ?? null,
+            'delivery_instruction' => $data->delivery_instructions ?? null,
+        ];
+
+        $deliveryTransaction = DeliveryTransaction::create($deliveryData);
+
+        return $deliveryTransaction;
     }
 
     public function updateOrder($data)
