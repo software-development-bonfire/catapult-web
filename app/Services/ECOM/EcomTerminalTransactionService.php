@@ -11,6 +11,7 @@ use App\Enums\API\deviceType;
 use App\Enums\KDS\OrderType;
 use App\Traits\DatabaseTransaction;
 use App\Services\CDIS\V2\CDISApiService;
+use Illuminate\Support\Facades\Log;
 
 class EcomTerminalTransactionService
 {
@@ -31,7 +32,7 @@ class EcomTerminalTransactionService
             $customer = (object) $data->customer;
             $orderType = $transaction->order_type ?? OrderType::DELIVERY;
             $detail = $data->cart;
-            $hasTransaction = POSTerminalTransaction::where('order_number', $transaction->order_number);
+            $hasTransaction = POSTerminalTransaction::where('order_number', $transaction->order_number)->first();
             
             $transactionData = [
                 'device_code' => $transaction->device_code,
@@ -77,9 +78,8 @@ class EcomTerminalTransactionService
                 'receipt' => 0,
             ];
             if ($transaction->type == 1) {
-                $email = app()->make(CDISApiService::class)->post('/api/ecommerce/customer/email', ['data' => $data->orderInformation->data]);
+                $email = app()->make(CDISApiService::class)->post('/api/ecommerce/customer/email', ['data' => $data]);
             }
-            $posTransaction = [];
 
             if(! $hasTransaction) {
                 $posTransaction = POSTerminalTransaction::create($transactionData);
@@ -91,9 +91,11 @@ class EcomTerminalTransactionService
                 if (isset($detail) && count($detail)) {
                     $this->storeDetail($detail, $posTransaction->bid, $orderType);
                 }
+
+                return $posTransaction;
             }
 
-            return $posTransaction;
+            
        // });
     }
 
