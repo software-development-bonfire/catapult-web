@@ -87,7 +87,6 @@ class EcomListen extends Command
                 break;
 
                 case 'payment' :
-                    log::info($payload->data);
                     $result = app()->make(TerminalTransactionController::class)->update($payload->data);
                 break;
 

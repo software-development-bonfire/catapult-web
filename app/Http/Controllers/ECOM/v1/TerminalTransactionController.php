@@ -28,8 +28,6 @@ class TerminalTransactionController extends EcomBaseController
                 $channel = 'ecommerce-'.$result['order_number'];
                 $this->initializePusher();
                 $this->pusher->trigger($channel, 'response', $result);
-                log::info('cdis broadcast');
-                $email = app()->make(CDISApiService::class)->post('/api/ecommerce/customer/email', ['data' => $data->orderInformation->data]);
             }
         } else {
             broadcast(new EcommerceOrderResponse($this->errorResponse([], 'Missing request parameters')));

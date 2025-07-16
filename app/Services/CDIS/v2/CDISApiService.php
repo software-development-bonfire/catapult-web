@@ -23,12 +23,7 @@ class CDISApiService
     protected $client;
 
     /**
-     * @var string PayMongo Secret API Key
-     */
-    protected $secretKey;
-
-    /**
-     * @var string Base URL for PayMongo API
+     * @var string Base URL for CDIS API
      */
     protected $baseUrl;
 

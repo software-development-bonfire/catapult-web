@@ -40,6 +40,7 @@ class POSTerminalTransaction extends Base
         'order_number',
         'order_type',
         'order_schedule',
+        'billing_type',
         'table_number',
         'customer_type',
         'customer_bid',

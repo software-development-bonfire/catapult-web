@@ -10,6 +10,7 @@ use App\Enums\Status;
 use App\Enums\API\deviceType;
 use App\Enums\KDS\OrderType;
 use App\Traits\DatabaseTransaction;
+use App\Services\CDIS\V2\CDISApiService;
 
 class EcomTerminalTransactionService
 {
@@ -24,10 +25,14 @@ class EcomTerminalTransactionService
     public function store($data, $deviceType = DeviceType::ECOMMERCE)
     {
        // return $this->transaction(function () use ($data) {
+            
+
             $transaction = $data->order_information->values;
             $customer = (object) $data->customer;
             $orderType = $transaction->order_type ?? OrderType::DELIVERY;
             $detail = $data->cart;
+            $hasTransaction = POSTerminalTransaction::where('order_number', $transaction->order_number);
+            
             $transactionData = [
                 'device_code' => $transaction->device_code,
                 'branch_bid' => $transaction->branch_bid,
@@ -71,17 +76,23 @@ class EcomTerminalTransactionService
                 'is_reset' => 0,
                 'receipt' => 0,
             ];
+            if ($transaction->type == 1) {
+                $email = app()->make(CDISApiService::class)->post('/api/ecommerce/customer/email', ['data' => $data->orderInformation->data]);
+            }
+            $posTransaction = [];
 
-            $posTransaction = POSTerminalTransaction::create($transactionData);
-            
-            if (isset($customer)) {
-                $this->storeDeliveryTransaction($customer, $posTransaction->bid);
+            if(! $hasTransaction) {
+                $posTransaction = POSTerminalTransaction::create($transactionData);
+
+                if (isset($customer)) {
+                    $this->storeDeliveryTransaction($customer, $posTransaction->bid);
+                }
+                
+                if (isset($detail) && count($detail)) {
+                    $this->storeDetail($detail, $posTransaction->bid, $orderType);
+                }
             }
-            
-            if (isset($detail) && count($detail)) {
-                $this->storeDetail($detail, $posTransaction->bid, $orderType);
-            }
-            
+
             return $posTransaction;
        // });
     }
@@ -210,6 +221,8 @@ class EcomTerminalTransactionService
                 'payment_status' => $data->payment_status,
             ]);
         }
+
+        
 
         return $transaction;
     }

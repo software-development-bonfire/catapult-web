@@ -135,6 +135,17 @@ module.exports = {
             autorestart: true,
         },
         {
+            name : "CPLT-ECOM-PING",
+            script: "artisan",
+            args: ["ecom:event-ping"],
+            exec_interpreter: "php",
+            exec_mode : "fork",
+            max_memory_restart : "5G",
+            watch: false,
+            merge_logs: true,
+            autorestart: true,
+        },
+        {
             name : "CPLT-ECOM-SIM",
             script: "artisan",
             args: ["ecom:send-item-availability"],
