@@ -31,6 +31,8 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(\App\Repositories\Contracts\DeviceSettingsRepository::class, \App\Repositories\Eloquent\DeviceSettingsRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\CDISProductCategoryRepository::class, \App\Repositories\Eloquent\CDISProductCategoryRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\BranchUniversalOrderSummaryRepository::class, \App\Repositories\Eloquent\BranchUniversalOrderSummaryRepositoryEloquent::class);
+
+        $this->app->bind(\App\Repositories\Contracts\Ecommerce\PosTerminalTransactionRepository::class, \App\Repositories\Eloquent\Ecommerce\PosTerminalTransactionRepositoryEloquent::class);
     }
 
     /**

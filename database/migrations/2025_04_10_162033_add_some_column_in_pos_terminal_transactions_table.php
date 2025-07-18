@@ -34,6 +34,9 @@ class AddSomeColumnInPosTerminalTransactionsTable extends Migration
                 if (! Schema::hasColumn('pos_terminal_transactions', 'billing_type')) {
                     $table->tinyInteger('billing_type')->default(BillingType::COD)->after('order_schedule');
                 }
+                if (! Schema::hasColumn('pos_terminal_transactions', 'total_delivery_fee')) {
+                    $table->tinyInteger('total_delivery_fee')->default(0.000000)->after('total_discount_amount');
+                }
             });
         }
     }
@@ -52,14 +55,17 @@ class AddSomeColumnInPosTerminalTransactionsTable extends Migration
             if (Schema::hasColumn('pos_terminal_transactions', 'payment_status')) {
                 $table->dropColumn('payment_status');
             }
-            if (! Schema::hasColumn('pos_terminal_transactions', 'order_type')) {
+            if (Schema::hasColumn('pos_terminal_transactions', 'order_type')) {
                 $table->dropColumn('order_type');
             }
-            if (! Schema::hasColumn('pos_terminal_transactions', 'billing_type')) {
+            if (Schema::hasColumn('pos_terminal_transactions', 'billing_type')) {
                 $table->dropColumn('billing_type');
             }
-            if (! Schema::hasColumn('pos_terminal_transactions', 'order_schedule')) {
+            if (Schema::hasColumn('pos_terminal_transactions', 'order_schedule')) {
                 $table->dropColumn('order_schedule');
+            }
+             if (Schema::hasColumn('pos_terminal_transactions', 'total_delivery_fee')) {
+                $table->dropColumn('total_delivery_fee');
             }
         });
     }

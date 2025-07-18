@@ -16,6 +16,7 @@ class POSTerminalTransactionProduct extends Base
         'terminal_transaction_bid',
         'usage_type',
         'product_bid',
+        'parent_bid',
         'name',
         'description',
         'long_description',
@@ -71,4 +72,5 @@ class POSTerminalTransactionProduct extends Base
     {
         return $this->belongsTo(POSTerminalTransaction::class, 'terminal_transaction_bid', 'transaction_id');
     }
+
 }

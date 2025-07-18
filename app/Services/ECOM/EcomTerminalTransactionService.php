@@ -32,7 +32,7 @@ class EcomTerminalTransactionService
             $customer = (object) $data->customer;
             $orderType = $transaction->order_type ?? OrderType::DELIVERY;
             $detail = $data->cart;
-            $hasTransaction = POSTerminalTransaction::where('order_number', $transaction->order_number)->first();
+            $hasTransaction = POSTerminalTransaction::where('order_number', $transaction->order_number)->get();
             
             $transactionData = [
                 'device_code' => $transaction->device_code,
@@ -47,17 +47,18 @@ class EcomTerminalTransactionService
                 'device_type' => $deviceType,
                 'status' => Status::ACTIVE,
                 'gross_sales' => $transaction->sub_total,
-                'net_sales' => $transaction->sub_total,
+                'net_sales' => $transaction->total_amount,
                 'total_quantity' => $transaction->total_quantity,
                 'total_free_items_amount' => 0,
                 'total_local_tax_amount' => 0,
                 'total_tax_amount' => 0,
-                'total_discount_amount' => 0,
+                'total_discount_amount' => $transaction->discount,
+                'total_delivery_fee' => $transaction->delivery_fee,
                 'total_vat_deduct_amount' => 0,
                 'total_vat_exempt_amount' => 0,
                 'total_vatable_sales' => 0,
                 'total_zero_rated_sales' => 0,
-                'total_tender' => 0,
+                'total_tender' => $transaction->total_amount,
                 'eligible_amount_to_earn_points' => 0,
                 'guest_count' => 0,
                 'service_charge' => 0,
@@ -67,7 +68,7 @@ class EcomTerminalTransactionService
                 'table_number' => 0,
                 'customer_type' => null,
                 'customer_bid' => $customer->bid,
-                'customer_name' => null,
+                'customer_name' => $customer->name,
                 'customer_address' => $customer->address,
                 'cashier_bid' => null,
                 'cashier_name' => null,
@@ -78,10 +79,15 @@ class EcomTerminalTransactionService
                 'receipt' => 0,
             ];
             if ($transaction->type == 1) {
-                $email = app()->make(CDISApiService::class)->post('/api/ecommerce/customer/email', ['data' => $data]);
+                $emailData = [
+                    'customer' => $customer,
+                    'cart' => $detail,
+                    'order_information' => $transaction
+                ];
+                $email = app()->make(CDISApiService::class)->post('/api/ecommerce/customer/email', ['data' => $emailData]);
             }
 
-            if(! $hasTransaction) {
+            if(! count($hasTransaction)) {
                 $posTransaction = POSTerminalTransaction::create($transactionData);
 
                 if (isset($customer)) {
@@ -93,10 +99,10 @@ class EcomTerminalTransactionService
                 }
 
                 return $posTransaction;
+            } else {
+                return $hasTransaction[0];
             }
-
-            
-       // });
+            return true;
     }
 
     public function storeDetail($details, $terminalTransactionBid, $orderType = OrderType::DELIVERY)
@@ -142,15 +148,20 @@ class EcomTerminalTransactionService
                 ];
                
                 $posTransactionProduct = POSTerminalTransactionProduct::create($transactionData);
+                if (isset($data->modifiers) && count($data->modifiers)) {
+                    $this->storeModifier($data->modifiers, $terminalTransactionBid, $posTransactionProduct->bid, $orderType);
+                }
 
-                $this->storeModifier($data->modifiers, $terminalTransactionBid, $orderType = OrderType::DELIVERY);
+                if (isset($data->addOns) && count($data->addOns)) {
+                    $this->storeModifier($data->addOns, $terminalTransactionBid, $posTransactionProduct->bid, $orderType);
+                }
 
             }
             return $posTransactionProduct;
         //});
     }
 
-    public function storeModifier($details, $terminalTransactionBid, $orderType = OrderType::DELIVERY)
+    public function storeModifier($details, $terminalTransactionBid, $parentBid, $orderType = OrderType::DELIVERY)
     {
         foreach ($details as $data) {
                 $data = (object) $data;
@@ -159,6 +170,7 @@ class EcomTerminalTransactionService
                     'terminal_transaction_bid' => $terminalTransactionBid,
                     'usage_type' => $data->usage,
                     'product_bid' => $data->bid,
+                    'parent_bid' => $parentBid,
                     'name' => $data->description,
                     'description' => $data->description,
                     'long_description' => $data->long_description,
@@ -195,6 +207,8 @@ class EcomTerminalTransactionService
                 $posTransactionProduct = POSTerminalTransactionProduct::create($transactionData);
 
             }
+
+            return $posTransactionProduct;
     }
 
     public function storeDeliveryTransaction($data, $bid)
@@ -223,8 +237,6 @@ class EcomTerminalTransactionService
                 'payment_status' => $data->payment_status,
             ]);
         }
-
-        
 
         return $transaction;
     }

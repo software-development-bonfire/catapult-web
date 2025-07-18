@@ -4,7 +4,7 @@ namespace App\Http\Controllers\ECOM\v1;
 
 use App\Events\TransactionEvent;
 use App\Http\Controllers\ECOM\EcomBaseController;
-use App\Repositories\Contracts\POS\TerminalTransactionRepository;
+use App\Repositories\Contracts\Ecommerce\PosTerminalTransactionRepository;
 use App\Services\ECOM\EcomTerminalTransactionService;
 use App\Services\CDIS\V2\CDISApiService;
 use Illuminate\Http\Request;
@@ -13,6 +13,9 @@ use App\Enums\API\DeviceType;
 use Illuminate\Support\Facades\Log;
 use App\Events\EcommerceOrderResponse;
 use App\Traits\PusherTrait;
+use App\Transformers\Ecommerce\CustomerEmailTransformer;
+use App\Transformers\Ecommerce\CustomerEmailProductTransformer;
+
 
 class TerminalTransactionController extends EcomBaseController
 {
@@ -45,6 +48,24 @@ class TerminalTransactionController extends EcomBaseController
         if (! empty($data)) {
             $data = json_decode($data);
             $result = app()->make(EcomTerminalTransactionService::class)->updateOrder($data);
+
+            if ($result) {
+                $transaction = app()->make(PosTerminalTransactionRepository::class)->list($data);
+                $transaction = fractal($transaction, CustomerEmailTransformer::class)->toArray()['data'];
+
+                $product = app()->make(PosTerminalTransactionRepository::class)->product($transaction[0]['bid']);
+                $product = fractal($product, new CustomerEmailProductTransformer(true))->toArray()['data'];
+
+                if (count($transaction)) {
+                    $emailData = [
+                        'customer' => $transaction[0],
+                        'cart' => $product,
+                        'order_information' => $transaction[0]
+                    ];
+                    log::info($emailData);
+                    $email = app()->make(CDISApiService::class)->post('/api/ecommerce/customer/email', ['data' => $emailData]);
+                }
+            }
         } else {
             return $this->errorResponse([], 'Missing request parameters');
         }

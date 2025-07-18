@@ -52,6 +52,7 @@ class EcomListen extends Command
         $pusherCluster = config('broadcasting.connections.cdis_pusher.options.cluster');
         $clientId = config('configuration.client_id');
         $branchCode = config('configuration.branch_code');
+        log::info($branchCode);
         $loop = Loop::get();
         $this->createLog('wss://ws-'.$pusherCluster.'.pusher.com/app/'.$pusherAppKey.'?protocol=7&client=js&version=7.0.6&flash=false', 'info', true, ['CONNECTION INIT']);
 
@@ -81,6 +82,7 @@ class EcomListen extends Command
     {
         $payload = json_decode($message);
         if (isset($payload->event)) {
+        log::info($payload->event);
             switch($payload->event) {
                 case 'order' :
                     $result = app()->make(TerminalTransactionController::class)->store($payload->data);

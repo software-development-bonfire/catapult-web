@@ -29,6 +29,7 @@ class POSTerminalTransaction extends Base
         'total_local_tax_amount',
         'total_tax_amount',
         'total_discount_amount',
+        'total_delivery_fee',
         'total_vat_deduct_amount',
         'total_vat_exempt_amount',
         'total_vatable_sales',
