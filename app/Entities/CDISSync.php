@@ -21,6 +21,8 @@ class CDISSync extends Model
         'branch_bid',
         'table_bid',
         'table_name',
+        'reference_bid',
+        'reference_table',
         'level',
         'group',
         'code',

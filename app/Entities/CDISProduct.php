@@ -17,6 +17,7 @@ class CDISProduct extends BaseModel
         'status',
         'is_sell_item',
         'is_inventory_item',
+        'is_finished_good',
         'tax_code',
         'is_senior_item',
         'is_pwd_item',

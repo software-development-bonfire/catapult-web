@@ -14,7 +14,9 @@ class CDISKitchenStationProcess extends BaseModel
         'kitchen_station_bid_2',
         'kitchen_station_bid_3',
         'kitchen_station_bid_4',
-        'status'
+        'status',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [

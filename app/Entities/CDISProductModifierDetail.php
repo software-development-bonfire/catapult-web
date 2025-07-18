@@ -13,9 +13,11 @@ class CDISProductModifierDetail extends BaseModel
     protected $fillable = [
         'bid',
         'head_bid',
+        'modifier_for_product_pricing_type_bid',
         'product_uom_bid',
         'product_branch_price_bid',
         'quantity',
+        'is_default',
     ];
 
     protected $casts = [

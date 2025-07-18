@@ -17,6 +17,7 @@ class CDISCostAndPriceChange extends BaseModel
         'effective_at',
         'expires_at',
         'status',
+        'is_immediate',
         'assessed_by',
         'assessed_at',
         'created_by',

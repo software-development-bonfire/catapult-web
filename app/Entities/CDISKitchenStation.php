@@ -13,7 +13,9 @@ class CDISKitchenStation extends BaseModel
         'order_type',
         'queueing_group_type',
         'screen_prioritization',
-        'status'
+        'status',
+        'created_by',
+        'updated_by',
     ];
 
     public function kitchenUserStation()

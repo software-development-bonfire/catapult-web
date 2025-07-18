@@ -13,6 +13,7 @@ class CDISPackagingVendor extends BaseModel
         'bid',
         'vendor_bid',
         'product_uom_bid',
+        'is_default',
         'status',
         'created_by',
         'updated_by',

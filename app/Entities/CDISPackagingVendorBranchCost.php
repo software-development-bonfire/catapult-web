@@ -20,6 +20,12 @@ class CDISPackagingVendorBranchCost extends BaseModel
         'price_to_branch',
         'price_to_branch_markup',
         'is_available',
+        'discount_type',
+        'discount_1',
+        'discount_2',
+        'discount_3',
+        'discount_4',
+        'adjustment',
         'created_by',
         'updated_by',
     ];
