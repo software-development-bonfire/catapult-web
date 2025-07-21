@@ -19,6 +19,7 @@ class CDISBranch extends BaseModel
         'contact_number',
         'business_name',
         'tin_no',
+        'vat_principal',
         'type',
         'status',
         'is_main_branch',
@@ -41,11 +42,6 @@ class CDISBranch extends BaseModel
     public function kitchenItemSetup()
     {
         return $this->hasMany(CDISBranch::class, 'bid', 'branch_bid');
-    }
-
-    public function user()
-    {
-        return $this->belongsToMany(CDISUser::class, CDISUserBranch::class, 'branch_bid', 'user_bid');
     }
 
     public function terminalTransactions()

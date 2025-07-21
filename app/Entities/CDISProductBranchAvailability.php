@@ -14,6 +14,7 @@ class CDISProductBranchAvailability extends BaseModel
         'branch_bid',
         'product_uom_bid',
         'is_available',
+        'ecomm_stock_availability',
         'min_stock',
         'max_stock',
         'created_by',

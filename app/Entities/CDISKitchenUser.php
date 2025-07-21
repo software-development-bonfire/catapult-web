@@ -32,6 +32,7 @@ class CDISKitchenUser extends BaseModel
      */
     protected $fillable = [
         'bid',
+        'passcode',
         'user_code',
         'full_name',
         'username',

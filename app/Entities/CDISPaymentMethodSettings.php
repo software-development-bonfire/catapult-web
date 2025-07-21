@@ -20,6 +20,7 @@ class CDISPaymentMethodSettings extends BaseModel
         'get_exact_amount',
         'open_cash_drawer',
         'payment_charge_type_bid',
+        'payment_charge_type_bid_ayala',
         'payment_tender_type_bid',
         'payment_transaction_type_bid',
         'status',
