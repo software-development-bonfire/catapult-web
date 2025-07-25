@@ -72,28 +72,43 @@ class AddNewColumnsInPaymentMethodSettingsTable extends Migration
     public function down()
     {
         Schema::disableForeignKeyConstraints();
+
         if (Schema::hasTable($this->table)) {
             Schema::table($this->table, function (Blueprint $table) {
+                // It happens due to some data, so we
+                // Drop foreign keys first before dropping the column
+                $fkPaymentChargeType = $this->customizedIndexUniqueForeignKeyName($this->table, 'payment_charge_type_bid', 'foreign');
+                $fkPaymentTenderType = $this->customizedIndexUniqueForeignKeyName($this->table, 'payment_tender_type_bid', 'foreign');
+                $fkTransactionType = $this->customizedIndexUniqueForeignKeyName($this->table, 'payment_transaction_type_bid', 'foreign');
+
+                if (Schema::hasColumn($this->table, 'payment_charge_type_bid')) {
+                    $table->dropForeign($fkPaymentChargeType);
+                    $table->dropColumn('payment_charge_type_bid');
+                }
+
+                if (Schema::hasColumn($this->table, 'payment_tender_type_bid')) {
+                    $table->dropForeign($fkPaymentTenderType);
+                    $table->dropColumn('payment_tender_type_bid');
+                }
+
+                if (Schema::hasColumn($this->table, 'payment_transaction_type_bid')) {
+                    $table->dropForeign($fkTransactionType);
+                    $table->dropColumn('payment_transaction_type_bid');
+                }
+
+                // Drop non-foreign key columns
                 if (Schema::hasColumn($this->table, 'is_default')) {
                     $table->dropColumn('is_default');
                 }
                 if (Schema::hasColumn($this->table, 'get_exact_amount')) {
                     $table->dropColumn('get_exact_amount');
                 }
-                if (Schema::hasColumn($this->table, 'payment_charge_type_bid')) {
-                    $table->dropColumn('payment_charge_type_bid');
-                }
-                if (Schema::hasColumn($this->table, 'payment_tender_type_bid')) {
-                    $table->dropColumn('payment_tender_type_bid');
-                }
-                if (Schema::hasColumn($this->table, 'payment_transaction_type_bid')) {
-                    $table->dropColumn('payment_transaction_type_bid');
-                }
                 if (Schema::hasColumn($this->table, 'status')) {
                     $table->dropColumn('status');
                 }
             });
         }
+
         Schema::enableForeignKeyConstraints();
     }
 }
