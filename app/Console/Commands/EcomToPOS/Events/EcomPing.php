@@ -3,104 +3,62 @@
 namespace App\Console\Commands\EcomToPOS\Events;
 
 use App\Traits\GenericHelper;
-use App\Traits\JobCancellationTrait;
 use App\Traits\PusherTrait;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Log;
-use Ratchet\RFC6455\Messaging\MessageInterface;
-use React\EventLoop\Loop;
-use App\Http\Controllers\ECOM\v1\TerminalTransactionController;
 
 class EcomPing extends Command
 {
     use GenericHelper, PusherTrait;
 
-    protected $signature = 'ecom:event-ping {--interval=true}{--limit=true}';
+    protected $signature = 'ecom:event-ping 
+                            {--interval=5 : Delay between pings in seconds}
+                            {--limit= : Optional max number of pings (leave blank for unlimited)}';
 
-    /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
+    protected $description = 'Continuously sends ping events to the Pusher channel until stopped or limit reached.';
 
     public function handle()
     {
         $pusherDomain = 'ws-eu.pusher.com';
+        $interval = (int) $this->option('interval');
+        $limit = $this->option('limit') !== null ? (int) $this->option('limit') : null;
+        $pingCount = 0;
+        $success = 0;
+        $loss = 0;
 
-        while (true) {
+        $this->info("Starting Ecom Ping every {$interval}s" . ($limit ? " (limit: {$limit} pings)" : " (unlimited)"));
+
+        while (is_null($limit) || $pingCount < $limit) {
             if (
                 $this->hasInternetConnection() &&
                 $this->hasInternetConnection($pusherDomain)
             ) {
-                $this->connect();
+                try {
+                    $this->ping($pingCount);
+                    $success++;
+                } catch (\Exception $e) {
+                    $this->createLog("❌ Ping failed: ". $e->getMessage(), 'error', true, ['PING ERROR']);
+                }
             } else {
-                $this->createLog("Could not connect: No internet connection.", 'warn', true, ['CONNECTION ERROR']);
+                $this->createLog("⚠️ No internet. Retrying after {$interval}s...", 'warn', true, ['CONNECTION ERROR']);
+                $loss++;
             }
 
-            sleep(5);
+            $pingCount++;
+            sleep($interval);
         }
+
+        $this->info("🛑 Ecom Ping ended. Total pings sent: {$pingCount}, Success: {$success}, Loss: {$loss}");
     }
 
-    public function connect()
+    protected function ping($pingCount)
     {
-        $pusherAppKey = config('broadcasting.connections.cdis_pusher.key');
-        $pusherCluster = config('broadcasting.connections.cdis_pusher.options.cluster');
         $clientId = config('configuration.client_id');
         $branchCode = config('configuration.branch_code');
-        $loop = Loop::get();
+        $channel = 'ecommerce-online-branch-' . $clientId;
 
-        $channel = 'ecommerce-online-branch-'.$clientId;;
         $this->initializePusher();
         $this->pusher->trigger($channel, 'ping', $branchCode);
-
-
-        // $this->createLog('wss://ws-'.$pusherCluster.'.pusher.com/app/'.$pusherAppKey.'?protocol=7&client=js&version=7.0.6&flash=false', 'info', true, ['CONNECTION INIT']);
-
-        // \Ratchet\Client\connect('wss://ws-'.$pusherCluster.'.pusher.com/app/'.$pusherAppKey.'?protocol=7&client=js&version=7.0.6&flash=false')
-        //     ->then(function ($connection) use ($loop, &$socketConnection, $clientId, $branchCode) {
-        //         $connection->send('{"event":"pusher:subscribe","data":{"auth":"","channel":"ecommerce-'.$branchCode.'"}}');
-        //         $connection->on('message', function (MessageInterface $message) use ($loop, $connection, &$pingTimer, $clientId, $branchCode) {
-        //             $this->eventListener($message, $connection, $clientId, $branchCode);
-        //         });
-                
-        //         $connection->on('close', function ($code = null, $reason = null) use ($loop, &$pingTimer) {
-        //             $this->createLog($reason, 'warn', true, ['CONNECTION CLOSED'], [$code]);
-        //             $loop->stop();
-        //         });
-        //     }, function ($e) use ($loop) {
-        //         Log::alert('EXCEPTION:'.json_encode($e));
-        //         $this->error("Could not connect: {$e->getMessage()}");
-        //         $loop->stop();
-        //     });
-
-        $loop->run();
-
-        return true;
+        
+        $this->createLog("✅ Ping #".($pingCount + 1)." sent to branch: {$branchCode}.", "info", true, [$channel]);
     }
-
-    // public function eventListener($message, $connection, $clientId, $branchCode)
-    // {
-    //     $payload = json_decode($message);
-    //     if (isset($payload->event)) {
-    //         switch($payload->event) {
-    //             case 'order' :
-    //                 $result = app()->make(TerminalTransactionController::class)->store($payload->data);
-    //             break;
-
-    //             case 'payment' :
-    //                 $result = app()->make(TerminalTransactionController::class)->update($payload->data);
-    //             break;
-
-    //             default: 
-    //             break;
-    //         }
-    //     }
-    // }
-
-
 }
