@@ -7,6 +7,7 @@ use App\Entities\POSTerminalTransaction;
 use App\Entities\POSTerminalTransactionProduct;
 use App\Enums\Status;
 use App\Enums\API\deviceType;
+use App\Enums\PaymentStatus;
 use App\Traits\DatabaseTransaction;
 
 class KioskTerminalTransactionService
@@ -64,16 +65,18 @@ class KioskTerminalTransactionService
                 'updated_at' => $data->updated_at,
                 'change' => $data->change,
                 'payment' => $data->payment,
+                'payment_status' => (isset($data->payments) && count($data->payments) > 0) ? 1: 0, // Means if there is a payments, then it is PAID
                 'is_reset' => $data->is_reset,
                 'receipt' => $data->receipt,
             ];
 
             $posTransaction = POSTerminalTransaction::where('terminal_bid', '=', $data->terminal_bid)
+                ->where('device_code', $deviceCode)
                 ->where('log_date', $data->log_date)
                 ->where('transaction_id', $data->transaction_id)
                 ->where('or_number', $data->or_number)
                 ->where('order_number', $data->order_number)
-                ->where('order_status', Status::INACTIVE)
+                ->where('order_status', PaymentStatus::CREATED)
                 ->first();
 
             if ($posTransaction) {
@@ -126,9 +129,11 @@ class KioskTerminalTransactionService
                     'vat_deduct' => $data->vat_deduct,
                     'vat_exempt' => $data->vat_exempt,
                     'remarks' => $data->remarks,
+                    'special_request' => $data->special_request,
                     'supervisor_bid' => $data->supervisor_bid,
                     'supervisor_name' => $data->supervisor_name,
                     'created_at' => $data->created_at,
+                    'parent_bid' => $data->parent_bid,
                     'parent_id' => $data->parent_id,
                     'add_on' => $data->add_on,
                     'take_home' => $data->take_home,
@@ -200,12 +205,13 @@ class KioskTerminalTransactionService
                 ->where('transaction_id', $data->transaction_id)
                 ->where('or_number', $data->or_number)
                 ->where('order_number', $data->order_number)
-                ->where('order_status', Status::INACTIVE)
+                ->where('order_status', PaymentStatus::CREATED)
                 ->first();
 
             if ($posTransaction) {
                 $posTransaction = tap($posTransaction)->update([
-                    'order_status' => Status::ACTIVE,
+                    'order_status' => PaymentStatus::PAID,
+                    'payment_status' => PaymentStatus::PAID,
                 ]);
             }
             return $posTransaction;

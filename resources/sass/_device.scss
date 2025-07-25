@@ -1,0 +1,63 @@
+.device-type {
+    display: inline-block;
+    padding: 5px 8px;
+    border-radius: 4px;
+    color: #fff;
+    text-align: center;
+    border: 1px transparent solid;
+    text-transform: uppercase;
+    width: 100%;
+    &--box {
+        width: 100%;
+        padding: 5px 8px;
+        border-radius: 0px;
+        color: #fff;
+        text-transform: uppercase;
+        font-size: 14px;
+    }
+    &--pos {
+        background-color: #155c61;
+        border-color: darken(#155c61, 15%);
+    }
+    &--pda {
+        background-color: #7f8c8d;
+        border-color: darken(#7f8c8d, 15%);
+    }
+    &--mobile {
+        background-color: #ff7686;
+        border-color: darken(#ff7686, 15%);
+    }
+    &--kiosk {
+        background-color: #f39c12;
+        border-color: darken(#f39c12, 15%);
+    }
+    &--kds {
+        background-color: #0051ff;
+        border-color: darken(#0051ff, 4%);
+    }
+    &--queueing {
+        background-color: #8e4fb0;
+        border-color: darken(#8e4fb0, 4%);
+    }
+    &--ecommerce {
+        background-color: #f73803;
+        border-color: darken(#f73803, 4%);
+    }
+}
+.device {
+    &--ip {
+        color: #001e07;
+        font-weight: bold;
+        &:hover {
+            color: darken(#00aa27, 5%);
+            cursor: pointer;
+        }
+    }
+    &--uid {
+        color: #979797;
+        &:hover {
+            color: darken(#1178f7, 5%);
+            cursor: pointer;
+        }
+    }
+}

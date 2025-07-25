@@ -67,13 +67,23 @@
                             <div v-text="tableData.time_needed" class="p-2"></div>
                         </td>
                         <td class="datatable-cell tc--time-needed">
-                            <div v-text="tableData.ordertaker_id" class="p-2"></div>
+                            <span 
+                                class="device-type device-type--box"
+                                :class="tableData.device_type === device.sirius_pos ? 'device-type--pos'
+                                    : tableData.device_type === device.pda ?  'device-type--pda'
+                                    : tableData.device_type === device.kiosk ?  'device-type--kiosk'
+                                    : tableData.device_type === device.qr_mobile ?  'device-type--mobile'
+                                    : tableData.device_type === device.kds ?  'device-type--kds'
+                                    : tableData.device_type === device.ecommerce ?  'device-type--ecommerce'
+                                    : ''"
+                                v-text="tableData.ordertaker_id">
+                            </span>
                         </td>
                         <td class="datatable-cell tc--ordertaker-id">
                             <div v-text="tableData.order_reference" class="p-2"></div>
                         </td>
                         <td class="datatable-cell tc--type">
-                            <div v-text="tableData.type" class="p-2"></div>
+                            <div v-text="tableData.order_type" class="p-2"></div>
                         </td>
                         <td class="datatable-cell tc--payment">
                             <div v-text="tableData.payment" class="p-2"></div>
@@ -149,6 +159,7 @@
         &--payment {
             min-width: 150px;
             max-width: 150px;
+            text-align: center;
         }
         &--process-in {
             min-width: 150px;
@@ -224,6 +235,15 @@
         mixins: [ Util ],
         data() {
             return {
+                device: {
+                    sirius_pos: POS.SIRIUS_POS,
+                    pda: POS.PDA,
+                    kiosk: POS.KIOSK,
+                    qr_mobile: POS.QR_MOBILE,
+                    kds: POS.KDS,
+                    queueing: POS.QUEUEING,
+                    ecommerce: POS.ECOMMERCE,
+                },
                 dialog: {
                     visible: false,
                     type: '',

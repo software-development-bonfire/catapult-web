@@ -40,6 +40,7 @@ class POSTerminalTransactionProduct extends Base
         'vat_deduct',
         'vat_exempt',
         'remarks',
+        'special_request',
         'supervisor_bid',
         'supervisor_name',
         'created_at',
