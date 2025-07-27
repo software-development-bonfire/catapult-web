@@ -86,7 +86,7 @@ class KioskTerminalTransactionService
             }
 
             if (isset($data->details) && count($data->details) > 0) {
-                $this->storeDetail($data->details, $posTransaction->bid);
+                $this->storeDetail($data->details, $posTransaction);
             }
             if (isset($data->payments) && count($data->payments) > 0) {
                 $this->storePayment($data->payments, $posTransaction->bid);
@@ -96,14 +96,14 @@ class KioskTerminalTransactionService
        // });
     }
 
-    public function storeDetail($details, $terminal_transaction_bid)
+    public function storeDetail($details, $transaction)
     {
         //return $this->transaction(function () use ($details) {
             foreach ($details as $data) {
                 $data = (object) $data;
                 $transactionData = [
                     'cart_bid' => $data->cart_bid,
-                    'terminal_transaction_bid' => $terminal_transaction_bid,
+                    'terminal_transaction_bid' => $transaction->bid,
                     'usage_type' => $data->usage_type,
                     'product_bid' => $data->product_bid,
                     'name' => $data->name,
@@ -148,9 +148,10 @@ class KioskTerminalTransactionService
                     'discount_value' => $data->discount_value,
                     'is_reset' => $data->is_reset,
                 ];
-                $posTransactionProduct = POSTerminalTransactionProduct::where('cart_bid', $data->cart_bid)
-                    ->where('log_date', $data->log_date)
-                    ->where('terminal_transaction_bid', $data->terminal_transaction_bid)
+                $posTransactionProduct = POSTerminalTransactionProduct::where('terminal_transaction_bid', $transaction->bid)
+                    ->where('cart_bid', $data->cart_bid)
+                    ->where('usage_type', $data->usage_type)
+                    ->where('order_type_id', $data->order_type_id)
                     ->where('product_bid', $data->product_bid)
                     ->first();
 
