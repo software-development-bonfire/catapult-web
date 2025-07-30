@@ -8,7 +8,7 @@ use Prettus\Repository\Contracts\RepositoryInterface;
 /**
  * Class ListCriteria.
  *
- * @package namespace App\Criteria\Kitchen\StationProcess;
+ * @package namespace App\Criteria\POS\ListCriteria;
  */
 class ListCriteria implements CriteriaInterface
 {

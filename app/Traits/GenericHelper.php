@@ -316,19 +316,60 @@ trait GenericHelper
         return  $host.(! is_null($port) ? '_'.$port : '').'_catapult_sync.'.$clientId;
     }
 
-    public function hasInternetConnection($hostname = "www.example.com", $port = 80)
+    public function hasInternetConnection($target = "8.8.8.8", $port = 53, $timeout = 3): bool
     {
-        $connected = @fsockopen($hostname, $port);
-
-        if ($connected) {
-            $hasConnection = true;
-            fclose($connected);
-        } else {
-            $hasConnection = false;
+        // 1. If input is a full URL (starts with http/https)
+        if (filter_var($target, FILTER_VALIDATE_URL)) {
+            $context = stream_context_create([
+                'http' => ['method' => 'HEAD', 'timeout' => $timeout],
+                'ssl' => ['verify_peer' => false, 'verify_peer_name' => false],
+            ]);
+            $stream = @fopen($target, 'r', false, $context);
+            if ($stream) {
+                fclose($stream);
+                return true;
+            }
+            return false;
         }
 
-        return $hasConnection;
+        // 2. If it's a domain or IP, check multiple fallback ports
+        $portsToTry = [$port, 80, 443, 53];
+        foreach ($portsToTry as $p) {
+            $connected = @fsockopen($target, $p, $errno, $errstr, $timeout);
+            if ($connected) {
+                fclose($connected);
+                return true;
+            }
+        }
+
+        return false;
     }
+
+    public function hasInternetViaMultipleChecks(): bool
+    {
+        $hosts = [
+            ["ip" => "1.1.1.1", "port" => 53],     // Cloudflare DNS
+            ["ip" => "8.8.8.8", "port" => 53],     // Google DNS
+            ["url" => "https://www.google.com"],   // Fallback HTTP
+        ];
+
+        foreach ($hosts as $target) {
+            if (isset($target['ip'])) {
+                if (@fsockopen($target['ip'], $target['port'], $errno, $errstr, 2)) {
+                    return true;
+                }
+            } else if (isset($target['url'])) {
+                $stream = @fopen($target['url'], "r");
+                if ($stream) {
+                    fclose($stream);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
 
     /**
      * Generate code for sync table entries

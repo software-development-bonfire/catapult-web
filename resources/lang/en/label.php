@@ -28,6 +28,7 @@ return [
     'branch' => 'Branch',
     'branch_and_terminal' => 'Branch and Terminal',
     'branch_code' => 'Branch Code',
+    'branch_universal_order_summary' => 'Branch Universal Order Summary',
     'branch_universal_order_summary_list' => 'Branch Universal Order Summary List',
     'branch_universal_order_no' => 'Branch Universal Order No.',
     'brand' => 'Brand',

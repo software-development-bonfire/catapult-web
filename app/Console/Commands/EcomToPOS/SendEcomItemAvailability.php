@@ -82,6 +82,10 @@ class SendEcomItemAvailability extends Command
         $url = $cdisUrl . '/api/catapult/v2/ecommerce/item-availability';
 
         while (true) {
+            if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                $this->createLog("Invalid URL: {$url}", 'error', true, []);
+            }
+
             if (! $this->hasInternetConnection() && ! $this->hasInternetConnection($cdisUrl)) {
                 $this->createLog(__('message.no_internet_connection'), 'error', true, []);
                 sleep(10); // wait a bit before retrying

@@ -60,15 +60,12 @@ class Listen extends Command
         while (true) {
             if (
                 $this->hasInternetConnection() &&
-                $this->hasInternetConnection($cdisUrl) &&
                 $this->hasInternetConnection($pusherDomain)
             ) {
                 $this->connect();
             } else {
                 $this->createLog("Could not connect: No internet connection.", 'warn', true, ['CONNECTION ERROR']);
-                $this->executeNetworkResolve();
             }
-
             sleep(5);
         }
     }
@@ -106,7 +103,7 @@ class Listen extends Command
                 $this->error("Could not connect: {$e->getMessage()}");
                 $loop->stop();
 
-                $this->executeNetworkResolve();
+                //$this->executeNetworkResolve();
             });
 
         $loop->run();

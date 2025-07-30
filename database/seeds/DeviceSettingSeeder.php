@@ -15,7 +15,7 @@ class DeviceSettingSeeder extends Seeder
     public function run()
     {
         $data = [
-            'terminal_code' => null,
+            'terminal_code' => '000',
             'device_code' => 'WA-001',
             'device_uid' => 'WA-001',
             'device_type' => DeviceType::ECOMMERCE,
@@ -27,6 +27,9 @@ class DeviceSettingSeeder extends Seeder
             'socket_status' => Status::ACTIVE,
         ];
 
-        DeviceSettings::create($data);
+        $model = DeviceSettings::where('device_code', $data['device_code'])->first();
+        if (! $model) {
+            DeviceSettings::create($data);
+        }
     }
 }

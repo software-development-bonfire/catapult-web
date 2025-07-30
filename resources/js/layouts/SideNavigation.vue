@@ -34,6 +34,14 @@
             </a>
             <a
                 v-if="this.$hasPermissionTo('view.kitchen-device-printer')"
+                href="/branch-universal-order-summary"
+                class="list-group-item"
+                :class="page === 'branch-universal-order-summary' ? 'active' : ''">
+                <i class="side-link-icon fa fa-cart-arrow-down fa-lg"></i>
+                <span class="side-link-label">{{ $t('label.branch_universal_order_summary') }}</span>
+            </a>
+            <a
+                v-if="this.$hasPermissionTo('view.kitchen-device-printer')"
                 href="/kitchen-device-printer"
                 class="list-group-item"
                 :class="page === 'kitchen-device-printer' ? 'active' : ''">

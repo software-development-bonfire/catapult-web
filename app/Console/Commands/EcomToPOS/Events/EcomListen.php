@@ -33,14 +33,14 @@ class EcomListen extends Command
         $pusherDomain = 'ws-eu.pusher.com';
 
         while (true) {
-            // if (
-            //     $this->hasInternetConnection() &&
-            //     $this->hasInternetConnection($pusherDomain)
-            // ) {
+            if (
+                $this->hasInternetConnection() &&
+                $this->hasInternetConnection($pusherDomain)
+            ) {
                 $this->connect();
-            // } else {
-            //     $this->createLog("Could not connect: No internet connection.", 'warn', true, ['CONNECTION ERROR']);
-            // }
+            } else {
+                $this->createLog("Could not connect: No internet connection.", 'warn', true, ['CONNECTION ERROR']);
+            }
 
             sleep(5);
         }
@@ -81,7 +81,6 @@ class EcomListen extends Command
     {
         $payload = json_decode($message);
         if (isset($payload->event)) {
-        log::info($payload->event);
             switch($payload->event) {
                 case 'order' :
                     $result = app()->make(TerminalTransactionController::class)->store($payload->data);

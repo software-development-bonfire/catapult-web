@@ -4,6 +4,7 @@ namespace App\Http\Controllers\POS\v1;
 
 use App\Entities\KitchenDisplayDetail;
 use App\Enums\CDIS\TerminalTransactionType;
+use App\Enums\UsageType;
 use App\Events\KDSTransactionEvent;
 use App\Events\MyPrivateEvent;
 use App\Events\PrintEvent;
@@ -157,15 +158,18 @@ class TerminalTransactionController extends POSBaseController
 
     public function search(Request $request)
     {
-        $result = null;
+        $transactions = null;
         $data = (object) stringToJson($request->all());
         if (! empty($data->filters)) {
-            $result = app()->make(TerminalTransactionRepository::class)->list($data->filters);
+            // Filters only non-modifiers, non-addons products in details
+            // Let the relationship query handle the rest
+            $detailFilters = ['usage_type' => UsageType::PRODUCT];
+            $transactions = app()->make(TerminalTransactionRepository::class)->list($data->filters, $detailFilters);
         } else {
             return $this->errorResponse([], 'Missing request parameters');
         }
 
-        return $this->successfulResponse($result);
+        return $this->successfulResponse($transactions);
     }
 
     public function printReceipt(Request $request)

@@ -2,6 +2,7 @@
 
 namespace App\Entities;
 
+use App\Enums\UsageType;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class POSTerminalTransactionProduct extends Base
@@ -40,6 +41,7 @@ class POSTerminalTransactionProduct extends Base
         'vat_deduct',
         'vat_exempt',
         'remarks',
+        'special_request',
         'supervisor_bid',
         'supervisor_name',
         'created_at',
@@ -73,4 +75,15 @@ class POSTerminalTransactionProduct extends Base
         return $this->belongsTo(POSTerminalTransaction::class, 'terminal_transaction_bid', 'transaction_id');
     }
 
+    // Self-referencing hasMany relationships with usage_type MODIFIERS
+    public function modifiers()
+    {
+        return $this->hasMany(POSTerminalTransactionProduct::class, 'parent_bid', 'product_bid')->where('usage_type', UsageType::BUNDLE);
+    }
+
+    // Self-referencing hasMany relationships with usage_type ADDONS
+    public function addons()
+    {
+        return $this->hasMany(POSTerminalTransactionProduct::class, 'parent_bid', 'product_bid')->where('usage_type', UsageType::ADDON);
+    }
 }

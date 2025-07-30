@@ -26,11 +26,56 @@ class TerminalTransactionRepositoryEloquent extends BaseRepository implements Te
         return POSTerminalTransaction::class;
     }
 
-    public function list($filters = [])
+    public function list($filters = [], $detailFilters = null, $paymentFilters = null)
     {
         $this->model = $this->model->with(['details', 'payments'])->orderBy('bid', 'ASC');
 
+        // apply filters for the main table
         $this->pushCriteria(new TerminalTransactionListCriteria($filters))->applyCriteria();
+
+        // Apply filters on 'details' and 'payments'
+        $this->model = $this->model
+            ->when($detailFilters, function ($q) use ($detailFilters) {
+                $q->whereHas('details', function ($query) use ($detailFilters) {
+                    foreach ($detailFilters as $key => $value) {
+                        if (!is_null($value)) {
+                            $query->where($key, $value);
+                        }
+                    }
+                });
+            })
+            ->when($paymentFilters, function ($q) use ($paymentFilters) {
+                $q->whereHas('payments', function ($query) use ($paymentFilters) {
+                    foreach ($paymentFilters as $key => $value) {
+                        if (!is_null($value)) {
+                            $query->where($key, $value);
+                        }
+                    }
+                });
+            })
+            ->with([
+                // Create a relationship query that filters details 
+                'details' => function ($query) use ($detailFilters) {
+                    if (!empty($detailFilters)) {
+                        foreach ($detailFilters as $key => $value) {
+                            if (!is_null($value)) {
+                                $query->where($key, $value);
+                            }
+                        }
+                    }
+                },
+                'details.modifiers', // load modifiers through created custom relation function by table itself
+                'details.addons',    // load modifiers through created custom relation function by table itself
+                'payments' => function ($query) use ($paymentFilters) {
+                    if (!empty($paymentFilters)) {
+                        foreach ($paymentFilters as $key => $value) {
+                            if (!is_null($value)) {
+                                $query->where($key, $value);
+                            }
+                        }
+                    }
+                },
+            ]);
 
         return $this->model->get();
     }
@@ -39,12 +84,24 @@ class TerminalTransactionRepositoryEloquent extends BaseRepository implements Te
     {
         $model = POSTerminalTransactionProduct::where(function ($query) use ($filters) {
             if (isset($filters)) {
-                if (! empty($filters->transaction_bid)) {
-                    $query->where('pos_terminal_transaction_products.terminal_transaction_bid', $filters->transaction_bid);
+                if (! empty($filters->terminal_transaction_bid)) {
+                    $query->where('terminal_transaction_bid', $filters->terminal_transaction_bid);
                 }
 
-                if (isset($filters->cart_bid) && isValidStringOrArray($filters->cart_bid)) {
-                    $query->whereIn('pos_terminal_transaction_products.cart_bid',  toSafeArray($filters->cart_bid));
+                if (! empty($filters->usage_type)) {
+                    $query->where('usage_type', $filters->usage_type);
+                }
+
+                if (! empty($filters->product_bid)) {
+                    $query->where('product_bid', $filters->product_bid);
+                }
+
+                if (! empty($filters->parent_bid)) {
+                    $query->where('parent_bid', $filters->parent_bid);
+                }
+
+                if (! empty($filters->cart_bid)) {
+                    $query->where('cart_bid', $filters->cart_bid);
                 }
             }
         });
