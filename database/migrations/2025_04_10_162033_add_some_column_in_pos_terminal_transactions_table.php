@@ -35,7 +35,7 @@ class AddSomeColumnInPosTerminalTransactionsTable extends Migration
                     $table->tinyInteger('billing_type')->default(BillingType::COD)->after('order_schedule');
                 }
                 if (! Schema::hasColumn('pos_terminal_transactions', 'total_delivery_fee')) {
-                    $table->tinyInteger('total_delivery_fee')->default(0.000000)->after('total_discount_amount');
+                    $table->decimal('total_delivery_fee')->default(0.000000)->after('total_discount_amount');
                 }
             });
         }

@@ -53,8 +53,7 @@ class EcomPing extends Command
         $clientId = config('configuration.client_id');
         $branchCode = config('configuration.branch_code');
         $loop = Loop::get();
-
-        $channel = 'ecommerce-online-branch-'.$clientId;;
+        $channel = 'ecommerce-online-branch-'.$clientId;
         $this->initializePusher();
         $this->pusher->trigger($channel, 'ping', $branchCode);
 
