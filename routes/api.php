@@ -55,6 +55,7 @@ Route::group([
     Route::post('logout', [\App\Http\Controllers\KIOSK\v1\LoginController::class, 'logout']);
     Route::post('trigger-event', [\App\Http\Controllers\KIOSK\v1\EventTriggerController::class, 'trigger']);
 
+
     Route::group(['middleware' => 'pos-token'], function () {
         Route::post('item-availability/store', [\App\Http\Controllers\KIOSK\v1\ItemAvailabilityController::class, 'store']);
         Route::get('item-availability/list', [\App\Http\Controllers\KIOSK\v1\ItemAvailabilityController::class, 'list']);
@@ -103,3 +104,7 @@ Route::group([
 
     
 });
+
+
+Route::post('/broadcast-event', [App\Http\Controllers\BroadcastController::class, 'broadcastEvent']);
+Route::post('/broadcast-event/ots', [App\Http\Controllers\BroadcastController::class, 'broadcastOTSRequestStatusEvent']);

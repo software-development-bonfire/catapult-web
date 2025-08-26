@@ -26,4 +26,20 @@ if (! function_exists('decrypter')) {
 }
 
 
+if (! function_exists('requestEncrypter')) {
+    function requestEncrypter($value)
+    {
+        \App\Helpers\SimpleEncryption::init(\App\Enums\OpenSSL::SECRET_KEY, \App\Enums\OpenSSL::SECRET_IV);
+        return \App\Helpers\SimpleEncryption::encryptText($value);
+    }
+}
+
+if (! function_exists('requestDecrypter')) {
+    function requestDecrypter($enc)
+    {
+        \App\Helpers\SimpleEncryption::init(\App\Enums\OpenSSL::SECRET_KEY, \App\Enums\OpenSSL::SECRET_IV);
+        return \App\Helpers\SimpleEncryption::decryptText($enc);
+    }
+}
+
 

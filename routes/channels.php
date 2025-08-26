@@ -33,3 +33,7 @@ Broadcast::channel('chat.{roomId}', function ($user, $roomId) {
 Broadcast::channel('sirius-compute-engine', function ($data) {
     return $data;
 });
+
+Broadcast::channel('ots-request-status-channel', function ($data) {
+    return $data;
+});
