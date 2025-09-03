@@ -105,6 +105,7 @@ class KioskTerminalTransactionService
                     'cart_bid' => $data->cart_bid,
                     'terminal_transaction_bid' => $transaction->bid,
                     'usage_type' => $data->usage_type,
+                    'product_type' => $data->product_type,
                     'product_bid' => $data->product_bid,
                     'name' => $data->name,
                     'description' => $data->description,

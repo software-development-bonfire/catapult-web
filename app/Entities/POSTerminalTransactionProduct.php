@@ -16,6 +16,7 @@ class POSTerminalTransactionProduct extends Base
         'cart_bid',
         'terminal_transaction_bid',
         'usage_type',
+        'product_type',
         'product_bid',
         'parent_bid',
         'name',
