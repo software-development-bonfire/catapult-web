@@ -37,6 +37,9 @@ class TerminalTransactionController extends POSBaseController
             return $this->errorResponse([], 'Missing request parameters');
         }
 
+        $sendToKitchen = isset($transactions['transction_type']) && ($transactions['transction_type'] == TerminalTransactionType::SALES) ;
+        $printToKitchen = isset($transactions['transction_type']) && ($transactions['transction_type'] == TerminalTransactionType::SALES || $transactions['transction_type'] == TerminalTransactionType::REFUND) ;
+
         // Print only SALES transaction type on Sticker/Kitchen Printer
         //if ((isset($transactions->type) && $transactions->type == TerminalTransactionType::SALES) && empty($transactions->is_reprint)) {
         $transactionProducts = [];
@@ -65,20 +68,23 @@ class TerminalTransactionController extends POSBaseController
                 }
             }
         }
-        // Get configured local printer of each products
-        $groupedPrinters = collect($flattenProducts)->groupBy('local_printer');
-        foreach ($groupedPrinters->toArray() as $printerHost => $items) {
-            // Reconstruct transaction product list to be printed on Kitchen Printer
 
-            if (! empty($printerHost) && count($items) > 0) {
-                $this->printKitchen($printerHost, $items, $transactions); // Call print directly
-                // Uncomment below code if you want to QUEUE kitchen printing, instead of calling $this->printKitchen
-                //KDSPrintToKitchenPrinter::dispatch($printerHost, $items, $transactions); // Add kitchen printing on the queue
+        if ($printToKitchen && count($flattenProducts) > 0) {
+            // Get configured local printer of each products
+            $groupedPrinters = collect($flattenProducts)->groupBy('local_printer');
+            foreach ($groupedPrinters->toArray() as $printerHost => $items) {
+                // Reconstruct transaction product list to be printed on Kitchen Printer
+
+                if (! empty($printerHost) && count($items) > 0) {
+                    $this->printKitchen($printerHost, $items, $transactions); // Call print directly
+                    // Uncomment below code if you want to QUEUE kitchen printing, instead of calling $this->printKitchen
+                    //KDSPrintToKitchenPrinter::dispatch($printerHost, $items, $transactions); // Add kitchen printing on the queue
+                }
             }
         }
 
         // Call sticker printing when printable for stickers are present
-        if (count($transactionStickersProducts) > 0) {
+        if ($sendToKitchen && count($transactionStickersProducts) > 0) {
             $this->printSticker($printerHost, $transactionStickersProducts, $transactions);
         }
 
@@ -95,38 +101,36 @@ class TerminalTransactionController extends POSBaseController
         }
             */
         \Illuminate\Support\Facades\Log::alert(json_encode($kitchenDisplayProducts));
-        
+        if ($sendToKitchen && count($kitchenDisplayProducts) == 0) {
+            // Get configured Kitchen Display of each products
+            $groupedDisplays = collect($kitchenDisplayProducts)->groupBy('device_uid');
+            foreach ($groupedDisplays->toArray() as $device => $items) {
+                if (! empty($device) && count($items) > 0) {
+                    // Broadcast to assigned KDS
+                    broadcast(new MyPrivateEvent($device, $transactions['kds_transaction'], $items, ''));
+                }
+            }
 
+            // Grouped by order type name, then assigned items by order type susch DINE IN, TAKE OUT, DRIVE THRU, etc.
+            $groupedReleasingDisplays = collect($kitchenDisplayProducts)->groupBy('order_type_name');
+            foreach ($groupedReleasingDisplays->toArray() as $orderType => $items) {
+                if (! empty($orderType) && count($items) > 0) {
+                    // Broadcast to assigned KDS for Releasing
+                    // Clone and modify the items
+                    $clonedItems = collect($items)->map(function ($item) {
+                        if (isset($item['quantity'])) {
+                            // $item['quantity'] = 0; // Set quantity to 0 to make sure on the first display on releasing
+                        }
+                        if (isset($item['remaining_quantity'])) {
+                            // $item['remaining_quantity'] = 0; // Set remaining_quantity to 0
+                        }
+                        return $item;
+                    })->toArray(); // Convert back to array if needed
 
-        // Get configured Kitchen Display of each products
-        $groupedDisplays = collect($kitchenDisplayProducts)->groupBy('device_uid');
-        foreach ($groupedDisplays->toArray() as $device => $items) {
-            if (! empty($device) && count($items) > 0) {
-                // Broadcast to assigned KDS
-                broadcast(new MyPrivateEvent($device, $transactions['kds_transaction'], $items, ''));
+                    broadcast(new KDSTransactionEvent('', $transactions['kds_transaction'], $clonedItems, $orderType, 'add'));
+                }
             }
         }
-
-        // Grouped by order type name, then assigned items by order type susch DINE IN, TAKE OUT, DRIVE THRU, etc.
-        $groupedReleasingDisplays = collect($kitchenDisplayProducts)->groupBy('order_type_name');
-        foreach ($groupedReleasingDisplays->toArray() as $orderType => $items) {
-            if (! empty($orderType) && count($items) > 0) {
-                // Broadcast to assigned KDS for Releasing
-                // Clone and modify the items
-                $clonedItems = collect($items)->map(function ($item) {
-                    if (isset($item['quantity'])) {
-                        // $item['quantity'] = 0; // Set quantity to 0 to make sure on the first display on releasing
-                    }
-                    if (isset($item['remaining_quantity'])) {
-                        // $item['remaining_quantity'] = 0; // Set remaining_quantity to 0
-                    }
-                    return $item;
-                })->toArray(); // Convert back to array if needed
-
-                broadcast(new KDSTransactionEvent('', $transactions['kds_transaction'], $clonedItems, $orderType, 'add'));
-            }
-        }
-
 
         //}
 
