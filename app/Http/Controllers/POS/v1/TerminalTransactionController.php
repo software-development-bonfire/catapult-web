@@ -20,6 +20,7 @@ use App\Traits\KitchenPrinterTrait;
 use App\Traits\StickerPrinterTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\Log;
 
 class TerminalTransactionController extends POSBaseController
 {
@@ -37,8 +38,8 @@ class TerminalTransactionController extends POSBaseController
             return $this->errorResponse([], 'Missing request parameters');
         }
 
-        $sendToKitchen = isset($transactions['transction_type']) && ($transactions['transction_type'] == TerminalTransactionType::SALES) ;
-        $printToKitchen = isset($transactions['transction_type']) && ($transactions['transction_type'] == TerminalTransactionType::SALES || $transactions['transction_type'] == TerminalTransactionType::REFUND) ;
+        $sendToKitchen = isset($transactions['transaction_type']) && ($transactions['transaction_type'] == TerminalTransactionType::SALES) ;
+        $printToKitchen = isset($transactions['transaction_type']) && ($transactions['transaction_type'] == TerminalTransactionType::SALES || $transactions['transaction_type'] == TerminalTransactionType::REFUND) ;
 
         // Print only SALES transaction type on Sticker/Kitchen Printer
         //if ((isset($transactions->type) && $transactions->type == TerminalTransactionType::SALES) && empty($transactions->is_reprint)) {
@@ -85,7 +86,8 @@ class TerminalTransactionController extends POSBaseController
 
         // Call sticker printing when printable for stickers are present
         if ($sendToKitchen && count($transactionStickersProducts) > 0) {
-            $this->printSticker($printerHost, $transactionStickersProducts, $transactions);
+            $printerHost = $this->getConfigStickerPrinter();
+            $this->printStickerSeparately($printerHost, $transactionStickersProducts, $transactions);
         }
 
         /*
@@ -100,8 +102,8 @@ class TerminalTransactionController extends POSBaseController
             $kitchenDisplayProducts[] = collect($kitchenDisplayDetail)->merge($kitchenDisplay);
         }
             */
-        \Illuminate\Support\Facades\Log::alert(json_encode($kitchenDisplayProducts));
-        if ($sendToKitchen && count($kitchenDisplayProducts) == 0) {
+       // \Illuminate\Support\Facades\Log::alert(json_encode($kitchenDisplayProducts));
+        if ($printToKitchen && count($kitchenDisplayProducts) == 0) {
             // Get configured Kitchen Display of each products
             $groupedDisplays = collect($kitchenDisplayProducts)->groupBy('device_uid');
             foreach ($groupedDisplays->toArray() as $device => $items) {

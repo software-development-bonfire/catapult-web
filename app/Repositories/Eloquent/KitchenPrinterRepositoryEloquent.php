@@ -36,6 +36,7 @@ class KitchenPrinterRepositoryEloquent extends BaseEloquent implements KitchenPr
                 'created_at',
                 'updated_at',
             ])
+            ->whereNull('deleted_at')
             ->orderBy('bid', 'ASC');
 
         return $this->paginate(isset($filters['itemsPerPage']) ? $filters['itemsPerPage'] : 10);
