@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\POS\v1;
 
+use App\Entities\CDISTerminal;
 use App\Entities\KitchenDisplayDetail;
 use App\Enums\CDIS\TerminalTransactionType;
 use App\Enums\UsageType;
@@ -33,6 +34,17 @@ class TerminalTransactionController extends POSBaseController
         \Illuminate\Support\Facades\Log::alert(json_encode($request->all()));
         $transactions = [];
         if (! empty($request->transaction)) {
+            // let's check first the transaction terminal number and branch code
+             foreach ($request->transaction as $datum) {
+                $datum = (object) $datum;
+                $branchCode = config('configuration.branch_code');
+
+                $terminal = CDISTerminal::find($datum->terminal_bid);
+                if (! $terminal) {
+                    // Return error if terminal not found with human readable message
+                    return $this->errorResponse([], 'Invalid terminal ('.$datum->terminal_bid.') or not found on branch ' . $branchCode);
+                }
+            }
             $transactions = app()->make(TerminalTransactionService::class)->store($request->transaction);
         } else {
             return $this->errorResponse([], 'Missing request parameters');

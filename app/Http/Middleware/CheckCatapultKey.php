@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Middleware\CDIS\API;
+namespace App\Http\Middleware;
 
 use App\Enums\API\APIDefinedScopes;
 use App\Traits\APIRequestTrait;

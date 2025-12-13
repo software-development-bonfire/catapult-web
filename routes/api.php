@@ -42,6 +42,10 @@ Route::group([
         Route::post('order/release', 'KitchenDisplayController@releaseOrder');
         Route::post('menu/release', 'KitchenDisplayController@releaseMenu');
 
+        Route::post('device-settings/update', [\App\Http\Controllers\KDS\v1\DeviceSettingsController::class, 'update']);
+        Route::post('device-settings/status', [\App\Http\Controllers\KDS\v1\DeviceSettingsController::class, 'status']);
+        Route::get('device-settings/list', [\App\Http\Controllers\KDS\v1\DeviceSettingsController::class, 'list']);
+
         Route::post('broadcasting/auth', [\App\Http\Controllers\KDS\v1\PusherAuthenticateController::class, 'authChannel']);
     });
 

@@ -10,7 +10,7 @@ use App\Enums\Status;
 use App\Enums\API\deviceType;
 use App\Enums\KDS\OrderType;
 use App\Traits\DatabaseTransaction;
-use App\Services\CDIS\V2\CDISApiService;
+use App\Services\CDIS\v2\CDISApiService;
 use Illuminate\Support\Facades\Log;
 
 class EcomTerminalTransactionService

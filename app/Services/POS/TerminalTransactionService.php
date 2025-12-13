@@ -85,6 +85,7 @@ class TerminalTransactionService
                 $transactions = $terminalTransaction;
                 $kdsTransaction = clone $terminalTransaction;
                 $kdsTransaction['terminal_number'] = $terminal->number;
+                $kdsTransaction['transaction_type'] = $datum->transaction_type;
                 $kdsTransaction['kitchen_station_index'] = 1; // We need to set a default kitchen station index for new transaction
                 $official_receipt = [];
 

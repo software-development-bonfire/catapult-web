@@ -6,8 +6,8 @@ use BenSampo\Enum\Enum;
 
 final class OrderType extends Enum
 {
-    const DINE_IN = 1000000000001;
-    const TAKE_OUT = 1000000000002;
-    const DELIVERY = 1000000000003;
-    const DRIVE_THRU = 1000000000004;
+    const DINE_IN = 1;
+    const TAKE_OUT = 2;
+    const DELIVERY = 3;
+    const DRIVE_THRU = 4;
 }

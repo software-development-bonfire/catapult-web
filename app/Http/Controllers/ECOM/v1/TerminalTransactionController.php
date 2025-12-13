@@ -6,7 +6,7 @@ use App\Events\TransactionEvent;
 use App\Http\Controllers\ECOM\EcomBaseController;
 use App\Repositories\Contracts\Ecommerce\PosTerminalTransactionRepository;
 use App\Services\ECOM\EcomTerminalTransactionService;
-use App\Services\CDIS\V2\CDISApiService;
+use App\Services\CDIS\v2\CDISApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
 use App\Enums\API\DeviceType;

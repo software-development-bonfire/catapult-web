@@ -129,19 +129,20 @@ trait StickerPrinterTrait
 
     function printStickerSeparately($printerName, $data, $transaction, $cut = true, $openCashdrawer = true)
     {
-        try {
-            /* Start the printer */
-            $validIPs = IP::extract($printerName);
-            if (isset($validIPs[0]) && IP::validate($validIPs[0])) {
-                $connector = new NetworkPrintConnector($validIPs[0], 9100);
-            } else {
-                $connector = new WindowsPrintConnector($this->getConfigStickerPrinter());
-            }
+        /* Start the printer */
+        $validIPs = IP::extract($printerName);
+        if (isset($validIPs[0]) && IP::validate($validIPs[0])) {
+            $connector = new NetworkPrintConnector($validIPs[0], 9100);
+        } else {
+            $connector = new WindowsPrintConnector($this->getConfigStickerPrinter());
+        }
 
+        /* Information for the receipt */
+        $printer = new StickerPrinter($connector);
+
+        try {
             $orderNumber = "#" . $transaction['order_number'];
             $orderType   = strtoupper(OrderType::getDescription($transaction['type']));
-
-            $printer = new StickerPrinter($connector);
 
             // Flatten list of items + addons
             $printList = [];
