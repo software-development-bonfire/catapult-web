@@ -18,6 +18,8 @@ use Illuminate\Console\Command;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\File;
+use League\Flysystem\FilesystemException;
 
 class FileUpload extends Command implements ShouldQueue
 {
@@ -103,9 +105,30 @@ class FileUpload extends Command implements ShouldQueue
                         continue;
                     }
 
+                    if (!is_dir($localPath) || !is_readable($localPath)) {
+                        $this->setErrorLog(__('error.no_file_storage_setup_detected'));
+                        continue;
+                    }
+                    // Validate parent directory first
+                    $parentDir = dirname($localPath);
+
+                    if (!File::isDirectory($parentDir)) {
+                        $this->setErrorLog("Base directory does not exist: {$parentDir}");
+                        continue;
+                    }
                     // initialize the target disk that handles destination
+                    
                     $sourceFullPath = $localPath.'/Reports/'.cleanNonAlphaNumericChars($terminalFile->name);
-                    $storageDisk = $this->resolveFilesystemDisk('upload_'.cleanNonAlphaNumericChars(strtolower($terminalFile->name)), $sourceFullPath);                    
+                    // Check every parent folder in the chain exists
+                    $fullParent = dirname($sourceFullPath);
+
+                    if (!File::isDirectory($fullParent)) {
+                        $this->setErrorLog("Cannot create directory. Base folder does not exist: {$fullParent}");
+                        continue;
+                    }
+
+                    $storageDisk = $this->resolveFilesystemDisk('upload_'.cleanNonAlphaNumericChars(strtolower($terminalFile->name)), $sourceFullPath); 
+                   
                     
                     $sourceDirectory = '/';
                     $destinationSubDirectoryUpload = '/Uploaded';

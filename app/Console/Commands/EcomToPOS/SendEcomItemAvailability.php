@@ -59,9 +59,8 @@ class SendEcomItemAvailability extends Command
      */
     public function handle()
     {
-        $cdisUrl = getDomain(config()->get('app.cdis_url'), true);
+        $cdisUrl = normalizeDomain(config()->get('app.cdis_url'));
         $branchCode = config('configuration.branch_code');
-
 
         $timeout = $this->option('timeout');
         $timeout =
@@ -81,9 +80,12 @@ class SendEcomItemAvailability extends Command
         $maximumRetry = config('sync.pos.to_cdis.max_retry') ?? 5;
         $url = $cdisUrl . '/api/catapult/v2/ecommerce/item-availability';
 
+        $this->createLog("✅ Start monitoring {$url}.", "info", true, [$cdisUrl]);
         while (true) {
             if (!filter_var($url, FILTER_VALIDATE_URL)) {
                 $this->createLog("Invalid URL: {$url}", 'error', true, []);
+                sleep(5);
+                continue;
             }
 
             if (! $this->hasInternetConnection() && ! $this->hasInternetConnection($cdisUrl)) {
@@ -94,7 +96,7 @@ class SendEcomItemAvailability extends Command
 
             $lastSent = Cache::get('ecom_item_availability_last_sent');
             $now = Carbon::now();
-            
+
             if ($lastSent && $now->diffInSeconds(Carbon::parse($lastSent)) < 300) {
                 sleep(10); // not yet 5 minutes, sleep and retry
                 continue;
@@ -103,11 +105,13 @@ class SendEcomItemAvailability extends Command
 
             $branch = CDISBranch::where('code', $branchCode)->first();
             if (! $branch) {
+                $this->createLog('Branch not found for code: ' . $branchCode.' You need to sync Catapult and CDIS', 'error', true, []);
                 return;
             }
 
             $deviceSettings = DeviceSettings::where('device_type', DeviceType::ECOMMERCE)->first();
             if (!$deviceSettings) {
+                $this->createLog('No eCommerce device settings found.', 'error', true, []);
                 return;
             }
 
@@ -124,19 +128,30 @@ class SendEcomItemAvailability extends Command
             $this->createLog('Start sending to: ' . $url, 'info', true, [
                 'payload_count' => count($products)
             ]);
-            $response = $this->sendRequest($products, $url);
+            if (empty($products)) {
+                $this->createLog('No item availability to send.', 'info', true, []);
+                sleep(60); // wait a bit before checking again
+                continue;
+            }
+            try {
+                $response = $this->sendRequest($products, $url);
 
-            $status = $response->getStatusCode();
-            $body = $response->getBody()->getContents();
+                $status = $response->getStatusCode();
+                $body = $response->getBody()->getContents();
 
-            $this->createLog($body, 'warn', true, [
-                'status' => $status,
-            ]);
-
-            Cache::put('ecom_item_availability_last_sent', $now);
+                $this->createLog($body, 'warn', true, [
+                    'status' => $status,
+                ]);
+            } catch (\Exception $e) {
+                $this->createLog($e->getMessage(), 'error', true, []);
+                sleep(10); // wait a bit before retrying
+            } finally {
+                //update the sent time even on failure to avoid tight loop
+                Cache::put('ecom_item_availability_last_sent', $now);
+            }
 
             $this->flushOutputBuffer();
-            sleep(10); //avoid tight loop
+            sleep(10);
         }
     }
 }

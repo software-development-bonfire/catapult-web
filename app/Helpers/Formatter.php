@@ -154,6 +154,31 @@ if (! function_exists('getDomain')) {
     }
 }
 
+if (! function_exists('normalizeDomain')) {
+    function normalizeDomain($url, $includeScheme = true)
+    {
+        // Parse the URL
+        $pieces = parse_url($url);
+
+        if (!isset($pieces['host'])) {
+            // If 'host' is not set, maybe URL is missing scheme, try parsing manually
+            $host = preg_replace('/\/.*$/', '', $pieces['path'] ?? '');
+        } else {
+            $host = $pieces['host'];
+        }
+
+        // Build domain with optional scheme
+        $domain = $includeScheme && isset($pieces['scheme']) 
+            ? $pieces['scheme'] . '://' . $host 
+            : $host;
+
+        // Remove trailing slash if exists
+        $domain = rtrim($domain, '/');
+
+        return $domain ?: false;
+    }
+}
+
 if (! function_exists('removeNonAlphaNumeric')) {
 
     function removeNonAlphaNumeric($value)
