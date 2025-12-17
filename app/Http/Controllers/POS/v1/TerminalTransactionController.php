@@ -31,18 +31,18 @@ class TerminalTransactionController extends POSBaseController
 
     public function store(Request $request)
     {
-        \Illuminate\Support\Facades\Log::alert(json_encode($request->all()));
+        \Illuminate\Support\Facades\Log::alert('TRANSACTION: '.json_encode($request->all()));
         $transactions = [];
         if (! empty($request->transaction)) {
             // let's check first the transaction terminal number and branch code
-             foreach ($request->transaction as $datum) {
+            foreach ($request->transaction as $datum) {
                 $datum = (object) $datum;
                 $branchCode = config('configuration.branch_code');
 
                 $terminal = CDISTerminal::find($datum->terminal_bid);
                 if (! $terminal) {
                     // Return error if terminal not found with human readable message
-                    return $this->errorResponse([], 'Invalid terminal ('.$datum->terminal_bid.') or not found on branch ' . $branchCode);
+                    return $this->errorResponse([], 'Invalid terminal ('.$datum->terminal_bid.') or not found on branch '.$branchCode);
                 }
             }
             $transactions = app()->make(TerminalTransactionService::class)->store($request->transaction);
@@ -50,8 +50,8 @@ class TerminalTransactionController extends POSBaseController
             return $this->errorResponse([], 'Missing request parameters');
         }
 
-        $sendToKitchen = isset($transactions['transaction_type']) && ($transactions['transaction_type'] == TerminalTransactionType::SALES) ;
-        $printToKitchen = isset($transactions['transaction_type']) && ($transactions['transaction_type'] == TerminalTransactionType::SALES || $transactions['transaction_type'] == TerminalTransactionType::REFUND) ;
+        $sendToKitchen = isset($transactions['transaction_type']) && ($transactions['transaction_type'] == TerminalTransactionType::SALES);
+        $printToKitchen = isset($transactions['transaction_type']) && ($transactions['transaction_type'] == TerminalTransactionType::SALES || $transactions['transaction_type'] == TerminalTransactionType::REFUND);
 
         // Print only SALES transaction type on Sticker/Kitchen Printer
         //if ((isset($transactions->type) && $transactions->type == TerminalTransactionType::SALES) && empty($transactions->is_reprint)) {
@@ -114,8 +114,12 @@ class TerminalTransactionController extends POSBaseController
             $kitchenDisplayProducts[] = collect($kitchenDisplayDetail)->merge($kitchenDisplay);
         }
             */
-       // \Illuminate\Support\Facades\Log::alert(json_encode($kitchenDisplayProducts));
-        if ($printToKitchen && count($kitchenDisplayProducts) == 0) {
+        \Illuminate\Support\Facades\Log::alert('VALIDATION: '.json_encode([
+            'printToKitchen' => $printToKitchen,
+            'count' => count($kitchenDisplayProducts)
+        ]));
+
+        if ($printToKitchen && count($kitchenDisplayProducts) > 0) {
             // Get configured Kitchen Display of each products
             $groupedDisplays = collect($kitchenDisplayProducts)->groupBy('device_uid');
             foreach ($groupedDisplays->toArray() as $device => $items) {
@@ -140,10 +144,12 @@ class TerminalTransactionController extends POSBaseController
                         }
                         return $item;
                     })->toArray(); // Convert back to array if needed
-
                     broadcast(new KDSTransactionEvent('', $transactions['kds_transaction'], $clonedItems, $orderType, 'add'));
                 }
             }
+            \Illuminate\Support\Facades\Log::alert('kitchenDisplayProducts: '.json_encode($kitchenDisplayProducts));
+            \Illuminate\Support\Facades\Log::alert('groupedDisplays: '.json_encode($groupedDisplays));
+            \Illuminate\Support\Facades\Log::alert('groupedReleasingDisplays: '.json_encode($groupedReleasingDisplays));
         }
 
         //}
