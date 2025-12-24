@@ -30,6 +30,7 @@ class CDISTerminalTransaction extends Base
         'table_number',
         'guest_count',
         'remarks',
+        'special_instruction',
         'created_by',
     ];
 
