@@ -112,9 +112,11 @@ class KitchenItemSetupRepositoryEloquent extends BaseEloquent implements Kitchen
                 'cdis_kitchen_item_setup_detail.head_bid',
                 'cdis_kitchen_item_setup_detail.kitchen_station_process_bid',
                 'cdis_kitchen_item_setup_detail.product_uom_packaging_bid',
+                DB::raw('cdis_kitchen_station.name as station_name'),
+                DB::raw('cdis_kitchen_station.order_type as order_type'),
                 DB::raw('cdis_kitchen_station_process.bid as station_bid'),
                 DB::raw('cdis_kitchen_station_process.code as station_code'),
-                DB::raw('cdis_kitchen_station_process.description as station_name'),
+                DB::raw('cdis_kitchen_station_process.description as station_process_name'),
                 DB::raw('cdis_kitchen_station_process.kitchen_station_bid_' . $index.' as station_bid_'.$index),
                 DB::raw('device_settings.device_code as device_code'),
                 DB::raw('device_settings.device_uid as device_uid'),
@@ -122,11 +124,13 @@ class KitchenItemSetupRepositoryEloquent extends BaseEloquent implements Kitchen
             ])
             ->leftJoin('cdis_kitchen_item_setup_detail', 'cdis_kitchen_item_setup_detail.head_bid', '=', 'cdis_kitchen_item_setup.bid')
             ->leftJoin('cdis_kitchen_station_process', 'cdis_kitchen_station_process.bid', '=', 'cdis_kitchen_item_setup_detail.kitchen_station_process_bid')
+            ->leftJoin('cdis_kitchen_station', 'cdis_kitchen_station.bid', '=', 'cdis_kitchen_station_process.kitchen_station_bid_' . $index)
             ->leftJoin('device_settings', 'device_settings.kitchen_station_bid', '=', 'cdis_kitchen_station_process.kitchen_station_bid_' . $index)
             ->whereNull('cdis_kitchen_item_setup.deleted_at')
             ->where('cdis_kitchen_item_setup.device_type', DeviceType::KITCHEN_DISPLAY)
             ->where('cdis_kitchen_item_setup.status', Status::ACTIVE)
             ->where('device_settings.device_type', APIDeviceType::KDS)
+            ->whereNull('device_settings.deleted_at')
             ->where('cdis_kitchen_item_setup_detail.product_uom_packaging_bid', $bid)
             ->orderBy('cdis_kitchen_item_setup.created_at', 'DESC');
 

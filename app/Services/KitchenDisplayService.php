@@ -30,7 +30,7 @@ class KitchenDisplayService
      */
     public function doneOrder($data)
     {
-        \Illuminate\Support\Facades\Log::alert(json_encode($data));
+        \Illuminate\Support\Facades\Log::alert('doneOrder: '.json_encode($data));
 
         $data = (object) stringToJson($data);
         $transaction = (object) $data->transaction;
@@ -40,8 +40,11 @@ class KitchenDisplayService
         ])->with('details')->first();
 
         if (!$terminalTransaction) {
+             \Illuminate\Support\Facades\Log::alert('doneOrder->transaction: Transaction is no exist on cdis_terminal_transaction');
             return;
         }
+
+         \Illuminate\Support\Facades\Log::alert('doneOrder->transaction: '.json_encode($transaction));
 
         $details = $terminalTransaction->details;
         foreach ($details as $detail) {
@@ -117,6 +120,7 @@ class KitchenDisplayService
     {
         $data = (object) stringToJson($data);
         $transaction = (object) $data->transaction;
+        $next = $data->next; // Target to NEXT station otherwise on previous kitchen index
         $terminalTransaction = CDISTerminalTransaction::where([
             'transaction_id' => $transaction->transaction_id,
             'terminal_bid' => $transaction->terminal_bid
@@ -132,7 +136,7 @@ class KitchenDisplayService
             if ($kitchenDisplays->isNotEmpty()) {
                 foreach ($kitchenDisplays as $kitchenDisplay) {
                     // Get all kitchen details with specific kitchen station number/index
-                    $this->getKitchenDetailsWithStationIndex($transaction, $kitchenDisplay, $kitchenDisplay->bid, $transaction->kitchen_station_index);
+                    $this->getKitchenDetailsWithStationIndex($transaction, $kitchenDisplay, $kitchenDisplay->bid, $transaction->kitchen_station_index, $next);
                 }
             }
         }
@@ -142,7 +146,7 @@ class KitchenDisplayService
     }
 
 
-    private function getKitchenDetailsWithStationIndex($transaction, $kitchenDisplay, $kitchenDisplayBid, $index)
+    private function getKitchenDetailsWithStationIndex($transaction, $kitchenDisplay, $kitchenDisplayBid, $index, $next)
     {
         // Get all kitchen details with specific kitchen station number/index
         $kitchenDisplayDetails = KitchenDisplayDetail::where([
@@ -157,7 +161,7 @@ class KitchenDisplayService
             // Update all remaining QTY to zero to current index,
             foreach ($kitchenDisplayDetails as $kitchenDisplayDetail) {
                 $kitchenDisplayDetail = (object) $kitchenDisplayDetail;
-                // Check if next sttion is present then updates the quantity
+                // Check if next station is present then updates the quantity
                 $kitchenDisplayDetails2 = KitchenDisplayDetail::where([
                     'head_bid' => $kitchenDisplayDetail['head_bid'],
                     'transaction_product_bid' => $kitchenDisplayDetail['transaction_product_bid'],
@@ -322,7 +326,6 @@ class KitchenDisplayService
                 }
             }
         } else {
-
             \Illuminate\Support\Facades\Log::alert(json_encode('WALA'));
         }
         return $data;
@@ -346,7 +349,7 @@ class KitchenDisplayService
      */
     public function moveRowItem($data)
     {
-        \Illuminate\Support\Facades\Log::alert(json_encode($data));
+        \Illuminate\Support\Facades\Log::alert('moveRowItem: '.json_encode($data));
         $data = (object) stringToObject($data);
         $rowItem = (object) $data->row_item;
         if ($rowItem) {
@@ -391,6 +394,7 @@ class KitchenDisplayService
                 $nextStationIndex =  intval($item->kitchen_station_index) + 1;
 
                 if (toSafeBoolean($data->next, true) == false) {
+                    // If not true then it means send back the data
                     $nextStationIndex =  intval($item->kitchen_station_index) - 1;
                 }
                 // Check if next sttion is present then updates the quantity
@@ -467,7 +471,7 @@ class KitchenDisplayService
      */
     public function moveItem($data)
     {
-        \Illuminate\Support\Facades\Log::alert(json_encode($data));
+        \Illuminate\Support\Facades\Log::alert('moveItem: '.json_encode($data));
         return $this->transaction(function () use ($data) {
             $kitchenDisplayDetail = KitchenDisplayDetail::find($data['kitchen_display_detail_bid']);
 

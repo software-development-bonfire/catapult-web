@@ -111,6 +111,7 @@ class DeviceSettingsRepositoryEloquent extends BaseRepository implements DeviceS
                 DB::raw('cdis_kitchen_station.bid as bid'),
                 DB::raw('cdis_kitchen_station.code as code'),
                 DB::raw('cdis_kitchen_station.name as name'),
+                DB::raw('cdis_kitchen_station.order_type as order_type'),
                 DB::raw('cdis_kitchen_station.queueing_group_type as queueing_group_type'),
                 DB::raw('cdis_kitchen_station.screen_prioritization as screen_prioritization'),
                 DB::raw('cdis_kitchen_station.status as status')

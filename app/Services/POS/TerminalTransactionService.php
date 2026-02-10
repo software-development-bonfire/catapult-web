@@ -234,11 +234,14 @@ class TerminalTransactionService
                             'is_addon' => false,
                             'transaction_id' => $terminalTransaction->transaction_id,
                             'transaction_product_bid' => $terminalTransactionDetailProduct->bid,
+                            'order_type_id' => $product->order_type_id,
                             'order_type_name' => $product->order_type_name,
                             'terminal_number' => $terminal->number,
                             'addons' => empty($addonNames) ? '' : implode(', ', $addonNames),
                             'has_addon' => count($product->addon) > 0,
                             'kitchen_station_index' => 1, // We need to set a default kitchen station index for new transaction
+                            'table_number' => isset($addon->table_number) ? $addon->table_number: sprintf('%02d', $flattenIndex),
+                            'queue_number' => isset($addon->queue_number) ? $addon->queue_number: sprintf('%05d', $flattenIndex),
                         ];
                         $flattenProducts[] = $productDetail;
                         
@@ -324,12 +327,15 @@ class TerminalTransactionService
                                 'is_addon' => true,
                                 'transaction_id' => $terminalTransaction->transaction_id,
                                 'transaction_product_bid' => $terminalTransactionAddon->bid,
+                                'order_type_id' => $addon->order_type_id,
                                 'order_type_name' => $addon->order_type_name,
                                 'terminal_number' => $terminal->number,
                                // 'addons' => '',
                                 'addons' => $product->name,
                                 'has_addon' => false,
                                 'kitchen_station_index' => 1, // We need to set a default kitchen station index for new transaction
+                                'table_number' => isset($addon->table_number) ? $addon->table_number: sprintf('%02d', $flattenIndex),
+                                'queue_number' => isset($addon->queue_number) ? $addon->queue_number: sprintf('%05d', $flattenIndex),
                             ];
                             $flattenProducts[] = $productDetail;
 

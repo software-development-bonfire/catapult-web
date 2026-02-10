@@ -56,4 +56,24 @@ class DeviceSettingsService
         DeviceSettings::find($bid)->delete();
         return true;
     }
+
+    /**
+     * Permanently delete devices not connected for more than 5 days
+     *
+     * @return int Number of deleted records
+     */
+    public function purgeInactiveDevices(): int
+    {
+        $threshold = Carbon::now()->subDays(5);
+
+        return DeviceSettings::where('last_connected', '<', $threshold)
+            ->forceDelete(); // use delete() if SoftDeletes is NOT used
+    }
+
+    public function setToOffline($minutes = 5)
+    {
+        // Update all devices that haven't connected in the last 5 minutes
+        DeviceSettings::where('last_connected_at', '<', now()->subMinutes($minutes))
+            ->update(['socket_status' => 0]);
+    }
 }

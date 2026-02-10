@@ -24,6 +24,7 @@ class DeviceStationTransformer extends TransformerAbstract
             'bid' => (string) $model->bid,
             'code' => $model->code,
             'name' => $model->name,
+            'order_type' => $model->order_type,
             'queueing_group_type' => $model->queueing_group_type,
             'screen_prioritization' => $model->screen_prioritization,
             'status' => $model->status

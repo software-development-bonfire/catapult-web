@@ -5,6 +5,7 @@ namespace App\Http\Controllers\POS\v1;
 use App\Entities\CDISTerminal;
 use App\Entities\KitchenDisplayDetail;
 use App\Enums\CDIS\TerminalTransactionType;
+use App\Enums\KDS\OrderType;
 use App\Enums\UsageType;
 use App\Events\KDSTransactionEvent;
 use App\Events\MyPrivateEvent;
@@ -99,7 +100,14 @@ class TerminalTransactionController extends POSBaseController
         // Call sticker printing when printable for stickers are present
         if ($sendToKitchen && count($transactionStickersProducts) > 0) {
             $printerHost = $this->getConfigStickerPrinter();
-            $this->printStickerSeparately($printerHost, $transactionStickersProducts, $transactions);
+            try {
+                $this->printStickerSeparately($printerHost, $transactionStickersProducts, $transactions);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::alert('VALIDATION: ' . json_encode([
+                    'printToKitchen' => $printToKitchen,
+                    'count' => count($kitchenDisplayProducts)
+                ]));
+            }
         }
 
         /*
@@ -130,7 +138,7 @@ class TerminalTransactionController extends POSBaseController
             }
 
             // Grouped by order type name, then assigned items by order type susch DINE IN, TAKE OUT, DRIVE THRU, etc.
-            $groupedReleasingDisplays = collect($kitchenDisplayProducts)->groupBy('order_type_name');
+            $groupedReleasingDisplays = collect($kitchenDisplayProducts)->groupBy('order_type_id');
             foreach ($groupedReleasingDisplays->toArray() as $orderType => $items) {
                 if (! empty($orderType) && count($items) > 0) {
                     // Broadcast to assigned KDS for Releasing
@@ -144,12 +152,15 @@ class TerminalTransactionController extends POSBaseController
                         }
                         return $item;
                     })->toArray(); // Convert back to array if needed
-                    broadcast(new KDSTransactionEvent('', $transactions['kds_transaction'], $clonedItems, $orderType, 'add'));
+                    
+                    $orderTypeName = OrderType::getDescription($orderType);
+                    \Illuminate\Support\Facades\Log::alert('BROADCAST: '.$orderType.': '.$orderTypeName.' ' . json_encode($transactions['kds_transaction']));
+                    broadcast(new KDSTransactionEvent($orderType, $transactions['kds_transaction'], $clonedItems, $orderTypeName, 'add'));
                 }
             }
-            \Illuminate\Support\Facades\Log::alert('kitchenDisplayProducts: '.json_encode($kitchenDisplayProducts));
-            \Illuminate\Support\Facades\Log::alert('groupedDisplays: '.json_encode($groupedDisplays));
-            \Illuminate\Support\Facades\Log::alert('groupedReleasingDisplays: '.json_encode($groupedReleasingDisplays));
+            \Illuminate\Support\Facades\Log::alert('kitchenDisplayProducts: ' . json_encode($kitchenDisplayProducts));
+            \Illuminate\Support\Facades\Log::alert('groupedDisplays: ' . json_encode($groupedDisplays));
+            \Illuminate\Support\Facades\Log::alert('groupedReleasingDisplays: ' . json_encode($groupedReleasingDisplays));
         }
 
         //}

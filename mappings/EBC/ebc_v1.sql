@@ -16,6 +16,8 @@
 CREATE DATABASE IF NOT EXISTS `catapult_web` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */;
 USE `catapult_web`;
 
+SET SQL_SAFE_UPDATES=0;
+
 -- Dumping structure for table catapult_web.api_setups
 CREATE TABLE IF NOT EXISTS `api_setups` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -494,3 +496,5 @@ INSERT INTO `file_storage_setup` (`id`, `bid`, `name`, `storage_type`, `local_pa
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40111 SET SQL_NOTES=IFNULL(@OLD_SQL_NOTES, 1) */;
+
+SET SQL_SAFE_UPDATES=1;
