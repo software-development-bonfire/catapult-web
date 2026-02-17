@@ -7,7 +7,11 @@ use App\Entities\CDISTerminal;
 use App\Entities\CDISTerminalTransaction;
 use App\Entities\KitchenDisplay;
 use App\Entities\KitchenDisplayDetail;
+use App\Enums\KDS\KDSMovementType;
 use App\Enums\KDS\MenuStatus;
+use App\Enums\KDS\OrderType;
+use App\Events\KDS\KDSDoneEvent;
+use App\Events\KDS\KDSReleaseEvent;
 use App\Events\KDSTransactionEvent;
 use App\Events\MyPrivateEvent;
 use App\Repositories\Contracts\KitchenItemSetupRepository;
@@ -28,9 +32,9 @@ class KitchenDisplayService
      * @param array $data
      * @return \Illuminate\Http\Response
      */
-    public function doneOrder($data)
+    public function releaseOrder($data)
     {
-        \Illuminate\Support\Facades\Log::alert('doneOrder: '.json_encode($data));
+        \Illuminate\Support\Facades\Log::alert('releaseOrder: ' . json_encode($data));
 
         $data = (object) stringToJson($data);
         $transaction = (object) $data->transaction;
@@ -40,11 +44,49 @@ class KitchenDisplayService
         ])->with('details')->first();
 
         if (!$terminalTransaction) {
-             \Illuminate\Support\Facades\Log::alert('doneOrder->transaction: Transaction is no exist on cdis_terminal_transaction');
+            \Illuminate\Support\Facades\Log::alert('releaseOrder->transaction: Transaction is no exist on cdis_terminal_transaction');
             return;
         }
 
-         \Illuminate\Support\Facades\Log::alert('doneOrder->transaction: '.json_encode($transaction));
+        \Illuminate\Support\Facades\Log::alert('releaseOrder->transaction: ' . json_encode($transaction));
+
+        $details = $terminalTransaction->details;
+        foreach ($details as $detail) {
+            $kitchenDisplays = KitchenDisplay::where('transaction_detail_bid', $detail->bid)->pluck('bid');
+
+            if ($kitchenDisplays->isNotEmpty()) {
+                // Bulk delete KitchenDisplayDetail records
+                KitchenDisplayDetail::whereIn('head_bid', $kitchenDisplays)->delete();
+
+                // Bulk delete KitchenDisplay records
+                KitchenDisplay::whereIn('bid', $kitchenDisplays)->delete();
+            }
+
+            // If releasing KDS sent request to make this transaction RELEASE
+            // Broadcast all KDS that contains transaction
+            broadcast(new KDSReleaseEvent($data->source, KDSMovementType::PER_ORDER, $transaction, []));
+        }
+
+        return $data;
+    }
+
+    public function doneOrder($data)
+    {
+        \Illuminate\Support\Facades\Log::alert('doneOrder: ' . json_encode($data));
+
+        $data = (object) stringToJson($data);
+        $transaction = (object) $data->transaction;
+        $terminalTransaction = CDISTerminalTransaction::where([
+            'transaction_id' => $transaction->transaction_id,
+            'terminal_bid' => $transaction->terminal_bid
+        ])->with('details')->first();
+
+        if (!$terminalTransaction) {
+            \Illuminate\Support\Facades\Log::alert('doneOrder->transaction: Transaction is no exist on cdis_terminal_transaction');
+            return;
+        }
+
+        \Illuminate\Support\Facades\Log::alert('doneOrder->transaction: ' . json_encode($transaction));
 
         $details = $terminalTransaction->details;
         foreach ($details as $detail) {
@@ -60,12 +102,13 @@ class KitchenDisplayService
 
             // If releasing KDS sent request to make this transaction DONE
             // Broadcast all KDS that contains transaction
-            broadcast(new KDSTransactionEvent('', $transaction, [], '', 'done'));
+            broadcast(new KDSDoneEvent($data->source, KDSMovementType::PER_ORDER, $transaction, []));
         }
 
 
         return $data;
     }
+
 
     /**
      * This function will be called in releasing station
@@ -140,7 +183,6 @@ class KitchenDisplayService
                 }
             }
         }
-
 
         return $data;
     }
@@ -318,11 +360,21 @@ class KitchenDisplayService
                 }
             }
             // Grouped by order type name, then assigned items by order type susch DINE IN, TAKE OUT, DRIVE THRU, etc.
-            $groupedReleasingDisplays = collect($releasingDetails)->groupBy('order_type_name');
+            $groupedReleasingDisplays = collect($releasingDetails)->groupBy('order_type_id');
             foreach ($groupedReleasingDisplays->toArray() as $orderType => $items) {
                 if (! empty($orderType) && count($items) > 0) {
                     // Broadcast to assigned KDS for Releasing
-                    broadcast(new KDSTransactionEvent('', $transaction, $items, $orderType, 'update'));
+
+                    $orderTypeName = OrderType::getDescription($orderType);
+                    \Illuminate\Support\Facades\Log::alert('BROADCAST: ' . $orderType . ': ' . $orderTypeName);
+                    \Illuminate\Support\Facades\Log::alert(json_encode([
+                        'device' => $orderType,
+                        'transaction' =>  $transaction,
+                        'items' => $items,
+                        'releasing' => $orderTypeName,
+                        'type' => 'add',
+                    ]));
+                    broadcast(new KDSTransactionEvent($orderType, $transaction, $items, $orderType, 'update'));
                 }
             }
         } else {
@@ -349,7 +401,7 @@ class KitchenDisplayService
      */
     public function moveRowItem($data)
     {
-        \Illuminate\Support\Facades\Log::alert('moveRowItem: '.json_encode($data));
+        \Illuminate\Support\Facades\Log::alert('moveRowItem: ' . json_encode($data));
         $data = (object) stringToObject($data);
         $rowItem = (object) $data->row_item;
         if ($rowItem) {
@@ -471,7 +523,7 @@ class KitchenDisplayService
      */
     public function moveItem($data)
     {
-        \Illuminate\Support\Facades\Log::alert('moveItem: '.json_encode($data));
+        \Illuminate\Support\Facades\Log::alert('moveItem: ' . json_encode($data));
         return $this->transaction(function () use ($data) {
             $kitchenDisplayDetail = KitchenDisplayDetail::find($data['kitchen_display_detail_bid']);
 

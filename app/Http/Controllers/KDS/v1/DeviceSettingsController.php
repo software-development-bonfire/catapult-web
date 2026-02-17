@@ -23,7 +23,7 @@ class DeviceSettingsController extends KDSBaseController
 
         return $this->successfulResponse($list->toArray()['data']);
     }
-    
+
     public function update(Request $request)
     {
         $data = (object) stringToJson($request->all());
@@ -48,5 +48,23 @@ class DeviceSettingsController extends KDSBaseController
         broadcast(new DeviceStatusEvent($result));
 
         return $this->successfulResponse($result, 'Device status broadcasted successfully!');
+    }
+
+    public function getConfig(Request $request)
+    {
+        $serverIp = $_SERVER['SERVER_ADDR'] ?? getHostByName(getHostName());
+        $result = [
+            'key'     => config('broadcasting.connections.pusher.key'),
+            'cluster' => config('broadcasting.connections.pusher.options.cluster'),
+            'port'    => config('broadcasting.connections.pusher.options.port'),
+            'host'    => config('broadcasting.connections.pusher.options.host'),
+            'scheme'  => 'http',
+            'ip' => $request->ip(),
+            'client_ip' => $request->getClientIp(),
+            'server_ip' => $serverIp,
+
+        ];
+
+        return $this->successfulResponse($result, 'Device config retrieved successfully!');
     }
 }
