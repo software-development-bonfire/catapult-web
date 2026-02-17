@@ -21,6 +21,7 @@ class KitchenDisplayDetail extends Base
         'kitchen_station_index',
         'status',
         'usage_type',
+        'order_type_id',
         'order_type_name',
         'special_request',
         'is_addon',

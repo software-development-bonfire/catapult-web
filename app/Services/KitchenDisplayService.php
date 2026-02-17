@@ -12,6 +12,15 @@ use App\Enums\KDS\MenuStatus;
 use App\Enums\KDS\OrderType;
 use App\Events\KDS\KDSDoneEvent;
 use App\Events\KDS\KDSReleaseEvent;
+use App\Events\KDS\KDSMoveMenuEvent;
+use App\Events\KDS\KDSRemoveOrderEvent;
+use App\Events\KDS\KDSRemoveMenuEvent;
+use App\Events\KDS\KDSMoveOrderEvent;
+use App\Events\KDS\KDSMoveItemEvent;
+use App\Events\KDS\KDSDoneMenuEvent;
+use App\Events\KDS\KDSReleaseMenuEvent;
+use App\Events\KDS\KDSOrderDoneEvent;
+use App\Events\KDS\KDSReleaseOrderEvent;
 use App\Events\KDSTransactionEvent;
 use App\Events\MyPrivateEvent;
 use App\Repositories\Contracts\KitchenItemSetupRepository;
@@ -51,10 +60,28 @@ class KitchenDisplayService
         \Illuminate\Support\Facades\Log::alert('releaseOrder->transaction: ' . json_encode($transaction));
 
         $details = $terminalTransaction->details;
+        $releasedItems = [];
+        
         foreach ($details as $detail) {
             $kitchenDisplays = KitchenDisplay::where('transaction_detail_bid', $detail->bid)->pluck('bid');
 
             if ($kitchenDisplays->isNotEmpty()) {
+                // Collect items before deletion for broadcasting
+                $deletedDetails = KitchenDisplayDetail::whereIn('head_bid', $kitchenDisplays)->get();
+                foreach ($deletedDetails as $deletedDetail) {
+                    $releasedItems[] = [
+                        'bid' => $deletedDetail->product_uom_packaging_bid,
+                        'product_bid' => $deletedDetail->product_uom_packaging_bid,
+                        'name' => $deletedDetail->name,
+                        'quantity' => $deletedDetail->remaining_quantity,
+                        'remaining_quantity' => $deletedDetail->remaining_quantity,
+                        'transaction_id' => $deletedDetail->transaction_id,
+                        'order_type_name' => $deletedDetail->order_type_name,
+                        'order_type_id' => $deletedDetail->order_type_id ?? '',
+                        'status' => $deletedDetail->status,
+                    ];
+                }
+                
                 // Bulk delete KitchenDisplayDetail records
                 KitchenDisplayDetail::whereIn('head_bid', $kitchenDisplays)->delete();
 
@@ -64,10 +91,57 @@ class KitchenDisplayService
 
             // If releasing KDS sent request to make this transaction RELEASE
             // Broadcast all KDS that contains transaction
-            broadcast(new KDSReleaseEvent($data->source, KDSMovementType::PER_ORDER, $transaction, []));
+            broadcast(new KDSReleaseOrderEvent($data->source, KDSMovementType::PER_ORDER, $transaction, $releasedItems));
         }
 
         return $data;
+    }
+
+    /**
+     * Release (mark as ready) a specific menu item in kitchen display.
+     *
+     * @param array $data
+     * @return \Illuminate\Http\Response
+     */
+    public function releaseMenu($data)
+    {
+        return $this->transaction(function () use ($data) {
+            $kitchenDisplayDetail = KitchenDisplayDetail::find($data['kitchen_display_detail_bid']);
+            $transaction = null;
+            
+            // Get transaction info before deletion
+            $terminal = CDISTerminal::where('number', $kitchenDisplayDetail->terminal_number)->first();
+            if ($terminal) {
+                $transaction = CDISTerminalTransaction::where([
+                    'transaction_id' => $kitchenDisplayDetail->transaction_id,
+                    'terminal_bid' => $terminal->bid
+                ])->first();
+            }
+            
+            $releasedItem = [
+                'bid' => $kitchenDisplayDetail->product_uom_packaging_bid,
+                'product_bid' => $kitchenDisplayDetail->product_uom_packaging_bid,
+                'name' => $kitchenDisplayDetail->name,
+                'quantity' => $kitchenDisplayDetail->remaining_quantity,
+                'remaining_quantity' => $kitchenDisplayDetail->remaining_quantity,
+                'transaction_id' => $kitchenDisplayDetail->transaction_id,
+                'order_type_name' => $kitchenDisplayDetail->order_type_name,
+                'order_type_id' => $kitchenDisplayDetail->order_type_id ?? '',
+                'status' => $kitchenDisplayDetail->status,
+            ];
+            
+            $kitchenDisplayDetail->update([
+                'status' => MenuStatus::RELEASING
+            ]);
+            $kitchenDisplayDetail->delete();
+            
+            // Dispatch release menu event
+            if ($transaction) {
+                broadcast(new KDSReleaseMenuEvent($releasedItem, $kitchenDisplayDetail->kitchen_station_index, $releasedItem['quantity'] ?? 0));
+            }
+
+            return true;
+        });
     }
 
     public function doneOrder($data)
@@ -89,10 +163,28 @@ class KitchenDisplayService
         \Illuminate\Support\Facades\Log::alert('doneOrder->transaction: ' . json_encode($transaction));
 
         $details = $terminalTransaction->details;
+        $completedItems = [];
+        
         foreach ($details as $detail) {
             $kitchenDisplays = KitchenDisplay::where('transaction_detail_bid', $detail->bid)->pluck('bid');
 
             if ($kitchenDisplays->isNotEmpty()) {
+                // Collect items before deletion for broadcasting
+                $deletedDetails = KitchenDisplayDetail::whereIn('head_bid', $kitchenDisplays)->get();
+                foreach ($deletedDetails as $deletedDetail) {
+                    $completedItems[] = [
+                        'bid' => $deletedDetail->product_uom_packaging_bid,
+                        'product_bid' => $deletedDetail->product_uom_packaging_bid,
+                        'name' => $deletedDetail->name,
+                        'quantity' => $deletedDetail->remaining_quantity,
+                        'remaining_quantity' => $deletedDetail->remaining_quantity,
+                        'transaction_id' => $deletedDetail->transaction_id,
+                        'order_type_name' => $deletedDetail->order_type_name,
+                        'order_type_id' => $deletedDetail->order_type_id ?? '',
+                        'status' => $deletedDetail->status,
+                    ];
+                }
+                
                 // Bulk delete KitchenDisplayDetail records
                 KitchenDisplayDetail::whereIn('head_bid', $kitchenDisplays)->delete();
 
@@ -102,9 +194,8 @@ class KitchenDisplayService
 
             // If releasing KDS sent request to make this transaction DONE
             // Broadcast all KDS that contains transaction
-            broadcast(new KDSDoneEvent($data->source, KDSMovementType::PER_ORDER, $transaction, []));
+            broadcast(new KDSOrderDoneEvent($completedItems, $transaction));
         }
-
 
         return $data;
     }
@@ -145,9 +236,8 @@ class KitchenDisplayService
                     KitchenDisplay::where('bid', $headBid)->delete();
                 }
             }
-            // If releasing KDS sent request to make this transaction DONE
-            // Broadcast all KDS that contains transaction
-            broadcast(new KDSTransactionEvent('', null, toSafeArray($item), '', 'done'));
+            // Dispatch specific event for menu completion
+            broadcast(new KDSDoneMenuEvent($item, $item->kitchen_station_index ?? 0, $item->quantity ?? 1));
         }
 
         return $data;
@@ -174,14 +264,23 @@ class KitchenDisplayService
         }
 
         $details = $terminalTransaction->details;
+        $movedItems = [];
         foreach ($details as $detail) {
             $kitchenDisplays = KitchenDisplay::where('transaction_detail_bid', $detail->bid)->get();
             if ($kitchenDisplays->isNotEmpty()) {
                 foreach ($kitchenDisplays as $kitchenDisplay) {
                     // Get all kitchen details with specific kitchen station number/index
-                    $this->getKitchenDetailsWithStationIndex($transaction, $kitchenDisplay, $kitchenDisplay->bid, $transaction->kitchen_station_index, $next);
+                    $items = $this->getKitchenDetailsWithStationIndex($transaction, $kitchenDisplay, $kitchenDisplay->bid, $transaction->kitchen_station_index, $next);
+                    if (!empty($items)) {
+                        $movedItems = array_merge($movedItems, $items);
+                    }
                 }
             }
+        }
+
+        // Dispatch move order event
+        if (!empty($movedItems)) {
+            broadcast(new KDSMoveOrderEvent($transaction, $movedItems, $transaction->kitchen_station_index, $transaction->kitchen_station_index + 1));
         }
 
         return $data;
@@ -196,6 +295,8 @@ class KitchenDisplayService
             'kitchen_station_index' => $index,
             'status' => MenuStatus::ON_PROCESS,
         ])->get();
+        $movedItems = [];
+        
         if ($kitchenDisplayDetails->isNotEmpty()) {
             $releasingDetails = [];
             $nextStationDetails = [];
@@ -263,6 +364,8 @@ class KitchenDisplayService
                     broadcast(new KDSTransactionEvent('', $transaction, $items, $orderType, 'update'));
                 }
             }
+            
+            $movedItems = array_merge($nextStationDetails, $releasingDetails);
         } else {
             // Grouped by order type name, then assigned items by order type susch DINE IN, TAKE OUT, DRIVE THRU, etc.
             $groupedReleasingDisplays = collect($kitchenDisplayDetails)->groupBy('order_type_name');
@@ -273,6 +376,8 @@ class KitchenDisplayService
                 }
             }
         }
+        
+        return $movedItems;
     }
 
 
@@ -299,8 +404,8 @@ class KitchenDisplayService
 
             // Update all remaining QTY to zero to current index,
             foreach ($kitchenDisplayDetails as $kitchenDisplayDetail) {
-                $kitchenDisplayDetail = (object) $kitchenDisplayDetail;
-                // Check if next sttion is present then updates the quantity
+                $kitchenDisplayDetail = (object) $kitchenDisplayDetail->toArray();
+                // Check if next station is present then updates the quantity
                 $kitchenDisplayDetails2 = KitchenDisplayDetail::where([
                     'head_bid' => $kitchenDisplayDetail->head_bid,
                     'transaction_product_bid' => $kitchenDisplayDetail->transaction_product_bid,
@@ -308,7 +413,7 @@ class KitchenDisplayService
                     'kitchen_station_index' => intval($item->kitchen_station_index) + 1
                 ])->first();
 
-                $data = [
+                $dataItem = [
                     'bid' => $kitchenDisplayDetail->product_uom_packaging_bid,
                     'product_bid' => $kitchenDisplayDetail->product_uom_packaging_bid,
                     'name' => $kitchenDisplayDetail->name,
@@ -319,6 +424,7 @@ class KitchenDisplayService
                     'is_addon' => $kitchenDisplayDetail->is_addon,
                     'transaction_id' => $kitchenDisplayDetail->transaction_id,
                     'order_type_name' => $kitchenDisplayDetail->order_type_name,
+                    'order_type_id' => $kitchenDisplayDetail->order_type_id ?? '',
                     'terminal_number' => $kitchenDisplayDetail->terminal_number,
                     'addons' => $kitchenDisplayDetail->addons,
                     'kitchen_station_index' => $kitchenDisplayDetail->kitchen_station_index,
@@ -331,54 +437,53 @@ class KitchenDisplayService
                     // If next station is present then we need to update remaining quantity
                     $kitchenDisplayDetails2->update(['remaining_quantity' => $kitchenDisplayDetail->remaining_quantity]);
                     $kitchenDisplay = app()->make(KitchenItemSetupRepository::class)->getKitchenStation($kitchenDisplayDetail->product_uom_packaging_bid, intval($kitchenDisplayDetail->kitchen_station_index) + 1);
-                    $nextStationDetails[] = collect($data)->merge($kitchenDisplay);
+                    if ($kitchenDisplay) {
+                        $nextStationDetails[] = collect($dataItem)->merge($kitchenDisplay->toArray());
+                    } else {
+                        $nextStationDetails[] = $dataItem;
+                    }
                 } else {
                     // If no next station then we need to put this on releasing station
                     $kitchenOrderStatus = MenuStatus::RELEASING;
-                    $data['status'] = $kitchenOrderStatus;
-                    $releasingDetails[] = $data;
+                    $dataItem['status'] = $kitchenOrderStatus;
+                    $releasingDetails[] = $dataItem;
                 }
                 // Update remaining quantity to 0, because it moves to next stations
-                $kitchenDisplayDetail->update(['remaining_quantity' => 0, 'status' => $kitchenOrderStatus]);
+                KitchenDisplayDetail::where('bid', $kitchenDisplayDetail->bid)->update([
+                    'remaining_quantity' => 0,
+                    'status' => $kitchenOrderStatus
+                ]);
             }
 
             $terminal = CDISTerminal::where('number', $item->terminal_number)->first();
+            if (!$terminal) {
+                \Illuminate\Support\Facades\Log::warning('Terminal not found for number: ' . $item->terminal_number);
+                return $data;
+            }
+            
             $terminalTransaction = CDISTerminalTransaction::where([
                 'transaction_id' => $item->transaction_id,
                 'terminal_bid' => $terminal->bid
             ])->with('details')->first();
+            
+            if (!$terminalTransaction) {
+                \Illuminate\Support\Facades\Log::warning('Terminal transaction not found');
+                return $data;
+            }
+            
             $transaction = clone $terminalTransaction;
             $transaction['terminal_number'] = $item->terminal_number;
             $transaction['kitchen_station_index'] = intval($item->kitchen_station_index) + 1;
-            // Get configured Kitchen Display of each products
-            $groupedDisplays = collect($nextStationDetails)->groupBy('device_uid');
-            foreach ($groupedDisplays->toArray() as $device => $items) {
-                if (! empty($device) && count($items) > 0) {
-                    // Broadcast to assigned KDS
-
-                    broadcast(new MyPrivateEvent($device, $transaction, $items, ''));
-                }
-            }
-            // Grouped by order type name, then assigned items by order type susch DINE IN, TAKE OUT, DRIVE THRU, etc.
-            $groupedReleasingDisplays = collect($releasingDetails)->groupBy('order_type_id');
-            foreach ($groupedReleasingDisplays->toArray() as $orderType => $items) {
-                if (! empty($orderType) && count($items) > 0) {
-                    // Broadcast to assigned KDS for Releasing
-
-                    $orderTypeName = OrderType::getDescription($orderType);
-                    \Illuminate\Support\Facades\Log::alert('BROADCAST: ' . $orderType . ': ' . $orderTypeName);
-                    \Illuminate\Support\Facades\Log::alert(json_encode([
-                        'device' => $orderType,
-                        'transaction' =>  $transaction,
-                        'items' => $items,
-                        'releasing' => $orderTypeName,
-                        'type' => 'add',
-                    ]));
-                    broadcast(new KDSTransactionEvent($orderType, $transaction, $items, $orderType, 'update'));
+            
+            // Dispatch move menu event with moved items
+            $movedItems = array_merge($nextStationDetails, $releasingDetails);
+            if (!empty($movedItems)) {
+                foreach ($movedItems as $movedItem) {
+                    broadcast(new KDSMoveMenuEvent($movedItem, $transaction, intval($item->kitchen_station_index), intval($item->kitchen_station_index) + 1, $movedItem['quantity'] ?? 0));
                 }
             }
         } else {
-            \Illuminate\Support\Facades\Log::alert(json_encode('WALA'));
+            \Illuminate\Support\Facades\Log::warning('No kitchen display details found for movement operation');
         }
         return $data;
     }
@@ -417,15 +522,13 @@ class KitchenDisplayService
                 $clonedItem = $item;
             }
 
-
-            // Ensure $item is an object before cloning
+            // Ensure $transaction is an object before cloning
             if (is_object($transaction)) {
                 $clonedTransaction = clone $transaction;
             } else {
-                // Handle the case when $item is not an object (e.g., log an error, return a default value, etc.)
+                // Handle the case when $transaction is not an object (e.g., log an error, return a default value, etc.)
                 $clonedTransaction = $transaction;
             }
-
 
             $kitchenDisplayDetail = KitchenDisplayDetail::where([
                 'transaction_id' => $item->transaction_id,
@@ -440,16 +543,24 @@ class KitchenDisplayService
                 $releasingDetails = [];
                 $nextStationDetails = [];
 
-                // Update all remaining QTY to zero to current index,
-                $kitchenDisplayDetail = (object) $kitchenDisplayDetail;
+                // Convert to object for consistency
+                $kitchenDisplayDetail = (object) $kitchenDisplayDetail->toArray();
 
                 $nextStationIndex =  intval($item->kitchen_station_index) + 1;
+                $quantityToMove = intval($data->quantity);
 
                 if (toSafeBoolean($data->next, true) == false) {
-                    // If not true then it means send back the data
+                    // If not true then it means send back the data (move to previous station)
                     $nextStationIndex =  intval($item->kitchen_station_index) - 1;
                 }
-                // Check if next sttion is present then updates the quantity
+                
+                // Prevent moving beyond valid station range
+                if ($nextStationIndex < 1 || $nextStationIndex > 4) {
+                    \Illuminate\Support\Facades\Log::warning('Invalid station index: ' . $nextStationIndex);
+                    return $rowItem;
+                }
+
+                // Check if next station is present then updates the quantity
                 $kitchenDisplayDetails2 = KitchenDisplayDetail::where([
                     'transaction_id' => $item->transaction_id,
                     'transaction_product_bid' => $item->transaction_product_bid,
@@ -460,56 +571,87 @@ class KitchenDisplayService
 
                 $newQuantity = 0;
                 $kitchenOrderStatus = MenuStatus::ON_PROCESS;
+                
                 if ($kitchenDisplayDetails2) {
-                    // If next station is present then we need to update remaining quantity
-                    $newQuantity = intval($kitchenDisplayDetails2->remaining_quantity) + intval($data->quantity);
-                    if (toSafeBoolean($data->next, true) == false) {
-                        $newQuantity =  intval($kitchenDisplayDetails2->remaining_quantity) - intval($data->quantity);
+                    // If next station exists, move quantity there
+                    if (toSafeBoolean($data->next, true) == true) {
+                        // Moving forward to next station
+                        $newQuantity = intval($kitchenDisplayDetails2->remaining_quantity) + $quantityToMove;
+                    } else {
+                        // Moving backward to previous station
+                        $newQuantity = intval($kitchenDisplayDetails2->remaining_quantity) + $quantityToMove;
                     }
-                    $kitchenDisplayDetails2->update(['remaining_quantity' => $newQuantity]);
+                    
+                    // Ensure quantity doesn't go negative
+                    $newQuantity = max(0, $newQuantity);
+                    
+                    KitchenDisplayDetail::where('bid', $kitchenDisplayDetails2->bid)->update([
+                        'remaining_quantity' => $newQuantity
+                    ]);
+                    
                     $kitchenDisplay = app()->make(KitchenItemSetupRepository::class)->getKitchenStation($kitchenDisplayDetail->product_uom_packaging_bid, $nextStationIndex);
                     $clonedItem->remaining_quantity = $newQuantity;
                     $clonedItem->quantity = $newQuantity;
                     $clonedItem->kitchen_station_index = $nextStationIndex;
-                    $nextStationDetails[] = collect($clonedItem)->merge($kitchenDisplay);
+                    $nextStationDetails[] = collect($clonedItem)->merge($kitchenDisplay ?? []);
                 } else {
-                    // If no next station then we need to put this on releasing station
-                    $kitchenOrderStatus = MenuStatus::RELEASING;
-                    $clonedItem->status = $kitchenOrderStatus;
-                    $releasingDetails[] = $clonedItem;
+                    // If no next station exists, check if moving to releasing station
+                    if ($nextStationIndex > 4) {
+                        // Moving to releasing station
+                        $kitchenOrderStatus = MenuStatus::RELEASING;
+                        $clonedItem->status = $kitchenOrderStatus;
+                        $releasingDetails[] = $clonedItem;
 
-                    $kitchenDisplayDetailReleasing = KitchenDisplayDetail::where([
-                        'transaction_id' => $item->transaction_id,
-                        'transaction_product_bid' => $item->transaction_product_bid,
-                        'product_uom_packaging_bid' => $item->product_uom_packaging_bid,
-                        'terminal_number' => $item->terminal_number,
-                        'kitchen_station_index' => 0
-                    ])->first();
+                        $kitchenDisplayDetailReleasing = KitchenDisplayDetail::where([
+                            'transaction_id' => $item->transaction_id,
+                            'transaction_product_bid' => $item->transaction_product_bid,
+                            'product_uom_packaging_bid' => $item->product_uom_packaging_bid,
+                            'terminal_number' => $item->terminal_number,
+                            'kitchen_station_index' => 0
+                        ])->first();
 
-                    if ($kitchenDisplayDetailReleasing) {
-                        // If next station is present then we need to update remaining quantity
-                        $newQuantity = intval($kitchenDisplayDetailReleasing->remaining_quantity) + intval($data->quantity);
-                        if (toSafeBoolean($data->next, true) == false) {
-                            $newQuantity =  intval($kitchenDisplayDetailReleasing->remaining_quantity) - intval($data->quantity);
+                        if ($kitchenDisplayDetailReleasing) {
+                            // Update releasing station quantity
+                            $newQuantity = intval($kitchenDisplayDetailReleasing->remaining_quantity) + $quantityToMove;
+                            $newQuantity = max(0, $newQuantity);
+                            KitchenDisplayDetail::where('bid', $kitchenDisplayDetailReleasing->bid)->update([
+                                'remaining_quantity' => $newQuantity
+                            ]);
                         }
-                        $kitchenDisplayDetailReleasing->update(['remaining_quantity' => $newQuantity]);
                     }
                 }
-                // Update remaining quantity to 0, because it moves to next stations
-                $kitchenDisplayDetail->update(['remaining_quantity' => $data->remaining_quantity, 'status' => $kitchenOrderStatus]);
+                
+                // Update the current station quantity (reduce by moved quantity)
+                $currentRemainingQuantity = intval($kitchenDisplayDetail->remaining_quantity) - $quantityToMove;
+                $currentRemainingQuantity = max(0, $currentRemainingQuantity);
+                
+                KitchenDisplayDetail::where('transaction_id', $item->transaction_id)
+                    ->where('transaction_product_bid', $item->transaction_product_bid)
+                    ->where('product_uom_packaging_bid', $item->product_uom_packaging_bid)
+                    ->where('terminal_number', $item->terminal_number)
+                    ->where('kitchen_station_index', $item->kitchen_station_index)
+                    ->where('status', MenuStatus::ON_PROCESS)
+                    ->update(['remaining_quantity' => $currentRemainingQuantity, 'status' => $kitchenOrderStatus]);
 
                 $clonedTransaction->kitchen_station_index = $nextStationIndex;
 
                 // Get configured Kitchen Display of each products
-                $groupedDisplays = collect($nextStationDetails)->groupBy('device_uid');
-                foreach ($groupedDisplays->toArray() as $device => $items) {
-                    if (! empty($device) && count($items) > 0) {
-                        // Broadcast to assigned KDS
-                        broadcast(new MyPrivateEvent($device, $clonedTransaction, $items, ''));
+                if (count($nextStationDetails) > 0) {
+                    $groupedDisplays = collect($nextStationDetails)->groupBy('device_uid');
+                    foreach ($groupedDisplays->toArray() as $device => $items) {
+                        if (! empty($device) && count($items) > 0) {
+                            // Broadcast to assigned KDS
+                            broadcast(new MyPrivateEvent($device, $clonedTransaction, $items, ''));
+                        }
                     }
                 }
-                // Broadcast to assigned KDS for Releasing
-                broadcast(new KDSTransactionEvent('', $clonedTransaction, toSafeArray($item), $orderType->name, 'update'));
+                
+                // Broadcast to assigned KDS for Releasing if applicable
+                if (count($releasingDetails) > 0) {
+                    broadcast(new KDSTransactionEvent('', $clonedTransaction, toSafeArray($item), $orderType->name ?? '', 'update'));
+                }
+            } else {
+                \Illuminate\Support\Facades\Log::warning('Kitchen display detail not found for movement');
             }
         }
         return $rowItem;
@@ -531,6 +673,16 @@ class KitchenDisplayService
                 return false;
             }
 
+            // Get transaction info for broadcasting
+            $terminal = CDISTerminal::where('number', $kitchenDisplayDetail->terminal_number)->first();
+            $transaction = null;
+            if ($terminal) {
+                $transaction = CDISTerminalTransaction::where([
+                    'transaction_id' => $kitchenDisplayDetail->transaction_id,
+                    'terminal_bid' => $terminal->bid
+                ])->first();
+            }
+
             $headBid = $kitchenDisplayDetail->head_bid;
             $transactionProductBid = $kitchenDisplayDetail->transaction_product_bid;
             $remainingQuantity = $kitchenDisplayDetail->remaining_quantity;
@@ -549,6 +701,19 @@ class KitchenDisplayService
                     'completed_at' => Carbon::now()
                 ]);
             }
+
+            // Prepare item data for broadcasting
+            $movedItem = [
+                'bid' => $kitchenDisplayDetail->product_uom_packaging_bid,
+                'product_bid' => $kitchenDisplayDetail->product_uom_packaging_bid,
+                'name' => $kitchenDisplayDetail->name,
+                'quantity' => $data['quantity'],
+                'remaining_quantity' => $kitchenDisplayDetail->remaining_quantity,
+                'transaction_id' => $kitchenDisplayDetail->transaction_id,
+                'order_type_name' => $kitchenDisplayDetail->order_type_name,
+                'order_type_id' => $kitchenDisplayDetail->order_type_id ?? '',
+                'status' => $kitchenDisplayDetail->status,
+            ];
 
             if ($remainingQuantity > 0) {
                 $kitchenDisplayDetail->update([
@@ -576,6 +741,11 @@ class KitchenDisplayService
                 $destinationKitchenDisplayDetail->create($expectedDestinationData);
             }
 
+            // Dispatch move item event
+            if ($transaction) {
+                broadcast(new KDSMoveItemEvent($movedItem, $transaction, $data['quantity'], $kitchenDisplayDetail->kitchen_station_index, $data['move_station_bid'] ?? null));
+            }
+
             return true;
         });
     }
@@ -590,14 +760,44 @@ class KitchenDisplayService
     {
         return $this->transaction(function () use ($data) {
             $kitchenDisplay = KitchenDisplay::find($data['kitchen_display_bid']);
+            $transaction = null;
+            $removedItems = [];
 
-            $kitchenDisplay->details()->each(function ($detail) {
+            $kitchenDisplay->details()->each(function ($detail) use (&$transaction, &$removedItems) {
+                if (!$transaction) {
+                    // Get transaction info from first detail
+                    $terminal = CDISTerminal::where('number', $detail->terminal_number)->first();
+                    if ($terminal) {
+                        $transaction = CDISTerminalTransaction::where([
+                            'transaction_id' => $detail->transaction_id,
+                            'terminal_bid' => $terminal->bid
+                        ])->first();
+                    }
+                }
+                
+                $removedItems[] = [
+                    'bid' => $detail->product_uom_packaging_bid,
+                    'product_bid' => $detail->product_uom_packaging_bid,
+                    'name' => $detail->name,
+                    'quantity' => $detail->remaining_quantity,
+                    'remaining_quantity' => $detail->remaining_quantity,
+                    'transaction_id' => $detail->transaction_id,
+                    'order_type_name' => $detail->order_type_name,
+                    'order_type_id' => $detail->order_type_id ?? '',
+                    'status' => $detail->status,
+                ];
+                
                 $detail->update([
                     'status' => MenuStatus::DELETED
                 ]);
 
                 $detail->delete();
             });
+
+            // Dispatch remove order event
+            if ($transaction && !empty($removedItems)) {
+                broadcast(new KDSRemoveOrderEvent($removedItems, $transaction));
+            }
 
             $kitchenDisplay->delete();
 
@@ -615,10 +815,38 @@ class KitchenDisplayService
     {
         return $this->transaction(function () use ($data) {
             $kitchenDisplayDetail = KitchenDisplayDetail::find($data['kitchen_display_detail_bid']);
+            $transaction = null;
+            
+            // Get transaction info before deletion
+            $terminal = CDISTerminal::where('number', $kitchenDisplayDetail->terminal_number)->first();
+            if ($terminal) {
+                $transaction = CDISTerminalTransaction::where([
+                    'transaction_id' => $kitchenDisplayDetail->transaction_id,
+                    'terminal_bid' => $terminal->bid
+                ])->first();
+            }
+            
+            $removedItem = [
+                'bid' => $kitchenDisplayDetail->product_uom_packaging_bid,
+                'product_bid' => $kitchenDisplayDetail->product_uom_packaging_bid,
+                'name' => $kitchenDisplayDetail->name,
+                'quantity' => $kitchenDisplayDetail->remaining_quantity,
+                'remaining_quantity' => $kitchenDisplayDetail->remaining_quantity,
+                'transaction_id' => $kitchenDisplayDetail->transaction_id,
+                'order_type_name' => $kitchenDisplayDetail->order_type_name,
+                'order_type_id' => $kitchenDisplayDetail->order_type_id ?? '',
+                'status' => $kitchenDisplayDetail->status,
+            ];
+            
             $kitchenDisplayDetail->update([
                 'status' => MenuStatus::DELETED
             ]);
             $kitchenDisplayDetail->delete();
+            
+            // Dispatch remove menu event
+            if ($transaction) {
+                broadcast(new KDSRemoveMenuEvent([$removedItem], $transaction));
+            }
 
             return true;
         });

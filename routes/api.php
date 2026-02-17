@@ -22,6 +22,7 @@ Route::group([
 ], function () {
     Route::post('login', [\App\Http\Controllers\KDS\v1\LoginController::class, 'login']);
     Route::post('logout', [\App\Http\Controllers\KDS\v1\LoginController::class, 'logout']);
+    Route::get('config', [\App\Http\Controllers\KDS\v1\DeviceSettingsController::class, 'getConfig']);
 
     Route::group(['middleware' => 'access-token'], function () {
         Route::get('station/list', 'KitchenStationController@list');
@@ -45,6 +46,7 @@ Route::group([
         Route::post('device-settings/update', [\App\Http\Controllers\KDS\v1\DeviceSettingsController::class, 'update']);
         Route::post('device-settings/status', [\App\Http\Controllers\KDS\v1\DeviceSettingsController::class, 'status']);
         Route::get('device-settings/list', [\App\Http\Controllers\KDS\v1\DeviceSettingsController::class, 'list']);
+        Route::get('device-settings/config', [\App\Http\Controllers\KDS\v1\DeviceSettingsController::class, 'getConfig']);
 
         Route::post('broadcasting/auth', [\App\Http\Controllers\KDS\v1\PusherAuthenticateController::class, 'authChannel']);
     });

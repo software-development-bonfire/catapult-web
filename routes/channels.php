@@ -26,8 +26,10 @@ Broadcast::channel('private-my-channel', function ($data) {
     return $data;
 });
 
-Broadcast::channel('chat.{roomId}', function ($user, $roomId) {
-    return ['id' => $user->id, 'name' => $user->name];
+Broadcast::channel('kds-device-{device}', function ($user, $device) {
+    // Allow all authenticated users to listen to KDS device channels
+    // In production, you might want to add more granular authorization
+    return ['device' => $device];
 });
 
 Broadcast::channel('sirius-compute-engine', function ($data) {

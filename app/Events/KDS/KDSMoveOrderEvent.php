@@ -1,35 +1,31 @@
 <?php
 
-namespace App\Events;
+namespace App\Events\KDS;
 
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Support\Facades\Log;
 
-class MyPrivateEvent implements ShouldBroadcast
+class KDSMoveOrderEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets;
 
-    public $device;
     public $transaction;
     public $items;
-    public $releasing;
+    public $fromStation;
+    public $toStation;
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct($device, $transaction, $items, $releasing)
+    public function __construct($transaction, $items, $fromStation, $toStation)
     {
-        $this->device = $device;
         $this->transaction = $transaction;
         $this->items = $items;
-        $this->releasing = $releasing;
+        $this->fromStation = $fromStation;
+        $this->toStation = $toStation;
     }
 
     /**
@@ -39,12 +35,11 @@ class MyPrivateEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        // Use device_uid to create a private channel specific to each KDS device
-        return new PrivateChannel('kds-device-' . $this->device);
+        return ['kds-channel'];
     }
-    
+
     public function broadcastAs()
     {
-        return 'kds-device-event';
+        return 'kds-move-order-event';
     }
 }
