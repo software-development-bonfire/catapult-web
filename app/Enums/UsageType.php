@@ -8,6 +8,6 @@ final class UsageType extends Enum
 {
     const PRODUCT   =   0;
     const ADDON     =   1;
-    const BUNDLE    =   2;
+    const BUNDLE    =   2; // Modifiers
     const HEAD_DISCOUNT =   4;
 }

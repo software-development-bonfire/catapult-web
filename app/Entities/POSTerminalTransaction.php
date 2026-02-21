@@ -73,6 +73,12 @@ class POSTerminalTransaction extends Base
         return $this->hasMany(POSTerminalTransactionProduct::class, 'terminal_transaction_bid', 'bid');
     }
 
+    public function addons()
+    {
+        return $this->hasMany(POSTerminalTransactionProduct::class, 'terminal_transaction_bid', 'bid');
+    }
+
+
     public function payments()
     {
         return $this->hasMany(POSPayment::class, 'terminal_transaction_bid', 'bid');

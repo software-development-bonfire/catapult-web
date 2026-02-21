@@ -18,31 +18,26 @@ class TerminalTransactionController extends KioskBaseController
     {
         $data = (object) stringToJson($request->all());
         if (! empty($data->data)) {
-            $result = app()->make(KioskTerminalTransactionService::class)->store($data->device_code, $data->data, DeviceType::KIOSK);
+            app()->make(KioskTerminalTransactionService::class)->store($data->device_code, $data->data, DeviceType::KIOSK);
         } else {
             return $this->errorResponse([], 'Missing request parameters');
         }
 
         unset($data->access_token);
-        // Send transaction to POS if there is payment in the OTS
-        if (isset($data->data['payments'])) {
-            $payments = $data->data['payments'];
-            if (isset($payments[0])) {
-                $payment = (object) stringToJson($payments[0]);
-                if ($payment->title !== 'CASH') {
-                    $devices = app()->make(DeviceSettingsRepository::class)->getActivePOS();
-                    if (count($devices) > 0) {
-                        foreach ($devices as $device) {
-                            // Send to the online POS device with first priority
-                            broadcast(new TransactionEvent($data->device_code, $device['device_code'], $data->data));
-                            break;
-                        }
-                    } else {
-                        // @TODO: If no online/configured devices then add to QUEUE
-                        // and report back to KIOSK device to inform the status
-                    }
-                }
+
+        \Illuminate\Support\Facades\Log::alert(json_encode($data->data));
+
+        // Broadcast the transaction data to all online POS devices
+        $devices = app()->make(DeviceSettingsRepository::class)->getActivePOS();
+        if (count($devices) > 0) {
+            foreach ($devices as $device) {
+                // Send to the online POS device with first priority
+                broadcast(new TransactionEvent($data->device_code, $device['device_code'], $data->data));
+                break;
             }
+        } else {
+            // @TODO: If no online/configured devices then add to QUEUE
+            // and report back to KIOSK device to inform the status
         }
         return $this->successfulResponse(
             $data->data,

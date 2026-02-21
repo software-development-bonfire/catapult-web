@@ -76,6 +76,7 @@ class POSTerminalTransactionProduct extends Base
         return $this->belongsTo(POSTerminalTransaction::class, 'terminal_transaction_bid', 'transaction_id');
     }
 
+    /*
     // Self-referencing hasMany relationships with usage_type MODIFIERS
     public function modifiers()
     {
@@ -86,5 +87,61 @@ class POSTerminalTransactionProduct extends Base
     public function addons()
     {
         return $this->hasMany(POSTerminalTransactionProduct::class, 'parent_bid', 'product_bid')->where('usage_type', UsageType::ADDON);
+    }
+    */
+
+
+
+    /**
+     * Get the parent product (for addons/modifiers)
+     */
+    public function parent()
+    {
+        return $this->belongsTo(POSTerminalTransactionProduct::class, 'parent_bid', 'product_bid');
+    }
+
+    /**
+     * Get all modifiers for this product (using product_bid as reference)
+     */
+    public function modifiers()
+    {
+        return $this->hasMany(POSTerminalTransactionProduct::class, 'parent_bid', 'product_bid')
+            ->where('usage_type', UsageType::BUNDLE);
+    }
+
+    /**
+     * Get all addons for this product (using product_bid as reference)
+     */
+    public function addons()
+    {
+        return $this->hasMany(POSTerminalTransactionProduct::class, 'parent_bid', 'product_bid')
+            ->where('usage_type', UsageType::ADDON);
+    }
+
+    /**
+     * Get all child items (both modifiers and addons)
+     */
+    public function children()
+    {
+        return $this->hasMany(POSTerminalTransactionProduct::class, 'parent_bid', 'product_bid');
+    }
+
+    /**
+     * Scope to get only main products (not addons/modifiers)
+     */
+    public function scopeMainProducts($query)
+    {
+        return $query->where('usage_type', UsageType::PRODUCT)
+            ->whereNull('parent_bid');
+    }
+
+    public function scopeAddons($query)
+    {
+        return $query->where('usage_type', UsageType::ADDON);
+    }
+
+    public function scopeModifiers($query)
+    {
+        return $query->where('usage_type', UsageType::BUNDLE);
     }
 }

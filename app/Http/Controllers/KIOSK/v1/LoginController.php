@@ -31,7 +31,9 @@ class LoginController extends KioskBaseController
      */
     public function login(Request $request)
     {
+        // Depending on the auth type, we will authenticate either by device or by user credentials
         if ($this->authType == 'device') {
+            // For device authentication, we will check if the device exists in the system and then generate a token for it
             $data = (object) stringToJson($request->all());
             $devices = app()->make(DeviceSettingsRepository::class)->where([
                 'device_uid' => $data->device_uid,
@@ -52,7 +54,7 @@ class LoginController extends KioskBaseController
                 return $this->tokenGeneratedResponse($response);
             }
         } else  if ($this->authType == 'user') {
-
+            // For user authentication, we will check the provided username and password against the user records in the system and generate a token if the credentials are valid
             $credentials = $request->only('username', 'password');
 
             $user = app()->make(UserAccountRepository::class)->where([

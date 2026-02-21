@@ -158,12 +158,6 @@ class TerminalTransactionController extends POSBaseController
                 }
             }
         }
-            //\Illuminate\Support\Facades\Log::alert('kitchenDisplayProducts: ' . json_encode($kitchenDisplayProducts));
-            //\Illuminate\Support\Facades\Log::alert('groupedDisplays: ' . json_encode($groupedDisplays));
-            //\Illuminate\Support\Facades\Log::alert('groupedReleasingDisplays: ' . json_encode($groupedReleasingDisplays));
-        }
-
-        //}
 
         return $this->successfulResponse(
             $transactions,
@@ -205,6 +199,83 @@ class TerminalTransactionController extends POSBaseController
         }
 
         return $this->successfulResponse($transactions);
+    }
+
+    public function search2(Request $request)
+    {
+        $data = (object) stringToJson($request->all());
+
+        if (empty($data->filters)) {
+            return $this->errorResponse([], 'Missing request parameters');
+        }
+
+        // Get only main products (not addons/modifiers) in the details
+        $detailFilters = [
+            'usage_type' => UsageType::PRODUCT
+        ];
+
+        // Add any additional detail filters from request
+        if (!empty($data->detail_filters)) {
+            $detailFilters = array_merge($detailFilters, (array) $data->detail_filters);
+        }
+
+        // Handle payment filters
+        $paymentFilters = !empty($data->payment_filters) ? (array) $data->payment_filters : null;
+
+        // Option to include or exclude children
+        $includeChildren = isset($data->include_children) ? $data->include_children : true;
+
+        $transactions = app()->make(TerminalTransactionRepository::class)
+            ->list($data->filters, $detailFilters, $paymentFilters, $includeChildren);
+
+        // Optionally transform the data to organize addons/modifiers under their parents
+        if ($includeChildren && $request->get('organize_children', false)) {
+            $transactions = $this->organizeTransactionChildren($transactions);
+        }
+
+        return $this->successfulResponse($transactions);
+    }
+
+    /**
+     * Organize transaction details to nest addons/modifiers under their parents
+     */
+    protected function organizeTransactionChildren($transactions)
+    {
+        return $transactions->map(function ($transaction) {
+            if ($transaction->details->isEmpty()) {
+                return $transaction;
+            }
+
+            $organizedDetails = collect();
+            $childrenByParent = [];
+
+            // First pass: separate parents and children
+            foreach ($transaction->details as $detail) {
+                if (in_array($detail->usage_type, [UsageType::BUNDLE, UsageType::ADDON])) {
+                    // This is a child
+                    if (!isset($childrenByParent[$detail->parent_bid])) {
+                        $childrenByParent[$detail->parent_bid] = collect();
+                    }
+                    $childrenByParent[$detail->parent_bid]->push($detail);
+                } else {
+                    // This is a parent or standalone product
+                    $detail->children = collect();
+                    $organizedDetails->push($detail);
+                }
+            }
+
+            // Second pass: attach children to their parents
+            foreach ($organizedDetails as $parent) {
+                if (isset($childrenByParent[$parent->product_bid])) {
+                    $parent->children = $childrenByParent[$parent->product_bid];
+                }
+            }
+
+            $transaction->organized_details = $organizedDetails;
+
+            // Keep the original details as well for backward compatibility
+            return $transaction;
+        });
     }
 
     public function printReceipt(Request $request)
