@@ -1,0 +1,1 @@
+pm2 stop all && php artisan optimize:clear && php artisan key:generate && php artisan optimize && pm2 restart all && pm2 monit

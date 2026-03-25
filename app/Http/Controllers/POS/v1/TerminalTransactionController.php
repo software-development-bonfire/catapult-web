@@ -193,7 +193,10 @@ class TerminalTransactionController extends POSBaseController
             // Filters only non-modifiers, non-addons products in details
             // Let the relationship query handle the rest
             $detailFilters = ['usage_type' => UsageType::PRODUCT];
-            $transactions = app()->make(TerminalTransactionRepository::class)->list($data->filters, $detailFilters);
+            
+            $filters = (object) $data->filters;
+            $paymentFilters = !empty($filters->payments) ? (array) $filters->payments : null;
+            $transactions = app()->make(TerminalTransactionRepository::class)->list($data->filters, $detailFilters, $paymentFilters);
         } else {
             return $this->errorResponse([], 'Missing request parameters');
         }

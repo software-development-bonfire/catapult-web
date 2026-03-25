@@ -103,7 +103,7 @@ Route::group([
 
 Route::group([
     'prefix' => 'sce/v1',
-    'namescpace' => 'SCE\v1'
+    'namespace' => 'SCE\v1'
 ], function() {
     Route::post('login', [\App\Http\Controllers\SCE\v1\LoginController::class, 'login']);
     Route::post('logout', [\App\Http\Controllers\SCE\v1\LoginController::class, 'logout']);

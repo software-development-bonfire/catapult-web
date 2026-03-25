@@ -50,7 +50,8 @@
                         ></i>
                             <span v-text="tableData.name"></span>
                         </div>
-                        <i class="device--uid" v-text="tableData.device_uid"></i>
+                        <div class="device--uid" v-text="tableData.device_uid"></div>
+                        <div class="device--code" v-text="tableData.device_code"></div>
                     </td>
                     <td class="datatable-cell" align="center">
                         <div class="device--ip" v-text="tableData.ip_address"></div>

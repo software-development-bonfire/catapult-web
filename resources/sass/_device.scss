@@ -60,4 +60,11 @@
             cursor: pointer;
         }
     }
+    &--code {
+        color: #aa9797;
+        &:hover {
+            color: darken(#9011f7, 5%);
+            cursor: pointer;
+        }
+    }
 }

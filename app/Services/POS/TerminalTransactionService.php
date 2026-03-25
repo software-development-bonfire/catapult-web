@@ -5,7 +5,9 @@ namespace App\Services\POS;
 use App\Entities\CDISInventoryLocationTag;
 use App\Entities\CDISTerminal;
 use App\Entities\CDISTerminalTransaction;
+use App\Entities\POSTerminalTransaction;
 use App\Enums\InventoryLocationTagType;
+use App\Enums\PaymentStatus;
 use App\Enums\UsageType;
 use App\Repositories\Contracts\CDIS\TerminalTransactionRepository;
 use App\Repositories\Contracts\KitchenItemSetupRepository;
@@ -412,9 +414,33 @@ class TerminalTransactionService
 
             $transactions['kds_transaction'] = $kdsTransaction;
             $transactions['official_receipt'] = $official_receipt;
+
+            //$this->updateStatus($datum);
         }
 
         return $transactions;
         // });
+    }
+
+    public function updateStatus($data)
+    {
+        return $this->transaction(function () use ($data) {
+            $data = (object) stringToJson($data);
+            $posTransaction = POSTerminalTransaction::where('terminal_bid', '=', $data->terminal_bid)
+                ->where('log_date', $data->log_date)
+                ->where('transaction_id', $data->transaction_id)
+                //->where('or_number', $data->or_number)
+                ->where('order_number', $data->order_number)
+                ->where('order_status', PaymentStatus::CREATED)
+                ->first();
+
+            if ($posTransaction) {
+                $posTransaction = tap($posTransaction)->update([
+                    'order_status' => PaymentStatus::PAID,
+                    'payment_status' => PaymentStatus::PAID,
+                ]);
+            }
+            return $posTransaction;
+        });
     }
 }
