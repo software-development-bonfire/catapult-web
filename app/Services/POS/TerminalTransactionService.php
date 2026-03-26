@@ -89,8 +89,8 @@ class TerminalTransactionService
             $kdsTransaction['terminal_number'] = $terminal->number;
             $kdsTransaction['transaction_type'] = $datum->transaction_type;
             $kdsTransaction['kitchen_station_index'] = 1; // We need to set a default kitchen station index for new transaction
-            $kdsTransaction['table_number'] = isset($datum->table_number) ? $datum->table_number : mb_substr($terminalTransaction->bid, -5);
-            $kdsTransaction['queue_number'] = isset($datum->queue_number) ? $datum->queue_number : mb_substr($terminalTransaction->bid, -5);
+            $kdsTransaction['table_number'] = isset($datum->table_number) ? $datum->table_number : '';// mb_substr($terminalTransaction->bid, -5);
+            $kdsTransaction['queue_number'] = isset($datum->queue_number) ? $datum->queue_number : '';// mb_substr($terminalTransaction->bid, -5);
             $official_receipt = [];
 
             foreach ($datum->official_receipt as $officialReceipt) {
@@ -244,8 +244,8 @@ class TerminalTransactionService
                         'addons' => empty($addonNames) ? '' : implode(', ', $addonNames),
                         'has_addon' => count($product->addon) > 0,
                         'kitchen_station_index' => 1, // We need to set a default kitchen station index for new transaction
-                        'table_number' => isset($addon->table_number) ? $addon->table_number : mb_substr($terminalTransaction->bid, -5),
-                        'queue_number' => isset($addon->queue_number) ? $addon->queue_number : mb_substr($terminalTransaction->bid, -5),
+                        'table_number' => isset($addon->table_number) ? $addon->table_number : '',// mb_substr($terminalTransaction->bid, -5),
+                        'queue_number' => isset($addon->queue_number) ? $addon->queue_number : '',// mb_substr($terminalTransaction->bid, -5),
                     ];
                     $flattenProducts[] = $productDetail;
 
@@ -338,8 +338,8 @@ class TerminalTransactionService
                             'addons' => $product->name,
                             'has_addon' => false,
                             'kitchen_station_index' => 1, // We need to set a default kitchen station index for new transaction
-                            'table_number' => isset($addon->table_number) ? $addon->table_number : mb_substr($terminalTransaction->bid, -5),
-                            'queue_number' => isset($addon->queue_number) ? $addon->queue_number : mb_substr($terminalTransaction->bid, -5),
+                            'table_number' => isset($addon->table_number) ? $addon->table_number : '',// mb_substr($terminalTransaction->bid, -5),
+                            'queue_number' => isset($addon->queue_number) ? $addon->queue_number : '',// mb_substr($terminalTransaction->bid, -5),
                         ];
                         $flattenProducts[] = $productDetail;
 

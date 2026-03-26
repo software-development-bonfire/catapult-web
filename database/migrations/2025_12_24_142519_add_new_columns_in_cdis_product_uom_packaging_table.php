@@ -14,7 +14,7 @@ class AddNewColumnsInCdisProductUomPackagingTable extends Migration
      */
     public function up()
     {
-        if (!Schema::hasTable($this->tableName)) {
+        if (Schema::hasTable($this->tableName)) {
             Schema::table($this->tableName, function (Blueprint $table) {
                 if (!Schema::hasColumn($this->tableName, 'menu_description')) {
                     $table->text('menu_description')->nullable()->after('pack_content');

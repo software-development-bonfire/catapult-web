@@ -15,7 +15,7 @@ class AddQueueNumberToPosTerminalTransactionsTable extends Migration
      */
     public function up()
     {
-        if (!Schema::hasTable($this->tableName)) {
+        if (Schema::hasTable($this->tableName)) {
             Schema::table($this->tableName, function (Blueprint $table) {
                 if (!Schema::hasColumn($this->tableName, 'queue_number')) {
                     $table->string('queue_number')->nullable()->after('table_number');

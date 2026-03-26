@@ -15,7 +15,7 @@ class AddOrderTypeIdToKitchenDisplayDetailTable extends Migration
      */
     public function up()
     {
-        if (!Schema::hasTable($this->tableName)) {
+        if (Schema::hasTable($this->tableName)) {
             Schema::table($this->tableName, function (Blueprint $table) {
                 // Add order_type_id if it doesn't already exist
                 if (!Schema::hasColumn($this->tableName, 'order_type_id')) {
