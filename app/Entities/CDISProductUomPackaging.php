@@ -25,6 +25,7 @@ class CDISProductUomPackaging extends BaseModel
         'menu_description',
         'allergens',
         'calories',
+        'max_prep_time',
 		'image_path',
         'is_finished_good',
 		'is_reduce_composition',

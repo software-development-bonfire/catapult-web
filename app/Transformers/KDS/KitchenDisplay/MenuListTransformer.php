@@ -48,6 +48,7 @@ class MenuListTransformer extends TransformerAbstract
             'transaction_product_bid' => (string) $model->transaction_product_bid,
             'name' => $model->name,
             'quantity' => number_format($model->quantity, $decimal),
+            'max_prep_time' => $model->max_prep_time,
             'remaining_quantity' => number_format($model->remaining_quantity, $decimal),
             'remarks' => $model->remarks,
             'kitchen_station_bid' => (string) $model->kitchen_station_bid,

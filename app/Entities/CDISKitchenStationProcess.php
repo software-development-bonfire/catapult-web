@@ -9,6 +9,7 @@ class CDISKitchenStationProcess extends BaseModel
     protected $fillable = [
         'bid',
         'code',
+        'branch_bid',
         'description',
         'kitchen_station_bid_1',
         'kitchen_station_bid_2',

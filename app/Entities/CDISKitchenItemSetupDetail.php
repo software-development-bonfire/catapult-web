@@ -9,6 +9,7 @@ class CDISKitchenItemSetupDetail extends BaseModel
     protected $fillable = [
         'bid',
         'head_bid',
+        'max_prep_time',
         'kitchen_station_process_bid',
         'product_uom_packaging_bid',
         'created_by',

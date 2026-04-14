@@ -8,6 +8,7 @@ class CDISKitchenStation extends BaseModel
 
     protected $fillable = [
         'bid',
+        'branch_bid',
         'code',
         'name',
         'order_type',
