@@ -53,7 +53,10 @@ class KitchenItemSetupRepositoryEloquent extends BaseEloquent implements Kitchen
                 DB::raw('cdis_kitchen_station_process.description as description'),
             ])
             ->leftJoin('cdis_kitchen_item_setup_detail', 'cdis_kitchen_item_setup_detail.head_bid', '=', 'cdis_kitchen_item_setup.bid')
-            ->leftJoin('cdis_kitchen_station_process', 'cdis_kitchen_station_process.bid', '=', 'cdis_kitchen_item_setup_detail.kitchen_station_process_bid')
+            ->leftJoin('cdis_kitchen_station_process', function ($join) {
+                $join->on('cdis_kitchen_station_process.bid', '=', 'cdis_kitchen_item_setup_detail.kitchen_station_process_bid')
+                    ->on('cdis_kitchen_station_process.branch_bid', '=', 'cdis_kitchen_item_setup.branch_bid');
+            })
             ->whereNull('cdis_kitchen_item_setup.deleted_at')
             ->where('cdis_kitchen_item_setup.device_type', DeviceType::KITCHEN_DISPLAY)
             ->where('cdis_kitchen_item_setup.status', Status::ACTIVE)
@@ -123,8 +126,14 @@ class KitchenItemSetupRepositoryEloquent extends BaseEloquent implements Kitchen
                 DB::raw('device_settings.name as device_name'),
             ])
             ->leftJoin('cdis_kitchen_item_setup_detail', 'cdis_kitchen_item_setup_detail.head_bid', '=', 'cdis_kitchen_item_setup.bid')
-            ->leftJoin('cdis_kitchen_station_process', 'cdis_kitchen_station_process.bid', '=', 'cdis_kitchen_item_setup_detail.kitchen_station_process_bid')
-            ->leftJoin('cdis_kitchen_station', 'cdis_kitchen_station.bid', '=', 'cdis_kitchen_station_process.kitchen_station_bid_' . $index)
+            ->leftJoin('cdis_kitchen_station_process', function ($join) {
+                $join->on('cdis_kitchen_station_process.bid', '=', 'cdis_kitchen_item_setup_detail.kitchen_station_process_bid')
+                    ->on('cdis_kitchen_station_process.branch_bid', '=', 'cdis_kitchen_item_setup.branch_bid');
+            })
+            ->leftJoin('cdis_kitchen_station', function ($join) use ($index) {
+                $join->on('cdis_kitchen_station.bid', '=', 'cdis_kitchen_station_process.kitchen_station_bid_' . $index)
+                    ->on('cdis_kitchen_station.branch_bid', '=', 'cdis_kitchen_station_process.branch_bid');
+            })
             ->leftJoin('device_settings', 'device_settings.kitchen_station_bid', '=', 'cdis_kitchen_station_process.kitchen_station_bid_' . $index)
             ->whereNull('cdis_kitchen_item_setup.deleted_at')
             ->where('cdis_kitchen_item_setup.device_type', DeviceType::KITCHEN_DISPLAY)

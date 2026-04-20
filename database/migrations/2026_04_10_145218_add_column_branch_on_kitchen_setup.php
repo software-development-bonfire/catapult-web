@@ -6,7 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 
 class AddColumnBranchOnKitchenSetup extends Migration
 {
-     private $table = [
+     private $tables = [
         'cdis_kitchen_station',
         'cdis_kitchen_station_process',
     ];
@@ -17,11 +17,11 @@ class AddColumnBranchOnKitchenSetup extends Migration
      */
     public function up()
     {
-        foreach ($this->table as $alterTable) {
+        foreach ($this->tables as $alterTable) {
             if (Schema::hasTable($alterTable)) {
                 Schema::table($alterTable, function (Blueprint $table) use ($alterTable) {
                     if (! Schema::hasColumn($alterTable, 'branch_bid')) {
-                        $table->unsignedBigInteger('branch_bid')->nullabe()->after('code');
+                        $table->unsignedBigInteger('branch_bid')->nullable()->after('code');
                     }
                 });
             }
@@ -37,7 +37,7 @@ class AddColumnBranchOnKitchenSetup extends Migration
     public function down()
     {
 
-        foreach ($this->table as $alterTable) {
+        foreach ($this->tables as $alterTable) {
             if (Schema::hasTable($alterTable)) {
                 Schema::table($alterTable, function (Blueprint $table)  use ($alterTable) {
                     if (Schema::hasColumn($alterTable, 'branch_bid')) {

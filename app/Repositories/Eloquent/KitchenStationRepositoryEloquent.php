@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Entities\CDISBranch;
 use App\Entities\CDISKitchenStation;
 use App\Enums\KDS\DeviceType;
 use App\Repositories\Contracts\KitchenStationRepository;
@@ -23,6 +24,8 @@ class KitchenStationRepositoryEloquent extends BaseEloquent implements KitchenSt
      */
     public function list($filters = null)
     {
+        $branchBid = CDISBranch::where('code', config('configuration.branch_code'))->whereNull('deleted_at')->value('bid');
+
         $this->model = $this->model
             ->select([
                 'bid',
@@ -32,6 +35,7 @@ class KitchenStationRepositoryEloquent extends BaseEloquent implements KitchenSt
                 'screen_prioritization',
                 'status',
             ])
+            ->where('branch_bid', $branchBid)
             ->orderBy('screen_prioritization', 'ASC');
 
         return $this->model->get();

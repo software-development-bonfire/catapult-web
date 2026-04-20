@@ -6,16 +6,9 @@ use Illuminate\Database\Migrations\Migration;
 
 class AddPrepTimeColumnInProductUomAndKitchenItemSetupTable extends Migration
 {
-    private $table = [
-        [
-            'cdis_product_uom_packaging',
-            'allergens'
-        ],
-        [
-            'cdis_kitchen_item_setup_detail',
-            'product_uom_packaging_bid'
-        ]
-    ];
+    private const PRODUCT_UOM_TABLE = 'cdis_product_uom_packaging';
+    private const KITCHEN_ITEM_TABLE = 'cdis_kitchen_item_setup_detail';
+
     /**
      * Run the migrations.
      *
@@ -23,32 +16,32 @@ class AddPrepTimeColumnInProductUomAndKitchenItemSetupTable extends Migration
      */
     public function up()
     {
-        $productUomTable = $this->table[0][0];
-        foreach ($this->table as $alterTable) {
-            
-            if (Schema::hasTable($alterTable[0])) {
-                Schema::table($alterTable[0], function (Blueprint $table) use ($alterTable, $productUomTable) {
+        if (Schema::hasTable(self::PRODUCT_UOM_TABLE)) {
+            Schema::table(self::PRODUCT_UOM_TABLE, function (Blueprint $table) {
+                if (!Schema::hasColumn(self::PRODUCT_UOM_TABLE, 'calories')) {
+                    $table->decimal('calories', 23, 6)->default(0.000000)->after('pack_content');
+                }
 
-                    if ($alterTable[0] == $productUomTable) {
-                        if (! Schema::hasColumn($alterTable[0], 'calories')) {
-                            $table->decimal('calories', 23, 6)->default(0.000000)->after('pack_content');
-                        }
-                        if (! Schema::hasColumn($alterTable[0], 'menu_description')) {
-                            $table->string('menu_description')->nullabe()->after('calories');
-                        }
-                        if (! Schema::hasColumn($alterTable[0], 'allergens')) {
-                            $table->string('allergens')->nullabe()->after('menu_description');
-                        }
-                        
-                    }
+                if (!Schema::hasColumn(self::PRODUCT_UOM_TABLE, 'menu_description')) {
+                    $table->string('menu_description')->nullable()->after('calories');
+                }
 
-                    if (! Schema::hasColumn($alterTable[0], 'max_prep_time')) {
-                        $table->decimal('max_prep_time', 23, 6)->default(0.000000)->after($alterTable[1]);
-                    }
-                });
-            }
+                if (!Schema::hasColumn(self::PRODUCT_UOM_TABLE, 'allergens')) {
+                    $table->string('allergens')->nullable()->after('menu_description');
+                }
+
+                if (!Schema::hasColumn(self::PRODUCT_UOM_TABLE, 'max_prep_time')) {
+                    $table->decimal('max_prep_time', 23, 6)->default(0.000000)->after('allergens');
+                }
+            });
         }
-        
+        if (Schema::hasTable(self::KITCHEN_ITEM_TABLE)) {
+            Schema::table(self::KITCHEN_ITEM_TABLE, function (Blueprint $table) {
+                if (!Schema::hasColumn(self::KITCHEN_ITEM_TABLE, 'max_prep_time')) {
+                    $table->decimal('max_prep_time', 23, 6)->default(0.000000)->after('product_uom_packaging_bid');
+                }
+            });
+        }
     }
 
     /**
@@ -58,29 +51,32 @@ class AddPrepTimeColumnInProductUomAndKitchenItemSetupTable extends Migration
      */
     public function down()
     {
-        $productUomTable = $this->table[0][0];
-        foreach ($this->table as $alterTable) {
-            if (Schema::hasTable($alterTable[0])) {
-                Schema::table($alterTable[0], function (Blueprint $table)  use ($alterTable, $productUomTable) {
-                    
-                    if ($alterTable[0] == $productUomTable) {
-                        if (Schema::hasColumn($alterTable[0], 'calories')) {
-                            $table->dropColumn('calories');
-                        }
-                        if (Schema::hasColumn($alterTable[0], 'menu_description')) {
-                            $table->dropColumn('menu_description');
-                        }
-                        if (Schema::hasColumn($alterTable[0], 'allergens')) {
-                            $table->dropColumn('allergens');
-                        }
-                    }
+        if (Schema::hasTable(self::PRODUCT_UOM_TABLE)) {
+            Schema::table(self::PRODUCT_UOM_TABLE, function (Blueprint $table) {
+                if (Schema::hasColumn(self::PRODUCT_UOM_TABLE, 'calories')) {
+                    $table->dropColumn('calories');
+                }
 
-                    if (Schema::hasColumn($alterTable[0], 'max_prep_time')) {
-                        $table->dropColumn('max_prep_time');
-                    }
-                });
-            }
+                if (Schema::hasColumn(self::PRODUCT_UOM_TABLE, 'menu_description')) {
+                    $table->dropColumn('menu_description');
+                }
+
+                if (Schema::hasColumn(self::PRODUCT_UOM_TABLE, 'allergens')) {
+                    $table->dropColumn('allergens');
+                }
+
+                if (Schema::hasColumn(self::PRODUCT_UOM_TABLE, 'max_prep_time')) {
+                    $table->dropColumn('max_prep_time');
+                }
+            });
         }
-        
+
+        if (Schema::hasTable(self::KITCHEN_ITEM_TABLE)) {
+            Schema::table(self::KITCHEN_ITEM_TABLE, function (Blueprint $table) {
+                if (Schema::hasColumn(self::KITCHEN_ITEM_TABLE, 'max_prep_time')) {
+                    $table->dropColumn('max_prep_time');
+                }
+            });
+        }
     }
 }
