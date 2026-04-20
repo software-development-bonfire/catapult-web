@@ -28,7 +28,6 @@ Broadcast::channel('private-my-channel', function ($data) {
 
 Broadcast::channel('kds-device-{device}', function ($user, $device) {
     // Allow all authenticated users to listen to KDS device channels
-    // In production, you might want to add more granular authorization
     return ['device' => $device];
 });
 
