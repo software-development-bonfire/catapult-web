@@ -201,7 +201,11 @@ class SyncService
                 $data = [];
 
                 foreach ($entityInstance->getTableColumns() as $tableColumnIndex => $tableColumn) {
-                    if (isset($syncData[$tableColumn])) {
+                    if (array_key_exists($tableColumn, $syncData)) {
+                        $type = \Schema::getColumnType($entityInstance->getTable(), $tableColumn);
+                        if (($type == "decimal" || $type == "integer") && $syncData[$tableColumn] == null) {
+                            $syncData[$tableColumn] = 0;
+                        }
                         $data[$tableColumn] = $syncData[$tableColumn];
                     }
                 }
@@ -215,8 +219,9 @@ class SyncService
                 }
 
                 $isExists = $detail->count() > 0;
-
+                
                 if ($isExists) {
+                
                     if ($this->validateDeletedToHardReset) {
                         if ($value->sync->action == 'delete' && $value->detail) {
                             $tableName = $this->getTableName($detail);

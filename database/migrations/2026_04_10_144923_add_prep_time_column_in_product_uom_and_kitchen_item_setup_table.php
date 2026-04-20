@@ -31,19 +31,19 @@ class AddPrepTimeColumnInProductUomAndKitchenItemSetupTable extends Migration
 
                     if ($alterTable[0] == $productUomTable) {
                         if (! Schema::hasColumn($alterTable[0], 'calories')) {
-                            $table->decimal('calories', 23, 6)->nullabe()->after('pack_content');
+                            $table->decimal('calories', 23, 6)->default(0.000000)->after('pack_content');
                         }
                         if (! Schema::hasColumn($alterTable[0], 'menu_description')) {
-                            $table->string('menu_description', 23, 6)->nullabe()->after('calories');
+                            $table->string('menu_description')->nullabe()->after('calories');
                         }
                         if (! Schema::hasColumn($alterTable[0], 'allergens')) {
-                            $table->string('allergens', 23, 6)->nullabe()->after('menu_description');
+                            $table->string('allergens')->nullabe()->after('menu_description');
                         }
                         
                     }
 
                     if (! Schema::hasColumn($alterTable[0], 'max_prep_time')) {
-                        $table->decimal('max_prep_time', 23, 6)->nullabe()->after($alterTable[1]);
+                        $table->integer('max_prep_time')->default(0)->after($alterTable[1]);
                     }
                 });
             }
