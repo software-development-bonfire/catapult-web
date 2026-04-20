@@ -43,7 +43,7 @@ class AddPrepTimeColumnInProductUomAndKitchenItemSetupTable extends Migration
                     }
 
                     if (! Schema::hasColumn($alterTable[0], 'max_prep_time')) {
-                        $table->integer('max_prep_time')->default(0)->after($alterTable[1]);
+                        $table->decimal('max_prep_time', 23, 6)->default(0.000000)->after($alterTable[1]);
                     }
                 });
             }
