@@ -94,6 +94,12 @@ Route::group([
         Route::post('transaction/print-receipt', [\App\Http\Controllers\POS\v1\TerminalTransactionController::class, 'printReceipt']);
         Route::get('transaction/list', [\App\Http\Controllers\POS\v1\TerminalTransactionController::class, 'list']);
 
+        Route::post('table', [\App\Http\Controllers\POS\v1\TableManagementController::class, 'upsertTable']);
+        Route::post('location', [\App\Http\Controllers\POS\v1\TableManagementController::class, 'upsertLocation']);
+        Route::post('table/availability', [\App\Http\Controllers\POS\v1\TableManagementController::class, 'updateTableAvailability']);
+        Route::post('table/check', [\App\Http\Controllers\POS\v1\TableManagementController::class, 'checkTableAvailability']);
+        Route::post('transaction/availability', [\App\Http\Controllers\POS\v1\TableManagementController::class, 'updateTransactionAvailability']);
+        Route::post('transaction/check', [\App\Http\Controllers\POS\v1\TableManagementController::class, 'checkTransactionAvailability']);
         Route::post('device-settings/device-status', [\App\Http\Controllers\POS\v1\DeviceSettingsController::class, 'deviceStatus']);
         Route::post('device-settings/print-status', [\App\Http\Controllers\POS\v1\DeviceSettingsController::class, 'devicePrintStatus']);
         Route::get('device-settings/list', [\App\Http\Controllers\POS\v1\DeviceSettingsController::class, 'list']);

@@ -14,6 +14,7 @@ class CDISTerminalTransaction extends Base
         'transaction_type',
         'is_zread',
         'status',
+        'availability',
         'type',
         'gross',
         'total_quantity',

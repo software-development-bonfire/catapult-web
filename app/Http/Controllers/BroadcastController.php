@@ -50,7 +50,7 @@ class BroadcastController extends Controller
         $reflection = new ReflectionClass($eventClass);
         $event = $reflection->newInstanceArgs($params);
 
-        // ✅ Dynamically override broadcastOn() if channels are provided
+        // Dynamically override broadcastOn() if channels are provided
         if (!empty($channels)) {
             $event->broadcastOn = function () use ($channels, $channelType) {
                 return collect($channels)->map(function ($ch) use ($channelType) {
@@ -66,7 +66,7 @@ class BroadcastController extends Controller
             };
         }
 
-        // ✅ Dynamically override broadcastAs() if provided
+        // Dynamically override broadcastAs() if provided
         if (!empty($broadcastName)) {
             $event->broadcastAs = function () use ($broadcastName) {
                 return $broadcastName;
