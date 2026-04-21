@@ -16,6 +16,22 @@ class TableManagementController extends POSBaseController
         $this->tableManagementService = $tableManagementService;
     }
 
+    public function getTables(Request $request)
+    {
+        $locationId = $request->query('location_id');
+
+        $tables = $this->tableManagementService->getTables($locationId);
+
+        return $this->successfulResponse($tables, 'Tables fetched successfully');
+    }
+
+    public function getLocations()
+    {
+        $locations = $this->tableManagementService->getLocations();
+
+        return $this->successfulResponse($locations, 'Locations fetched successfully');
+    }
+
     public function upsertLocation(Request $request)
     {
         $data = $this->extractPayload($request);
@@ -41,7 +57,7 @@ class TableManagementController extends POSBaseController
 
         $validator = Validator::make($data, [
             'id' => 'nullable|integer|min:1',
-            'location_id' => 'nullable|integer|min:1|exists:table_location,id',
+            'location_id' => 'required|integer|min:1|exists:table_location,id',
             'name' => 'required|string|max:255',
             'status' => 'nullable|integer',
             'availability' => 'nullable|in:' . implode(',', $this->tableManagementService->getTableAvailabilityValues()),

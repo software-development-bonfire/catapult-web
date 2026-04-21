@@ -35,6 +35,24 @@ class TableManagementService
         return self::TRANSACTION_AVAILABILITY;
     }
 
+    public function getTables($locationId = null)
+    {
+        $query = $this->diningTableRepository->with('location');
+
+        if (!empty($locationId)) {
+            $query = $query->findWhere(['location_id' => (int) $locationId]);
+        } else {
+            $query = $query->all();
+        }
+
+        return $query;
+    }
+
+    public function getLocations()
+    {
+        return $this->tableLocationRepository->with('tables')->all();
+    }
+
     public function upsertLocation($data = [])
     {
         return $this->tableLocationRepository->updateOrCreateById(

@@ -13,8 +13,8 @@
 
 
 -- Dumping database structure for catapult_web
-CREATE DATABASE IF NOT EXISTS `catapult_web` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */;
-USE `catapult_web`;
+/*CREATE DATABASE IF NOT EXISTS `catapult_web` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */;
+USE `catapult_web`;*/
 
 SET SQL_SAFE_UPDATES=0;
 

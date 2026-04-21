@@ -33,6 +33,8 @@ class ImportMappingSqlFiles extends Command
         DB::beginTransaction();
 
         try {
+            DB::statement("SET SESSION sql_mode = 'ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
+            DB::statement("SET SESSION foreign_key_checks = 0");
             foreach ($files as $file) {
                 $fullPath = $path . DIRECTORY_SEPARATOR . $file;
 
@@ -47,14 +49,14 @@ class ImportMappingSqlFiles extends Command
                 // Important: split by delimiter if needed
                 DB::unprepared($sql);
             }
-
+            DB::statement("SET SESSION foreign_key_checks = 1");
             DB::commit();
-            $this->info('✅ All SQL files imported successfully.');
+            $this->info('All SQL files imported successfully.');
 
             return;
-
         } catch (\Throwable $e) {
             DB::rollBack();
+            DB::statement("SET SESSION foreign_key_checks = 1");
             $this->error("❌ Import failed: " . $e->getMessage());
 
             return;

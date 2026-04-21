@@ -37,7 +37,6 @@ class CreateKitchenDisplayMovementHistoryTable extends Migration
 
             // Indices
             $table->index(['detail_bid', 'created_at']);
-            $table->index('movement_type');
             $table->index('created_at');
 
             // Foreign Key
