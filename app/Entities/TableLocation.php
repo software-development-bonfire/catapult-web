@@ -9,7 +9,11 @@ class TableLocation extends Model
     protected $table = 'table_location';
 
     protected $fillable = [
+        'pos_id',
         'name',
+        'location_name',
+        'no_of_tables',
+        'no_of_seats',
         'status',
     ];
 

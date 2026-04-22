@@ -78,6 +78,19 @@ Route::group([
 });
 
 Route::group([
+    'prefix' => 'station-ots/v1',
+    'namespace' => 'StationOTS\v1'
+], function () {
+    Route::group(['middleware' => 'pos-token'], function () {
+        Route::post('transaction/store', [\App\Http\Controllers\StationOTS\v1\TransactionController::class, 'store']);
+        Route::post('transaction/check', [\App\Http\Controllers\POS\v1\TableManagementController::class, 'checkTransactionAvailability']);
+        Route::post('table/check', [\App\Http\Controllers\POS\v1\TableManagementController::class, 'checkTableAvailability']);
+        Route::get('table/list', [\App\Http\Controllers\POS\v1\TableManagementController::class, 'getTables']);
+        Route::get('location/list', [\App\Http\Controllers\POS\v1\TableManagementController::class, 'getLocations']);
+    });
+});
+
+Route::group([
     'prefix' => 'pos/v1',
     'namespace' => 'POS\v1'
 ], function () {
