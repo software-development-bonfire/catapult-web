@@ -11,4 +11,6 @@ interface DiningTableRepository extends RepositoryInterface
     public function updateOrCreateById(?int $id, array $data);
 
     public function findByIdOrName($id, $name, $locationId = null);
+
+    public function updateOrCreateByPosId(?int $posId, array $data);
 }

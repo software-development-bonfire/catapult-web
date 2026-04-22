@@ -30,4 +30,17 @@ class TableLocationRepositoryEloquent extends BaseRepository implements TableLoc
 
         return $this->model->create($data);
     }
+
+    public function updateOrCreateByPosId(?int $posId, array $data)
+    {
+        if (!empty($posId)) {
+            $record = $this->model->where('pos_location_id', $posId)->first();
+            if ($record) {
+                $record->update($data);
+                return $record->fresh();
+            }
+        }
+
+        return $this->model->create($data);
+    }
 }

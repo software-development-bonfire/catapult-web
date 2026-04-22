@@ -50,4 +50,17 @@ class DiningTableRepositoryEloquent extends BaseRepository implements DiningTabl
             })
             ->first();
     }
+
+    public function updateOrCreateByPosId(?int $posId, array $data)
+    {
+        if (!empty($posId)) {
+            $record = $this->model->where('pos_table_id', $posId)->first();
+            if ($record) {
+                $record->update($data);
+                return $record->fresh();
+            }
+        }
+
+        return $this->model->create($data);
+    }
 }

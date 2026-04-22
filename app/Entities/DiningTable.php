@@ -9,7 +9,7 @@ class DiningTable extends Model
     protected $table = 'table';
 
     protected $fillable = [
-        'pos_id',
+        'pos_table_id',
         'location_id',
         'transaction_no',
         'table_ref',

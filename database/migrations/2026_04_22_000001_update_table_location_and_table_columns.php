@@ -9,14 +9,12 @@ class UpdateTableLocationAndTableColumns extends Migration
     public function up()
     {
         Schema::table('table_location', function (Blueprint $table) {
-            $table->unsignedBigInteger('pos_id')->nullable()->after('id');
             $table->string('location_name')->nullable()->after('name');
             $table->integer('no_of_tables')->default(0)->after('location_name');
             $table->integer('no_of_seats')->default(0)->after('no_of_tables');
         });
 
         Schema::table('table', function (Blueprint $table) {
-            $table->unsignedBigInteger('pos_id')->nullable()->after('id');
             $table->string('transaction_no')->nullable()->after('location_id');
             $table->string('table_ref')->nullable()->after('transaction_no');
             $table->integer('seat_number')->default(0)->after('table_ref');
@@ -38,12 +36,12 @@ class UpdateTableLocationAndTableColumns extends Migration
     public function down()
     {
         Schema::table('table_location', function (Blueprint $table) {
-            $table->dropColumn(['pos_id', 'location_name', 'no_of_tables', 'no_of_seats']);
+            $table->dropColumn(['location_name', 'no_of_tables', 'no_of_seats']);
         });
 
         Schema::table('table', function (Blueprint $table) {
             $table->dropColumn([
-                'pos_id', 'transaction_no', 'table_ref', 'seat_number',
+                'transaction_no', 'table_ref', 'seat_number',
                 'is_available', 'date', 'total', 'number_of_guest',
                 'shape', 'positionX', 'position_y', 'height', 'width',
                 'angle', 'is_placed', 'no_of_items',

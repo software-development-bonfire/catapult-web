@@ -28,4 +28,19 @@ class POSBaseController extends Controller
         }
         return $validAppKey;
     }
+
+    public function extractPayload(Request $request): array
+    {
+        $payload = (object) stringToJson($request->all());
+
+        if (isset($payload->data) && is_array($payload->data)) {
+            return $payload->data;
+        }
+
+        if (isset($payload->data) && is_object($payload->data)) {
+            return (array) $payload->data;
+        }
+
+        return (array) $payload;
+    }
 }
