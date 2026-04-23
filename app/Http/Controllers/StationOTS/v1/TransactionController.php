@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\StationOTS\v1;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\StationOTS\StationOTSBaseController;
 use App\Services\StationOTS\TransactionService;
 use App\Traits\APIRequestTrait;
 use App\Traits\TokenResponsesJson;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class TransactionController extends Controller
+class TransactionController extends StationOTSBaseController
 {
     use TokenResponsesJson, APIRequestTrait;
 
