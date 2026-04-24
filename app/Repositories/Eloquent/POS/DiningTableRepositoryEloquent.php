@@ -23,10 +23,14 @@ class DiningTableRepositoryEloquent extends BaseRepository implements DiningTabl
             ->first();
     }
 
-    public function updateOrCreateById(?int $id, array $data)
+    public function updateOrCreateById(?int $id, array $data, $posIdCheck = true)
     {
         if (!empty($id)) {
-            $record = $this->model->find($id);
+            if ($posIdCheck) {
+                $record = $this->model->where('pos_table_id', $id)->first(); //Change to pos_table_id for POS integration as requested
+            } else {
+                $record = $this->model->find($id);
+            }
             if ($record) {
                 $record->update($data);
                 return $record->fresh();
@@ -36,11 +40,16 @@ class DiningTableRepositoryEloquent extends BaseRepository implements DiningTabl
         return $this->model->create($data);
     }
 
-    public function findByIdOrName($id, $name, $locationId = null)
+    public function findByIdOrName($id, $name, $locationId = null, $posIdCheck = true)
     {
         return $this->model
-            ->when(!empty($id), function ($query) use ($id) {
-                $query->where('id', $id);
+            ->when(!empty($id), function ($query) use ($posIdCheck, $id) {
+                if ($posIdCheck) {
+                    $query->where('pos_table_id', $id); // Change to pos_table_id for POS integration as requested
+                } else {
+
+                    $query->where('id', $id);
+                }
             })
             ->when(empty($id) && !empty($name), function ($query) use ($name, $locationId) {
                 $query->where('name', $name);
@@ -51,10 +60,14 @@ class DiningTableRepositoryEloquent extends BaseRepository implements DiningTabl
             ->first();
     }
 
-    public function updateOrCreateByPosId(?int $posId, array $data)
+    public function updateOrCreateByPosId(?int $posId, array $data, $posIdCheck = true)
     {
         if (!empty($posId)) {
-            $record = $this->model->where('pos_table_id', $posId)->first();
+            if ($posIdCheck) {
+                $record = $this->model->where('pos_table_id', $posId)->first(); // Change to pos_table_id for POS integration as requested
+            } else {
+                $record = $this->model->find($posId);
+            }
             if ($record) {
                 $record->update($data);
                 return $record->fresh();

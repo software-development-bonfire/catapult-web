@@ -230,11 +230,36 @@ class TableManagementService
         $results = [];
         foreach ($dataArray as $data) {
             $data = (object) $data;
+            
+            /**
+             * FOREIGN KEY MAPPING: pos_location_id → table_location.id
+             * 
+             * Station OTS sends location_id as pos_location_id (POS system's own ID).
+             * But the table.location_id foreign key references table_location.id (Catapult's ID).
+             * 
+             * Example:
+             * - Request: location_id = 4 (Station OTS reference)
+             * - Database: table_location record with pos_location_id=4 has id=3
+             * - Solution: Look up id=3 and use it for foreign key constraint
+             */
+            $actualLocationId = null;
+            if (isset($data->location_id)) {
+                // The location_id in request is a pos_location_id from Station OTS
+                // Find the actual table_location.id using pos_location_id
+                $location = $this->tableLocationRepository->findWhere([
+                    'pos_location_id' => (int) $data->location_id
+                ])->first();
+                
+                if ($location) {
+                    $actualLocationId = $location->id;
+                }
+            }
+            
             $result = $this->diningTableRepository->updateOrCreateByPosId(
                 isset($data->id) ? (int) $data->id : null,
                 [
                     'pos_table_id' => isset($data->id) ? (int) $data->id : null,
-                    'location_id' => isset($data->location_id) ? (int) $data->location_id : null,
+                    'location_id' => $actualLocationId,
                     'transaction_no' => $data->transaction_no ?? null,
                     'table_ref' => $data->table_ref ?? null,
                     'name' => $data->table_ref ?? null,

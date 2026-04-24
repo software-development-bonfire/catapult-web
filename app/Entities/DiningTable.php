@@ -33,6 +33,6 @@ class DiningTable extends Model
 
     public function location()
     {
-        return $this->belongsTo(TableLocation::class, 'location_id', 'id');
+        return $this->belongsTo(TableLocation::class, 'location_id', 'pos_location_id');
     }
 }
