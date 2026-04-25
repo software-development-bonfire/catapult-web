@@ -123,12 +123,6 @@ class TransactionService
 
         $transaction->load('details');
 
-        broadcast(new TransactionEvent(
-            'station-ots',
-            'kds',
-            $transaction
-        ));
-
         return $transaction;
     }
 }

@@ -9,6 +9,7 @@ use App\Enums\KDS\OrderType;
 use App\Enums\UsageType;
 use App\Events\KDSTransactionEvent;
 use App\Events\MyPrivateEvent;
+use App\Events\OTSSettledEvent;
 use App\Events\PrintEvent;
 use App\Http\Controllers\POS\POSBaseController;
 use App\Jobs\KDS\PrintToKitchenPrinter as KDSPrintToKitchenPrinter;
@@ -50,7 +51,12 @@ class TerminalTransactionController extends POSBaseController
         } else {
             return $this->errorResponse([], 'Missing request parameters');
         }
-
+        $isFineDine = isset($transactions['device_mode']) && ($transactions['device_mode'] == 3);
+        if ($isFineDine) {
+            // If fine-dine transaction from POS and it settled, broadcast to all Station OTS
+            broadcast(new OTSSettledEvent($transactions['tabled_id'], $transactions['device_code'], $transactions['kds_transaction']));
+        }
+        
         $printToSticker = isset($transactions['transaction_type']) && ($transactions['transaction_type'] == TerminalTransactionType::SALES);
         $printToKitchen = isset($transactions['transaction_type']) && ($transactions['transaction_type'] == TerminalTransactionType::SALES || $transactions['transaction_type'] == TerminalTransactionType::REFUND);
 

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\StationOTS\v1;
 
+use App\Events\TransactionEvent;
 use App\Http\Controllers\StationOTS\StationOTSBaseController;
+use App\Repositories\Contracts\DeviceSettingsRepository;
 use App\Services\StationOTS\TransactionService;
 use App\Traits\APIRequestTrait;
 use App\Traits\TokenResponsesJson;
@@ -45,6 +47,14 @@ class TransactionController extends StationOTSBaseController
 
         $result = $this->transactionService->store($data);
 
+        $devices = app()->make(DeviceSettingsRepository::class)->getActivePOS();
+        if (count($devices) > 0) {
+            foreach ($devices as $device) {
+                // Send to the online POS device with first priority
+                broadcast(new TransactionEvent($data['device_code'], $device['device_code'], $result));
+                break;
+            }
+        }
         return $this->successfulResponse($result, 'Transaction stored successfully');
     }
 }
