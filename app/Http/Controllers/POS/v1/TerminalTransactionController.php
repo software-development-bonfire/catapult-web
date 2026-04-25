@@ -4,6 +4,7 @@ namespace App\Http\Controllers\POS\v1;
 
 use App\Entities\CDISTerminal;
 use App\Entities\KitchenDisplayDetail;
+use App\Entities\StationOTSTerminalTransaction;
 use App\Enums\CDIS\TerminalTransactionType;
 use App\Enums\KDS\OrderType;
 use App\Enums\UsageType;
@@ -55,6 +56,21 @@ class TerminalTransactionController extends POSBaseController
         if ($isFineDine) {
             // If fine-dine transaction from POS and it settled, broadcast to all Station OTS
             broadcast(new OTSSettledEvent($transactions['tabled_id'], $transactions['device_code'], $transactions['kds_transaction']));
+
+            // Delete the fine-dine transaction and its details from station_ots_terminal_transactions
+            $otsTransaction = null;
+            if (!empty($transactions['bid'])) {
+                $otsTransaction = StationOTSTerminalTransaction::where('bid', $transactions['bid'])->first();
+            }
+            if (!$otsTransaction && !empty($transactions['terminal_bid']) && !empty($transactions['transaction_id'])) {
+                $otsTransaction = StationOTSTerminalTransaction::where('terminal_bid', $transactions['terminal_bid'])
+                    ->where('transaction_id', $transactions['transaction_id'])
+                    ->first();
+            }
+            if ($otsTransaction) {
+                $otsTransaction->details()->delete();
+                $otsTransaction->delete();
+            }
         }
         
         $printToSticker = isset($transactions['transaction_type']) && ($transactions['transaction_type'] == TerminalTransactionType::SALES);
