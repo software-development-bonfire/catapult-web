@@ -22,15 +22,21 @@ class TransactionController extends StationOTSBaseController
 
     public function store(Request $request)
     {
+        if (!$this->isValidCatapultKey($request)) {
+            return $this->errorResponse([], 'Invalid app_key');
+        }
+        
         $data = $this->extractPayload($request);
+
+        $data['device_code'] = $request->input('device_code') ?? ($data['device_code'] ?? null);
 
         $validator = Validator::make($data, [
             'terminal_bid' => 'required',
             'transaction_id' => 'required',
-            'products' => 'nullable|array',
-            'products.*.product_bid' => 'required',
-            'products.*.name' => 'required|string',
-            'products.*.quantity' => 'required|numeric|min:0',
+            'details' => 'nullable|array',
+            'details.*.product_bid' => 'required',
+            'details.*.name' => 'required|string',
+            'details.*.quantity' => 'required|numeric|min:0',
         ]);
 
         if ($validator->fails()) {

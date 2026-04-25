@@ -264,7 +264,7 @@ class TableManagementService
                     'table_ref' => $data->table_ref ?? null,
                     'name' => $data->table_ref ?? null,
                     'seat_number' => $data->seat_number ?? 0,
-                    'is_available' => $data->is_available ?? true,
+                    'is_available' => toSafeBoolean($data->is_available, true),
                     'status' => isset($data->status) ? (int) $data->status : 1,
                     'availability' => $data->is_available ? 'available' : 'occupied',
                     'date' => $data->date ?? null,

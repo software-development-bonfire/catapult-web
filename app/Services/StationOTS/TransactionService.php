@@ -2,8 +2,9 @@
 
 namespace App\Services\StationOTS;
 
-use App\Entities\POSTerminalTransaction;
-use App\Entities\POSTerminalTransactionProduct;
+use App\Entities\StationOTSTerminalTransaction;
+use App\Entities\StationOTSTerminalTransactionProduct;
+use App\Events\TransactionEvent;
 use Illuminate\Support\Facades\Log;
 
 class TransactionService
@@ -12,7 +13,7 @@ class TransactionService
     {
         $data = (object) $data;
 
-        $transaction = POSTerminalTransaction::create([
+        $transaction = StationOTSTerminalTransaction::create([
             'branch_bid' => $data->branch_bid ?? null,
             'device_code' => $data->device_code ?? null,
             'terminal_bid' => $data->terminal_bid ?? null,
@@ -23,6 +24,8 @@ class TransactionService
             'is_first_transaction' => $data->is_first_transaction ?? null,
             'type' => $data->type ?? null,
             'device_type' => $data->device_type ?? null,
+            'device_mode' => $data->device_mode ?? null,
+            'device_mode_label' => $data->device_mode_label ?? null,
             'status' => $data->status ?? null,
             'gross_sales' => $data->gross_sales ?? 0,
             'net_sales' => $data->net_sales ?? 0,
@@ -41,9 +44,11 @@ class TransactionService
             'guest_count' => $data->guest_count ?? 0,
             'service_charge' => $data->service_charge ?? 0,
             'order_number' => $data->order_number ?? null,
+            'locator_number' => $data->locator_number ?? null,
             'order_type' => $data->order_type ?? null,
             'order_schedule' => $data->order_schedule ?? null,
             'billing_type' => $data->billing_type ?? null,
+            'table_id' => $data->table_id ?? null,
             'table_number' => $data->table_number ?? null,
             'customer_type' => $data->customer_type ?? null,
             'customer_bid' => $data->customer_bid ?? null,
@@ -59,8 +64,8 @@ class TransactionService
             'receipt' => $data->receipt ?? null,
         ]);
 
-        if (!empty($data->products) && is_array($data->products)) {
-            foreach ($data->products as $product) {
+        if (!empty($data->details) && is_array($data->details)) {
+            foreach ($data->details as $product) {
                 $product = (object) $product;
 
                 $transaction->details()->create([
@@ -86,6 +91,7 @@ class TransactionService
                     'price' => $product->price ?? 0,
                     'individual_total_amount' => $product->individual_total_amount ?? 0,
                     'individual_total_discount' => $product->individual_total_discount ?? 0,
+                    'total_addon_amount' => $product->total_addon_amount ?? 0,
                     'entire_discount' => $product->entire_discount ?? 0,
                     'entire_amount' => $product->entire_amount ?? 0,
                     'vatable_sales' => $product->vatable_sales ?? 0,
@@ -109,11 +115,20 @@ class TransactionService
                     'cashier_name' => $product->cashier_name ?? null,
                     'discount_bid' => $product->discount_bid ?? null,
                     'discount_value' => $product->discount_value ?? null,
+                    'status' => $product->status ?? 0,
                     'is_reset' => $product->is_reset ?? 0,
                 ]);
             }
         }
 
-        return $transaction->load('details');
+        $transaction->load('details');
+
+        broadcast(new TransactionEvent(
+            'station-ots',
+            'kds',
+            $transaction
+        ));
+
+        return $transaction;
     }
 }
