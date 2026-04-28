@@ -55,6 +55,7 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
     'cdis_url' => env('CDIS_URL', 'http://localhost'),
+    'cdis_path' => env('CDIS_PATH', 'C:\Users\Bonfire\Documents\CDIS'),
     'asset_url' => env('ASSET_URL', null),
 
     /*

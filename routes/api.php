@@ -85,8 +85,8 @@ Route::group([
         Route::post('transaction/store', [\App\Http\Controllers\StationOTS\v1\TransactionController::class, 'store']);
         Route::post('transaction/check', [\App\Http\Controllers\POS\v1\TableManagementController::class, 'checkTransactionAvailability']);
         Route::post('table/check', [\App\Http\Controllers\POS\v1\TableManagementController::class, 'checkTableAvailability']);
-        Route::get('table/list', [\App\Http\Controllers\POS\v1\TableManagementController::class, 'getTables']);
-        Route::get('location/list', [\App\Http\Controllers\POS\v1\TableManagementController::class, 'getLocations']);
+        Route::post('table/list', [\App\Http\Controllers\POS\v1\TableManagementController::class, 'getTables']);
+        Route::post('location/list', [\App\Http\Controllers\POS\v1\TableManagementController::class, 'getLocations']);
     });
 });
 
