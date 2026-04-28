@@ -298,6 +298,11 @@ class TableManagementService
         }
 
         $table->availability = $data['availability'];
+        if ( $data['availability'] === 'available') {
+            $table->is_available = true;
+        } else {
+            $table->is_available = false;
+        }
         $table->save();
 
         return $table->fresh();

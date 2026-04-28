@@ -174,7 +174,7 @@ class TableManagementController extends POSBaseController
         $validator = Validator::make($data, [
             'id' => 'nullable|integer|min:1|required_without:name',
             'name' => 'nullable|string|max:255|required_without:id',
-            'location_id' => 'nullable|integer|min:1',
+            'location_id' => 'required|integer|min:1',
             'availability' => 'required|in:' . implode(',', $this->tableManagementService->getTableAvailabilityValues()),
         ]);
 
@@ -198,7 +198,7 @@ class TableManagementController extends POSBaseController
         $validator = Validator::make($data, [
             'id' => 'nullable|integer|min:1|required_without:name',
             'name' => 'nullable|string|max:255|required_without:id',
-            'location_id' => 'nullable|integer|min:1',
+            'location_id' => 'required|integer|min:1',
         ]);
 
         if ($validator->fails()) {

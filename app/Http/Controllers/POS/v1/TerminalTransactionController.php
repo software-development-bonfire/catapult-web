@@ -7,6 +7,8 @@ use App\Entities\KitchenDisplayDetail;
 use App\Entities\StationOTSTerminalTransaction;
 use App\Enums\CDIS\TerminalTransactionType;
 use App\Enums\KDS\OrderType;
+use App\Enums\OTS\SourceTransactionType;
+use App\Enums\POS\DeviceMode;
 use App\Enums\UsageType;
 use App\Events\KDSTransactionEvent;
 use App\Events\MyPrivateEvent;
@@ -52,27 +54,36 @@ class TerminalTransactionController extends POSBaseController
         } else {
             return $this->errorResponse([], 'Missing request parameters');
         }
-        $isFineDine = isset($transactions['device_mode']) && ($transactions['device_mode'] == 3);
-        //if ($isFineDine) {
-            // If fine-dine transaction from POS and it settled, broadcast to all Station OTS
-            broadcast(new OTSSettledEvent($transactions['tabled_id'] ?? 1, $transactions['device_code'] ?? 'device_code', $transactions['kds_transaction']));
+        \Illuminate\Support\Facades\Log::alert('transactions: ' . json_encode($transactions));
+        $isNotFastFood = isset($transactions['device_mode']) && ($transactions['device_mode'] !== DeviceMode::FAST_FOOD);
+        if ($isNotFastFood) {
+            if (isset($transactions['is_settled']) && $transactions['is_settled'] === true) {
+                // If fine-dine transaction from POS and it settled, broadcast to all Station OTS
+                broadcast(new OTSSettledEvent($transactions['tabled_id'] ?? 'Add `table_id` on the request body', $transactions['device_code'] ?? 'Add `device_code` on the request body', $transactions['kds_transaction']));
 
-            // Delete the fine-dine transaction and its details from station_ots_terminal_transactions
-            $otsTransaction = null;
-            if (!empty($transactions['bid'])) {
-                $otsTransaction = StationOTSTerminalTransaction::where('bid', $transactions['bid'])->first();
+                Log::alert('Fine-dine transaction settled with bid: ' . ($transactions['bid'] ?? 'N/A') . ' and transaction_id: ' . ($transactions['transaction_id'] ?? 'N/A') . '. Broadcasting settlement to Station OTS.');
+                // Delete the fine-dine transaction and its details from station_ots_terminal_transactions
+                $otsTransaction = null;
+                if (!empty($transactions['bid'])) {
+                    $otsTransaction = StationOTSTerminalTransaction::where('bid', $transactions['bid'])->first();
+                }
+                if (!$otsTransaction && !empty($transactions['terminal_bid']) && !empty($transactions['transaction_id'])) {
+                    $otsTransaction = StationOTSTerminalTransaction::where('terminal_bid', $transactions['terminal_bid'])
+                        ->where('transaction_id', $transactions['transaction_id'])
+                        ->first();
+                }
+                if ($otsTransaction) {
+                    $otsTransaction->details()->delete();
+                    $otsTransaction->delete();
+                }
+            } else {
+                // @TODO: Add here broadcasting events for KDS, this event should be send to KDS when fine-dine transaction is created/updated on POS, so KDS can display the transaction immediately without waiting for the settlement, since fine-dine transaction usually will be settled after the meal, and we want to make sure that the order will be displayed on KDS as soon as possible once the order is created on POS
+                // Broadcast to all Station OTS that fine-dine transaction is created/updated
+                //broadcast(new MyPrivateEvent('fine-dine', $transactions['kds_transaction'], [], 'fine-dine-transaction'));
+                Log::alert('Fine-dine transaction created/updated with bid: ' . ($transactions['bid'] ?? 'N/A') . ' and transaction_id: ' . ($transactions['transaction_id'] ?? 'N/A') . '. Broadcasting to KDS is still to be implemented.');
             }
-            if (!$otsTransaction && !empty($transactions['terminal_bid']) && !empty($transactions['transaction_id'])) {
-                $otsTransaction = StationOTSTerminalTransaction::where('terminal_bid', $transactions['terminal_bid'])
-                    ->where('transaction_id', $transactions['transaction_id'])
-                    ->first();
-            }
-            if ($otsTransaction) {
-                $otsTransaction->details()->delete();
-                $otsTransaction->delete();
-            }
-       // }
-        
+        }
+
         $printToSticker = isset($transactions['transaction_type']) && ($transactions['transaction_type'] == TerminalTransactionType::SALES);
         $printToKitchen = isset($transactions['transaction_type']) && ($transactions['transaction_type'] == TerminalTransactionType::SALES || $transactions['transaction_type'] == TerminalTransactionType::REFUND);
 

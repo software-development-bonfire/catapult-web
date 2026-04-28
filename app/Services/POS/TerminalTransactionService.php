@@ -85,6 +85,9 @@ class TerminalTransactionService
 
             $terminalTransaction = CDISTerminalTransaction::create($headData);
             $transactions = $terminalTransaction;
+            $transactions['device_mode'] = isset($datum->device_mode) ? $datum->device_mode : null;
+            $transactions['table_id'] = isset($datum->table_id) ? $datum->table_id : null;
+
             $kdsTransaction = clone $terminalTransaction;
             $kdsTransaction['terminal_number'] = $terminal->number;
             $kdsTransaction['transaction_type'] = $datum->transaction_type;
@@ -162,6 +165,11 @@ class TerminalTransactionService
                             'deleted_at' => $officialReceipt->deleted_at,
                         ]);
                     }
+
+                    // This means transaction already paid, we can set is_settled to true, 
+                    // As per POS logic, if payment method is already exist in the official receipt that means transaction is already paid,
+                    // and we can consider it as settled transaction
+                    $transactions['is_settled'] = true;
                 }
 
                 $products = [];
