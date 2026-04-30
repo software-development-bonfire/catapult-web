@@ -76,6 +76,13 @@ class TerminalTransactionController extends POSBaseController
                     $otsTransaction->details()->delete();
                     $otsTransaction->delete();
                 }
+                // No need to send to KDS since the transaction already settled, and usually for fine-dine transaction, 
+                // the order will be sent to KDS immediately once the order is created on POS, so we can assume that the order already exist on KDS, 
+                // and we just need to update the status on KDS once the transaction is settled, which is handled by OTSSettledEvent
+                return $this->successfulResponse(
+                    $transactions,
+                    Lang::get('success.successfully_created', ['value' => __('label.terminal_transaction')])
+                );
             } else {
                 // @TODO: Add here broadcasting events for KDS, this event should be send to KDS when fine-dine transaction is created/updated on POS, so KDS can display the transaction immediately without waiting for the settlement, since fine-dine transaction usually will be settled after the meal, and we want to make sure that the order will be displayed on KDS as soon as possible once the order is created on POS
                 // Broadcast to all Station OTS that fine-dine transaction is created/updated

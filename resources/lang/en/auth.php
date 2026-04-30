@@ -16,5 +16,6 @@ return [
     'failed' => 'These credentials do not match our records.',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
     'unknown_auth_type' => 'Unknown authentication type.',
+    'branch_not_allowed' => 'You do not have access to the selected branch.',
 
 ];

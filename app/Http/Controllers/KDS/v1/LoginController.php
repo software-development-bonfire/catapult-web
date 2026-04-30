@@ -3,13 +3,11 @@
 namespace App\Http\Controllers\KDS\v1;
 
 use App\Enums\API\APIDefinedScopes;
-use App\Enums\Status;
 use App\Http\Controllers\Controller;
 use App\Repositories\Contracts\CDISKitchenUserRepository;
 use App\Traits\APIRequestTrait;
 use App\Traits\TokenResponsesJson;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Laravel\Passport\Passport;
 
 class LoginController extends Controller
@@ -25,39 +23,28 @@ class LoginController extends Controller
      */
     public function login(Request $request)
     {
+        $repository = app()->make(CDISKitchenUserRepository::class);
+
         // Due to some changes on CDIS, passcode only validation is implemented
         if ($this->authenticatedPasscodeOnly) {
-            $user = app()->make(CDISKitchenUserRepository::class)->where([
-                'passcode' => $request->get('passcode')
-            ])->first();
-
-            if ($user && $user->status === Status::ACTIVE) {
-                $token = $this->generateNewUserToken($user, $request, false, false, array_keys(APIDefinedScopes::SCOPES));
-                $response = [
-                    'session' => $token,
-                    'user' => $user,
-                    'auth_type' => 'passcode',
-                ];
-                return $this->tokenGeneratedResponse($response);
-            }
+            $result = $repository->authenticateByPasscode($request->get('passcode', ''));
+            $authType = 'passcode';
         } else {
             $credentials = $request->only('username', 'password');
+            $result = $repository->authenticateByCredentials($credentials['username'] ?? '', $credentials['password'] ?? '');
+            $authType = 'user';
+        }
 
-            $user = app()->make(CDISKitchenUserRepository::class)->where([
-                'username' => $credentials['username']
-            ])->first();
-
-            if ($user && Hash::check($credentials['password'], $user->password)) {
-                if ($user->status === Status::ACTIVE) {
-                    $token = $this->generateNewUserToken($user, $request, false, false, array_keys(APIDefinedScopes::SCOPES));
-                    $response = [
-                        'session' => $token,
-                        'user' => $user,
-                        'auth_type' => 'user',
-                    ];
-                    return $this->tokenGeneratedResponse($response);
-                }
-            }
+        if ($result) {
+            $token = $this->generateNewUserToken($result['user'], $request, false, false, array_keys(APIDefinedScopes::SCOPES));
+            $response = [
+                'session' => $token,
+                'user' => $result['user'],
+                'auth_type' => $authType,
+                'branch_bid' => $result['branch_bid'],
+                'allowed_branches' => $result['allowed_branches'],
+            ];
+            return $this->tokenGeneratedResponse($response);
         }
 
         return $this->errorTokenResponse(null, __('auth.failed'));
