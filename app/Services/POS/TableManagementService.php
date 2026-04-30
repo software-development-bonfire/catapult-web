@@ -2,6 +2,7 @@
 
 namespace App\Services\POS;
 
+use App\Enums\POS\TableStatus;
 use App\Repositories\Contracts\POS\DiningTableRepository;
 use App\Repositories\Contracts\POS\TableLocationRepository;
 use App\Repositories\Contracts\POS\TerminalTransactionAvailabilityRepository;
@@ -264,9 +265,9 @@ class TableManagementService
                     'table_ref' => $data->table_ref ?? null,
                     'name' => $data->table_ref ?? null,
                     'seat_number' => $data->seat_number ?? 0,
-                    'is_available' => toSafeBoolean($data->is_available, true),
+                    'is_available' => TableStatus::fromValue($data->is_available)->value == TableStatus::AVAILABLE,
                     'status' => isset($data->status) ? (int) $data->status : 1,
-                    'availability' => $data->is_available ? 'available' : 'occupied',
+                    'availability' => strtolower(TableStatus::getDescription($data->is_available)),
                     'date' => $data->date ?? null,
                     'total' => $data->total ?? 0,
                     'number_of_guest' => $data->number_of_guest ?? 0,
