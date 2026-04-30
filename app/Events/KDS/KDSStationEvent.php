@@ -35,7 +35,8 @@ class KDSStationEvent implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        return new PrivateChannel('kds-device-' . $this->deviceUid);
+        $prefix = str_starts_with($this->eventType, 'FINEDINE') ? 'finedine' : 'fastfood';
+        return new PrivateChannel("kds-{$prefix}-{$this->deviceUid}");
     }
 
     public function broadcastAs()

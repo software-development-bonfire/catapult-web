@@ -11,6 +11,7 @@ use App\Transformers\CDIS\KitchenStation\ListTransformer;
 use App\Transformers\CDIS\KitchenStation\ProcessListTransformer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Spatie\Fractalistic\ArraySerializer;
 
 class KitchenStationController extends Controller
@@ -67,7 +68,7 @@ class KitchenStationController extends Controller
         $filters = stringToJson($request->get('filters'));
 
         $stations = app()->make(DeviceSettingsRepository::class)->getKitchenStation($filters);
-
+        Log::alert('$stations: ' . json_encode($stations));
         $stations = fractal($stations, DeviceStationTransformer::class)->serializeWith(new ArraySerializer());
 
 

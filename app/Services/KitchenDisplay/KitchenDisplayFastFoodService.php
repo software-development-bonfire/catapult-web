@@ -10,7 +10,7 @@ use App\Enums\KDS\MenuStatus;
 use App\Events\KDS\FastFood\KDSFastFoodOrderEvent;
 use App\Events\KDS\KDSStationEvent;
 use App\Events\KDS\Common\KDSOrderDoneEvent;
-use App\Events\MyPrivateEvent;
+use App\Events\KDS\KDSDeviceEvent;
 use App\Repositories\Contracts\KitchenItemSetupRepository;
 
 /**
@@ -276,7 +276,7 @@ class KitchenDisplayFastFoodService extends KitchenDisplayService
             // Broadcast done event to each device that had items from this order
             $deviceUids = $this->getDeviceUidsForOrder($kitchenDisplay->bid);
             foreach ($deviceUids as $deviceUid) {
-                broadcast(new KDSOrderDoneEvent($deviceUid, $items->toArray(), $kitchenDisplay->toArray()));
+                broadcast(new KDSOrderDoneEvent($deviceUid, $items->toArray(), $kitchenDisplay->toArray(), 'fastfood'));
             }
 
             return true;
@@ -375,7 +375,7 @@ class KitchenDisplayFastFoodService extends KitchenDisplayService
         }
 
         // Also broadcast to order type (for releasing station)
-        broadcast(new MyPrivateEvent(
+        broadcast(new KDSDeviceEvent(
             $order->order_type_id,
             $order,
             $items,

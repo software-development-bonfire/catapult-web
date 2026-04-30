@@ -10,8 +10,8 @@ use App\Enums\KDS\OrderType;
 use App\Enums\OTS\SourceTransactionType;
 use App\Enums\POS\DeviceMode;
 use App\Enums\UsageType;
-use App\Events\KDSTransactionEvent;
-use App\Events\MyPrivateEvent;
+use App\Events\KDS\KDSTransactionEvent;
+use App\Events\KDS\KDSDeviceEvent;
 use App\Events\OTS\OTSSettledEvent;
 use App\Events\PrintEvent;
 use App\Http\Controllers\POS\POSBaseController;
@@ -86,7 +86,7 @@ class TerminalTransactionController extends POSBaseController
             } else {
                 // @TODO: Add here broadcasting events for KDS, this event should be send to KDS when fine-dine transaction is created/updated on POS, so KDS can display the transaction immediately without waiting for the settlement, since fine-dine transaction usually will be settled after the meal, and we want to make sure that the order will be displayed on KDS as soon as possible once the order is created on POS
                 // Broadcast to all Station OTS that fine-dine transaction is created/updated
-                //broadcast(new MyPrivateEvent('fine-dine', $transactions['kds_transaction'], [], 'fine-dine-transaction'));
+                //broadcast(new KDSDeviceEvent('fine-dine', $transactions['kds_transaction'], [], 'fine-dine-transaction'));
                 Log::alert('Fine-dine transaction created/updated with bid: ' . ($transactions['bid'] ?? 'N/A') . ' and transaction_id: ' . ($transactions['transaction_id'] ?? 'N/A') . '. Broadcasting to KDS is still to be implemented.');
             }
         }
@@ -165,7 +165,7 @@ class TerminalTransactionController extends POSBaseController
                 if (! empty($device) && count($items) > 0) {
                     // Broadcast to assigned KDS
                     \Illuminate\Support\Facades\Log::info('Broadcasting to device: ' . $device . ' with ' . count($items) . ' items');
-                    broadcast(new MyPrivateEvent($device, $transactions['kds_transaction'], $items, ''));
+                    broadcast(new KDSDeviceEvent($device, $transactions['kds_transaction'], $items, ''));
                 }
             }
 

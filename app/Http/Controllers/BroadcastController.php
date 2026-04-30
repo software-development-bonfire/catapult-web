@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\MyPrivateEvent;
+use App\Events\KDS\KDSDeviceEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use ReflectionClass;
@@ -100,7 +100,7 @@ class BroadcastController extends Controller
         $requestStatus = $request->input('request_type', 'status');
         $deviceId = $request->input('device_id');
         \broadcast(new \App\Events\OTS\OTSRequestStatusEvent($requestStatus, $deviceId, $data));
-        broadcast(new MyPrivateEvent('Device123', ['id' => 1, 'amount' => 100.50], [['item' => 'Product A', 'qty' => 2]], false));
+        broadcast(new KDSDeviceEvent('Device123', ['id' => 1, 'amount' => 100.50], [['item' => 'Product A', 'qty' => 2]], false));
 
         return response()->json([
             'status' => 'Event dispatched',

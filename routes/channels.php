@@ -31,6 +31,18 @@ Broadcast::channel('kds-device-{device}', function ($user, $device) {
     return ['device' => $device];
 });
 
+Broadcast::channel('kds-finedine-{device}', function ($user, $device) {
+    return ['device' => $device];
+});
+
+Broadcast::channel('kds-fastfood-{device}', function ($user, $device) {
+    return ['device' => $device];
+});
+
+Broadcast::channel('kds-command-{device}', function ($user, $device) {
+    return ['device' => $device];
+});
+
 Broadcast::channel('sirius-compute-engine', function ($data) {
     return $data;
 });

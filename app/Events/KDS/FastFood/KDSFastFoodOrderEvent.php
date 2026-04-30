@@ -25,6 +25,11 @@ class KDSFastFoodOrderEvent extends KDSEventBase
         $this->items = $items;
     }
 
+    protected function getChannelName(): string
+    {
+        return 'kds-fastfood-' . $this->deviceUid;
+    }
+
     public function broadcastAs()
     {
         return 'kds-fastfood-order';

@@ -10,8 +10,6 @@ use App\Entities\KitchenDisplayDetail;
 use App\Enums\KDS\KDSMovementType;
 use App\Enums\KDS\MenuStatus;
 use App\Enums\KDS\OrderType;
-use App\Events\KDS\KDSDoneEvent;
-use App\Events\KDS\KDSReleaseEvent;
 use App\Events\KDS\KDSMoveMenuEvent;
 use App\Events\KDS\KDSRemoveOrderEvent;
 use App\Events\KDS\KDSRemoveMenuEvent;
@@ -21,8 +19,8 @@ use App\Events\KDS\KDSDoneMenuEvent;
 use App\Events\KDS\KDSReleaseMenuEvent;
 use App\Events\KDS\KDSOrderDoneEvent;
 use App\Events\KDS\KDSReleaseOrderEvent;
-use App\Events\KDSTransactionEvent;
-use App\Events\MyPrivateEvent;
+use App\Events\KDS\KDSTransactionEvent;
+use App\Events\KDS\KDSDeviceEvent;
 use App\Repositories\Contracts\KitchenItemSetupRepository;
 use App\Repositories\Contracts\POS\TerminalTransactionRepository;
 use App\Traits\DatabaseTransaction;
@@ -353,7 +351,7 @@ class KitchenDisplayService
                     // Broadcast to assigned KDS
 
                     $transaction->kitchen_station_index = intval($index) + 1;
-                    broadcast(new MyPrivateEvent($device, $transaction, $items, ''));
+                    broadcast(new KDSDeviceEvent($device, $transaction, $items, ''));
                 }
             }
             // Grouped by order type name, then assigned items by order type susch DINE IN, TAKE OUT, DRIVE THRU, etc.
@@ -641,7 +639,7 @@ class KitchenDisplayService
                     foreach ($groupedDisplays->toArray() as $device => $items) {
                         if (! empty($device) && count($items) > 0) {
                             // Broadcast to assigned KDS
-                            broadcast(new MyPrivateEvent($device, $clonedTransaction, $items, ''));
+                            broadcast(new KDSDeviceEvent($device, $clonedTransaction, $items, ''));
                         }
                     }
                 }

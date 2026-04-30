@@ -27,6 +27,11 @@ class KDSFineDineOrderEvent extends KDSEventBase
         $this->action = $action;
     }
 
+    protected function getChannelName(): string
+    {
+        return 'kds-finedine-' . $this->deviceUid;
+    }
+
     public function broadcastAs()
     {
         return 'kds-finedine-order';

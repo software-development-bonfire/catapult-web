@@ -16,12 +16,19 @@ class KDSOrderDoneEvent extends KDSEventBase
 
     public $items;
     public $order;
+    protected $mode;
 
-    public function __construct(string $deviceUid, $items, $order)
+    public function __construct(string $deviceUid, $items, $order, string $mode = 'fastfood')
     {
         $this->deviceUid = $deviceUid;
         $this->items = $items;
         $this->order = $order;
+        $this->mode = $mode;
+    }
+
+    protected function getChannelName(): string
+    {
+        return "kds-{$this->mode}-{$this->deviceUid}";
     }
 
     public function broadcastAs()

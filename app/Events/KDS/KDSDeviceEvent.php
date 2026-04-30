@@ -2,35 +2,34 @@
 
 namespace App\Events\KDS;
 
-use App\Enums\POS\EventMessageType;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Support\Facades\Log;
 
-class KDSMoveEvent implements ShouldBroadcast
+class KDSDeviceEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets;
 
-    public $source;
-    public $target;
-    public $type;
+    public $device;
     public $transaction;
     public $items;
-    public $direction;
+    public $releasing;
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct($source, $target, $type, $transaction, $items, $direction)
+    public function __construct($device, $transaction, $items, $releasing)
     {
-        $this->source = $source;
-        $this->target = $target;
+        $this->device = $device;
         $this->transaction = $transaction;
         $this->items = $items;
-        $this->type = $type;
-        $this->direction = $direction;
+        $this->releasing = $releasing;
     }
 
     /**
@@ -40,11 +39,12 @@ class KDSMoveEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return ['kds-channel'];
+        // Use device_uid to create a private channel specific to each KDS device
+        return new PrivateChannel('kds-device-' . $this->device);
     }
-
+    
     public function broadcastAs()
     {
-        return 'kds-move-event';
+        return 'kds-device-event';
     }
 }

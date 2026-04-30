@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -36,7 +37,7 @@ class DeviceCommandEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return ['command-channel'];
+        return new PrivateChannel('kds-command-' . $this->device);
     }
 
     public function broadcastAs()

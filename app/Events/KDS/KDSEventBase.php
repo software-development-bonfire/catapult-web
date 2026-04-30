@@ -36,7 +36,16 @@ abstract class KDSEventBase implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('kds-device-' . $this->deviceUid);
+        return new PrivateChannel($this->getChannelName());
+    }
+
+    /**
+     * Get the channel name for this event.
+     * Override in subclasses for mode-specific channels.
+     */
+    protected function getChannelName(): string
+    {
+        return 'kds-device-' . $this->deviceUid;
     }
 
     /**
