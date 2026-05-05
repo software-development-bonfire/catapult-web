@@ -2,6 +2,9 @@
 
 namespace App\Events\KDS\FineDine;
 
+use App\Enums\KDS\KDSMovementAction;
+use App\Enums\KDS\KDSMovementType;
+use App\Enums\KDS\KDSSystemMode;
 use App\Events\KDS\KDSEventBase;
 
 /**
@@ -35,9 +38,9 @@ class KDSFineDineOrderDoneEvent extends KDSEventBase
     public function broadcastWith()
     {
         return [
-            'mode' => 'finedine',
-            'entity' => 'order',
-            'action' => 'done',
+            'mode' => KDSSystemMode::FINE_DINE,
+            'entity' => KDSMovementType::PER_ORDER,
+            'action' => KDSMovementAction::DONE,
             'transaction' => $this->transaction,
             'items' => $this->items,
             'timestamp' => now()->toISOString(),

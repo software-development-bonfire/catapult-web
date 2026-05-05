@@ -2,6 +2,8 @@
 
 namespace App\Events\KDS;
 
+use App\Enums\KDS\KDSSystemMode;
+
 /**
  * Fast-Food Transaction Event
  * 
@@ -38,7 +40,7 @@ class KDSFastFoodTransactionEvent extends KDSEventBase
             'transaction' => $this->transaction,
             'items' => $this->items,
             'releasing' => $this->releasing,
-            'mode' => 'fastfood',
+            'mode' => KDSSystemMode::FAST_FOOD,
             'timestamp' => now()->toISOString(),
         ];
     }

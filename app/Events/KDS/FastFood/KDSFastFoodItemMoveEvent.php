@@ -2,6 +2,9 @@
 
 namespace App\Events\KDS\FastFood;
 
+use App\Enums\KDS\KDSMovementAction;
+use App\Enums\KDS\KDSMovementType;
+use App\Enums\KDS\KDSSystemMode;
 use App\Events\KDS\KDSEventBase;
 
 /**
@@ -41,9 +44,9 @@ class KDSFastFoodItemMoveEvent extends KDSEventBase
     public function broadcastWith()
     {
         return [
-            'mode' => 'fastfood',
-            'entity' => 'item',
-            'action' => 'move',
+            'mode' => KDSSystemMode::FAST_FOOD,
+            'entity' => KDSMovementType::PER_ITEM,
+            'action' => KDSMovementAction::MOVE,
             'item' => $this->item,
             'transaction' => $this->transaction,
             'fromStation' => $this->fromStation,

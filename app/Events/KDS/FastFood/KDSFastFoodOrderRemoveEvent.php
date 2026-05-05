@@ -2,6 +2,9 @@
 
 namespace App\Events\KDS\FastFood;
 
+use App\Enums\KDS\KDSMovementAction;
+use App\Enums\KDS\KDSMovementType;
+use App\Enums\KDS\KDSSystemMode;
 use App\Events\KDS\KDSEventBase;
 
 /**
@@ -35,9 +38,9 @@ class KDSFastFoodOrderRemoveEvent extends KDSEventBase
     public function broadcastWith()
     {
         return [
-            'mode' => 'fastfood',
-            'entity' => 'order',
-            'action' => 'remove',
+            'mode' => KDSSystemMode::FAST_FOOD,
+            'entity' => KDSMovementType::PER_ORDER,
+            'action' => KDSMovementAction::DELETE,
             'transaction' => $this->transaction,
             'items' => $this->items,
             'timestamp' => now()->toISOString(),

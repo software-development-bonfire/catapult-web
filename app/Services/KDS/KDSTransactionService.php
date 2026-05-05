@@ -2,6 +2,7 @@
 
 namespace App\Services\KDS;
 
+use App\Entities\CDISProductUomPackaging;
 use App\Entities\CDISTerminal;
 use App\Entities\CDISTerminalTransaction;
 use App\Enums\UsageType;
@@ -95,6 +96,7 @@ class KDSTransactionService
                     'kitchen_station_index' => 1,
                     'table_number' => $terminalTransaction->table_number ?? '',
                     'queue_number' => $terminalTransaction->queue_number ?? '',
+                    'max_prep_time' => $this->getMaxPrepTime($storedProduct->product_bid),
                 ];
                 $flattenProducts[] = $productDetail;
 
@@ -130,6 +132,7 @@ class KDSTransactionService
                         'kitchen_station_index' => 1,
                         'table_number' => $terminalTransaction->table_number ?? '',
                         'queue_number' => $terminalTransaction->queue_number ?? '',
+                        'max_prep_time' => $this->getMaxPrepTime($storedAddon->product_bid),
                     ];
                     $flattenProducts[] = $addonDetail;
 
@@ -148,5 +151,14 @@ class KDSTransactionService
             'flatten_products' => $flattenProducts,
         ];
         return $result;
+    }
+
+    /**
+     * Get max preparation time for a product from its UOM packaging configuration.
+     */
+    private function getMaxPrepTime($productBid): float
+    {
+        $packaging = CDISProductUomPackaging::where('bid', $productBid)->first();
+        return $packaging ? (float) $packaging->max_prep_time : 0;
     }
 }

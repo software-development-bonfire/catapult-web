@@ -18,10 +18,10 @@ use Illuminate\Queue\SerializesModels;
  *   kds-station-{deviceUid}     → broadcast as "kds-station-event"
  *   kds-command-{deviceUid}     → broadcast as "command-event"
  * 
- * Payload routing fields:
- *   mode   — "finedine" | "fastfood"
- *   entity — "menu" | "order" | "item"        (station events only)
- *   action — "release" | "move" | "remove" | "done"  (station events only)
+ * Payload routing fields (integer enum values):
+ *   mode   — KDSSystemMode (0=FAST_FOOD, 1=FINE_DINE)
+ *   entity — KDSMovementType (1=PER_ORDER, 2=PER_MENU, 3=PER_ITEM)
+ *   action — KDSMovementAction (1=RELEASE, 2=DONE, 3=ADD, 4=UPDATE, 5=DELETE, 6=MOVE)
  */
 abstract class KDSEventBase implements ShouldBroadcast
 {

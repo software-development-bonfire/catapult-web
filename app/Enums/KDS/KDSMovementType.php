@@ -8,4 +8,5 @@ final class KDSMovementType extends Enum
 {
     const PER_ORDER = 1;
     const PER_MENU  = 2;
+    const PER_ITEM  = 3;
 }

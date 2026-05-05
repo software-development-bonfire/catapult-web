@@ -2,6 +2,9 @@
 
 namespace App\Events\KDS\FineDine;
 
+use App\Enums\KDS\KDSMovementAction;
+use App\Enums\KDS\KDSMovementType;
+use App\Enums\KDS\KDSSystemMode;
 use App\Events\KDS\KDSEventBase;
 
 /**
@@ -33,9 +36,9 @@ class KDSFineDineMenuRemoveEvent extends KDSEventBase
     public function broadcastWith()
     {
         return [
-            'mode' => 'finedine',
-            'entity' => 'menu',
-            'action' => 'remove',
+            'mode' => KDSSystemMode::FINE_DINE,
+            'entity' => KDSMovementType::PER_MENU,
+            'action' => KDSMovementAction::DELETE,
             'item' => $this->item,
             'timestamp' => now()->toISOString(),
         ];

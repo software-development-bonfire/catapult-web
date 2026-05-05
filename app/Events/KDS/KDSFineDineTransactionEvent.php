@@ -2,6 +2,8 @@
 
 namespace App\Events\KDS;
 
+use App\Enums\KDS\KDSSystemMode;
+
 /**
  * Fine-Dine Transaction Event
  * 
@@ -41,7 +43,7 @@ class KDSFineDineTransactionEvent extends KDSEventBase
             'items' => $this->items,
             'releasing' => $this->releasing,
             'action' => $this->action,
-            'mode' => 'finedine',
+            'mode' => KDSSystemMode::FINE_DINE,
             'timestamp' => now()->toISOString(),
         ];
     }

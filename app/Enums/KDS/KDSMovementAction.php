@@ -11,4 +11,5 @@ final class KDSMovementAction extends Enum
     const ADD       = 3;
     const UPDATE    = 4;
     const DELETE    = 5;
+    const MOVE      = 6;
 }
