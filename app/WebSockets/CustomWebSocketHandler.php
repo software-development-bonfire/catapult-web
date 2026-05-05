@@ -41,7 +41,7 @@ class CustomWebSocketHandler extends BaseWebSocketHandler
         $data = json_decode($message, true);
 
         // Log the message for debugging
-        \Illuminate\Support\Facades\Log::info('Received message:', $data);
+        //\Illuminate\Support\Facades\Log::info('Received message:', $data);
 
         $this->handleReceivedMessage($connection, $data);
 

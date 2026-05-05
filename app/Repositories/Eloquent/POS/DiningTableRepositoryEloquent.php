@@ -60,7 +60,7 @@ class DiningTableRepositoryEloquent extends BaseRepository implements DiningTabl
             ->first();
     }
 
-    public function updateOrCreateByPosId(?int $posId, array $data, $posIdCheck = true)
+    public function updateOrCreateByPosId(?int $posId, array $data, bool $posIdCheck = true)
     {
         if (!empty($posId)) {
             if ($posIdCheck) {

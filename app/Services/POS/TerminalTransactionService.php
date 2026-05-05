@@ -2,18 +2,13 @@
 
 namespace App\Services\POS;
 
-use App\Entities\CDISInventoryLocationTag;
 use App\Entities\CDISTerminal;
 use App\Entities\CDISTerminalTransaction;
 use App\Entities\POSTerminalTransaction;
-use App\Enums\InventoryLocationTagType;
 use App\Enums\PaymentStatus;
 use App\Enums\UsageType;
 use App\Repositories\Contracts\CDIS\TerminalTransactionRepository;
-use App\Repositories\Contracts\KitchenItemSetupRepository;
-use Illuminate\Support\Facades\Log;
 use App\Traits\DatabaseTransaction;
-use App\Traits\KitchenDisplayTrait;
 use App\Traits\QueryHelper;
 use App\Traits\TerminalTransactionDiscountTrait;
 
@@ -22,11 +17,13 @@ class TerminalTransactionService
     use DatabaseTransaction;
     use QueryHelper;
     use TerminalTransactionDiscountTrait;
-    use KitchenDisplayTrait;
 
+    /**
+     * Store transaction data to CDISTerminalTransaction tables only.
+     * Returns stored transaction with products and metadata.
+     */
     public function store($data)
     {
-        //$this->transaction(function () use ($data) {
         $transactions = [];
         foreach ($data as $datum) {
             $datum = (object) $datum;
@@ -48,9 +45,6 @@ class TerminalTransactionService
                 $this->deleteRelatedDiscounts($terminalTransaction);
                 $terminalTransaction->forceDelete();
 
-                // Added to add indentifier if terminal is already sent
-                // Perhaps it reprint or retried sending
-                // Use to validate and restrict reprinting kitchen and sticker printing
                 $transactions['is_reprint'] = true;
             }
 
@@ -88,12 +82,6 @@ class TerminalTransactionService
             $transactions['device_mode'] = isset($datum->device_mode) ? $datum->device_mode : null;
             $transactions['table_id'] = isset($datum->table_id) ? $datum->table_id : null;
 
-            $kdsTransaction = clone $terminalTransaction;
-            $kdsTransaction['terminal_number'] = $terminal->number;
-            $kdsTransaction['transaction_type'] = $datum->transaction_type;
-            $kdsTransaction['kitchen_station_index'] = 1; // We need to set a default kitchen station index for new transaction
-            $kdsTransaction['table_number'] = isset($datum->table_number) ? $datum->table_number : '';// mb_substr($terminalTransaction->bid, -5);
-            $kdsTransaction['queue_number'] = isset($datum->queue_number) ? $datum->queue_number : '';// mb_substr($terminalTransaction->bid, -5);
             $official_receipt = [];
 
             foreach ($datum->official_receipt as $officialReceipt) {
@@ -166,15 +154,10 @@ class TerminalTransactionService
                         ]);
                     }
 
-                    // This means transaction already paid, we can set is_settled to true, 
-                    // As per POS logic, if payment method is already exist in the official receipt that means transaction is already paid,
-                    // and we can consider it as settled transaction
                     $transactions['is_settled'] = true;
                 }
 
                 $products = [];
-                $flattenProducts = [];
-                $flattenIndex = 0;
                 foreach ($officialReceipt->product as $key => $product) {
                     $product = (object) $product;
 
@@ -213,55 +196,6 @@ class TerminalTransactionService
                         'updated_at' => $officialReceipt->updated_at,
                         'deleted_at' => $officialReceipt->deleted_at,
                     ]);
-
-                    // Collect addons names
-                    $addonNames = [];
-                    if (!empty($product->addon)) {
-                        foreach ($product->addon as $addon) {
-                            $addon = (object) $addon;
-                            $prefix = '';
-                            if ($addon->usage_type == UsageType::ADDON) {
-                                $prefix = '(A) ';
-                            } else if ($addon->usage_type == UsageType::BUNDLE) { // This enum stands for MODIFIER
-                                $prefix = '(MOD) ';
-                            }
-                            $addonNames[] = $prefix . $addon->name;
-                        }
-                    }
-
-                    // This array used to build data for Kitchen Printer, Kitchen Sticker, Kitchen Display
-                    // serve as the main transaction product
-                    $productDetail = [
-                        'index' => $flattenIndex,
-                        'bid' => $product->bid,
-                        'product_bid' => $product->product_bid,
-                        'name' => $product->name,
-                        'menu_code' => $product->menu_code,
-                        'description' => $product->description,
-                        'long_description' => $product->long_description,
-                        'quantity' => $product->quantity,
-                        'remaining_quantity' => $product->quantity,
-                        'usage_type' => '',
-                        'special_request' => $product->special_request ?? '',
-                        'is_addon' => false,
-                        'transaction_id' => $terminalTransaction->transaction_id,
-                        'transaction_product_bid' => $terminalTransactionDetailProduct->bid,
-                        'order_type_id' => $product->order_type_id,
-                        'order_type_name' => $product->order_type_name,
-                        'terminal_number' => $terminal->number,
-                        'addons' => empty($addonNames) ? '' : implode(', ', $addonNames),
-                        'has_addon' => count($product->addon) > 0,
-                        'kitchen_station_index' => 1, // We need to set a default kitchen station index for new transaction
-                        'table_number' => isset($addon->table_number) ? $addon->table_number : '',// mb_substr($terminalTransaction->bid, -5),
-                        'queue_number' => isset($addon->queue_number) ? $addon->queue_number : '',// mb_substr($terminalTransaction->bid, -5),
-                    ];
-                    $flattenProducts[] = $productDetail;
-
-                    // Validated Kitchen Item Setup and Build Kitchen Display
-                    // Add only product without addons
-                    if (count($product->addon) <= 0) {
-                        $this->validateKitchenDisplay($terminalTransactionDetail, $terminalTransactionDetailProduct, $productDetail);
-                    }
 
                     if (isset($product->price_override_details)) {
                         $terminalTransactionDetail->priceOverride()->create([
@@ -320,37 +254,6 @@ class TerminalTransactionService
 
                         $addons[] = $terminalTransactionAddon;
 
-                        $flattenIndex += 1;
-
-                        // This array used to build data for Kitchen Printer, Kitchen Sticker, Kitchen Display
-                        // serve as the addon of the product
-                        $productDetail = [
-                            'index' => $flattenIndex,
-                            'bid' => $addon->bid,
-                            'product_bid' => $addon->product_bid,
-                            'name' => $addon->name,
-                            'menu_code' => $addon->menu_code,
-                            'description' => $addon->description,
-                            'long_description' => $addon->long_description,
-                            'quantity' => $addon->quantity,
-                            'remaining_quantity' => $product->quantity,
-                            'usage_type' => $addon->usage_type,
-                            'special_request' => $addon->special_request,
-                            'is_addon' => true,
-                            'transaction_id' => $terminalTransaction->transaction_id,
-                            'transaction_product_bid' => $terminalTransactionAddon->bid,
-                            'order_type_id' => $addon->order_type_id,
-                            'order_type_name' => $addon->order_type_name,
-                            'terminal_number' => $terminal->number,
-                            // 'addons' => '',
-                            'addons' => $product->name,
-                            'has_addon' => false,
-                            'kitchen_station_index' => 1, // We need to set a default kitchen station index for new transaction
-                            'table_number' => isset($addon->table_number) ? $addon->table_number : '',// mb_substr($terminalTransaction->bid, -5),
-                            'queue_number' => isset($addon->queue_number) ? $addon->queue_number : '',// mb_substr($terminalTransaction->bid, -5),
-                        ];
-                        $flattenProducts[] = $productDetail;
-
                         $this->disableForeignKeyChecks();
 
                         if (isset($addon->discount)) {
@@ -380,16 +283,12 @@ class TerminalTransactionService
                             }
                         }
 
-                        // Validated Kitchen Item Setup and Build Kitchen Display
-                        $this->validateKitchenDisplay($terminalTransactionDetail, $terminalTransactionAddon, $productDetail);
-
                         $this->enableForeignKeyChecks();
                     }
                     $terminalTransactionDetailProduct->addons = $addons;
                     $terminalTransactionDetailProduct->special_request = $product->special_request;
 
                     $products[] = $terminalTransactionDetailProduct;
-                    $flattenIndex += 1;
 
                     foreach ($product->discount as $discount) {
                         $discount = (object) $discount;
@@ -411,23 +310,15 @@ class TerminalTransactionService
                         ]);
                     }
 
-                    // Validated Kitchen Item Setup and Build Kitchen Display
-                    //$this->validateKitchenDisplay($terminalTransactionDetail, $terminalTransactionDetailProduct, $productDetail);
-
                     $this->enableForeignKeyChecks();
                 }
                 $official_receipt['products'] = $products;
-                $official_receipt['flatten_products'] = $flattenProducts;
             }
 
-            $transactions['kds_transaction'] = $kdsTransaction;
             $transactions['official_receipt'] = $official_receipt;
-
-            //$this->updateStatus($datum);
         }
 
         return $transactions;
-        // });
     }
 
     public function updateStatus($data)
@@ -437,7 +328,6 @@ class TerminalTransactionService
             $posTransaction = POSTerminalTransaction::where('terminal_bid', '=', $data->terminal_bid)
                 ->where('log_date', $data->log_date)
                 ->where('transaction_id', $data->transaction_id)
-                //->where('or_number', $data->or_number)
                 ->where('order_number', $data->order_number)
                 ->where('order_status', PaymentStatus::CREATED)
                 ->first();
