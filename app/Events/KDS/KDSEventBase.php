@@ -11,28 +11,23 @@ use Illuminate\Queue\SerializesModels;
 /**
  * Base KDS Event
  * 
- * All KDS events extend this for common functionality
+ * All KDS events extend this for common functionality.
+ * Channels:
+ *   - kds-transaction-{deviceUid} — transaction events
+ *   - kds-station-{deviceUid}     — station movement/release/done/remove events
+ *   - kds-command-{deviceUid}     — device command events
  */
 abstract class KDSEventBase implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
-     * Event type identifier (e.g. FASTFOOD_ORDER, FINEDINE_RELEASE)
-     * The event class and eventType already encode the system mode.
-     */
-    protected $eventType = 'UNKNOWN';
-
-    /**
      * Target device UID - all events are scoped to a specific KDS device.
-     * If received, it's intended for this device. No extra validation needed.
      */
     public $deviceUid = '';
 
     /**
      * Get the channels the event should broadcast on
-     * 
-     * @return Channel|array
      */
     public function broadcastOn()
     {
@@ -41,24 +36,17 @@ abstract class KDSEventBase implements ShouldBroadcast
 
     /**
      * Get the channel name for this event.
-     * Override in subclasses for mode-specific channels.
+     * Override in subclasses for specific channel prefixes.
      */
-    protected function getChannelName(): string
-    {
-        return 'kds-device-' . $this->deviceUid;
-    }
+    abstract protected function getChannelName(): string;
 
     /**
      * Get the name the event should broadcast as
-     * 
-     * @return string
      */
     abstract public function broadcastAs();
 
     /**
      * Get data to broadcast
-     * 
-     * @return array
      */
     abstract public function broadcastWith();
 }

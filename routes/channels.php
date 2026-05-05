@@ -26,16 +26,22 @@ Broadcast::channel('private-my-channel', function ($data) {
     return $data;
 });
 
-Broadcast::channel('kds-device-{device}', function ($user, $device) {
-    // Allow all authenticated users to listen to KDS device channels
+/*
+|--------------------------------------------------------------------------
+| KDS Private Channels
+|--------------------------------------------------------------------------
+|
+| kds-transaction-{device} — Transaction events (FineDine/FastFood)
+| kds-station-{device}     — Station movement/release/done/remove events
+| kds-command-{device}      — Device command events
+|
+*/
+
+Broadcast::channel('kds-transaction-{device}', function ($user, $device) {
     return ['device' => $device];
 });
 
-Broadcast::channel('kds-finedine-{device}', function ($user, $device) {
-    return ['device' => $device];
-});
-
-Broadcast::channel('kds-fastfood-{device}', function ($user, $device) {
+Broadcast::channel('kds-station-{device}', function ($user, $device) {
     return ['device' => $device];
 });
 
