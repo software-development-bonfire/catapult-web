@@ -35,18 +35,20 @@ class KDSFineDineItemMoveEvent extends KDSEventBase
 
     public function broadcastAs()
     {
-        return 'kds-finedine-item-move';
+        return 'kds-station-event';
     }
 
     public function broadcastWith()
     {
         return [
+            'mode' => 'finedine',
+            'entity' => 'item',
+            'action' => 'move',
             'item' => $this->item,
             'transaction' => $this->transaction,
             'fromStation' => $this->fromStation,
             'toStation' => $this->toStation,
             'quantity' => $this->quantity,
-            'mode' => 'finedine',
             'timestamp' => now()->toISOString(),
         ];
     }

@@ -29,15 +29,17 @@ class KDSFineDineItemRemoveEvent extends KDSEventBase
 
     public function broadcastAs()
     {
-        return 'kds-finedine-item-remove';
+        return 'kds-station-event';
     }
 
     public function broadcastWith()
     {
         return [
+            'mode' => 'finedine',
+            'entity' => 'item',
+            'action' => 'remove',
             'item' => $this->item,
             'transaction' => $this->transaction,
-            'mode' => 'finedine',
             'timestamp' => now()->toISOString(),
         ];
     }

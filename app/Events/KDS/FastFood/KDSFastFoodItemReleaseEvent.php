@@ -31,16 +31,18 @@ class KDSFastFoodItemReleaseEvent extends KDSEventBase
 
     public function broadcastAs()
     {
-        return 'kds-fastfood-item-release';
+        return 'kds-station-event';
     }
 
     public function broadcastWith()
     {
         return [
+            'mode' => 'fastfood',
+            'entity' => 'item',
+            'action' => 'release',
             'item' => $this->item,
             'transaction' => $this->transaction,
             'quantity' => $this->quantity,
-            'mode' => 'fastfood',
             'timestamp' => now()->toISOString(),
         ];
     }

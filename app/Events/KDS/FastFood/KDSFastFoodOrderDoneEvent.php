@@ -29,15 +29,17 @@ class KDSFastFoodOrderDoneEvent extends KDSEventBase
 
     public function broadcastAs()
     {
-        return 'kds-fastfood-order-done';
+        return 'kds-station-event';
     }
 
     public function broadcastWith()
     {
         return [
+            'mode' => 'fastfood',
+            'entity' => 'order',
+            'action' => 'done',
             'transaction' => $this->transaction,
             'items' => $this->items,
-            'mode' => 'fastfood',
             'timestamp' => now()->toISOString(),
         ];
     }

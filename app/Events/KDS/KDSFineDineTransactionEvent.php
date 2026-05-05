@@ -31,7 +31,7 @@ class KDSFineDineTransactionEvent extends KDSEventBase
 
     public function broadcastAs()
     {
-        return 'kds-finedine-transaction';
+        return 'kds-transaction-event';
     }
 
     public function broadcastWith()

@@ -12,17 +12,23 @@ use Illuminate\Queue\SerializesModels;
  * Base KDS Event
  * 
  * All KDS events extend this for common functionality.
- * Channels:
- *   - kds-transaction-{deviceUid} — transaction events
- *   - kds-station-{deviceUid}     — station movement/release/done/remove events
- *   - kds-command-{deviceUid}     — device command events
+ * 
+ * Channels (private, device-scoped):
+ *   kds-transaction-{deviceUid} → broadcast as "kds-transaction-event"
+ *   kds-station-{deviceUid}     → broadcast as "kds-station-event"
+ *   kds-command-{deviceUid}     → broadcast as "command-event"
+ * 
+ * Payload routing fields:
+ *   mode   — "finedine" | "fastfood"
+ *   entity — "menu" | "order" | "item"        (station events only)
+ *   action — "release" | "move" | "remove" | "done"  (station events only)
  */
 abstract class KDSEventBase implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
-     * Target device UID - all events are scoped to a specific KDS device.
+     * Target device UID — all events are scoped to a specific KDS device.
      */
     public $deviceUid = '';
 
@@ -36,17 +42,19 @@ abstract class KDSEventBase implements ShouldBroadcast
 
     /**
      * Get the channel name for this event.
-     * Override in subclasses for specific channel prefixes.
      */
     abstract protected function getChannelName(): string;
 
     /**
-     * Get the name the event should broadcast as
+     * Get the name the event should broadcast as.
+     * 
+     * Station and transaction subclasses share a unified broadcast name
+     * so the client only needs one bind per channel.
      */
     abstract public function broadcastAs();
 
     /**
-     * Get data to broadcast
+     * Get data to broadcast.
      */
     abstract public function broadcastWith();
 }

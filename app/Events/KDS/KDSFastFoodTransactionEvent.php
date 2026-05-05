@@ -29,7 +29,7 @@ class KDSFastFoodTransactionEvent extends KDSEventBase
 
     public function broadcastAs()
     {
-        return 'kds-fastfood-transaction';
+        return 'kds-transaction-event';
     }
 
     public function broadcastWith()

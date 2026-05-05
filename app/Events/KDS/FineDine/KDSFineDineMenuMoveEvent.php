@@ -33,17 +33,19 @@ class KDSFineDineMenuMoveEvent extends KDSEventBase
 
     public function broadcastAs()
     {
-        return 'kds-finedine-menu-move';
+        return 'kds-station-event';
     }
 
     public function broadcastWith()
     {
         return [
+            'mode' => 'finedine',
+            'entity' => 'menu',
+            'action' => 'move',
             'item' => $this->item,
             'fromStation' => $this->fromStation,
             'toStation' => $this->toStation,
             'quantity' => $this->quantity,
-            'mode' => 'finedine',
             'timestamp' => now()->toISOString(),
         ];
     }

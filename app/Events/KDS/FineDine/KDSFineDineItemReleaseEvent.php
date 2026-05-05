@@ -31,16 +31,18 @@ class KDSFineDineItemReleaseEvent extends KDSEventBase
 
     public function broadcastAs()
     {
-        return 'kds-finedine-item-release';
+        return 'kds-station-event';
     }
 
     public function broadcastWith()
     {
         return [
+            'mode' => 'finedine',
+            'entity' => 'item',
+            'action' => 'release',
             'item' => $this->item,
             'transaction' => $this->transaction,
             'quantity' => $this->quantity,
-            'mode' => 'finedine',
             'timestamp' => now()->toISOString(),
         ];
     }
