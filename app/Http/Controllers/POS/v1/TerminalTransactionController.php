@@ -6,10 +6,11 @@ use App\Entities\CDISTerminal;
 use App\Entities\StationOTSTerminalTransaction;
 use App\Enums\CDIS\TerminalTransactionType;
 use App\Enums\KDS\OrderType;
+use App\Enums\OTS\SourceTransactionType;
 use App\Enums\POS\DeviceMode;
 use App\Enums\UsageType;
-use App\Events\KDS\KDSTransactionEvent;
-use App\Events\KDS\KDSDeviceEvent;
+use App\Events\KDS\KDSFastFoodTransactionEvent;
+use App\Events\KDS\KDSFineDineTransactionEvent;
 use App\Events\OTS\OTSSettledEvent;
 use App\Events\PrintEvent;
 use App\Http\Controllers\POS\POSBaseController;
@@ -53,11 +54,13 @@ class TerminalTransactionController extends POSBaseController
         $transactions = app()->make(TerminalTransactionService::class)->store($request->transaction);
 
         // Step 2: Construct KDS data and persist to KDS tables
-        $kdsData = app()->make(KDSTransactionService::class)->store($request->transaction);
+        if (!empty($transactions)) {
+            $kdsData = app()->make(KDSTransactionService::class)->store($transactions);
 
-        // Merge KDS data into transactions for broadcasting
-        $transactions['kds_transaction'] = $kdsData['kds_transaction'] ?? null;
-        $transactions['flatten_products'] = $kdsData['flatten_products'] ?? [];
+            // Merge KDS data into transactions for broadcasting
+            $transactions['kds_transaction'] = $kdsData['kds_transaction'] ?? null;
+            $transactions['flatten_products'] = $kdsData['flatten_products'] ?? [];
+        }
 
         Log::alert('transactions: ' . json_encode($transactions));
 
@@ -198,6 +201,7 @@ class TerminalTransactionController extends POSBaseController
         }
 
         if (count($transactionStickersProducts) <= 0) {
+            Log::alert('No need to print stickers for transaction_id: ' . ($transactions['transaction_id'] ?? 'N/A') . ' with transaction_type: ' . ($transactions['transaction_type'] ?? 'N/A') . '. transactionStickersProducts count: ' . count($transactionStickersProducts));
             return;
         }
 
@@ -214,10 +218,17 @@ class TerminalTransactionController extends POSBaseController
      */
     private function handleKDSBroadcasting($transactions, $isFineDine = false)
     {
+        // SALES/REFUND is initially from FASTFOOD flow, but for FINE DINE developer put it on the transaction type for some reason.
         $sendToKitchenDisplay = isset($transactions['transaction_type'])
-            && ($transactions['transaction_type'] == TerminalTransactionType::SALES || $transactions['transaction_type'] == TerminalTransactionType::REFUND);
+            && (
+                ($transactions['transaction_type'] == TerminalTransactionType::SALES ||
+                    $transactions['transaction_type'] == TerminalTransactionType::REFUND) ||
+                $transactions['transaction_type'] == SourceTransactionType::FINEDINE // For fine-dine, we want to send to KDS even if it's not marked as SALES/REFUND for preparation purposes
+            );
 
+        // Only proceed if we need to send to kitchen display and there are products to send
         if (!$sendToKitchenDisplay || empty($transactions['flatten_products'])) {
+            Log::alert('No need to broadcast to KDS for transaction_id: ' . ($transactions['transaction_id'] ?? 'N/A') . ' with transaction_type: ' . ($transactions['transaction_type'] ?? 'N/A') . '. sendToKitchenDisplay: ' . ($sendToKitchenDisplay ? 'true' : 'false') . ' and flatten_products count: ' . count($transactions['flatten_products']));
             return;
         }
 
@@ -242,6 +253,7 @@ class TerminalTransactionController extends POSBaseController
         // Broadcast to releasing stations by order type
         if (!$isFineDine) {
             // If FASTFOOD sento releasing stations immediately for order type flow
+            // If FINE-DINE we will only send to KDS station for preparation, and the releasing station flow will be handled when the order is marked as done by station device.
             $this->broadcastToReleasingStations($kitchenDisplayProducts, $transactions);
         }
     }
@@ -251,12 +263,18 @@ class TerminalTransactionController extends POSBaseController
      */
     private function broadcastToKDSDevices($kitchenDisplayProducts, $transactions)
     {
+        $isFineDine = $this->isFineDineTransaction($transactions);
         $groupedDisplays = collect($kitchenDisplayProducts)->groupBy('device_uid');
 
         foreach ($groupedDisplays->toArray() as $device => $items) {
             if (!empty($device) && count($items) > 0) {
-                Log::info('Broadcasting to device: ' . $device . ' with ' . count($items) . ' items');
-                broadcast(new KDSDeviceEvent($device, $transactions['kds_transaction'], $items, ''));
+                Log::info('Broadcasting to device: ' . $device . ' with mode ' . ($isFineDine ? 'FineDine' : 'FastFood') . ' and ' . count($items) . ' items');
+
+                if ($isFineDine) {
+                    broadcast(new KDSFineDineTransactionEvent($device, $transactions['kds_transaction'], $items));
+                } else {
+                    broadcast(new KDSFastFoodTransactionEvent($device, $transactions['kds_transaction'], $items));
+                }
             }
         }
     }
@@ -276,7 +294,12 @@ class TerminalTransactionController extends POSBaseController
             $orderTypeName = OrderType::getDescription($orderType);
             Log::alert('BROADCAST: ' . $orderType . ': ' . $orderTypeName);
 
-            broadcast(new KDSTransactionEvent($orderType, $transactions['kds_transaction'], $items, $orderTypeName, 'add'));
+            // Broadcast releasing transaction to each device that has items
+            $deviceUids = collect($items)->pluck('device_uid')->unique()->filter();
+            foreach ($deviceUids as $deviceUid) {
+                $deviceItems = collect($items)->where('device_uid', $deviceUid)->values()->toArray();
+                broadcast(new KDSFastFoodTransactionEvent($deviceUid, $transactions['kds_transaction'], $deviceItems, true));
+            }
         }
     }
 

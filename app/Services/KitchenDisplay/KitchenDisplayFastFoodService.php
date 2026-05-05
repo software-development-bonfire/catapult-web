@@ -7,10 +7,10 @@ use App\Entities\CDISTerminalTransaction;
 use App\Entities\KitchenDisplay;
 use App\Entities\KitchenDisplayDetail;
 use App\Enums\KDS\MenuStatus;
-use App\Events\KDS\FastFood\KDSFastFoodOrderEvent;
-use App\Events\KDS\KDSStationEvent;
-use App\Events\KDS\Common\KDSOrderDoneEvent;
-use App\Events\KDS\KDSDeviceEvent;
+use App\Events\KDS\FastFood\KDSFastFoodItemMoveEvent;
+use App\Events\KDS\FastFood\KDSFastFoodItemReleaseEvent;
+use App\Events\KDS\FastFood\KDSFastFoodOrderDoneEvent;
+use App\Events\KDS\KDSFastFoodTransactionEvent;
 use App\Repositories\Contracts\KitchenItemSetupRepository;
 
 /**
@@ -163,7 +163,14 @@ class KitchenDisplayFastFoodService extends KitchenDisplayService
             // Broadcast movement to the target station's device
             $deviceUid = $this->getDeviceUidForStation($detail->kitchen_station_bid);
             if ($deviceUid) {
-                broadcast(KDSStationEvent::fastFoodMovement($deviceUid, $detail, $nextStation, $data->quantity ?? 0));
+                broadcast(new KDSFastFoodItemMoveEvent(
+                    $deviceUid,
+                    $detail,
+                    $detail->transaction_id,
+                    $detail->current_station_index,
+                    $nextStation,
+                    $data->quantity ?? 0
+                ));
             }
 
             return true;
@@ -194,7 +201,7 @@ class KitchenDisplayFastFoodService extends KitchenDisplayService
             // Broadcast release to the item's device
             $deviceUid = $this->getDeviceUidForStation($detail->kitchen_station_bid);
             if ($deviceUid) {
-                broadcast(KDSStationEvent::fastFoodRelease($deviceUid, $detail));
+                broadcast(new KDSFastFoodItemReleaseEvent($deviceUid, $detail, $detail->transaction_id));
             }
 
             return true;
@@ -276,7 +283,7 @@ class KitchenDisplayFastFoodService extends KitchenDisplayService
             // Broadcast done event to each device that had items from this order
             $deviceUids = $this->getDeviceUidsForOrder($kitchenDisplay->bid);
             foreach ($deviceUids as $deviceUid) {
-                broadcast(new KDSOrderDoneEvent($deviceUid, $items->toArray(), $kitchenDisplay->toArray(), 'fastfood'));
+                broadcast(new KDSFastFoodOrderDoneEvent($deviceUid, $kitchenDisplay->toArray(), $items->toArray()));
             }
 
             return true;
@@ -367,19 +374,24 @@ class KitchenDisplayFastFoodService extends KitchenDisplayService
 
         // Broadcast to each device
         foreach ($itemsByDevice as $deviceUid => $deviceItems) {
-            broadcast(new KDSFastFoodOrderEvent(
+            broadcast(new KDSFastFoodTransactionEvent(
                 $deviceUid,
                 $order,
                 $deviceItems
             ));
         }
 
-        // Also broadcast to order type (for releasing station)
-        broadcast(new KDSDeviceEvent(
-            $order->order_type_id,
-            $order,
-            $items,
-            $order->order_type_name
-        ));
+        // Also broadcast to releasing station devices
+        $releasingDeviceUids = $this->getDeviceUidsForOrder($order->bid ?? '');
+        foreach ($releasingDeviceUids as $deviceUid) {
+            if (!isset($itemsByDevice[$deviceUid])) {
+                broadcast(new KDSFastFoodTransactionEvent(
+                    $deviceUid,
+                    $order,
+                    $items,
+                    true
+                ));
+            }
+        }
     }
 }

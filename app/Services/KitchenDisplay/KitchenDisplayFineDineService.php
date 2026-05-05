@@ -7,10 +7,10 @@ use App\Entities\CDISTerminalTransaction;
 use App\Entities\KitchenDisplay;
 use App\Entities\KitchenDisplayDetail;
 use App\Enums\KDS\MenuStatus;
-use App\Events\KDS\FineDine\KDSFineDineOrderEvent;
-use App\Events\KDS\KDSStationEvent;
-use App\Events\KDS\Common\KDSOrderDoneEvent;
-use App\Events\KDS\KDSDeviceEvent;
+use App\Events\KDS\FineDine\KDSFineDineItemMoveEvent;
+use App\Events\KDS\FineDine\KDSFineDineItemReleaseEvent;
+use App\Events\KDS\FineDine\KDSFineDineOrderDoneEvent;
+use App\Events\KDS\KDSFineDineTransactionEvent;
 use App\Repositories\Contracts\KitchenItemSetupRepository;
 
 /**
@@ -154,7 +154,7 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
             // Broadcast completion signal to all devices with items from this order
             $deviceUids = $this->getDeviceUidsForOrder($kitchenDisplay->bid);
             foreach ($deviceUids as $deviceUid) {
-                broadcast(KDSStationEvent::fineDinePartial($deviceUid, $kitchenDisplay, $items, 'ORDER_COMPLETE'));
+                broadcast(new KDSFineDineOrderDoneEvent($deviceUid, $kitchenDisplay->toArray(), $items->toArray()));
             }
 
             return true;
@@ -270,7 +270,14 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
             // Broadcast movement to the target station's device
             $deviceUid = $this->getDeviceUidForStation($detail->kitchen_station_bid);
             if ($deviceUid) {
-                broadcast(KDSStationEvent::fineDineMovement($deviceUid, $detail, $order, $nextStation));
+                broadcast(new KDSFineDineItemMoveEvent(
+                    $deviceUid,
+                    $detail,
+                    $order,
+                    $detail->current_station_index,
+                    $nextStation,
+                    $detail->remaining_quantity ?? 1
+                ));
             }
 
             return true;
@@ -305,7 +312,7 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
             // Broadcast partial release to the item's device
             $deviceUid = $this->getDeviceUidForStation($detail->kitchen_station_bid);
             if ($deviceUid) {
-                broadcast(KDSStationEvent::fineDineRelease($deviceUid, $detail, $order));
+                broadcast(new KDSFineDineItemReleaseEvent($deviceUid, $detail, $order));
             }
 
             return true;
@@ -378,7 +385,7 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
             // Broadcast done event to each device that had items from this order
             $deviceUids = $this->getDeviceUidsForOrder($kitchenDisplay->bid);
             foreach ($deviceUids as $deviceUid) {
-                broadcast(new KDSOrderDoneEvent($deviceUid, $items->toArray(), $kitchenDisplay->toArray(), 'finedine'));
+                broadcast(new KDSFineDineOrderDoneEvent($deviceUid, $kitchenDisplay->toArray(), $items->toArray()));
             }
 
             return true;
@@ -466,23 +473,29 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
 
         // Broadcast to each device
         foreach ($itemsByDevice as $deviceUid => $deviceItems) {
-            broadcast(new KDSFineDineOrderEvent(
+            broadcast(new KDSFineDineTransactionEvent(
                 $deviceUid,
                 $order,
                 $deviceItems,
+                false,
                 $eventType
             ));
         }
 
-        // Broadcast to order type (for releasing station)
-        // Only broadcast to releasing if order is complete and ready
+        // Broadcast to releasing station devices if order is complete
         if ($order->is_complete) {
-            broadcast(new KDSDeviceEvent(
-                $order->order_type_id,
-                $order,
-                $items,
-                $order->order_type_name
-            ));
+            $releasingDeviceUids = $this->getDeviceUidsForOrder($order->bid ?? '');
+            foreach ($releasingDeviceUids as $deviceUid) {
+                if (!isset($itemsByDevice[$deviceUid])) {
+                    broadcast(new KDSFineDineTransactionEvent(
+                        $deviceUid,
+                        $order,
+                        $items,
+                        true,
+                        $eventType
+                    ));
+                }
+            }
         }
     }
 }

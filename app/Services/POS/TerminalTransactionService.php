@@ -139,6 +139,7 @@ class TerminalTransactionService
                 }
 
                 if (isset($officialReceipt->payment_method)) {
+                    $totalPaidAmount = 0;
                     foreach ($officialReceipt->payment_method as $paymentMethod) {
                         $paymentMethod = (object) $paymentMethod;
 
@@ -152,9 +153,12 @@ class TerminalTransactionService
                             'updated_at' => $officialReceipt->updated_at,
                             'deleted_at' => $officialReceipt->deleted_at,
                         ]);
+
+                        $totalPaidAmount += $paymentMethod->total;
                     }
 
-                    $transactions['is_settled'] = true;
+                    // Determine if the transaction is settled based on total paid amount vs official receipt total
+                    $transactions['is_settled'] = $totalPaidAmount > 0 && $totalPaidAmount >= $officialReceipt->total;
                 }
 
                 $products = [];

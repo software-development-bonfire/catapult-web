@@ -10,17 +10,16 @@ use App\Entities\KitchenDisplayDetail;
 use App\Enums\KDS\KDSMovementType;
 use App\Enums\KDS\MenuStatus;
 use App\Enums\KDS\OrderType;
-use App\Events\KDS\KDSMoveMenuEvent;
-use App\Events\KDS\KDSRemoveOrderEvent;
-use App\Events\KDS\KDSRemoveMenuEvent;
-use App\Events\KDS\KDSMoveOrderEvent;
-use App\Events\KDS\KDSMoveItemEvent;
-use App\Events\KDS\KDSDoneMenuEvent;
-use App\Events\KDS\KDSReleaseMenuEvent;
-use App\Events\KDS\KDSOrderDoneEvent;
-use App\Events\KDS\KDSReleaseOrderEvent;
-use App\Events\KDS\KDSTransactionEvent;
-use App\Events\KDS\KDSDeviceEvent;
+use App\Events\KDS\FastFood\KDSFastFoodMenuMoveEvent;
+use App\Events\KDS\FastFood\KDSFastFoodMenuReleaseEvent;
+use App\Events\KDS\FastFood\KDSFastFoodMenuDoneEvent;
+use App\Events\KDS\FastFood\KDSFastFoodMenuRemoveEvent;
+use App\Events\KDS\FastFood\KDSFastFoodOrderMoveEvent;
+use App\Events\KDS\FastFood\KDSFastFoodOrderReleaseEvent;
+use App\Events\KDS\FastFood\KDSFastFoodOrderDoneEvent;
+use App\Events\KDS\FastFood\KDSFastFoodOrderRemoveEvent;
+use App\Events\KDS\FastFood\KDSFastFoodItemMoveEvent;
+use App\Events\KDS\KDSFastFoodTransactionEvent;
 use App\Repositories\Contracts\KitchenItemSetupRepository;
 use App\Repositories\Contracts\POS\TerminalTransactionRepository;
 use App\Traits\DatabaseTransaction;
@@ -88,8 +87,11 @@ class KitchenDisplayService
             }
 
             // If releasing KDS sent request to make this transaction RELEASE
-            // Broadcast all KDS that contains transaction
-            broadcast(new KDSReleaseOrderEvent($data->source, KDSMovementType::PER_ORDER, $transaction, $releasedItems));
+            // Broadcast to each device that had items from this order
+            $deviceUids = $this->getAffectedDeviceUids($releasedItems);
+            foreach ($deviceUids as $deviceUid) {
+                broadcast(new KDSFastFoodOrderReleaseEvent($deviceUid, $transaction, $releasedItems));
+            }
         }
 
         return $data;
@@ -135,7 +137,10 @@ class KitchenDisplayService
             
             // Dispatch release menu event
             if ($transaction) {
-                broadcast(new KDSReleaseMenuEvent($releasedItem, $kitchenDisplayDetail->kitchen_station_index, $releasedItem['quantity'] ?? 0));
+                $deviceUid = $this->getDeviceUidForItem($kitchenDisplayDetail->product_uom_packaging_bid, $kitchenDisplayDetail->kitchen_station_index);
+                if ($deviceUid) {
+                    broadcast(new KDSFastFoodMenuReleaseEvent($deviceUid, $releasedItem, $releasedItem['quantity'] ?? 0));
+                }
             }
 
             return true;
@@ -191,8 +196,11 @@ class KitchenDisplayService
             }
 
             // If releasing KDS sent request to make this transaction DONE
-            // Broadcast all KDS that contains transaction
-            broadcast(new KDSOrderDoneEvent($completedItems, $transaction));
+            // Broadcast to each device that had items from this order
+            $deviceUids = $this->getAffectedDeviceUids($completedItems);
+            foreach ($deviceUids as $deviceUid) {
+                broadcast(new KDSFastFoodOrderDoneEvent($deviceUid, $transaction, $completedItems));
+            }
         }
 
         return $data;
@@ -235,7 +243,10 @@ class KitchenDisplayService
                 }
             }
             // Dispatch specific event for menu completion
-            broadcast(new KDSDoneMenuEvent($item, $item->kitchen_station_index ?? 0, $item->quantity ?? 1));
+            $deviceUid = $this->getDeviceUidForItem($item->product_uom_packaging_bid, $item->kitchen_station_index ?? 1);
+            if ($deviceUid) {
+                broadcast(new KDSFastFoodMenuDoneEvent($deviceUid, $item, $item->quantity ?? 1));
+            }
         }
 
         return $data;
@@ -278,7 +289,16 @@ class KitchenDisplayService
 
         // Dispatch move order event
         if (!empty($movedItems)) {
-            broadcast(new KDSMoveOrderEvent($transaction, $movedItems, $transaction->kitchen_station_index, $transaction->kitchen_station_index + 1));
+            $deviceUids = $this->getAffectedDeviceUids($movedItems);
+            foreach ($deviceUids as $deviceUid) {
+                broadcast(new KDSFastFoodOrderMoveEvent(
+                    $deviceUid,
+                    $transaction,
+                    $movedItems,
+                    $transaction->kitchen_station_index,
+                    $transaction->kitchen_station_index + 1
+                ));
+            }
         }
 
         return $data;
@@ -351,7 +371,7 @@ class KitchenDisplayService
                     // Broadcast to assigned KDS
 
                     $transaction->kitchen_station_index = intval($index) + 1;
-                    broadcast(new KDSDeviceEvent($device, $transaction, $items, ''));
+                    broadcast(new KDSFastFoodTransactionEvent($device, $transaction, $items));
                 }
             }
             // Grouped by order type name, then assigned items by order type susch DINE IN, TAKE OUT, DRIVE THRU, etc.
@@ -359,7 +379,10 @@ class KitchenDisplayService
             foreach ($groupedReleasingDisplays->toArray() as $orderType => $items) {
                 if (! empty($orderType) && count($items) > 0) {
                     // Broadcast to assigned KDS for Releasing
-                    broadcast(new KDSTransactionEvent('', $transaction, $items, $orderType, 'update'));
+                    $deviceUids = $this->getAffectedDeviceUids($items);
+                    foreach ($deviceUids as $deviceUid) {
+                        broadcast(new KDSFastFoodTransactionEvent($deviceUid, $transaction, $items, true));
+                    }
                 }
             }
             
@@ -370,7 +393,7 @@ class KitchenDisplayService
             foreach ($groupedReleasingDisplays->toArray() as $orderType => $items) {
                 if (! empty($orderType) && count($items) > 0) {
                     // Broadcast to assigned KDS for Releasing
-                    //broadcast(new KDSTransactionEvent('', $transaction, $items, $orderType, 'update'));
+                    //broadcast(new KDSFastFoodTransactionEvent(...));
                 }
             }
         }
@@ -477,7 +500,17 @@ class KitchenDisplayService
             $movedItems = array_merge($nextStationDetails, $releasingDetails);
             if (!empty($movedItems)) {
                 foreach ($movedItems as $movedItem) {
-                    broadcast(new KDSMoveMenuEvent($movedItem, $transaction, intval($item->kitchen_station_index), intval($item->kitchen_station_index) + 1, $movedItem['quantity'] ?? 0));
+                    $movedItemArr = is_array($movedItem) ? $movedItem : (array) $movedItem;
+                    $deviceUid = $this->getDeviceUidForItem($movedItemArr['product_bid'] ?? '', intval($item->kitchen_station_index) + 1);
+                    if ($deviceUid) {
+                        broadcast(new KDSFastFoodMenuMoveEvent(
+                            $deviceUid,
+                            $movedItem,
+                            intval($item->kitchen_station_index),
+                            intval($item->kitchen_station_index) + 1,
+                            $movedItemArr['quantity'] ?? 0
+                        ));
+                    }
                 }
             }
         } else {
@@ -639,14 +672,17 @@ class KitchenDisplayService
                     foreach ($groupedDisplays->toArray() as $device => $items) {
                         if (! empty($device) && count($items) > 0) {
                             // Broadcast to assigned KDS
-                            broadcast(new KDSDeviceEvent($device, $clonedTransaction, $items, ''));
+                            broadcast(new KDSFastFoodTransactionEvent($device, $clonedTransaction, $items));
                         }
                     }
                 }
                 
                 // Broadcast to assigned KDS for Releasing if applicable
                 if (count($releasingDetails) > 0) {
-                    broadcast(new KDSTransactionEvent('', $clonedTransaction, toSafeArray($item), $orderType->name ?? '', 'update'));
+                    $deviceUids = $this->getAffectedDeviceUids(toSafeArray($item));
+                    foreach ($deviceUids as $deviceUid) {
+                        broadcast(new KDSFastFoodTransactionEvent($deviceUid, $clonedTransaction, toSafeArray($item), true));
+                    }
                 }
             } else {
                 \Illuminate\Support\Facades\Log::warning('Kitchen display detail not found for movement');
@@ -741,7 +777,17 @@ class KitchenDisplayService
 
             // Dispatch move item event
             if ($transaction) {
-                broadcast(new KDSMoveItemEvent($movedItem, $transaction, $data['quantity'], $kitchenDisplayDetail->kitchen_station_index, $data['move_station_bid'] ?? null));
+                $deviceUid = $this->getDeviceUidForItem($kitchenDisplayDetail->product_uom_packaging_bid, $kitchenDisplayDetail->kitchen_station_index);
+                if ($deviceUid) {
+                    broadcast(new KDSFastFoodItemMoveEvent(
+                        $deviceUid,
+                        $movedItem,
+                        $transaction,
+                        $kitchenDisplayDetail->kitchen_station_index,
+                        $data['move_station_bid'] ?? null,
+                        $data['quantity']
+                    ));
+                }
             }
 
             return true;
@@ -794,7 +840,10 @@ class KitchenDisplayService
 
             // Dispatch remove order event
             if ($transaction && !empty($removedItems)) {
-                broadcast(new KDSRemoveOrderEvent($removedItems, $transaction));
+                $deviceUids = $this->getAffectedDeviceUids($removedItems);
+                foreach ($deviceUids as $deviceUid) {
+                    broadcast(new KDSFastFoodOrderRemoveEvent($deviceUid, $transaction, $removedItems));
+                }
             }
 
             $kitchenDisplay->delete();
@@ -843,10 +892,40 @@ class KitchenDisplayService
             
             // Dispatch remove menu event
             if ($transaction) {
-                broadcast(new KDSRemoveMenuEvent([$removedItem], $transaction));
+                $deviceUid = $this->getDeviceUidForItem($kitchenDisplayDetail->product_uom_packaging_bid, $kitchenDisplayDetail->kitchen_station_index);
+                if ($deviceUid) {
+                    broadcast(new KDSFastFoodMenuRemoveEvent($deviceUid, $removedItem));
+                }
             }
 
             return true;
         });
+    }
+
+    /**
+     * Get the device UID for a product at a specific station index.
+     */
+    protected function getDeviceUidForItem($productBid, $stationIndex)
+    {
+        $kitchenSetup = app()->make(KitchenItemSetupRepository::class)->getKitchenStation($productBid, $stationIndex);
+        return $kitchenSetup['device_uid'] ?? null;
+    }
+
+    /**
+     * Get all unique device UIDs affected by a set of items.
+     */
+    protected function getAffectedDeviceUids(array $items): array
+    {
+        $deviceUids = [];
+        foreach ($items as $item) {
+            $item = (array) $item;
+            $productBid = $item['product_bid'] ?? $item['bid'] ?? '';
+            $stationIndex = $item['kitchen_station_index'] ?? 1;
+            $deviceUid = $this->getDeviceUidForItem($productBid, $stationIndex);
+            if ($deviceUid && !in_array($deviceUid, $deviceUids)) {
+                $deviceUids[] = $deviceUid;
+            }
+        }
+        return $deviceUids;
     }
 }
