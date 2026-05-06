@@ -2,6 +2,8 @@
 
 namespace App\Services\KDS;
 
+use App\Entities\CDISBranch;
+use App\Entities\CDISKitchenItemSetupDetail;
 use App\Entities\CDISProductUomPackaging;
 use App\Entities\CDISTerminal;
 use App\Entities\CDISTerminalTransaction;
@@ -43,13 +45,22 @@ class KDSTransactionService
             $terminalTransaction->load('details.products.addons');
         }
 
-        // Build KDS transaction header directly from the stored model
-        $kdsTransaction = clone $terminalTransaction;
-        $kdsTransaction['terminal_number'] = $terminal->number;
-        $kdsTransaction['transaction_type'] = $terminalTransaction->transaction_type;
-        $kdsTransaction['kitchen_station_index'] = 1;
-        $kdsTransaction['table_number'] = $terminalTransaction->table_number ?? '';
-        $kdsTransaction['queue_number'] = $terminalTransaction->queue_number ?? '';
+        // Build KDS transaction header as plain array for deterministic broadcast serialization
+        $kdsTransaction = [
+            'bid' => $terminalTransaction->bid,
+            'terminal_bid' => $terminalTransaction->terminal_bid,
+            'terminal_number' => $terminal->number,
+            'transaction_id' => $terminalTransaction->transaction_id,
+            'date' => $terminalTransaction->date,
+            'amount' => $terminalTransaction->amount,
+            'transaction_type' => $terminalTransaction->transaction_type,
+            'kitchen_station_index' => 1,
+            'log_date' => $terminalTransaction->log_date,
+            'order_number' => $terminalTransaction->order_number ?? '',
+            'table_number' => $terminalTransaction->table_number ?? '',
+            'queue_number' => $terminalTransaction->queue_number ?? '',
+            'remarks' => $terminalTransaction->remarks ?? '',
+        ];
 
         $flattenProducts = [];
         $flattenIndex = 0;
@@ -154,10 +165,30 @@ class KDSTransactionService
     }
 
     /**
-     * Get max preparation time for a product from its UOM packaging configuration.
+     * Get max preparation time for a product from kitchen item setup detail,
+     * filtered by the current branch configuration.
      */
     private function getMaxPrepTime($productBid): float
     {
+        $branchBid = CDISBranch::where('code', config('configuration.branch_code'))
+            ->whereNull('deleted_at')
+            ->value('bid');
+
+        if (!$branchBid) {
+            return 0;
+        }
+
+        $detail = CDISKitchenItemSetupDetail::where('product_uom_packaging_bid', $productBid)
+            ->whereHas('kitchenItemSetup', function ($query) use ($branchBid) {
+                $query->where('branch_bid', $branchBid)->whereNull('deleted_at');
+            })
+            ->whereNull('deleted_at')
+            ->first();
+
+        if ($detail) {
+            return (float) $detail->max_prep_time;
+        }
+
         $packaging = CDISProductUomPackaging::where('bid', $productBid)->first();
         return $packaging ? (float) $packaging->max_prep_time : 0;
     }

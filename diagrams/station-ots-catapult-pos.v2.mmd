@@ -1,0 +1,78 @@
+sequenceDiagram
+    autonumber
+
+    actor STAFF
+    participant OTS as 🖥️ Station OTS (Multiple)
+    participant CAT as ⚙️ Catapult Server
+    participant POS as 💳 POS
+    actor CASHIER
+    participant KDS as 🍳 KDS / Printer
+
+    %% -----------------------------
+    %% TABLE AVAILABILITY CHECK
+    %% -----------------------------
+    Note over OTS: User selects table & creates order
+    STAFF->>OTS: Create table transaction
+    OTS->>CAT: [POST] api/pos/v1/table/check\n(table_id)
+
+    alt Table NOT Available
+        CAT-->>OTS: Response: NOT AVAILABLE
+        Note over OTS: ❌ Show prompt: "Table occupied"\nStop transaction
+    else Table Available
+        CAT-->>OTS: Response: AVAILABLE
+
+        %% -----------------------------
+        %% ORDER CREATION
+        %% -----------------------------        
+        OTS->>CAT: [POST] api/station-ots/v1/transaction/store
+        CAT->>CAT: Process transaction
+        Note right of CAT: 🗄️ INSERT → station_terminal_transaction\nstatus: PENDING
+
+        %% -----------------------------
+        %% BROADCAST EVENT
+        %% -----------------------------
+        Note over CAT: 📡 Pusher: Broadcast Events
+        CAT-->>POS: [EVENT] TransactionEvent
+
+        %% -----------------------------
+        %% POS HANDLING
+        %% -----------------------------
+        POS->>POS: Process transaction
+        Note right of POS: 🗄️ INSERT → POS DB\nstatus: OPEN
+
+        %% -----------------------------
+        %% KITCHEN HANDLING
+        %% -----------------------------
+        Note over POS: Auto send back receive data to Catapult to process Kitchen
+        POS->>CAT: [POST] api/pos/v1/transaction/store
+        CAT->>CAT: Process transaction to KDS 
+        Note over CAT: 📡 Pusher: Broadcast Events
+        CAT-->>KDS: [EVENT] KDSTransactionEvent
+        
+        %% -----------------------------
+        %% KDS / PRINTER HANDLING
+        %% -----------------------------
+        KDS->>KDS: Display order on screen
+        KDS->>KDS: Print receipt (thermal)
+
+        %% -----------------------------
+        %% SETTLEMENT HANDLING
+        %% -----------------------------
+        %%Note over CAT,POS: 🟢 POS TO CATAPULT MANUAL INTERACTION STARTS HERE
+        Note over POS: Cashier settles order
+        CASHIER->>POS: Settle the transaction
+        POS->>CAT: [POST] api/pos/v1/transaction/store (with SETTLE indetifier)
+
+        %% -----------------------------
+        %% FINALIZATION
+        %% -----------------------------
+        CAT->>CAT: Process settled transaction
+        Note right of CAT: 🗄️ INSERT → cdis_terminal_transaction\nstatus: SETTLED
+        Note right of CAT: 🗑️ DELETE → station_terminal_transaction
+
+        %% -----------------------------
+        %% NOTIFICATION BACK
+        %% -----------------------------
+        Note over CAT: 📡 Pusher: Broadcast Events
+        CAT-->>OTS: [EVENT] OTSTransactionEvent (SETTLED)
+    end
