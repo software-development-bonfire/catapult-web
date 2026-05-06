@@ -506,6 +506,16 @@ import Util from '../../../mixins/Util.vue';
                     data: data,
                 }).then(function(response) {
 
+                    if (response.data.success === false) {
+                        self.dialog.visible = true;
+                        self.dialog.status = 'error';
+                        self.dialog.message = response.data.message || self.$t('message.something_went_wrong');
+                        self.dialog.ok.function = () => {
+                            self.dialog.visible = false;
+                        };
+                        return false;
+                    }
+
                     if (self.form.mode === 'create') {
                         self.devices.values.data.push(response.data.data);
                         self.dialog.message = self.$t('success.success_successfully_created', { value: self.$t('label.device') });
@@ -527,13 +537,28 @@ import Util from '../../../mixins/Util.vue';
                 })
                 .catch(error => {
                     if (error.response != undefined) {
-                        self.errors.device_type = error.response.data.errors.device_type ? error.response.data.errors.device_type[0] : '';
-                        self.errors.device_name = error.response.data.errors.name ? error.response.data.errors.name[0] : '';
-                        self.errors.ip_address = error.response.data.errors.ip_address ? error.response.data.errors.ip_address[0] : '';
-                        self.errors.api_endpoint = error.response.data.errors.api_endpoint ? error.response.data.errors.api_endpoint[0] : '';
-                        self.errors.token = error.response.data.errors.token ? error.response.data.errors.token[0] : '';
-                        self.errors.kitchen_station_bid = error.response.data.errors.kitchen_station_bid ? error.response.data.errors.kitchen_station_bid[0] : '';
-                        self.errors.background_process_priority = error.response.data.errors.background_process_priority ? error.response.data.errors.background_process_priority[0] : '';
+                        let responseData = error.response.data;
+                        let errors = responseData.errors;
+
+                        // Handle non-field-specific error response (e.g. { success: false, errors: [], message: "..." })
+                        if (!errors || Array.isArray(errors) || Object.keys(errors).length === 0) {
+                            self.dialog.visible = true;
+                            self.dialog.status = 'error';
+                            self.dialog.message = responseData.message || self.$t('message.something_went_wrong');
+                            self.dialog.ok.function = () => {
+                                self.dialog.visible = false;
+                            };
+                            return;
+                        }
+
+                        // Handle field-specific validation errors
+                        self.errors.device_type = errors.device_type ? errors.device_type[0] : '';
+                        self.errors.device_name = errors.name ? errors.name[0] : '';
+                        self.errors.ip_address = errors.ip_address ? errors.ip_address[0] : '';
+                        self.errors.api_endpoint = errors.api_endpoint ? errors.api_endpoint[0] : '';
+                        self.errors.token = errors.token ? errors.token[0] : '';
+                        self.errors.kitchen_station_bid = errors.kitchen_station_bid ? errors.kitchen_station_bid[0] : '';
+                        self.errors.background_process_priority = errors.background_process_priority ? errors.background_process_priority[0] : '';
                         self.$forceUpdate();
                     }
                 });

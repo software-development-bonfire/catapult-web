@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Entities\DeviceSettings;
 use App\Events\DeviceCommandEvent;
+use App\Events\KDS\KDSCommandEvent;
 use App\Http\Requests\DeviceSettingsNewRequest;
 use App\Http\Requests\DeviceSettingsRequest;
 use App\Repositories\Contracts\DeviceSettingsRepository;
@@ -68,7 +69,7 @@ class DeviceSettingsController extends Controller
             $data = app()->make(DeviceSettingsService::class)->update($request->all());
             if ($data) {
                 $device = (object) stringToJson($request->all());
-                broadcast(new DeviceCommandEvent($device->device_uid, 'restart', $data));
+                broadcast(new KDSCommandEvent($device->device_uid, 'restart', $data));
             }
         } catch (\Throwable $th) {
             return $this->errorResponse(
