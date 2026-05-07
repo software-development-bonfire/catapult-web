@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use App\Enums\CDIS\TerminalTransactionType;
 use App\Enums\KDS\OrderType;
+use App\Enums\OTS\SourceTransactionType;
 use App\Enums\UsageType;
 use App\Helpers\IP;
 use Illuminate\Support\Carbon;
@@ -94,7 +95,7 @@ trait KitchenPrinterTrait
         /* Print top logo */
         $printer->setJustification(Printer::JUSTIFY_CENTER);
         //$printer->graphics($logo);
-        if ($transaction['transaction_type'] != TerminalTransactionType::SALES) {
+        if ($transaction['transaction_type'] != TerminalTransactionType::SALES && $transaction['transaction_type'] != SourceTransactionType::FINEDINE) {
             $this->title($printer, 'PLEASE DO NOT PREPARE');
         }
 

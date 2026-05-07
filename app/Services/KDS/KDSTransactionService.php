@@ -113,7 +113,7 @@ class KDSTransactionService
 
                 // Persist to KitchenDisplay/KitchenDisplayDetail tables (products without addons)
                 if ($storedProduct->addons->isEmpty()) {
-                    $this->validateKitchenDisplay($transactionDetail, $storedProduct, $productDetail);
+                    $this->validateKitchenDisplay($terminalTransaction, $transactionDetail, $storedProduct, $productDetail);
                 }
 
                 // Process addons from loaded relationship
@@ -148,7 +148,7 @@ class KDSTransactionService
                     $flattenProducts[] = $addonDetail;
 
                     // Persist to KitchenDisplay/KitchenDisplayDetail tables for addon
-                    $this->validateKitchenDisplay($transactionDetail, $storedAddon, $addonDetail);
+                    $this->validateKitchenDisplay($terminalTransaction, $transactionDetail, $storedAddon, $addonDetail);
                 }
 
                 $flattenIndex += 1;

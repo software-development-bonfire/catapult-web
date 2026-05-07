@@ -62,8 +62,6 @@ class TerminalTransactionController extends POSBaseController
             $transactions['flatten_products'] = $kdsData['flatten_products'] ?? [];
         }
 
-        Log::alert('transactions: ' . json_encode($transactions));
-
         // Step 3: Handle fine-dine (non-fast-food) flow
         if ($this->isFineDineTransaction($transactions)) {
             return $this->handleFineDineTransaction($transactions);
@@ -154,8 +152,11 @@ class TerminalTransactionController extends POSBaseController
     private function handleKitchenPrinting($transactions)
     {
         $printToKitchen = isset($transactions['transaction_type'])
-            && ($transactions['transaction_type'] == TerminalTransactionType::SALES || $transactions['transaction_type'] == TerminalTransactionType::REFUND);
-
+            && (
+                ($transactions['transaction_type'] == TerminalTransactionType::SALES ||
+                    $transactions['transaction_type'] == TerminalTransactionType::REFUND) ||
+                $transactions['transaction_type'] == SourceTransactionType::FINEDINE // For fine-dine, we want to send to KDS even if it's not marked as SALES/REFUND for preparation purposes
+            );
         if (!$printToKitchen || empty($transactions['flatten_products'])) {
             return;
         }
@@ -186,12 +187,12 @@ class TerminalTransactionController extends POSBaseController
     private function handleStickerPrinting($transactions)
     {
         $printToSticker = isset($transactions['transaction_type'])
-            && ($transactions['transaction_type'] == TerminalTransactionType::SALES);
+            && ($transactions['transaction_type'] == TerminalTransactionType::SALES || $transactions['transaction_type'] == SourceTransactionType::FINEDINE);
 
         if (!$printToSticker || !isset($transactions['official_receipt']['products'])) {
             return;
         }
-
+        
         $transactionStickersProducts = [];
         foreach ($transactions['official_receipt']['products'] as $product) {
             $productPackaging = app()->make(KitchenPrinterRepository::class)->getProductIsPrintSticker($product['product_bid']);

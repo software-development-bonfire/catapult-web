@@ -2,14 +2,11 @@
 
 namespace App\Services\KitchenDisplay;
 
-use App\Entities\CDISTerminal;
-use App\Entities\CDISTerminalTransaction;
 use App\Entities\DeviceSettings;
 use App\Entities\KitchenDisplay;
 use App\Entities\KitchenDisplayDetail;
 use App\Entities\KitchenDisplayMovementHistory;
 use App\Enums\KDS\MenuStatus;
-use App\Repositories\Contracts\KitchenItemSetupRepository;
 use App\Traits\DatabaseTransaction;
 use Illuminate\Support\Facades\Log;
 
@@ -135,7 +132,7 @@ abstract class KitchenDisplayService
             ->where('status', MenuStatus::ON_PROCESS);
 
         if ($terminalBid) {
-            $query->whereHas('kitchenDisplay', function ($q) use ($terminalBid) {
+            $query->whereHas('head', function ($q) use ($terminalBid) {
                 $q->where('terminal_bid', $terminalBid);
             });
         }
