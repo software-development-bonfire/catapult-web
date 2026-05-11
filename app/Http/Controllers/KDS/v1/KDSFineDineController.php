@@ -10,6 +10,7 @@ use App\Transformers\KDS\KitchenDisplay\AddonListTransformer;
 use App\Transformers\KDS\KitchenDisplay\MenuListTransformer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Spatie\Fractalistic\ArraySerializer;
 
 class KDSFineDineController extends Controller
@@ -52,49 +53,6 @@ class KDSFineDineController extends Controller
     }
 
     /**
-     * Add a new batch of items to an existing order.
-     */
-    public function addBatchToOrder(Request $request): JsonResponse
-    {
-        $data = $request->all();
-        $orderId = $data['order_id'] ?? null;
-        $products = $data['products'] ?? [];
-        $batchNumber = $data['batch_number'] ?? 2;
-
-        if (!$orderId || empty($products)) {
-            return $this->errorResponse([], 'order_id and products are required');
-        }
-
-        $result = $this->service->addBatchToOrder($orderId, $products, $batchNumber);
-
-        if (!$result) {
-            return $this->errorResponse([], 'Failed to add batch to order');
-        }
-
-        return $this->successfulResponse(['added' => true]);
-    }
-
-    /**
-     * Mark order as complete (all batches received).
-     */
-    public function completeOrderReceived(Request $request): JsonResponse
-    {
-        $orderId = $request->get('order_id');
-
-        if (!$orderId) {
-            return $this->errorResponse([], 'order_id is required');
-        }
-
-        $result = $this->service->completeOrderReceived($orderId);
-
-        if (!$result) {
-            return $this->errorResponse([], 'Failed to mark order as complete');
-        }
-
-        return $this->successfulResponse(['completed' => true]);
-    }
-
-    /**
      * Get menu list.
      */
     public function getMenuList(Request $request): JsonResponse
@@ -113,149 +71,6 @@ class KDSFineDineController extends Controller
         $menus = fractal($menus, MenuListTransformer::class)->serializeWith(new ArraySerializer());
 
         return $this->successfulResponse(['menu' => $menus]);
-    }
-
-    /**
-     * Move menu to next/previous station.
-     */
-    public function moveMenu(Request $request): JsonResponse
-    {
-        try {
-            $result = $this->service->moveItem($request->all());
-
-            if (!$result) {
-                return $this->errorResponse([], 'Failed to move menu');
-            }
-        } catch (\Exception $ex) {
-            return $this->errorResponse([], $ex->getMessage());
-        }
-
-        return $this->successfulResponse($result);
-    }
-
-    /**
-     * Release individual menu item.
-     */
-    public function releaseMenu(Request $request): JsonResponse
-    {
-        try {
-            $result = $this->service->releaseItem($request->all());
-
-            if (!$result) {
-                return $this->errorResponse([], 'Failed to release menu');
-            }
-        } catch (\Exception $ex) {
-            return $this->errorResponse([], $ex->getMessage());
-        }
-
-        return $this->successfulResponse($result);
-    }
-
-    /**
-     * Done individual menu item.
-     */
-    public function doneMenu(Request $request): JsonResponse
-    {
-        try {
-            $result = $this->service->doneItem($request->all());
-
-            if (!$result) {
-                return $this->errorResponse([], 'Failed to mark menu as done');
-            }
-        } catch (\Exception $ex) {
-            return $this->errorResponse([], $ex->getMessage());
-        }
-
-        return $this->successfulResponse($result);
-    }
-
-    /**
-     * Remove menu item.
-     */
-    public function removeMenu(Request $request): JsonResponse
-    {
-        try {
-            $result = $this->service->removeItem($request->all());
-
-            if (!$result) {
-                return $this->errorResponse([]);
-            }
-        } catch (\Exception $ex) {
-            return $this->errorResponse([]);
-        }
-
-        return $this->successfulResponse();
-    }
-
-    /**
-     * Move entire order to next/previous station.
-     */
-    public function moveOrder(Request $request): JsonResponse
-    {
-        $result = $this->service->moveItem($request->all());
-
-        return $this->successfulResponse($result);
-    }
-
-    /**
-     * Partial release - release selected items from order.
-     */
-    public function partialReleaseOrder(Request $request): JsonResponse
-    {
-        $items = $request->get('items', []);
-        $results = [];
-
-        foreach ($items as $item) {
-            $results[] = $this->service->releaseItem($item);
-        }
-
-        return $this->successfulResponse(['released' => $results]);
-    }
-
-    /**
-     * Done entire order.
-     */
-    public function doneOrder(Request $request): JsonResponse
-    {
-        $result = $this->service->doneOrder($request->all());
-
-        return $this->successfulResponse($result);
-    }
-
-    /**
-     * Remove entire order.
-     */
-    public function removeOrder(Request $request): JsonResponse
-    {
-        try {
-            $result = $this->service->removeOrder($request->all());
-
-            if (!$result) {
-                return $this->errorResponse([]);
-            }
-        } catch (\Exception $ex) {
-            return $this->errorResponse([]);
-        }
-
-        return $this->successfulResponse();
-    }
-
-    /**
-     * Move individual item (row-level).
-     */
-    public function moveItem(Request $request): JsonResponse
-    {
-        try {
-            $result = $this->service->moveItem($request->all());
-
-            if (!$result) {
-                return $this->errorResponse([]);
-            }
-        } catch (\Exception $ex) {
-            return $this->errorResponse([]);
-        }
-
-        return $this->successfulResponse($result);
     }
 
     /**
@@ -283,48 +98,37 @@ class KDSFineDineController extends Controller
         }
 
         try {
-            $result = null;
-
             switch ($action) {
                 case 'move_order':
                 case 'move_menu':
                 case 'move_item':
                     $result = $this->service->moveItem($payload);
                     break;
-
                 case 'done_order':
                     $result = $this->service->doneOrder($payload);
                     break;
-
+                case 'done_menu':
+                    $result = $this->service->doneItem($payload);
+                    break;
                 case 'release_order':
                 case 'release_menu':
                     $result = $this->service->releaseItem($payload);
                     break;
-
                 case 'remove_order':
                     $result = $this->service->removeOrder($payload);
                     break;
-
-                case 'done_menu':
-                    $result = $this->service->doneItem($payload);
-                    break;
-
                 case 'remove_menu':
                     $result = $this->service->removeItem($payload);
                     break;
-
                 case 'partial_release':
                     $result = $this->handlePartialReleaseAction($payload);
                     break;
-
                 case 'add_batch':
                     $result = $this->handleAddBatchAction($payload);
                     break;
-
                 case 'complete_order':
                     $result = $this->handleCompleteOrderAction($payload);
                     break;
-
                 default:
                     $result = null;
                     break;

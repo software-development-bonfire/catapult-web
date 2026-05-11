@@ -2,8 +2,6 @@
 
 namespace App\Services\KitchenDisplay;
 
-use App\Entities\CDISTerminal;
-use App\Entities\CDISTerminalTransaction;
 use App\Entities\KitchenDisplay;
 use App\Entities\KitchenDisplayDetail;
 use App\Enums\KDS\MenuStatus;
@@ -11,7 +9,10 @@ use App\Events\KDS\FineDine\KDSFineDineItemMoveEvent;
 use App\Events\KDS\FineDine\KDSFineDineItemReleaseEvent;
 use App\Events\KDS\FineDine\KDSFineDineOrderDoneEvent;
 use App\Events\KDS\KDSFineDineTransactionEvent;
+use App\Enums\KDS\KDSSystemMode;
 use App\Repositories\Contracts\KitchenItemSetupRepository;
+use Illuminate\Support\Facades\Log;
+use phpDocumentor\Reflection\Types\True_;
 
 /**
  * Fine-Dining Kitchen Display Service
@@ -22,7 +23,7 @@ use App\Repositories\Contracts\KitchenItemSetupRepository;
  */
 class KitchenDisplayFineDineService extends KitchenDisplayService
 {
-    protected $systemMode = 'FINEDINE';
+    protected $systemMode = KDSSystemMode::DB_FINE_DINE;
 
     /**
      * Store Fine-Dine order (first batch)
@@ -53,7 +54,7 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
                 'transaction_detail_bid' => $data->transaction_detail_bid,
                 'terminal_bid' => $data->terminal_bid,
                 'terminal_number' => $data->terminal_number,
-                'system_mode' => 'FINEDINE',
+                'system_mode' => KDSSystemMode::DB_FINE_DINE,
                 'order_type_id' => $data->order_type_id ?? null,
                 'order_type_name' => $data->order_type_name ?? 'FINEDINE',
                 'is_partial' => $data->is_partial ?? true,
@@ -215,79 +216,99 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
 
     /**
      * Move item to next station
-     * Fine-Dine: Only move items that have been received
-     * Items can move independently based on operator action
+     * Fine-Dine: Items can move independently based on operator action
+     * 
+     * Accepts payloads:
+     * - Direct: { "kitchen_display_detail_bid": "..." }
+     * - Order: { "transaction": { "terminal_number": ..., "transaction_id": ... }, "next": true }
+     * - Item:  { "item": { "terminal_number": ..., "transaction_id": ..., "product_bid": ... } }
+     * - Row:   { "row_item": { "item": { ... } }, "next": true, "quantity": x, "remaining_quantity": y }
      * 
      * @param array $itemData
      * @return bool
      */
     public function moveItem(array $itemData): bool
     {
-        return $this->transaction(function () use ($itemData) {
+        //return $this->transaction(function () use ($itemData) {
             $data = (object) $itemData;
             $next = $data->next ?? true;
+            $quantity = $data->quantity ?? null;
+            $remainingQuantity = $data->remaining_quantity ?? null;
 
-            $this->log('moveItem', [
-                'detail_bid' => $data->kitchen_display_detail_bid,
-                'quantity' => $data->quantity,
-                'direction' => $next ? 'FORWARD' : 'BACKWARD',
-            ]);
+            $details = $this->resolveDetails($itemData);
+            
+            Log::info('Resolved Details', ['details' => $details]);
 
-            $detail = KitchenDisplayDetail::find($data->kitchen_display_detail_bid);
-
-            if (!$detail || $detail->status !== MenuStatus::ON_PROCESS) {
+            if (empty($details)) {
+                $this->log('moveItem:NO_DETAILS_FOUND', (array) $data);
                 return false;
             }
 
-            // Get next station
-            $nextStation = $next
-                ? $this->getNextStationInSequence($detail)
-                : $this->getPreviousStationInSequence($detail);
+            foreach ($details as $detail) {
+                Log::info('Processing Detail for Move', ['detail_bid' => $detail->bid, 'current_station_index' => $detail->current_station_index, 'status' => $detail->status]);
+                if ($detail->status !== MenuStatus::ON_PROCESS) {
+                    continue;
+                }
 
-            if ($nextStation === null) {
-                return false;
-            }
+                $moveQuantity = $quantity ?? $detail->remaining_quantity;
 
-            // Update detail
-            $detail->update([
-                'current_station_index' => $nextStation,
-                'current_position_in_sequence' => $detail->current_position_in_sequence + ($next ? 1 : -1),
-                'status' => $nextStation === 0 ? MenuStatus::RELEASING : MenuStatus::ON_PROCESS,
-            ]);
+                // Get next station
+                $nextStation = $next
+                    ? $this->getNextStationInSequence($detail)
+                    : $this->getPreviousStationInSequence($detail);
 
-            // Record movement
-            $this->recordMovement(
-                $detail->bid,
-                $detail->current_station_index,
-                $nextStation,
-                $data->quantity ?? $detail->remaining_quantity,
-                $next ? 'FORWARD' : 'BACKWARD'
-            );
+                if ($nextStation === null) {
+                    continue;
+                }
 
-            // Get order for broadcast
-            $order = KitchenDisplay::find($detail->head_bid);
+                Log::info('Moving Detail', ['detail_bid' => $detail->bid, 'from_station' => $detail->current_station_index, 'to_station' => $nextStation, 'move_quantity' => $moveQuantity]);
+                if ($quantity !== null && $remainingQuantity !== null && $remainingQuantity > 0) {
+                    // Partial move: keep item at station with reduced qty
+                    $detail->update([
+                        'remaining_quantity' => $remainingQuantity,
+                    ]);
+                } else {
+                    // Full move: move entire item to next station
+                    $detail->update([
+                        'current_station_index' => $nextStation,
+                        'current_position_in_sequence' => $detail->current_position_in_sequence + ($next ? 1 : -1),
+                        'status' => $nextStation === 0 ? MenuStatus::RELEASING : MenuStatus::ON_PROCESS,
+                    ]);
+                }
 
-            // Broadcast movement to the target station's device
-            $deviceUid = $this->getDeviceUidForStation($detail->kitchen_station_bid);
-            if ($deviceUid) {
-                broadcast(new KDSFineDineItemMoveEvent(
-                    $deviceUid,
-                    $detail,
-                    $order,
+                Log::info('Updated Detail for Move', ['detail_bid' => $detail->bid, 'new_station_index' => $detail->current_station_index, 'new_status' => $detail->status]);
+                // Record movement
+                $this->recordMovement(
+                    $detail->bid,
                     $detail->current_station_index,
                     $nextStation,
-                    $detail->remaining_quantity ?? 1
-                ));
+                    (int) $moveQuantity,
+                    $next ? 'FORWARD' : 'BACKWARD'
+                );
+
+                // Broadcast movement
+                $order = KitchenDisplay::find($detail->head_bid);
+                $deviceUid = $this->getDeviceUidForStation($detail->kitchen_station_bid);
+                Log::info('Broadcasting Move Event', ['device_uid' => $deviceUid, 'detail_bid' => $detail->bid, 'order_id' => $order->order_id ?? null]);
+                if ($deviceUid) {
+                    broadcast(new KDSFineDineItemMoveEvent(
+                        $deviceUid,
+                        $detail,
+                        $order,
+                        $detail->current_station_index,
+                        $nextStation,
+                        $moveQuantity ?? 1
+                    ));
+                }
             }
 
             return true;
-        });
+        //});
     }
 
     /**
      * Release item (mark as ready)
      * Fine-Dine: Can release individual items as they complete
-     * NOT all items together like Fast-Food
      * 
      * @param array $itemData
      * @return bool
@@ -295,24 +316,21 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
     public function releaseItem(array $itemData): bool
     {
         return $this->transaction(function () use ($itemData) {
-            $detail = KitchenDisplayDetail::find($itemData['kitchen_display_detail_bid']);
+            $details = $this->resolveDetails($itemData);
 
-            if (!$detail) {
+            if (empty($details)) {
                 return false;
             }
 
-            $this->log('releaseItem', ['detail_bid' => $detail->bid]);
+            foreach ($details as $detail) {
+                $this->log('releaseItem', ['detail_bid' => $detail->bid]);
+                $detail->update(['status' => MenuStatus::RELEASING]);
 
-            // Mark as releasing
-            $detail->update(['status' => MenuStatus::RELEASING]);
-
-            // Get order
-            $order = KitchenDisplay::find($detail->head_bid);
-
-            // Broadcast partial release to the item's device
-            $deviceUid = $this->getDeviceUidForStation($detail->kitchen_station_bid);
-            if ($deviceUid) {
-                broadcast(new KDSFineDineItemReleaseEvent($deviceUid, $detail, $order));
+                $order = KitchenDisplay::find($detail->head_bid);
+                $deviceUid = $this->getDeviceUidForStation($detail->kitchen_station_bid);
+                if ($deviceUid) {
+                    broadcast(new KDSFineDineItemReleaseEvent($deviceUid, $detail, $order));
+                }
             }
 
             return true;
@@ -329,20 +347,22 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
     public function doneItem(array $itemData): bool
     {
         return $this->transaction(function () use ($itemData) {
-            $detail = KitchenDisplayDetail::find($itemData['kitchen_display_detail_bid']);
+            $details = $this->resolveDetails($itemData);
 
-            if (!$detail) {
+            if (empty($details)) {
                 return false;
             }
 
-            $this->log('doneItem', ['detail_bid' => $detail->bid]);
+            foreach ($details as $detail) {
+                $this->log('doneItem', ['detail_bid' => $detail->bid]);
+                $detail->update(['status' => MenuStatus::DONE]);
+                $detail->delete();
 
-            $detail->update(['status' => MenuStatus::DONE]);
-            $detail->delete();
-
-            // Update order completed count
-            $order = KitchenDisplay::find($detail->head_bid);
-            $order->increment('completed_items');
+                $order = KitchenDisplay::find($detail->head_bid);
+                if ($order) {
+                    $order->increment('completed_items');
+                }
+            }
 
             return true;
         });
@@ -352,6 +372,8 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
      * Mark entire order as done
      * Fine-Dine: Only mark done when explicitly called
      * 
+     * Accepts: { "source": {...}, "transaction": { "terminal_number": ..., "transaction_id": ... } }
+     * 
      * @param array $orderData
      * @return bool
      */
@@ -359,30 +381,36 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
     {
         return $this->transaction(function () use ($orderData) {
             $data = (object) $orderData;
+            $txn = isset($data->transaction) ? (object) $data->transaction : $data;
 
-            $this->log('doneOrder', ['order_id' => $data->order_id ?? $data->kitchen_display_bid]);
+            $terminalNumber = $txn->terminal_number ?? null;
+            $transactionId = $txn->transaction_id ?? null;
+            $orderId = $data->order_id ?? null;
 
-            $kitchenDisplay = $data->order_id
-                ? KitchenDisplay::where('order_id', $data->order_id)->first()
-                : KitchenDisplay::find($data->kitchen_display_bid);
+            $this->log('doneOrder', ['terminal_number' => $terminalNumber, 'transaction_id' => $transactionId]);
+
+            if ($orderId) {
+                $kitchenDisplay = KitchenDisplay::where('order_id', $orderId)->first();
+            } elseif ($terminalNumber && $transactionId) {
+                $kitchenDisplay = KitchenDisplay::where('terminal_number', $terminalNumber)
+                    ->where('transaction_id', $transactionId)
+                    ->first();
+            } else {
+                return false;
+            }
 
             if (!$kitchenDisplay) {
                 return false;
             }
 
-            // Get all items before deletion
             $items = KitchenDisplayDetail::where('head_bid', $kitchenDisplay->bid)->get();
-
-            // Delete all items
             KitchenDisplayDetail::where('head_bid', $kitchenDisplay->bid)->delete();
 
-            // Mark order as done
             $kitchenDisplay->update([
                 'status' => 'DONE',
                 'completed_at' => now(),
             ]);
 
-            // Broadcast done event to each device that had items from this order
             $deviceUids = $this->getDeviceUidsForOrder($kitchenDisplay->bid);
             foreach ($deviceUids as $deviceUid) {
                 broadcast(new KDSFineDineOrderDoneEvent($deviceUid, $kitchenDisplay->toArray(), $items->toArray()));
@@ -400,16 +428,17 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
     public function removeItem(array $itemData): bool
     {
         return $this->transaction(function () use ($itemData) {
-            $detail = KitchenDisplayDetail::find($itemData['kitchen_display_detail_bid']);
+            $details = $this->resolveDetails($itemData);
 
-            if (!$detail) {
+            if (empty($details)) {
                 return false;
             }
 
-            $this->log('removeItem', ['detail_bid' => $detail->bid]);
-
-            $detail->update(['status' => MenuStatus::DELETED]);
-            $detail->delete();
+            foreach ($details as $detail) {
+                $this->log('removeItem', ['detail_bid' => $detail->bid]);
+                $detail->update(['status' => MenuStatus::DELETED]);
+                $detail->delete();
+            }
 
             return true;
         });
@@ -417,6 +446,9 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
 
     /**
      * Remove entire order
+     * 
+     * Accepts: { "transaction": { "terminal_number": ..., "transaction_id": ... } }
+     * 
      * @param array $orderData
      * @return bool
      */
@@ -424,25 +456,111 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
     {
         return $this->transaction(function () use ($orderData) {
             $data = (object) $orderData;
+            $txn = isset($data->transaction) ? (object) $data->transaction : $data;
 
-            $this->log('removeOrder', ['order_id' => $data->order_id ?? $data->kitchen_display_bid]);
+            $terminalNumber = $txn->terminal_number ?? null;
+            $transactionId = $txn->transaction_id ?? null;
+            $orderId = $data->order_id ?? null;
 
-            $kitchenDisplay = $data->order_id
-                ? KitchenDisplay::where('order_id', $data->order_id)->first()
-                : KitchenDisplay::find($data->kitchen_display_bid);
+            $this->log('removeOrder', ['terminal_number' => $terminalNumber, 'transaction_id' => $transactionId]);
+
+            if ($orderId) {
+                $kitchenDisplay = KitchenDisplay::where('order_id', $orderId)->first();
+            } elseif ($terminalNumber && $transactionId) {
+                $kitchenDisplay = KitchenDisplay::where('terminal_number', $terminalNumber)
+                    ->where('transaction_id', $transactionId)
+                    ->first();
+            } else {
+                return false;
+            }
 
             if (!$kitchenDisplay) {
                 return false;
             }
 
-            // Delete all items
             KitchenDisplayDetail::where('head_bid', $kitchenDisplay->bid)->delete();
-
-            // Delete order
             $kitchenDisplay->delete();
 
             return true;
         });
+    }
+
+    /**
+     * Resolve KitchenDisplayDetail records from various payload formats.
+     * 
+     * @param array $payload
+     * @return array|KitchenDisplayDetail[]
+     */
+    private function resolveDetails(array $payload): array
+    {
+        // Direct detail BID
+        if (!empty($payload['kitchen_display_detail_bid'])) {
+            $detail = KitchenDisplayDetail::find($payload['kitchen_display_detail_bid']);
+            return $detail ? [$detail] : [];
+        }
+
+        // From row_item payload (per-item with quantity)
+        if (!empty($payload['row_item'])) {
+            $rowItem = (object) $payload['row_item'];
+            $item = (object) ($rowItem->item ?? $payload['row_item']);
+
+            $terminalNumber = $item->terminal_number ?? null;
+            $transactionId = $item->transaction_id ?? null;
+            $productBid = $item->product_bid ?? null;
+
+            if ($terminalNumber && $transactionId && $productBid) {
+                return KitchenDisplayDetail::where('terminal_number', $terminalNumber)
+                    ->whereHas('head', function ($q) use ($transactionId) {
+                        $q->where('transaction_id', $transactionId);
+                    })
+                    ->where('product_uom_packaging_bid', $productBid)
+                    ->get()
+                    ->all();
+            }
+        }
+
+        // From item payload (per-menu)
+        if (!empty($payload['item'])) {
+            $item = (object) $payload['item'];
+            $terminalNumber = $item->terminal_number ?? null;
+            $transactionId = $item->transaction_id ?? null;
+            $productBid = $item->product_bid ?? null;
+
+            if ($terminalNumber && $transactionId && $productBid) {
+                return KitchenDisplayDetail::where('terminal_number', $terminalNumber)
+                    ->whereHas('head', function ($q) use ($transactionId) {
+                        $q->where('transaction_id', $transactionId);
+                    })
+                    ->where('product_uom_packaging_bid', $productBid)
+                    ->get()
+                    ->all();
+            }
+        }
+
+        // From transaction payload (per-order - move all items)
+        if (!empty($payload['transaction'])) {
+            $txn = (object) $payload['transaction'];
+            $terminalBid = $txn->terminal_bid ?? null;
+            $transactionId = $txn->transaction_id ?? null;
+
+            Log::info('Resolving details from transaction payload', ['terminal_bid' => $terminalBid, 'transaction_id' => $transactionId]);
+            if ($terminalBid && $transactionId) {
+                $kitchenDisplay = KitchenDisplay::where('terminal_bid', $terminalBid)
+                    ->where('transaction_id', $transactionId)
+                    ->first();
+
+                    Log::info('Found kitchen display for transaction payload', ['kitchen_display' => $kitchenDisplay]);
+                    Log::info('Found kitchen display bid', ['kitchen_display_bid' => $kitchenDisplay->bid ?? null]);
+                if ($kitchenDisplay) {
+                    return KitchenDisplayDetail::where('head_bid', $kitchenDisplay->bid)
+                        ->where('status', MenuStatus::ON_PROCESS)
+                        ->get()
+                        ->all();
+                }
+            }
+        }
+
+        return [];
     }
 
     /**

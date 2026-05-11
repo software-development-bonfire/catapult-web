@@ -78,32 +78,33 @@ class KitchenItemSetupRepositoryEloquent extends BaseEloquent implements Kitchen
         return $this->model->get();
     }
 
-    public function getInitialKitchenStation($bid)
+    public function getInitialKitchenStation($bid, $shouldBroadcastAllTogether = false)
     {
-        /*
-        $this->model = $this->model
-            ->select([
-                'cdis_kitchen_item_setup_detail.head_bid',
-                'cdis_kitchen_item_setup_detail.kitchen_station_process_bid',
-                'cdis_kitchen_item_setup_detail.product_uom_packaging_bid',
-                DB::raw('cdis_kitchen_station_process.code as station_code'),
-                DB::raw('cdis_kitchen_station_process.description as station_name'),
-                DB::raw('device_settings.device_code as device_code'),
-                DB::raw('device_settings.device_uid as device_uid'),
-                DB::raw('device_settings.name as device_name'),
-            ])
-            ->leftJoin('cdis_kitchen_item_setup_detail', 'cdis_kitchen_item_setup_detail.head_bid', '=', 'cdis_kitchen_item_setup.bid')
-            ->leftJoin('cdis_kitchen_station_process', 'cdis_kitchen_station_process.bid', '=', 'cdis_kitchen_item_setup_detail.kitchen_station_process_bid')
-            ->leftJoin('device_settings', 'device_settings.kitchen_station_bid', '=', 'cdis_kitchen_station_process.kitchen_station_bid_1')
-            ->whereNull('cdis_kitchen_item_setup.deleted_at')
-            ->where('cdis_kitchen_item_setup.device_type', DeviceType::KITCHEN_DISPLAY)
-            ->where('cdis_kitchen_item_setup.status', Status::ACTIVE)
-            ->where('device_settings.device_type', APIDeviceType::KDS)
-            ->where('cdis_kitchen_item_setup_detail.product_uom_packaging_bid', $bid)
-            ->orderBy('cdis_kitchen_item_setup.created_at', 'DESC');
+        if ($shouldBroadcastAllTogether) {
+            // If broadcasting all together, we can just get the first station for the product without considering the station index
+            $this->model = $this->model
+                ->select([
+                    'cdis_kitchen_item_setup_detail.head_bid',
+                    'cdis_kitchen_item_setup_detail.kitchen_station_process_bid',
+                    'cdis_kitchen_item_setup_detail.product_uom_packaging_bid',
+                    DB::raw('cdis_kitchen_station_process.code as station_code'),
+                    DB::raw('cdis_kitchen_station_process.description as station_name'),
+                   // DB::raw('device_settings.device_code as device_code'),
+                   // DB::raw('device_settings.device_uid as device_uid'),
+                   // DB::raw('device_settings.name as device_name'),
+                ])
+                ->leftJoin('cdis_kitchen_item_setup_detail', 'cdis_kitchen_item_setup_detail.head_bid', '=', 'cdis_kitchen_item_setup.bid')
+                ->leftJoin('cdis_kitchen_station_process', 'cdis_kitchen_station_process.bid', '=', 'cdis_kitchen_item_setup_detail.kitchen_station_process_bid')
+               // ->leftJoin('device_settings', 'device_settings.kitchen_station_bid', '=', 'cdis_kitchen_station_process.kitchen_station_bid_1')
+                ->whereNull('cdis_kitchen_item_setup.deleted_at')
+                ->where('cdis_kitchen_item_setup.device_type', DeviceType::KITCHEN_DISPLAY)
+                ->where('cdis_kitchen_item_setup.status', Status::ACTIVE)
+               // ->where('device_settings.device_type', APIDeviceType::KDS)
+                ->where('cdis_kitchen_item_setup_detail.product_uom_packaging_bid', $bid)
+                ->orderBy('cdis_kitchen_item_setup.created_at', 'DESC');
 
-        return $this->model->first();
-        */
+            return $this->model->first();
+        }
         return $this->getKitchenStation($bid, 1);
     }
 
@@ -143,7 +144,7 @@ class KitchenItemSetupRepositoryEloquent extends BaseEloquent implements Kitchen
             ->where('cdis_kitchen_item_setup_detail.product_uom_packaging_bid', $bid)
             ->orderBy('cdis_kitchen_item_setup.created_at', 'DESC');
 
-          
+
         return $this->model->first();
     }
 }

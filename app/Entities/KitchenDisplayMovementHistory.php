@@ -2,7 +2,9 @@
 
 namespace App\Entities;
 
-class KitchenDisplayMovementHistory extends Base
+use Illuminate\Database\Eloquent\Model;
+
+class KitchenDisplayMovementHistory extends Model
 {
     protected $table = 'kitchen_display_movement_history';
 
