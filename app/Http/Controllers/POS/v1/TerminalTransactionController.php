@@ -14,6 +14,7 @@ use App\Events\KDS\KDSFineDineTransactionEvent;
 use App\Events\OTS\OTSSettledEvent;
 use App\Events\PrintEvent;
 use App\Http\Controllers\POS\POSBaseController;
+use App\Repositories\Contracts\DeviceSettingsRepository;
 use App\Repositories\Contracts\KitchenItemSetupRepository;
 use App\Repositories\Contracts\KitchenPrinterRepository;
 use App\Repositories\Contracts\POS\TerminalTransactionRepository;
@@ -249,8 +250,8 @@ class TerminalTransactionController extends POSBaseController
         if (count($kitchenDisplayProducts) <= 0) {
             return;
         }
-Log::alert('Flatten Products: ' . json_encode($transactions['flatten_products']));
-Log::alert('Kitchen DisplayProducts: ' . json_encode($kitchenDisplayProducts));
+        Log::alert('Flatten Products: ' . json_encode($transactions['flatten_products']));
+        Log::alert('Kitchen DisplayProducts: ' . json_encode($kitchenDisplayProducts));
         // Broadcast to assigned KDS devices
         $this->broadcastToKDSDevices($kitchenDisplayProducts, $transactions);
 
@@ -271,19 +272,37 @@ Log::alert('Kitchen DisplayProducts: ' . json_encode($kitchenDisplayProducts));
         
         // Check if we should broadcast all items together to all devices regardless of their assigned station
         $broadcastAllTogether = config('system.kds.broadcast_all_together', false);
+        $broadcastToAllUniqueDevices = config('system.kds.broadcast_unique_devices', false);
         
         if ($broadcastAllTogether) {
             // Broadcast all items together to all unique devices
             $allDeviceUids = collect($kitchenDisplayProducts)->pluck('device_uid')->unique()->filter();
-            
-            foreach ($allDeviceUids as $device) {
-                if (!empty($device)) {
-                    Log::info('Broadcasting all items to device: ' . $device . ' with mode ' . ($isFineDine ? 'FineDine' : 'FastFood') . ' and ' . count($kitchenDisplayProducts) . ' items');
-                    
-                    if ($isFineDine) {
-                        broadcast(new KDSFineDineTransactionEvent($device, $transactions['kds_transaction'], $kitchenDisplayProducts));
-                    } else {
-                        broadcast(new KDSFastFoodTransactionEvent($device, $transactions['kds_transaction'], $kitchenDisplayProducts));
+            if ($broadcastToAllUniqueDevices) {
+                Log::alert('Broadcasting all items together to all unique devices: ' . json_encode($allDeviceUids));
+                foreach ($allDeviceUids as $device) {
+                    if (!empty($device)) {
+                        Log::info('Broadcasting all items to device: ' . $device . ' with mode ' . ($isFineDine ? 'FineDine' : 'FastFood') . ' and ' . count($kitchenDisplayProducts) . ' items');
+                        
+                        if ($isFineDine) {
+                            broadcast(new KDSFineDineTransactionEvent($device, $transactions['kds_transaction'], $kitchenDisplayProducts));
+                        } else {
+                            broadcast(new KDSFastFoodTransactionEvent($device, $transactions['kds_transaction'], $kitchenDisplayProducts));
+                        }
+                    }
+                }
+            } else {
+                $allKdsDevices = app()->make(DeviceSettingsRepository::class)->getKDSDevices();
+                
+                Log::alert('KDS Devices: ' . json_encode($allKdsDevices));
+                foreach ($allKdsDevices as $device) {
+                    if (!empty($device)) {  
+                        $deviceUid = $device->device_uid;
+                        Log::info('Broadcasting all items to device: ' . $deviceUid . ' with mode ' . ($isFineDine ? 'FineDine' : 'FastFood') . ' and ' . count($kitchenDisplayProducts) . ' items');
+                         if ($isFineDine) {
+                            broadcast(new KDSFineDineTransactionEvent($deviceUid, $transactions['kds_transaction'], $kitchenDisplayProducts));
+                        } else {
+                            broadcast(new KDSFastFoodTransactionEvent($deviceUid, $transactions['kds_transaction'], $kitchenDisplayProducts));
+                        }
                     }
                 }
             }

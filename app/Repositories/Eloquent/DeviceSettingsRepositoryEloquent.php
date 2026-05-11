@@ -75,6 +75,41 @@ class DeviceSettingsRepositoryEloquent extends BaseRepository implements DeviceS
     }
 
     /**
+     * Get all KDS (Kitchen Display System) devices with their assigned kitchen station info
+     *
+     * @return Collection $result.
+     */
+    public function getKDSDevices()
+    {
+        $this->model = $this->model
+            ->select([
+                DB::raw('device_settings.bid as bid'),
+                DB::raw('device_settings.device_code as device_code'),
+                DB::raw('device_settings.device_uid as device_uid'),
+                DB::raw('device_settings.device_type as device_type'),
+                DB::raw('device_settings.name as name'),
+                DB::raw('device_settings.ip_address as ip_address'),
+                DB::raw('device_settings.socket_status as socket_status'),
+                DB::raw('device_settings.status as status'),
+                DB::raw('device_settings.kitchen_station_bid as kitchen_station_bid'),
+                DB::raw('cdis_kitchen_station.bid as assigned_kitchen_station_bid'),
+                DB::raw('cdis_kitchen_station.code as assigned_kitchen_station_code'),
+                DB::raw('cdis_kitchen_station.name as assigned_kitchen_station_name'),
+                DB::raw('CASE WHEN cdis_kitchen_station.bid IS NOT NULL THEN 1 ELSE 0 END as has_kitchen_station')
+            ])
+            ->leftJoin('cdis_kitchen_station', 'cdis_kitchen_station.bid', '=', 'device_settings.kitchen_station_bid')
+            ->where('device_settings.device_type', DeviceType::KDS)
+            ->where('device_settings.status', Status::ACTIVE)
+            ->whereNull('device_settings.deleted_at')
+            ->orderBy('device_settings.name', 'ASC');
+
+        $result = $this->model->get();
+        $this->resetModel();
+
+        return $result;
+    }
+
+    /**
      * Get kitchen stations
      *
      * @param Object $filters
