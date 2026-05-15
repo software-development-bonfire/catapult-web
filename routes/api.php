@@ -43,25 +43,11 @@ Route::group([
         });
 
         // ============================================
-        // FAST-FOOD SPECIFIC
+        // UNIFIED KDS ENDPOINTS
         // ============================================
-        Route::group(['prefix' => 'fastfood'], function () {
-            Route::post('action', [\App\Http\Controllers\KDS\v1\KDSFastFoodController::class, 'action']);
-            Route::get('order/list', [\App\Http\Controllers\KDS\v1\KDSFastFoodController::class, 'getOrderList']);
-            Route::get('order/{order_id}', [\App\Http\Controllers\KDS\v1\KDSFastFoodController::class, 'getOrder']);
-            Route::get('menu/list', [\App\Http\Controllers\KDS\v1\KDSFastFoodController::class, 'getMenuList']);
-        });
-
-        // ============================================
-        // FINE-DINE SPECIFIC
-        // ============================================
-        Route::group(['prefix' => 'finedine'], function () {
-            Route::post('action', [\App\Http\Controllers\KDS\v1\KDSFineDineController::class, 'action']);
-            Route::get('order/list', [\App\Http\Controllers\KDS\v1\KDSFineDineController::class, 'getOrderList']);
-            Route::get('order/{order_id}', [\App\Http\Controllers\KDS\v1\KDSFineDineController::class, 'getOrder']);
-            Route::get('menu/list', [\App\Http\Controllers\KDS\v1\KDSFineDineController::class, 'getMenuList']);
-            Route::get('item/{item_id}/movement-history', [\App\Http\Controllers\KDS\v1\KDSFineDineController::class, 'getMovementHistory']);
-        });
+        Route::post('action', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'action']);
+        Route::post('move-item', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'moveItem']);
+        Route::post('move-order', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'moveOrder']);
 
         // ============================================
         // LEGACY ENDPOINTS (Backward compatibility)
@@ -81,7 +67,6 @@ Route::group([
         Route::post('menu/done', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'doneMenu']);
         Route::post('order/release', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'releaseOrder']);
         Route::post('menu/release', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'releaseMenu']);
-        Route::post('action', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'action']);
 
         // ============================================
         // DEVICE SETTINGS (Shared)
