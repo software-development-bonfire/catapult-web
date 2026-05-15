@@ -56,3 +56,13 @@ Broadcast::channel('sirius-compute-engine', function ($data) {
 Broadcast::channel('ots-request-status-channel', function ($data) {
     return $data;
 });
+
+/*
+|--------------------------------------------------------------------------
+| KDS Mobile Monitor Private Channels
+|--------------------------------------------------------------------------
+*/
+
+Broadcast::channel('kds-mobile-monitor-{branchBid}', function ($user, $branchBid) {
+    return ['branch_bid' => $branchBid];
+});

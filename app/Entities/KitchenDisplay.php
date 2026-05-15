@@ -2,6 +2,7 @@
 
 namespace App\Entities;
 
+use App\Observers\KitchenDisplayObserver;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class KitchenDisplay extends Base
@@ -9,6 +10,12 @@ class KitchenDisplay extends Base
     use SoftDeletes;
 
     protected $table = 'kitchen_display';
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::observe(KitchenDisplayObserver::class);
+    }
 
     protected $fillable = [
         'transaction_detail_bid',

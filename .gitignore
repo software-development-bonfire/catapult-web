@@ -17,3 +17,5 @@ yarn-error.log
 .idea/
 /storage/*.key
 storage/framework/laravel-excel/
+
+/kds-mobile-monitor

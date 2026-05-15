@@ -16,6 +16,26 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// ============================================
+// KDS MOBILE MONITOR
+// ============================================
+Route::group([
+    'prefix' => 'kds-mobile/v1',
+    'namespace' => 'KDSMobile\v1'
+], function () {
+    Route::post('login', [\App\Http\Controllers\KDSMobile\v1\KDSMobileLoginController::class, 'login']);
+    Route::post('logout', [\App\Http\Controllers\KDSMobile\v1\KDSMobileLoginController::class, 'logout']);
+    Route::get('config', [\App\Http\Controllers\KDSMobile\v1\KDSMobileController::class, 'config']);
+
+    Route::group(['middleware' => 'access-token'], function () {
+        Route::get('transactions', [\App\Http\Controllers\KDSMobile\v1\KDSMobileController::class, 'transactions']);
+        Route::get('transactions/{transactionId}', [\App\Http\Controllers\KDSMobile\v1\KDSMobileController::class, 'transactionDetail']);
+        Route::get('summary', [\App\Http\Controllers\KDSMobile\v1\KDSMobileController::class, 'summary']);
+        Route::get('branches', [\App\Http\Controllers\KDSMobile\v1\KDSMobileController::class, 'branches']);
+        Route::post('broadcasting/auth', [\App\Http\Controllers\KDSMobile\v1\KDSMobilePusherAuthController::class, 'authChannel']);
+    });
+});
+
 Route::group([
     'prefix' => 'kds/v1',
     'namespace' => 'KDS\v1'
