@@ -19,12 +19,27 @@ class KDSMobileUpdateEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public string $branchBid;
-    public string $action;
-    public ?string $transactionId;
-    public ?string $orderNumber;
+    /**
+     * @var string
+     */
+    public $branchBid;
 
-    public function __construct(string $branchBid, string $action, ?string $transactionId = null, ?string $orderNumber = null)
+    /**
+     * @var string
+     */
+    public $action;
+
+    /**
+     * @var string|null
+     */
+    public $transactionId;
+
+    /**
+     * @var string|null
+     */
+    public $orderNumber;
+
+    public function __construct($branchBid, $action, $transactionId = null, $orderNumber = null)
     {
         $this->branchBid = $branchBid;
         $this->action = $action;
@@ -42,7 +57,7 @@ class KDSMobileUpdateEvent implements ShouldBroadcast
         return 'kds-mobile-update';
     }
 
-    public function broadcastWith(): array
+    public function broadcastWith()
     {
         return [
             'branch_bid' => $this->branchBid,

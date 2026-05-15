@@ -13,7 +13,7 @@ class KDSMobileService
     /**
      * Get transactions for the mobile monitor with filters.
      */
-    public function getTransactions(array $filters): array
+    public function getTransactions(array $filters)
     {
         $query = KitchenDisplay::with('details')
             ->whereNull('deleted_at');
@@ -65,7 +65,7 @@ class KDSMobileService
     /**
      * Get a single transaction with full detail.
      */
-    public function getTransactionDetail(string $transactionId): ?array
+    public function getTransactionDetail($transactionId)
     {
         $kitchenDisplay = KitchenDisplay::with('details')
             ->where('transaction_id', $transactionId)
@@ -81,7 +81,7 @@ class KDSMobileService
     /**
      * Get summary counts for tabs.
      */
-    public function getSummary(array $filters): array
+    public function getSummary(array $filters)
     {
         $baseQuery = KitchenDisplay::whereNull('deleted_at');
 
@@ -137,7 +137,7 @@ class KDSMobileService
     /**
      * Get available branches for the monitor.
      */
-    public function getBranches(): array
+    public function getBranches()
     {
         $branches = DB::table('cdis_branch')
             ->whereNull('deleted_at')
@@ -157,7 +157,7 @@ class KDSMobileService
     /**
      * Broadcast update notification to all mobile monitors.
      */
-    public function broadcastUpdate(string $branchBid, string $action, ?string $transactionId = null, ?string $orderNumber = null): void
+    public function broadcastUpdate($branchBid, $action, $transactionId = null, $orderNumber = null)
     {
         broadcast(new KDSMobileUpdateEvent($branchBid, $action, $transactionId, $orderNumber));
     }
@@ -165,7 +165,7 @@ class KDSMobileService
     /**
      * Format transactions for the API response.
      */
-    private function formatTransactions($transactions, array $filters): array
+    private function formatTransactions($transactions, array $filters)
     {
         $delayMinutes = $filters['delay_minutes'] ?? 10;
         $onGoingDelayMinutes = $filters['on_going_delay_minutes'] ?? 5;
@@ -178,7 +178,7 @@ class KDSMobileService
     /**
      * Format a single transaction with status classification.
      */
-    private function formatSingleTransaction($kitchenDisplay, int $delayMinutes = 10, int $onGoingDelayMinutes = 5): array
+    private function formatSingleTransaction($kitchenDisplay, $delayMinutes = 10, $onGoingDelayMinutes = 5)
     {
         $createdAt = $kitchenDisplay->created_at;
         $completedAt = $kitchenDisplay->completed_at;

@@ -9,7 +9,10 @@ use Illuminate\Http\Request;
 
 class KDSMobileController extends Controller
 {
-    private KDSMobileService $service;
+    /**
+     * @var KDSMobileService
+     */
+    private $service;
 
     public function __construct(KDSMobileService $service)
     {
@@ -20,7 +23,7 @@ class KDSMobileController extends Controller
      * Get transactions list with filters.
      * GET /api/kds-mobile/v1/transactions
      */
-    public function transactions(Request $request): JsonResponse
+    public function transactions(Request $request)
     {
         $filters = [
             'branch_bid' => $request->get('branch_bid'),
@@ -43,7 +46,7 @@ class KDSMobileController extends Controller
      * Get transaction detail.
      * GET /api/kds-mobile/v1/transactions/{transactionId}
      */
-    public function transactionDetail(Request $request, string $transactionId): JsonResponse
+    public function transactionDetail(Request $request, $transactionId)
     {
         $detail = $this->service->getTransactionDetail($transactionId);
 
@@ -64,7 +67,7 @@ class KDSMobileController extends Controller
      * Get summary counts (for tab badges).
      * GET /api/kds-mobile/v1/summary
      */
-    public function summary(Request $request): JsonResponse
+    public function summary(Request $request)
     {
         $filters = [
             'branch_bid' => $request->get('branch_bid'),
@@ -86,7 +89,7 @@ class KDSMobileController extends Controller
      * Get available branches.
      * GET /api/kds-mobile/v1/branches
      */
-    public function branches(): JsonResponse
+    public function branches()
     {
         $branches = $this->service->getBranches();
 
@@ -100,7 +103,7 @@ class KDSMobileController extends Controller
      * Get pusher config for the mobile monitor.
      * GET /api/kds-mobile/v1/config
      */
-    public function config(): JsonResponse
+    public function config()
     {
         return response()->json([
             'success' => true,

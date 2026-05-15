@@ -11,7 +11,7 @@ class KitchenDisplay extends Base
 
     protected $table = 'kitchen_display';
 
-    protected static function boot()
+    public static function boot()
     {
         parent::boot();
         static::observe(KitchenDisplayObserver::class);
