@@ -38,7 +38,7 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
     {
         return $this->transaction(function () use ($transactionData) {
             $data = (object) $transactionData;
-            
+
             $this->log('storeOrder', [
                 'order_id' => $data->order_id,
                 'transaction_id' => $data->transaction_id,
@@ -230,64 +230,81 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
     public function moveItem(array $itemData): bool
     {
         //return $this->transaction(function () use ($itemData) {
-            $data = (object) $itemData;
-            $next = $data->next ?? true;
-            $quantity = $data->quantity ?? null;
-            $remainingQuantity = $data->remaining_quantity ?? null;
+        $data = (object) $itemData;
+        $next = $data->next ?? true;
+        $quantity = $data->quantity ?? null;
+        $remainingQuantity = $data->remaining_quantity ?? null;
 
-            $details = $this->resolveDetails($itemData);
-            
-            Log::info('Resolved Details', ['details' => $details]);
+        $details = $this->resolveDetails($itemData);
 
-            if (empty($details)) {
-                $this->log('moveItem:NO_DETAILS_FOUND', (array) $data);
-                return false;
+        Log::info('Resolved Details', ['details' => $details]);
+
+        if (empty($details)) {
+            $this->log('moveItem:NO_DETAILS_FOUND', (array) $data);
+            return false;
+        }
+
+        foreach ($details as $detail) {
+            Log::info('Processing Detail for Move', ['detail_bid' => $detail->bid, 'current_station_index' => $detail->current_station_index, 'status' => $detail->status]);
+            if ($detail->status !== MenuStatus::ON_PROCESS) {
+                continue;
             }
 
-            foreach ($details as $detail) {
-                Log::info('Processing Detail for Move', ['detail_bid' => $detail->bid, 'current_station_index' => $detail->current_station_index, 'status' => $detail->status]);
-                if ($detail->status !== MenuStatus::ON_PROCESS) {
-                    continue;
+            $moveQuantity = $quantity ?? $detail->remaining_quantity;
+
+            // Get next station
+            $nextStation = $next
+                ? $this->getNextStationInSequence($detail)
+                : $this->getPreviousStationInSequence($detail);
+
+            // If there is no next station, treat as release to releasing station
+            if ($nextStation === null) {
+                $nextStation = 0;
+            }
+
+            Log::info('Moving Detail', ['detail_bid' => $detail->bid, 'from_station' => $detail->current_station_index, 'to_station' => $nextStation, 'move_quantity' => $moveQuantity]);
+            if ($quantity !== null && $remainingQuantity !== null && $remainingQuantity > 0) {
+                // Partial move: keep item at station with reduced qty
+                $detail->update([
+                    'remaining_quantity' => $remainingQuantity,
+                ]);
+            } else {
+                // Full move: move entire item to next station
+                $detail->update([
+                    'current_station_index' => $nextStation,
+                    'current_position_in_sequence' => $detail->current_position_in_sequence + ($next ? 1 : -1),
+                    'status' => $nextStation === 0 ? MenuStatus::RELEASING : MenuStatus::ON_PROCESS,
+                ]);
+            }
+
+            Log::info('Updated Detail for Move', ['detail_bid' => $detail->bid, 'new_station_index' => $detail->current_station_index, 'new_status' => $detail->status]);
+            // Record movement
+            $this->recordMovement(
+                $detail->bid,
+                $detail->current_station_index,
+                $nextStation,
+                (int) $moveQuantity,
+                $next ? 'FORWARD' : 'BACKWARD'
+            );
+
+            // Broadcast movement
+            $order = KitchenDisplay::find($detail->head_bid);
+
+            if ($nextStation === 0) {
+                // Broadcast release event to ALL releasing station devices
+                $releasingDeviceUids = $this->getReleasingStationDeviceUids();
+                Log::info('Broadcasting Release Event to all releasing devices', ['device_uids' => $releasingDeviceUids, 'detail_bid' => $detail->bid, 'order_id' => $order->order_id ?? null]);
+                foreach ($releasingDeviceUids as $deviceUid) {
+
+                    broadcast(new KDSFineDineItemReleaseEvent(
+                        $deviceUid,
+                        $detail,
+                        $order,
+                        $moveQuantity ?? 1
+                    ));
+                    Log::info('Broadcasted to releasing devices', ['device_uid' => $deviceUid, 'detail' => json_encode($detail), 'moved_quantity' => $moveQuantity ?? 1]);
                 }
-
-                $moveQuantity = $quantity ?? $detail->remaining_quantity;
-
-                // Get next station
-                $nextStation = $next
-                    ? $this->getNextStationInSequence($detail)
-                    : $this->getPreviousStationInSequence($detail);
-
-                if ($nextStation === null) {
-                    continue;
-                }
-
-                Log::info('Moving Detail', ['detail_bid' => $detail->bid, 'from_station' => $detail->current_station_index, 'to_station' => $nextStation, 'move_quantity' => $moveQuantity]);
-                if ($quantity !== null && $remainingQuantity !== null && $remainingQuantity > 0) {
-                    // Partial move: keep item at station with reduced qty
-                    $detail->update([
-                        'remaining_quantity' => $remainingQuantity,
-                    ]);
-                } else {
-                    // Full move: move entire item to next station
-                    $detail->update([
-                        'current_station_index' => $nextStation,
-                        'current_position_in_sequence' => $detail->current_position_in_sequence + ($next ? 1 : -1),
-                        'status' => $nextStation === 0 ? MenuStatus::RELEASING : MenuStatus::ON_PROCESS,
-                    ]);
-                }
-
-                Log::info('Updated Detail for Move', ['detail_bid' => $detail->bid, 'new_station_index' => $detail->current_station_index, 'new_status' => $detail->status]);
-                // Record movement
-                $this->recordMovement(
-                    $detail->bid,
-                    $detail->current_station_index,
-                    $nextStation,
-                    (int) $moveQuantity,
-                    $next ? 'FORWARD' : 'BACKWARD'
-                );
-
-                // Broadcast movement
-                $order = KitchenDisplay::find($detail->head_bid);
+            } else {
                 $deviceUid = $this->getDeviceUidForStation($detail->kitchen_station_bid);
                 Log::info('Broadcasting Move Event', ['device_uid' => $deviceUid, 'detail_bid' => $detail->bid, 'order_id' => $order->order_id ?? null]);
                 if ($deviceUid) {
@@ -301,8 +318,9 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
                     ));
                 }
             }
+        }
 
-            return true;
+        return true;
         //});
     }
 
@@ -327,9 +345,11 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
                 $detail->update(['status' => MenuStatus::RELEASING]);
 
                 $order = KitchenDisplay::find($detail->head_bid);
-                $deviceUid = $this->getDeviceUidForStation($detail->kitchen_station_bid);
-                if ($deviceUid) {
+                // Broadcast to ALL releasing station devices
+                $releasingDeviceUids = $this->getReleasingStationDeviceUids();
+                foreach ($releasingDeviceUids as $deviceUid) {
                     broadcast(new KDSFineDineItemReleaseEvent($deviceUid, $detail, $order));
+                    Log::info('Broadcasted to releasing devices', ['device_uid' => $deviceUid, 'detail' => json_encode($detail), 'order_id' => $order->order_id ?? null]);
                 }
             }
 
@@ -549,8 +569,8 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
                     ->where('transaction_id', $transactionId)
                     ->first();
 
-                    Log::info('Found kitchen display for transaction payload', ['kitchen_display' => $kitchenDisplay]);
-                    Log::info('Found kitchen display bid', ['kitchen_display_bid' => $kitchenDisplay->bid ?? null]);
+                Log::info('Found kitchen display for transaction payload', ['kitchen_display' => $kitchenDisplay]);
+                Log::info('Found kitchen display bid', ['kitchen_display_bid' => $kitchenDisplay->bid ?? null]);
                 if ($kitchenDisplay) {
                     return KitchenDisplayDetail::where('head_bid', $kitchenDisplay->bid)
                         ->where('status', MenuStatus::ON_PROCESS)

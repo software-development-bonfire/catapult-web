@@ -2,11 +2,14 @@
 
 namespace App\Services\KitchenDisplay;
 
+use App\Entities\CDISKitchenStation;
 use App\Entities\DeviceSettings;
 use App\Entities\KitchenDisplay;
 use App\Entities\KitchenDisplayDetail;
 use App\Entities\KitchenDisplayMovementHistory;
+use App\Enums\API\DeviceType;
 use App\Enums\KDS\MenuStatus;
+use App\Enums\KDS\QueueingGroup;
 use App\Traits\DatabaseTransaction;
 use Illuminate\Support\Facades\Log;
 
@@ -320,7 +323,30 @@ abstract class KitchenDisplayService
         }
 
         return DeviceSettings::whereIn('kitchen_station_bid', $stationBids)
-            ->where('device_type', 'KDS')
+            ->where('device_type', DeviceType::KDS)
+            ->pluck('device_uid')
+            ->unique()
+            ->filter()
+            ->toArray();
+    }
+
+    /**
+     * Get all device UIDs for releasing stations (queueing_group_type = 3)
+     * 
+     * @return array
+     */
+    protected function getReleasingStationDeviceUids(): array
+    {
+        $releasingStationBids = CDISKitchenStation::where('queueing_group_type', QueueingGroup::RELEASING)
+            ->pluck('bid')
+            ->toArray();
+
+        if (empty($releasingStationBids)) {
+            return [];
+        }
+
+        return DeviceSettings::whereIn('kitchen_station_bid', $releasingStationBids)
+            ->where('device_type', DeviceType::KDS)
             ->pluck('device_uid')
             ->unique()
             ->filter()

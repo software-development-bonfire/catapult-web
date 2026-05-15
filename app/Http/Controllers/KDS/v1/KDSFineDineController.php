@@ -93,6 +93,7 @@ class KDSFineDineController extends Controller
         $action = $request->get('action');
         $payload = $request->get('payload', []);
 
+        Log::alert('PAYLOAD', $payload);
         if (!$action) {
             return $this->errorResponse([], 'action is required');
         }
@@ -139,7 +140,7 @@ class KDSFineDineController extends Controller
             }
 
             if ($result === false) {
-                return $this->errorResponse([], "Failed to execute action: $action");
+                //return $this->errorResponse([], "Failed to execute action: $action");
             }
 
             return $this->successfulResponse(is_bool($result) ? [] : $result);

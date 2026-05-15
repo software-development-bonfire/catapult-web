@@ -94,12 +94,12 @@ class TerminalTransactionController extends POSBaseController
     {
         if (isset($transactions['is_settled']) && $transactions['is_settled'] === true) {
             broadcast(new OTSSettledEvent(
-                $transactions['tabled_id'] ?? 'Add `table_id` on the request body',
+                $transactions['table_id'] ?? 'Add `table_id` on the request body',
                 $transactions['device_code'] ?? 'Add `device_code` on the request body',
-                $transactions['kds_transaction']
+                $transactions
             ));
 
-            Log::alert('Fine-dine transaction settled with bid: ' . ($transactions['bid'] ?? 'N/A') . ' and transaction_id: ' . ($transactions['transaction_id'] ?? 'N/A'));
+            Log::alert('Fine-dine transaction settled with bid: ' . ($transactions['bid'] ?? 'N/A') . ' and transaction_id: ' . ($transactions['transaction_id'] ?? 'N/A'). ' and table_id: ' . ($transactions['table_id'] ?? 'N/A'));
 
             // Clean up OTS transaction
             $this->cleanupOTSTransaction($transactions);
