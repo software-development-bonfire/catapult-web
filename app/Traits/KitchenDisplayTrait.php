@@ -4,9 +4,7 @@ namespace App\Traits;
 
 use App\Entities\KitchenDisplay;
 use App\Entities\KitchenDisplayDetail;
-use App\Enums\KDS\KDSSystemMode;
 use App\Enums\KDS\MenuStatus;
-use App\Enums\POS\DeviceMode;
 use App\Repositories\Contracts\KitchenItemSetupRepository;
 
 /**
@@ -14,18 +12,18 @@ use App\Repositories\Contracts\KitchenItemSetupRepository;
  *
  * Responsible for persisting KitchenDisplay (head) and KitchenDisplayDetail records
  * when a new transaction arrives from POS. Products are assigned to their configured
- * kitchen stations based on KitchenItemSetup.
+ * kitchen station based on KitchenItemSetup.
  *
- * Station sequence: Items start at station 1 and move forward (1→2→3→...→0 releasing).
- * Only station 1 gets the initial quantity; subsequent stations start with 0 until
- * items are explicitly moved by the KDS operator.
+ * Station assignment: Items are assigned to their first configured station (station_bid).
+ * Movement between stations is handled by KitchenDisplayMovementService.
  */
 trait KitchenDisplayTrait
 {
     /**
      * Persist KitchenDisplay records for a product/addon.
      *
-     * @param object $transactionDetail  CDISTerminalTransactionDetail model
+     * @param object $terminalTransaction  CDISTerminalTransaction model
+     * @param object $transactionDetail    CDISTerminalTransactionDetail model
      * @param object $transactionDetailProduct  CDISTerminalTransactionProduct model
      * @param array  $product  Flattened product detail array from KDSTransactionService
      * @return array|null
@@ -34,27 +32,16 @@ trait KitchenDisplayTrait
     {
         $product = (object) $product;
 
-        // Resolve all configured stations for this product (up to 4)
-        $stationSequence = [];
-        $stationSetups = [];
-
-        for ($index = 1; $index <= 4; $index++) {
-            $setup = app()->make(KitchenItemSetupRepository::class)
-                ->getKitchenStation($transactionDetailProduct->product_bid, $index);
-
-            if ($setup) {
-                $stationSequence[] = $index;
-                $stationSetups[$index] = $setup;
-            }
-        }
+        // Resolve the first configured station for this product
+        $setup = app()->make(KitchenItemSetupRepository::class)
+            ->getKitchenStation($transactionDetailProduct->product_bid, 1);
 
         // No station configured for this product, skip
-        if (empty($stationSequence)) {
+        if (!$setup) {
             return null;
         }
 
-        // Append releasing station (index 0) at the end of the sequence
-        $stationSequence[] = 0;
+        $kitchenStationBid = $setup['station_bid_1'] ?? null;
 
         // Get or create the KitchenDisplay head record
         $kitchenDisplay = $this->getOrCreateKitchenDisplay($terminalTransaction, $transactionDetail, $product);
@@ -63,17 +50,12 @@ trait KitchenDisplayTrait
             return null;
         }
 
-        // Create detail record only for the first station (where item starts)
-        $firstIndex = $stationSequence[0];
-        $firstSetup = $stationSetups[$firstIndex];
+        // Create detail record at the first station
+        $this->createKitchenDisplayDetail($kitchenDisplay, $transactionDetailProduct, $product, $kitchenStationBid);
 
-        $this->createKitchenDisplayDetail($kitchenDisplay, $transactionDetailProduct, $product, [
-            'kitchen_station_bid' => $firstSetup['station_bid_' . $firstIndex],
-            'kitchen_station_index' => $firstIndex,
-            'current_station_index' => $firstIndex,
-            'station_sequence' => json_encode($stationSequence),
-            'current_position_in_sequence' => 0,
-        ]);
+        // Update total_quantity on head
+        $totalQty = KitchenDisplayDetail::where('head_bid', $kitchenDisplay->bid)->sum('remaining_quantity');
+        $kitchenDisplay->update(['total_quantity' => $totalQty]);
 
         return [
             'kitchen_display_id' => $kitchenDisplay->bid,
@@ -84,25 +66,24 @@ trait KitchenDisplayTrait
     /**
      * Get or create the KitchenDisplay head record for a transaction detail.
      *
+     * @param object $terminalTransaction
      * @param object $transactionDetail
      * @param object $product
      * @return KitchenDisplay|null
      */
-    private function getOrCreateKitchenDisplay($terminalTransaction,$transactionDetail, $product)
+    private function getOrCreateKitchenDisplay($terminalTransaction, $transactionDetail, $product)
     {
         $kitchenDisplay = KitchenDisplay::where('transaction_detail_bid', $transactionDetail->bid)->first();
 
         if (!$kitchenDisplay) {
-            $isFineDine = isset($terminalTransaction['device_mode']) && ($terminalTransaction['device_mode'] !== DeviceMode::FAST_FOOD);
             $kitchenDisplay = KitchenDisplay::create([
                 'transaction_detail_bid' => $transactionDetail->bid,
-                'terminal_bid' => $terminalTransaction->terminal_bid,
+                'transaction_date' => $terminalTransaction->transaction_date ?? now()->toDateString(),
                 'transaction_id' => $product->transaction_id,
+                'terminal_bid' => $terminalTransaction->terminal_bid,
                 'terminal_number' => $product->terminal_number,
-                'order_type_id' => $product->order_type_id ?? '',
-                'order_type_name' => $product->order_type_name ?? '',
-                'system_mode' => $isFineDine ? KDSSystemMode::DB_FINE_DINE : KDSSystemMode::DB_FAST_FOOD,
-                'status' => 'PREPARING',
+                'total_quantity' => 0,
+                'completed_quantity' => 0,
             ]);
         }
 
@@ -115,17 +96,16 @@ trait KitchenDisplayTrait
      * @param KitchenDisplay $kitchenDisplay
      * @param object $transactionDetailProduct
      * @param object $product
-     * @param array $stationData
+     * @param string|null $kitchenStationBid
      * @return KitchenDisplayDetail|null
      */
-    private function createKitchenDisplayDetail($kitchenDisplay, $transactionDetailProduct, $product, array $stationData)
+    private function createKitchenDisplayDetail($kitchenDisplay, $transactionDetailProduct, $product, $kitchenStationBid)
     {
         // Check for duplicate: same head + product + station
         $exists = KitchenDisplayDetail::where('head_bid', $kitchenDisplay->bid)
             ->where('transaction_product_bid', $transactionDetailProduct->bid)
             ->where('product_uom_packaging_bid', $transactionDetailProduct->product_bid)
-            ->where('kitchen_station_bid', $stationData['kitchen_station_bid'])
-            ->where('kitchen_station_index', $stationData['kitchen_station_index'])
+            ->where('kitchen_station_bid', $kitchenStationBid)
             ->first();
 
         if ($exists) {
@@ -137,22 +117,17 @@ trait KitchenDisplayTrait
             'transaction_product_bid' => $transactionDetailProduct->bid,
             'product_uom_packaging_bid' => $transactionDetailProduct->product_bid,
             'transaction_id' => $product->transaction_id,
-            'terminal_number' => $product->terminal_number,
-            'name' => $transactionDetailProduct->name,
-            'original_quantity' => $transactionDetailProduct->quantity,
             'remaining_quantity' => $transactionDetailProduct->quantity,
-            'kitchen_station_bid' => $stationData['kitchen_station_bid'],
-            'kitchen_station_index' => $stationData['kitchen_station_index'],
-            'current_station_index' => $stationData['current_station_index'],
-            'station_sequence' => $stationData['station_sequence'],
-            'current_position_in_sequence' => $stationData['current_position_in_sequence'],
-            'usage_type' => $transactionDetailProduct->usage_type ?? '',
-            'order_type_id' => $product->order_type_id ?? '',
-            'order_type_name' => $product->order_type_name ?? '',
-            'special_request' => $product->special_request ?? '',
-            'is_addon' => $product->is_addon ?? false,
-            'addons' => $product->addons ?? '',
+            'kitchen_station_bid' => $kitchenStationBid,
             'status' => MenuStatus::ON_PROCESS,
+            'order_type_id' => $product->order_type_id ?? null,
+            'order_type_name' => $product->order_type_name ?? null,
+            'usage_type' => $transactionDetailProduct->usage_type ?? '',
+            'special_request' => $product->special_request ?? '',
+            'addons' => $product->addons ?? '',
+            'is_addon' => $product->is_addon ?? false,
+            'name' => $transactionDetailProduct->name,
+            'terminal_number' => $product->terminal_number,
         ]);
     }
 }

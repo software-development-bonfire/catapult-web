@@ -30,19 +30,6 @@ Route::group([
     Route::group(['middleware' => 'access-token'], function () {
 
         // ============================================
-        // COMMON ENDPOINTS (Both order types)
-        // ============================================
-        Route::group(['prefix' => 'common'], function () {
-            Route::get('station/list', [\App\Http\Controllers\KDS\v1\KDSCommonController::class, 'getStationList']);
-            Route::get('station/device', [\App\Http\Controllers\KDS\v1\KDSCommonController::class, 'getDeviceStation']);
-            Route::post('station/device', [\App\Http\Controllers\KDS\v1\KDSCommonController::class, 'getDeviceStation']);
-            Route::get('station/process/list', [\App\Http\Controllers\KDS\v1\KDSCommonController::class, 'getStationProcessList']);
-            Route::get('order/menu/list', [\App\Http\Controllers\KDS\v1\KDSCommonController::class, 'getMenuList']);
-            Route::get('order/{order_id}/details', [\App\Http\Controllers\KDS\v1\KDSCommonController::class, 'getOrderDetails']);
-            Route::get('orders/by-station/{station_index}', [\App\Http\Controllers\KDS\v1\KDSCommonController::class, 'getOrdersByStation']);
-        });
-
-        // ============================================
         // UNIFIED KDS ENDPOINTS
         // ============================================
         Route::post('action', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'action']);

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\KitchenDisplay;
+namespace App\Services\KDS;
 
 use App\Entities\CDISKitchenStation;
 use App\Entities\DeviceSettings;
@@ -17,11 +17,12 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Unified Kitchen Display Movement Service
- * 
+ *
  * Handles all KDS movement operations for both move_order and move_item actions.
  * Uses standardized payload structure from Flutter KDS clients.
- * 
- * Replaces: KitchenDisplayFineDineService, KitchenDisplayFastFoodService
+ *
+ * Station identification uses kitchen_station_bid (not index-based).
+ * Station sequence is resolved dynamically from KitchenItemSetupRepository.
  */
 class KitchenDisplayMovementService
 {
@@ -30,9 +31,6 @@ class KitchenDisplayMovementService
     /**
      * Process a move_order action.
      * All items in the transaction move to the next station.
-     *
-     * @param array $payload
-     * @return array
      */
     public function moveOrder(array $payload): array
     {
@@ -48,7 +46,6 @@ class KitchenDisplayMovementService
         }
 
         $transactionId = $transaction->transaction_id ?? null;
-        $terminalNumber = $transaction->terminal_number ?? null;
 
         if (!$transactionId) {
             return $this->errorResult('transaction_id is required');
@@ -56,7 +53,7 @@ class KitchenDisplayMovementService
 
         $results = [];
         $released = false;
-        $nextStationIndex = null;
+        $nextStationBid = null;
 
         foreach ($items as $itemData) {
             $item = (object) $itemData;
@@ -66,8 +63,8 @@ class KitchenDisplayMovementService
             if ($result['released']) {
                 $released = true;
             }
-            if ($result['next_station'] !== null) {
-                $nextStationIndex = $result['next_station'];
+            if ($result['next_station_bid'] !== null) {
+                $nextStationBid = $result['next_station_bid'];
             }
         }
 
@@ -77,7 +74,7 @@ class KitchenDisplayMovementService
             'data' => [
                 'action' => 'move_order',
                 'released' => $released,
-                'next_station' => $nextStationIndex,
+                'next_station_bid' => $nextStationBid,
                 'transaction_id' => $transactionId,
             ],
         ];
@@ -86,9 +83,6 @@ class KitchenDisplayMovementService
     /**
      * Process a move_item action.
      * A single item moves to the next station with optional partial quantity.
-     *
-     * @param array $payload
-     * @return array
      */
     public function moveItem(array $payload): array
     {
@@ -131,7 +125,7 @@ class KitchenDisplayMovementService
             'data' => [
                 'action' => 'move_item',
                 'released' => $result['released'],
-                'next_station' => $result['next_station'],
+                'next_station_bid' => $result['next_station_bid'],
                 'transaction_id' => $transactionId,
             ],
         ];
@@ -139,13 +133,6 @@ class KitchenDisplayMovementService
 
     /**
      * Process movement for a single item.
-     *
-     * @param object $item
-     * @param object $transaction
-     * @param object $orderType
-     * @param bool $next
-     * @param bool $forceRelease
-     * @return array
      */
     private function processItemMovement(object $item, object $transaction, object $orderType, bool $next, bool $forceRelease): array
     {
@@ -153,41 +140,36 @@ class KitchenDisplayMovementService
         $transactionProductBid = $item->transaction_product_bid ?? null;
         $productUomPackagingBid = $item->product_uom_packaging_bid ?? $item->product_bid ?? null;
         $terminalNumber = $item->terminal_number ?? $transaction->terminal_number ?? null;
-        $currentStationIndex = (int) ($item->kitchen_station_index ?? 1);
-        $kitchenStationProcessBid = $item->kitchen_station_process_bid ?? null;
+        $currentStationBid = $item->kitchen_station_bid ?? null;
         $movedQuantity = (float) ($item->moved_quantity ?? $item->quantity ?? 0);
         $remainingQuantity = isset($item->remaining_quantity) ? (float) $item->remaining_quantity : null;
 
         // Find the KitchenDisplayDetail record
-        $detail = $this->resolveDetail($transactionId, $transactionProductBid, $productUomPackagingBid, $terminalNumber, $currentStationIndex);
+        $detail = $this->resolveDetail($transactionId, $transactionProductBid, $productUomPackagingBid, $terminalNumber, $currentStationBid);
 
         if (!$detail) {
             Log::warning('KDS Movement: Detail not found', [
                 'transaction_id' => $transactionId,
                 'transaction_product_bid' => $transactionProductBid,
-                'station_index' => $currentStationIndex,
+                'kitchen_station_bid' => $currentStationBid,
             ]);
-            return ['released' => false, 'next_station' => null];
+            return ['released' => false, 'next_station_bid' => null];
         }
 
         // Determine next station
-        $nextStationIndex = $this->determineNextStation($detail, $kitchenStationProcessBid, $currentStationIndex, $next);
+        $nextStationBid = $this->determineNextStation($detail, $next);
 
-        // If no next station or force release, send to releasing station (0)
+        // If no next station or force release, send to releasing (null station_bid)
         $released = false;
-        if ($nextStationIndex === null || $forceRelease) {
-            $nextStationIndex = 0;
-            $released = true;
-        }
-
-        if ($nextStationIndex === 0) {
+        if ($nextStationBid === null || $forceRelease) {
+            $nextStationBid = null;
             $released = true;
         }
 
         Log::info('KDS Movement: Processing', [
             'detail_bid' => $detail->bid,
-            'from_station' => $currentStationIndex,
-            'to_station' => $nextStationIndex,
+            'from_station_bid' => $currentStationBid,
+            'to_station_bid' => $nextStationBid,
             'moved_quantity' => $movedQuantity,
             'remaining_quantity' => $remainingQuantity,
             'released' => $released,
@@ -197,52 +179,52 @@ class KitchenDisplayMovementService
         $isPartialMove = $remainingQuantity !== null && $remainingQuantity > 0 && $movedQuantity < $detail->remaining_quantity;
 
         return $this->transaction(function () use (
-            $detail, $currentStationIndex, $nextStationIndex, $movedQuantity,
+            $detail, $currentStationBid, $nextStationBid, $movedQuantity,
             $remainingQuantity, $isPartialMove, $released, $item, $transaction, $orderType, $next
         ) {
             if ($isPartialMove) {
-                // Partial move: reduce current station qty, add to next station
-                $this->handlePartialMove($detail, $currentStationIndex, $nextStationIndex, $movedQuantity, $remainingQuantity, $released);
+                $this->handlePartialMove($detail, $nextStationBid, $movedQuantity, $remainingQuantity, $released);
             } else {
-                // Full move: entire item moves to next station
-                $this->handleFullMove($detail, $currentStationIndex, $nextStationIndex, $movedQuantity, $released);
+                $this->handleFullMove($detail, $nextStationBid, $movedQuantity, $released);
             }
 
             // Record movement history
             $this->recordMovement(
                 $detail->bid,
-                $currentStationIndex,
-                $nextStationIndex,
-                (int) $movedQuantity,
+                $detail->kitchen_station_bid,
+                $nextStationBid,
+                $movedQuantity,
                 $released ? 'TO_RELEASING' : ($next ? 'FORWARD' : 'BACKWARD')
             );
 
-            // Broadcast events
-            $this->broadcastMovement($detail, $currentStationIndex, $nextStationIndex, $movedQuantity, $released, $item, $transaction, $orderType);
+            // Update completed_quantity on head
+            $this->updateHeadCompletedQuantity($detail->head_bid);
 
-            return ['released' => $released, 'next_station' => $nextStationIndex];
+            // Broadcast events
+            $this->broadcastMovement($detail, $currentStationBid, $nextStationBid, $movedQuantity, $released, $item, $transaction, $orderType);
+
+            return ['released' => $released, 'next_station_bid' => $nextStationBid];
         });
     }
 
     /**
      * Handle partial quantity move.
-     * Reduces current station qty, merges or creates at next station.
+     * Reduces current detail qty, merges or creates at next station.
      */
     private function handlePartialMove(
         KitchenDisplayDetail $detail,
-        int $fromStation,
-        int $toStation,
+        ?string $toStationBid,
         float $movedQuantity,
         float $remainingQuantity,
         bool $released
     ): void {
-        // Update current station remaining quantity
+        // Update current record remaining quantity
         $detail->update([
             'remaining_quantity' => $remainingQuantity,
         ]);
 
         // Merge or create at destination station
-        $this->mergeOrCreateAtStation($detail, $toStation, $movedQuantity, $released);
+        $this->mergeOrCreateAtStation($detail, $toStationBid, $movedQuantity, $released);
     }
 
     /**
@@ -251,22 +233,21 @@ class KitchenDisplayMovementService
      */
     private function handleFullMove(
         KitchenDisplayDetail $detail,
-        int $fromStation,
-        int $toStation,
+        ?string $toStationBid,
         float $movedQuantity,
         bool $released
     ): void {
         // Check if same item already exists in destination
-        $existingAtDestination = $this->findExistingAtStation($detail, $toStation);
+        $existingAtDestination = $this->findExistingAtStation($detail, $toStationBid);
 
         if ($existingAtDestination) {
-            // Merge quantities: add moved quantity to existing record
+            // Merge quantities
             $newQuantity = $existingAtDestination->remaining_quantity + $movedQuantity;
             $existingAtDestination->update([
                 'remaining_quantity' => $newQuantity,
             ]);
 
-            // Set current to 0 and mark appropriately
+            // Mark current as done and soft-delete
             $detail->update([
                 'remaining_quantity' => 0,
                 'status' => MenuStatus::DONE,
@@ -275,12 +256,9 @@ class KitchenDisplayMovementService
         } else {
             // Move the detail record to next station
             $newStatus = $released ? MenuStatus::RELEASING : MenuStatus::ON_PROCESS;
-            $newPosition = ($detail->current_position_in_sequence ?? 0) + 1;
 
             $detail->update([
-                'current_station_index' => $toStation,
-                'kitchen_station_index' => $toStation,
-                'current_position_in_sequence' => $newPosition,
+                'kitchen_station_bid' => $toStationBid,
                 'status' => $newStatus,
             ]);
         }
@@ -288,52 +266,38 @@ class KitchenDisplayMovementService
 
     /**
      * Merge quantity into existing record at station, or create new record.
-     * NEVER creates duplicate rows for same transaction + item + station.
      */
     private function mergeOrCreateAtStation(
         KitchenDisplayDetail $sourceDetail,
-        int $targetStation,
+        ?string $targetStationBid,
         float $quantity,
         bool $released
     ): void {
-        $existing = $this->findExistingAtStation($sourceDetail, $targetStation);
+        $existing = $this->findExistingAtStation($sourceDetail, $targetStationBid);
 
         if ($existing) {
-            // Merge: add quantity to existing record
             $newQuantity = $existing->remaining_quantity + $quantity;
             $existing->update([
                 'remaining_quantity' => $newQuantity,
             ]);
         } else {
-            // Create new record at destination station
             $newStatus = $released ? MenuStatus::RELEASING : MenuStatus::ON_PROCESS;
-
-            // Get kitchen station bid for the target station
-            $kitchenSetup = app()->make(KitchenItemSetupRepository::class)
-                ->getKitchenStation($sourceDetail->product_uom_packaging_bid, $targetStation);
 
             KitchenDisplayDetail::create([
                 'head_bid' => $sourceDetail->head_bid,
-                'transaction_id' => $sourceDetail->transaction_id,
                 'transaction_product_bid' => $sourceDetail->transaction_product_bid,
                 'product_uom_packaging_bid' => $sourceDetail->product_uom_packaging_bid,
-                'name' => $sourceDetail->name,
+                'transaction_id' => $sourceDetail->transaction_id,
                 'remaining_quantity' => $quantity,
-                'original_quantity' => $sourceDetail->original_quantity,
-                'kitchen_station_bid' => $kitchenSetup['station_bid_' . $targetStation] ?? null,
-                'kitchen_station_index' => $targetStation,
-                'current_station_index' => $targetStation,
-                'station_sequence' => $sourceDetail->station_sequence,
-                'current_position_in_sequence' => ($sourceDetail->current_position_in_sequence ?? 0) + 1,
-                'order_sequence' => $sourceDetail->order_sequence,
-                'batch_number' => $sourceDetail->batch_number,
+                'kitchen_station_bid' => $targetStationBid,
                 'status' => $newStatus,
-                'usage_type' => $sourceDetail->usage_type,
                 'order_type_id' => $sourceDetail->order_type_id,
                 'order_type_name' => $sourceDetail->order_type_name,
+                'usage_type' => $sourceDetail->usage_type,
                 'special_request' => $sourceDetail->special_request,
-                'is_addon' => $sourceDetail->is_addon,
                 'addons' => $sourceDetail->addons,
+                'is_addon' => $sourceDetail->is_addon,
+                'name' => $sourceDetail->name,
                 'terminal_number' => $sourceDetail->terminal_number,
             ]);
         }
@@ -341,14 +305,13 @@ class KitchenDisplayMovementService
 
     /**
      * Find existing detail record at a target station for the same transaction item.
-     * Uses: transaction_id, transaction_product_bid, station
      */
-    private function findExistingAtStation(KitchenDisplayDetail $detail, int $stationIndex): ?KitchenDisplayDetail
+    private function findExistingAtStation(KitchenDisplayDetail $detail, ?string $stationBid): ?KitchenDisplayDetail
     {
         return KitchenDisplayDetail::where('head_bid', $detail->head_bid)
             ->where('transaction_product_bid', $detail->transaction_product_bid)
             ->where('product_uom_packaging_bid', $detail->product_uom_packaging_bid)
-            ->where('kitchen_station_index', $stationIndex)
+            ->where('kitchen_station_bid', $stationBid)
             ->where('bid', '!=', $detail->bid)
             ->first();
     }
@@ -361,7 +324,7 @@ class KitchenDisplayMovementService
         ?string $transactionProductBid,
         ?string $productUomPackagingBid,
         ?string $terminalNumber,
-        int $stationIndex
+        ?string $kitchenStationBid
     ): ?KitchenDisplayDetail {
         $query = KitchenDisplayDetail::where('status', MenuStatus::ON_PROCESS);
 
@@ -381,76 +344,90 @@ class KitchenDisplayMovementService
             $query->where('terminal_number', $terminalNumber);
         }
 
-        $query->where('kitchen_station_index', $stationIndex);
+        if ($kitchenStationBid) {
+            $query->where('kitchen_station_bid', $kitchenStationBid);
+        }
 
         return $query->first();
     }
 
     /**
-     * Determine the next station in the sequence.
-     * Uses kitchen_station_process_bid and kitchen_station_index to find next.
+     * Determine the next station using KitchenItemSetupRepository.
+     * Looks up the product's configured stations and finds the next one after current.
      * Returns null if no next station exists (should release).
      */
-    private function determineNextStation(
-        KitchenDisplayDetail $detail,
-        ?string $kitchenStationProcessBid,
-        int $currentStationIndex,
-        bool $next
-    ): ?int {
-        // Try to use station_sequence from the detail record
-        $sequence = json_decode($detail->station_sequence, true);
+    private function determineNextStation(KitchenDisplayDetail $detail, bool $next): ?string
+    {
+        $productBid = $detail->product_uom_packaging_bid;
+        $currentStationBid = $detail->kitchen_station_bid;
 
-        if (is_array($sequence) && !empty($sequence)) {
-            $currentPosition = $detail->current_position_in_sequence ?? 0;
+        // Build the station sequence for this product
+        $stations = [];
+        for ($index = 1; $index <= 4; $index++) {
+            $setup = app()->make(KitchenItemSetupRepository::class)
+                ->getKitchenStation($productBid, $index);
 
-            // Find current station position in sequence
-            $positionInSequence = array_search($currentStationIndex, $sequence);
-            if ($positionInSequence !== false) {
-                $currentPosition = $positionInSequence;
+            if ($setup && !empty($setup['station_bid_' . $index])) {
+                $stations[] = $setup['station_bid_' . $index];
             }
+        }
 
-            $targetPosition = $next ? $currentPosition + 1 : $currentPosition - 1;
-
-            if (isset($sequence[$targetPosition])) {
-                $nextValue = $sequence[$targetPosition];
-                // 0 means releasing station
-                return $nextValue === 0 ? 0 : $nextValue;
-            }
-
-            // No next position in sequence = release
+        if (empty($stations)) {
             return null;
         }
 
-        // Fallback: use kitchen_station_process_bid to look up station sequence
-        if ($kitchenStationProcessBid) {
-            $nextIndex = $next ? $currentStationIndex + 1 : $currentStationIndex - 1;
-            $kitchenSetup = app()->make(KitchenItemSetupRepository::class)
-                ->getKitchenStation($detail->product_uom_packaging_bid, $nextIndex);
+        // Find current position in sequence
+        $currentPos = array_search($currentStationBid, $stations);
 
-            if ($kitchenSetup && !empty($kitchenSetup)) {
-                return $nextIndex;
-            }
-
-            // No next station found
+        if ($currentPos === false) {
+            // Current station not in sequence, default to releasing
             return null;
         }
 
-        // Default: try next sequential station
-        $nextIndex = $next ? $currentStationIndex + 1 : $currentStationIndex - 1;
+        $targetPos = $next ? $currentPos + 1 : $currentPos - 1;
 
-        if ($nextIndex < 1 || $nextIndex > 4) {
+        if ($targetPos < 0 || $targetPos >= count($stations)) {
+            // Beyond sequence = release
             return null;
         }
 
-        // Check if next station exists in setup
-        $kitchenSetup = app()->make(KitchenItemSetupRepository::class)
-            ->getKitchenStation($detail->product_uom_packaging_bid, $nextIndex);
+        return $stations[$targetPos];
+    }
 
-        if ($kitchenSetup && !empty($kitchenSetup)) {
-            return $nextIndex;
+    /**
+     * Update the completed_quantity on the head record.
+     */
+    private function updateHeadCompletedQuantity(string $headBid): void
+    {
+        $head = KitchenDisplay::find($headBid);
+        if (!$head) {
+            return;
         }
 
-        return null;
+        // completed = items that are DONE or soft-deleted
+        $completedQty = KitchenDisplayDetail::withTrashed()
+            ->where('head_bid', $headBid)
+            ->where('status', MenuStatus::DONE)
+            ->sum('remaining_quantity');
+
+        // Also count releasing items
+        $releasingQty = KitchenDisplayDetail::withTrashed()
+            ->where('head_bid', $headBid)
+            ->where('status', MenuStatus::RELEASING)
+            ->sum('remaining_quantity');
+
+        $head->update([
+            'completed_quantity' => $completedQty + $releasingQty,
+        ]);
+
+        // Auto-complete if no active items remain
+        $activeCount = KitchenDisplayDetail::where('head_bid', $headBid)
+            ->where('status', MenuStatus::ON_PROCESS)
+            ->count();
+
+        if ($activeCount === 0 && !$head->completed_at) {
+            $head->update(['completed_at' => now()]);
+        }
     }
 
     /**
@@ -458,9 +435,9 @@ class KitchenDisplayMovementService
      */
     private function recordMovement(
         string $detailBid,
-        int $fromStation,
-        int $toStation,
-        int $quantity,
+        ?string $fromStationBid,
+        ?string $toStationBid,
+        float $quantity,
         string $movementType
     ): void {
         $detail = KitchenDisplayDetail::withTrashed()->find($detailBid);
@@ -469,10 +446,14 @@ class KitchenDisplayMovementService
             return;
         }
 
+        // Resolve station indices for history (for reporting)
+        $fromIndex = $this->resolveStationIndex($fromStationBid);
+        $toIndex = $toStationBid ? $this->resolveStationIndex($toStationBid) : 0;
+
         KitchenDisplayMovementHistory::create([
             'detail_bid' => $detailBid,
-            'from_station_index' => $fromStation,
-            'to_station_index' => $toStation,
+            'from_station_index' => $fromIndex,
+            'to_station_index' => $toIndex,
             'quantity_moved' => $quantity,
             'movement_type' => $movementType,
             'status_before' => $detail->status,
@@ -481,12 +462,25 @@ class KitchenDisplayMovementService
     }
 
     /**
+     * Resolve a station_bid to its index number (1-4) for history tracking.
+     */
+    private function resolveStationIndex(?string $stationBid): int
+    {
+        if (!$stationBid) {
+            return 0;
+        }
+
+        $station = CDISKitchenStation::where('bid', $stationBid)->first();
+        return $station ? (int) ($station->station_index ?? $station->index ?? 0) : 0;
+    }
+
+    /**
      * Broadcast movement events to affected KDS devices.
      */
     private function broadcastMovement(
         KitchenDisplayDetail $detail,
-        int $fromStation,
-        int $toStation,
+        ?string $fromStationBid,
+        ?string $toStationBid,
         float $movedQuantity,
         bool $released,
         object $item,
@@ -494,7 +488,7 @@ class KitchenDisplayMovementService
         object $orderType
     ): void {
         $transactionData = (array) $transaction;
-        $transactionData['kitchen_station_index'] = $toStation;
+        $transactionData['kitchen_station_bid'] = $toStationBid;
 
         $itemData = [
             'bid' => $detail->product_uom_packaging_bid,
@@ -512,12 +506,11 @@ class KitchenDisplayMovementService
             'order_type_id' => $detail->order_type_id ?? '',
             'terminal_number' => $detail->terminal_number,
             'addons' => $detail->addons,
-            'kitchen_station_index' => $toStation,
+            'kitchen_station_bid' => $toStationBid,
             'status' => $detail->status,
         ];
 
         if ($released) {
-            // Broadcast to all releasing station devices
             $releasingDeviceUids = $this->getReleasingStationDeviceUids();
             foreach ($releasingDeviceUids as $deviceUid) {
                 broadcast(new KDSFastFoodTransactionEvent(
@@ -529,10 +522,7 @@ class KitchenDisplayMovementService
             }
         } else {
             // Broadcast to the target station's device
-            $kitchenSetup = app()->make(KitchenItemSetupRepository::class)
-                ->getKitchenStation($detail->product_uom_packaging_bid, $toStation);
-
-            $deviceUid = $kitchenSetup['device_uid'] ?? null;
+            $deviceUid = $this->getDeviceUidForStation($toStationBid);
             if ($deviceUid) {
                 broadcast(new KDSFastFoodTransactionEvent(
                     $deviceUid,
@@ -544,10 +534,7 @@ class KitchenDisplayMovementService
         }
 
         // Also broadcast to source station device to update/remove
-        $sourceSetup = app()->make(KitchenItemSetupRepository::class)
-            ->getKitchenStation($detail->product_uom_packaging_bid, $fromStation);
-
-        $sourceDeviceUid = $sourceSetup['device_uid'] ?? null;
+        $sourceDeviceUid = $this->getDeviceUidForStation($fromStationBid);
         if ($sourceDeviceUid) {
             broadcast(new KDSFastFoodTransactionEvent(
                 $sourceDeviceUid,
@@ -584,10 +571,13 @@ class KitchenDisplayMovementService
         }
 
         $this->transaction(function () use ($kitchenDisplay) {
+            KitchenDisplayDetail::where('head_bid', $kitchenDisplay->bid)->update([
+                'status' => MenuStatus::DONE,
+            ]);
             KitchenDisplayDetail::where('head_bid', $kitchenDisplay->bid)->delete();
             $kitchenDisplay->update([
-                'status' => 'DONE',
                 'completed_at' => now(),
+                'completed_quantity' => $kitchenDisplay->total_quantity,
             ]);
         });
 
@@ -624,21 +614,14 @@ class KitchenDisplayMovementService
                     $item->transaction_product_bid ?? null,
                     $item->product_uom_packaging_bid ?? $item->product_bid ?? null,
                     $item->terminal_number ?? null,
-                    (int) ($item->kitchen_station_index ?? 1)
+                    $item->kitchen_station_bid ?? null
                 );
 
                 if ($detail) {
                     $detail->update(['status' => MenuStatus::DONE]);
                     $detail->delete();
 
-                    // Check if all items done for the order
-                    $remaining = KitchenDisplayDetail::where('head_bid', $detail->head_bid)->exists();
-                    if (!$remaining) {
-                        KitchenDisplay::where('bid', $detail->head_bid)->update([
-                            'status' => 'DONE',
-                            'completed_at' => now(),
-                        ]);
-                    }
+                    $this->updateHeadCompletedQuantity($detail->head_bid);
                 }
             }
         });
@@ -681,11 +664,10 @@ class KitchenDisplayMovementService
         $this->transaction(function () use ($kitchenDisplay) {
             KitchenDisplayDetail::where('head_bid', $kitchenDisplay->bid)->update([
                 'status' => MenuStatus::RELEASING,
-                'kitchen_station_index' => 0,
-                'current_station_index' => 0,
+                'kitchen_station_bid' => null,
             ]);
             KitchenDisplayDetail::where('head_bid', $kitchenDisplay->bid)->delete();
-            $kitchenDisplay->update(['status' => 'RELEASING']);
+            $kitchenDisplay->update(['completed_at' => now()]);
         });
 
         return [
@@ -722,14 +704,13 @@ class KitchenDisplayMovementService
                     $item->transaction_product_bid ?? null,
                     $item->product_uom_packaging_bid ?? $item->product_bid ?? null,
                     $item->terminal_number ?? null,
-                    (int) ($item->kitchen_station_index ?? 1)
+                    $item->kitchen_station_bid ?? null
                 );
 
                 if ($detail) {
                     $detail->update([
                         'status' => MenuStatus::RELEASING,
-                        'kitchen_station_index' => 0,
-                        'current_station_index' => 0,
+                        'kitchen_station_bid' => null,
                     ]);
                     $detail->delete();
                 }
@@ -813,7 +794,7 @@ class KitchenDisplayMovementService
                     $item->transaction_product_bid ?? null,
                     $item->product_uom_packaging_bid ?? $item->product_bid ?? null,
                     $item->terminal_number ?? null,
-                    (int) ($item->kitchen_station_index ?? 1)
+                    $item->kitchen_station_bid ?? null
                 );
 
                 if ($detail) {
@@ -837,6 +818,20 @@ class KitchenDisplayMovementService
                 'transaction_id' => $transactionId,
             ],
         ];
+    }
+
+    /**
+     * Get device UID for a kitchen station bid.
+     */
+    private function getDeviceUidForStation(?string $stationBid): ?string
+    {
+        if (!$stationBid) {
+            return null;
+        }
+
+        return DeviceSettings::where('kitchen_station_bid', $stationBid)
+            ->where('device_type', DeviceType::KDS)
+            ->value('device_uid');
     }
 
     /**

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\KDS\v1;
 use App\Http\Controllers\Controller;
 use App\Repositories\Contracts\KitchenDisplayRepository;
 use App\Repositories\Eloquent\KitchenDisplayRepositoryEloquent;
-use App\Services\KitchenDisplay\KitchenDisplayMovementService;
+use App\Services\KDS\KitchenDisplayMovementService;
 use App\Transformers\KDS\KitchenDisplay\AddonListTransformer;
 use App\Transformers\KDS\KitchenDisplay\MenuListTransformer;
 use Illuminate\Http\JsonResponse;
