@@ -234,6 +234,7 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
         $next = $data->next ?? true;
         $quantity = $data->quantity ?? null;
         $remainingQuantity = $data->remaining_quantity ?? null;
+        $movedQuantity = $data->moved_quantity ?? null;
 
         $details = $this->resolveDetails($itemData);
 
@@ -293,17 +294,19 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
             if ($nextStation === 0) {
                 // Broadcast release event to ALL releasing station devices
                 $releasingDeviceUids = $this->getReleasingStationDeviceUids();
+                $releasePayload = $this->buildReleaseEventPayload($detail, $order, $itemData);
                 Log::info('Broadcasting Release Event to all releasing devices', ['device_uids' => $releasingDeviceUids, 'detail_bid' => $detail->bid, 'order_id' => $order->order_id ?? null]);
                 foreach ($releasingDeviceUids as $deviceUid) {
-
                     broadcast(new KDSFineDineItemReleaseEvent(
                         $deviceUid,
-                        $detail,
-                        $order,
-                        $moveQuantity ?? 1
+                        $releasePayload['item'],
+                        $releasePayload['transaction'],
+                        $releasePayload['order_type'],
+                        $movedQuantity ?? $moveQuantity
                     ));
                     Log::info('Broadcasted to releasing devices', ['device_uid' => $deviceUid, 'detail' => json_encode($detail), 'moved_quantity' => $moveQuantity ?? 1]);
                 }
+
             } else {
                 $deviceUid = $this->getDeviceUidForStation($detail->kitchen_station_bid);
                 Log::info('Broadcasting Move Event', ['device_uid' => $deviceUid, 'detail_bid' => $detail->bid, 'order_id' => $order->order_id ?? null]);
@@ -345,10 +348,17 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
                 $detail->update(['status' => MenuStatus::RELEASING]);
 
                 $order = KitchenDisplay::find($detail->head_bid);
+                $releasePayload = $this->buildReleaseEventPayload($detail, $order, $itemData);
                 // Broadcast to ALL releasing station devices
                 $releasingDeviceUids = $this->getReleasingStationDeviceUids();
                 foreach ($releasingDeviceUids as $deviceUid) {
-                    broadcast(new KDSFineDineItemReleaseEvent($deviceUid, $detail, $order));
+                    broadcast(new KDSFineDineItemReleaseEvent(
+                        $deviceUid,
+                        $releasePayload['item'],
+                        $releasePayload['transaction'],
+                        $releasePayload['order_type'],
+                        $detail->remaining_quantity ?? 1
+                    ));
                     Log::info('Broadcasted to releasing devices', ['device_uid' => $deviceUid, 'detail' => json_encode($detail), 'order_id' => $order->order_id ?? null]);
                 }
             }
@@ -581,6 +591,25 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
         }
 
         return [];
+    }
+
+    private function buildReleaseEventPayload(KitchenDisplayDetail $detail, ?KitchenDisplay $order, array $payload): array
+    {
+        if (!empty($payload['row_item'])) {
+            $rowItem = (object) $payload['row_item'];
+
+            return [
+                'item' => $rowItem->item ?? $detail,
+                'transaction' => $rowItem->transaction ?? $order,
+                'order_type' => $rowItem->order_type ?? $detail->order_type_name ?? $order->order_type_name ?? null,
+            ];
+        }
+
+        return [
+            'item' => $payload['item'] ?? $detail,
+            'transaction' => $payload['transaction'] ?? $order,
+            'order_type' => $payload['order_type'] ?? $detail->order_type_name ?? $order->order_type_name ?? null,
+        ];
     }
 
     /**

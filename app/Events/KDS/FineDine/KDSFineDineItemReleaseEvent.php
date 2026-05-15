@@ -17,13 +17,15 @@ class KDSFineDineItemReleaseEvent extends KDSEventBase
 {
     public $item;
     public $transaction;
+    public $orderType;
     public $quantity;
 
-    public function __construct(string $deviceUid, $item, $transaction, $quantity = 1)
+    public function __construct(string $deviceUid, $item, $transaction, $orderType, $quantity = 1)
     {
         $this->deviceUid = $deviceUid;
         $this->item = $item;
         $this->transaction = $transaction;
+        $this->orderType = $orderType;
         $this->quantity = $quantity;
     }
 
@@ -45,6 +47,7 @@ class KDSFineDineItemReleaseEvent extends KDSEventBase
             'action' => KDSMovementAction::RELEASE,
             'item' => $this->item,
             'transaction' => $this->transaction,
+            'order_type' => $this->orderType,
             'quantity' => $this->quantity,
             'timestamp' => now()->toISOString(),
         ];

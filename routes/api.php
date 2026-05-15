@@ -23,9 +23,9 @@ Route::group([
     // ============================================
     // AUTH (Shared)
     // ============================================
-    Route::post('login', 'LoginController@login');
-    Route::post('logout', 'LoginController@logout');
-    Route::get('config', 'DeviceSettingsController@getConfig');
+    Route::post('login', [\App\Http\Controllers\KDS\v1\LoginController::class, 'login']);
+    Route::post('logout', [\App\Http\Controllers\KDS\v1\LoginController::class, 'logout']);
+    Route::get('config', [\App\Http\Controllers\KDS\v1\DeviceSettingsController::class, 'getConfig']);
 
     Route::group(['middleware' => 'access-token'], function () {
 
@@ -33,67 +33,68 @@ Route::group([
         // COMMON ENDPOINTS (Both order types)
         // ============================================
         Route::group(['prefix' => 'common'], function () {
-            Route::get('station/list', 'KDSCommonController@getStationList');
-            Route::get('station/device', 'KDSCommonController@getDeviceStation');
-            Route::post('station/device', 'KDSCommonController@getDeviceStation');
-            Route::get('station/process/list', 'KDSCommonController@getStationProcessList');
-            Route::get('order/menu/list', 'KDSCommonController@getMenuList');
-            Route::get('order/{order_id}/details', 'KDSCommonController@getOrderDetails');
-            Route::get('orders/by-station/{station_index}', 'KDSCommonController@getOrdersByStation');
+            Route::get('station/list', [\App\Http\Controllers\KDS\v1\KDSCommonController::class, 'getStationList']);
+            Route::get('station/device', [\App\Http\Controllers\KDS\v1\KDSCommonController::class, 'getDeviceStation']);
+            Route::post('station/device', [\App\Http\Controllers\KDS\v1\KDSCommonController::class, 'getDeviceStation']);
+            Route::get('station/process/list', [\App\Http\Controllers\KDS\v1\KDSCommonController::class, 'getStationProcessList']);
+            Route::get('order/menu/list', [\App\Http\Controllers\KDS\v1\KDSCommonController::class, 'getMenuList']);
+            Route::get('order/{order_id}/details', [\App\Http\Controllers\KDS\v1\KDSCommonController::class, 'getOrderDetails']);
+            Route::get('orders/by-station/{station_index}', [\App\Http\Controllers\KDS\v1\KDSCommonController::class, 'getOrdersByStation']);
         });
 
         // ============================================
         // FAST-FOOD SPECIFIC
         // ============================================
         Route::group(['prefix' => 'fastfood'], function () {
-            Route::post('action', 'KDSFastFoodController@action');
-            Route::get('order/list', 'KDSFastFoodController@getOrderList');
-            Route::get('order/{order_id}', 'KDSFastFoodController@getOrder');
-            Route::get('menu/list', 'KDSFastFoodController@getMenuList');
+            Route::post('action', [\App\Http\Controllers\KDS\v1\KDSFastFoodController::class, 'action']);
+            Route::get('order/list', [\App\Http\Controllers\KDS\v1\KDSFastFoodController::class, 'getOrderList']);
+            Route::get('order/{order_id}', [\App\Http\Controllers\KDS\v1\KDSFastFoodController::class, 'getOrder']);
+            Route::get('menu/list', [\App\Http\Controllers\KDS\v1\KDSFastFoodController::class, 'getMenuList']);
         });
 
         // ============================================
         // FINE-DINE SPECIFIC
         // ============================================
         Route::group(['prefix' => 'finedine'], function () {
-            Route::post('action', 'KDSFineDineController@action');
-            Route::get('order/list', 'KDSFineDineController@getOrderList');
-            Route::get('order/{order_id}', 'KDSFineDineController@getOrder');
-            Route::get('menu/list', 'KDSFineDineController@getMenuList');
-            Route::get('item/{item_id}/movement-history', 'KDSFineDineController@getMovementHistory');
+            Route::post('action', [\App\Http\Controllers\KDS\v1\KDSFineDineController::class, 'action']);
+            Route::get('order/list', [\App\Http\Controllers\KDS\v1\KDSFineDineController::class, 'getOrderList']);
+            Route::get('order/{order_id}', [\App\Http\Controllers\KDS\v1\KDSFineDineController::class, 'getOrder']);
+            Route::get('menu/list', [\App\Http\Controllers\KDS\v1\KDSFineDineController::class, 'getMenuList']);
+            Route::get('item/{item_id}/movement-history', [\App\Http\Controllers\KDS\v1\KDSFineDineController::class, 'getMovementHistory']);
         });
 
         // ============================================
         // LEGACY ENDPOINTS (Backward compatibility)
         // ============================================
-        Route::get('station/list', 'KitchenStationController@list');
-        Route::get('station/device', 'KitchenStationController@device');
-        Route::post('station/device', 'KitchenStationController@device');
-        Route::get('station/process/list', 'KitchenStationController@stationProcessList');
-        Route::get('order/menu/list', 'KitchenDisplayController@getMenuList');
-        Route::post('order/menu/move-station', 'KitchenDisplayController@moveMenu');
-        Route::delete('order/remove', 'KitchenDisplayController@removeOrder');
-        Route::delete('menu/remove', 'KitchenDisplayController@removeMenu');
-        Route::post('order/move', 'KitchenDisplayController@moveOrder');
-        Route::post('menu/move', 'KitchenDisplayController@moveMenu');
-        Route::post('item/move', 'KitchenDisplayController@moveItem');
-        Route::post('order/done', 'KitchenDisplayController@doneOrder');
-        Route::post('menu/done', 'KitchenDisplayController@doneMenu');
-        Route::post('order/release', 'KitchenDisplayController@releaseOrder');
-        Route::post('menu/release', 'KitchenDisplayController@releaseMenu');
+        Route::get('station/list', [\App\Http\Controllers\KDS\v1\KitchenStationController::class, 'list']);
+        Route::get('station/device', [\App\Http\Controllers\KDS\v1\KitchenStationController::class, 'device']);
+        Route::post('station/device', [\App\Http\Controllers\KDS\v1\KitchenStationController::class, 'device']);
+        Route::get('station/process/list', [\App\Http\Controllers\KDS\v1\KitchenStationController::class, 'stationProcessList']);
+        Route::get('order/menu/list', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'getMenuList']);
+        Route::post('order/menu/move-station', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'moveMenu']);
+        Route::delete('order/remove', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'removeOrder']);
+        Route::delete('menu/remove', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'removeMenu']);
+        Route::post('order/move', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'moveOrder']);
+        Route::post('menu/move', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'moveMenu']);
+        Route::post('item/move', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'moveItem']);
+        Route::post('order/done', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'doneOrder']);
+        Route::post('menu/done', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'doneMenu']);
+        Route::post('order/release', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'releaseOrder']);
+        Route::post('menu/release', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'releaseMenu']);
+        Route::post('action', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'action']);
 
         // ============================================
         // DEVICE SETTINGS (Shared)
         // ============================================
-        Route::post('device-settings/update', 'DeviceSettingsController@update');
-        Route::post('device-settings/status', 'DeviceSettingsController@status');
-        Route::get('device-settings/list', 'DeviceSettingsController@list');
-        Route::get('device-settings/config', 'DeviceSettingsController@getConfig');
+        Route::post('device-settings/update', [\App\Http\Controllers\KDS\v1\DeviceSettingsController::class, 'update']);
+        Route::post('device-settings/status', [\App\Http\Controllers\KDS\v1\DeviceSettingsController::class, 'status']);
+        Route::get('device-settings/list', [\App\Http\Controllers\KDS\v1\DeviceSettingsController::class, 'list']);
+        Route::get('device-settings/config', [\App\Http\Controllers\KDS\v1\DeviceSettingsController::class, 'getConfig']);
 
         // ============================================
         // BROADCASTING AUTH (Shared)
         // ============================================
-        Route::post('broadcasting/auth', 'PusherAuthenticateController@authChannel');
+        Route::post('broadcasting/auth', [\App\Http\Controllers\KDS\v1\PusherAuthenticateController::class, 'authChannel']);
     });
 });
 
