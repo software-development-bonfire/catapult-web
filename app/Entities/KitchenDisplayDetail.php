@@ -26,6 +26,8 @@ class KitchenDisplayDetail extends Base
         'is_addon',
         'name',
         'terminal_number',
+        'started_at',
+        'end_at',
     ];
 
     protected $casts = [
@@ -37,6 +39,8 @@ class KitchenDisplayDetail extends Base
         'transaction_id' => 'string',
         'remaining_quantity' => 'decimal:6',
         'is_addon' => 'boolean',
+        'started_at' => 'datetime',
+        'end_at' => 'datetime',
     ];
 
     public function head()

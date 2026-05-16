@@ -128,6 +128,7 @@ trait KitchenDisplayTrait
             'is_addon' => $product->is_addon ?? false,
             'name' => $transactionDetailProduct->name,
             'terminal_number' => $product->terminal_number,
+            'started_at' => now(),
         ]);
     }
 }

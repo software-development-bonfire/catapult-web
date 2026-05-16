@@ -241,25 +241,28 @@ class KitchenDisplayMovementService
         $existingAtDestination = $this->findExistingAtStation($detail, $toStationBid);
 
         if ($existingAtDestination) {
-            // Merge quantities
+            // Merge quantities into existing destination record
             $newQuantity = $existingAtDestination->remaining_quantity + $movedQuantity;
             $existingAtDestination->update([
                 'remaining_quantity' => $newQuantity,
             ]);
 
-            // Mark current as done and soft-delete
+            // Mark current record as done – all quantity has left this station
             $detail->update([
                 'remaining_quantity' => 0,
                 'status' => MenuStatus::DONE,
+                'end_at' => now(),
             ]);
             $detail->delete();
         } else {
-            // Move the detail record to next station
+            // Move the detail record to the next station
             $newStatus = $released ? MenuStatus::RELEASING : MenuStatus::ON_PROCESS;
 
             $detail->update([
                 'kitchen_station_bid' => $toStationBid,
                 'status' => $newStatus,
+                'started_at' => now(), // item has arrived at new station
+                'end_at' => null,      // reset end marker for new station
             ]);
         }
     }
@@ -299,6 +302,7 @@ class KitchenDisplayMovementService
                 'is_addon' => $sourceDetail->is_addon,
                 'name' => $sourceDetail->name,
                 'terminal_number' => $sourceDetail->terminal_number,
+                'started_at' => now(),
             ]);
         }
     }
@@ -312,7 +316,8 @@ class KitchenDisplayMovementService
             ->where('transaction_product_bid', $detail->transaction_product_bid)
             ->where('product_uom_packaging_bid', $detail->product_uom_packaging_bid)
             ->where('kitchen_station_bid', $stationBid)
-            ->where('bid', '!=', $detail->bid)
+            ->where('terminal_number', $detail->terminal_number)
+            //->where('bid', '!=', $detail->bid)
             ->first();
     }
 
@@ -511,12 +516,20 @@ class KitchenDisplayMovementService
         ];
 
         if ($released) {
+            // For the releasing station display, send the original total quantity of the item
+            // (from the Flutter payload) so the UI can show: received / total.
+            $originalQuantity = (float) ($item->quantity ?? $movedQuantity);
+            $releasingItemData = array_merge($itemData, [
+                'quantity' => $originalQuantity,
+                'remaining_quantity' => $movedQuantity, // qty received at releasing this batch
+            ]);
+
             $releasingDeviceUids = $this->getReleasingStationDeviceUids();
             foreach ($releasingDeviceUids as $deviceUid) {
                 broadcast(new KDSFastFoodTransactionEvent(
                     $deviceUid,
                     (object) $transactionData,
-                    [$itemData],
+                    [$releasingItemData],
                     true
                 ));
             }
