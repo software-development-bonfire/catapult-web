@@ -156,6 +156,11 @@ class KitchenDisplayMovementService
             return ['released' => false, 'next_station_bid' => null];
         }
 
+        // For a full-move (client sends moved_quantity=0), use the detail's current remaining quantity
+        if ($movedQuantity <= 0) {
+            $movedQuantity = $detail->remaining_quantity ?? 0;
+        }
+
         // Determine next station
         $nextStationBid = $this->determineNextStation($detail, $next);
 
@@ -323,15 +328,19 @@ class KitchenDisplayMovementService
 
     /**
      * Resolve KitchenDisplayDetail from item identifiers.
+     *
+     * @param array|null $statuses Statuses to filter by; defaults to [ON_PROCESS].
      */
     private function resolveDetail(
         ?string $transactionId,
         ?string $transactionProductBid,
         ?string $productUomPackagingBid,
         ?string $terminalNumber,
-        ?string $kitchenStationBid
+        ?string $kitchenStationBid,
+        ?array $statuses = null
     ): ?KitchenDisplayDetail {
-        $query = KitchenDisplayDetail::where('status', MenuStatus::ON_PROCESS);
+        $statuses = $statuses ?? [MenuStatus::ON_PROCESS];
+        $query = KitchenDisplayDetail::whereIn('status', $statuses);
 
         if ($transactionId) {
             $query->where('transaction_id', $transactionId);
@@ -712,20 +721,24 @@ class KitchenDisplayMovementService
         $this->transaction(function () use ($items, $transactionId) {
             foreach ($items as $itemData) {
                 $item = (object) $itemData;
+                // Releasing-station items may already have RELEASING status;
+                // include both ON_PROCESS and RELEASING so they are found.
                 $detail = $this->resolveDetail(
                     $item->transaction_id ?? $transactionId,
                     $item->transaction_product_bid ?? null,
                     $item->product_uom_packaging_bid ?? $item->product_bid ?? null,
                     $item->terminal_number ?? null,
-                    $item->kitchen_station_bid ?? null
+                    $item->kitchen_station_bid ?? null,
+                    [MenuStatus::ON_PROCESS, MenuStatus::RELEASING]
                 );
 
                 if ($detail) {
                     $detail->update([
                         'status' => MenuStatus::RELEASING,
-                        'kitchen_station_bid' => null,
+                        'end_at' => now(),
                     ]);
                     $detail->delete();
+                    $this->updateHeadCompletedQuantity($detail->head_bid);
                 }
             }
         });
