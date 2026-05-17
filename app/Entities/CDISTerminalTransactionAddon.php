@@ -32,6 +32,7 @@ class CDISTerminalTransactionAddon extends Base
         'vat_exempt',
         'split_number',
         'remarks',
+        'special_request',
         'usage_type',
         'supervisor_bid',
         'supervisor_name'

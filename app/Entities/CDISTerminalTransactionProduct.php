@@ -34,6 +34,7 @@ class CDISTerminalTransactionProduct extends Base
         'vat_exempt',
         'split_number',
         'remarks',
+        'special_request',
         'supervisor_bid',
         'supervisor_name'
     ];
