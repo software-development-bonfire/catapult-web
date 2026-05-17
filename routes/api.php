@@ -84,6 +84,11 @@ Route::group([
         Route::get('device-settings/config', [\App\Http\Controllers\KDS\v1\DeviceSettingsController::class, 'getConfig']);
 
         // ============================================
+        // SUMMARY
+        // ============================================
+        Route::post('kds-summary', [\App\Http\Controllers\KDS\v1\KdsSummaryController::class, 'summary']);
+
+        // ============================================
         // BROADCASTING AUTH (Shared)
         // ============================================
         Route::post('broadcasting/auth', [\App\Http\Controllers\KDS\v1\PusherAuthenticateController::class, 'authChannel']);

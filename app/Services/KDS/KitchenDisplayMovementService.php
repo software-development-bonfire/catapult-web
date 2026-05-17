@@ -156,7 +156,8 @@ class KitchenDisplayMovementService
             return ['released' => false, 'next_station_bid' => null];
         }
 
-        // For a full-move (client sends moved_quantity=0), use the detail's current remaining quantity
+        // If client sends 0 for moved_quantity (full-move call e.g. moveOrder),
+        // use the detail's current remaining quantity
         if ($movedQuantity <= 0) {
             $movedQuantity = $detail->remaining_quantity ?? 0;
         }
@@ -182,6 +183,13 @@ class KitchenDisplayMovementService
 
         // Determine if this is a partial or full move
         $isPartialMove = $remainingQuantity !== null && $remainingQuantity > 0 && $movedQuantity < $detail->remaining_quantity;
+
+        // For a full move always broadcast with the detail's actual remaining quantity.
+        // This prevents stale moved_quantity values (e.g. from Flutter's local DB after a
+        // prior partial move) from producing an incorrect broadcast quantity.
+        if (!$isPartialMove) {
+            $movedQuantity = $detail->remaining_quantity ?? $movedQuantity;
+        }
 
         return $this->transaction(function () use (
             $detail, $currentStationBid, $nextStationBid, $movedQuantity,
