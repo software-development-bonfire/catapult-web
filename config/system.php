@@ -34,10 +34,12 @@ return [
 
     'printers' => [
         'sticker' => env('PRINTER_STICKER', NULL),
+        'kitchen' => env('PRINTER_KITCHEN', NULL),
     ],
 
     'kds' => [
         'broadcast_all_together' => env('KDS_BROADCAST_ALL_TOGETHER', false),
         'broadcast_unique_devices' => env('KDS_BROADCAST_UNIQUE_DEVICES', false),
+        'printer_failover' => env('KDS_PRINTER_FAILOVER', false),
     ],
 ];

@@ -10,6 +10,7 @@ use App\Entities\KitchenDisplayMovementHistory;
 use App\Enums\API\DeviceType;
 use App\Enums\KDS\MenuStatus;
 use App\Enums\KDS\QueueingGroup;
+use App\Events\KDS\FastFood\KDSFastFoodOrderMoveEvent;
 use App\Events\KDS\KDSFastFoodTransactionEvent;
 use App\Repositories\Contracts\KitchenItemSetupRepository;
 use App\Traits\DatabaseTransaction;
@@ -214,7 +215,7 @@ class KitchenDisplayMovementService
             $this->updateHeadCompletedQuantity($detail->head_bid);
 
             // Broadcast events
-            $this->broadcastMovement($detail, $currentStationBid, $nextStationBid, $movedQuantity, $released, $item, $transaction, $orderType);
+            $this->broadcastMovement($detail, $currentStationBid, $nextStationBid, $movedQuantity, $released, $item, $transaction, $orderType, $next);
 
             return ['released' => $released, 'next_station_bid' => $nextStationBid];
         });
@@ -507,7 +508,8 @@ class KitchenDisplayMovementService
         bool $released,
         object $item,
         object $transaction,
-        object $orderType
+        object $orderType,
+        bool $next = true
     ): void {
         $transactionData = (array) $transaction;
         $transactionData['kitchen_station_bid'] = $toStationBid;
@@ -533,22 +535,38 @@ class KitchenDisplayMovementService
         ];
 
         if ($released) {
-            // For the releasing station display, send the original total quantity of the item
-            // (from the Flutter payload) so the UI can show: received / total.
-            $originalQuantity = (float) ($item->quantity ?? $movedQuantity);
-            $releasingItemData = array_merge($itemData, [
-                'quantity' => $originalQuantity,
-                'remaining_quantity' => $movedQuantity, // qty received at releasing this batch
-            ]);
+            if (!$next) {
+                // Send-back from releasing station → notify all non-releasing stations
+                // so they can restore the items in their local DB.
+                $nonReleasingDeviceUids = $this->getNonReleasingStationDeviceUids();
+                foreach ($nonReleasingDeviceUids as $deviceUid) {
+                    broadcast(new KDSFastFoodOrderMoveEvent(
+                        $deviceUid,
+                        (object) $transactionData,
+                        [$itemData],
+                        $fromStationBid,
+                        null,
+                        false,
+                        true
+                    ));
+                }
+            } else {
+                // Forward to releasing station display
+                $originalQuantity = (float) ($item->quantity ?? $movedQuantity);
+                $releasingItemData = array_merge($itemData, [
+                    'quantity' => $originalQuantity,
+                    'remaining_quantity' => $movedQuantity,
+                ]);
 
-            $releasingDeviceUids = $this->getReleasingStationDeviceUids();
-            foreach ($releasingDeviceUids as $deviceUid) {
-                broadcast(new KDSFastFoodTransactionEvent(
-                    $deviceUid,
-                    (object) $transactionData,
-                    [$releasingItemData],
-                    true
-                ));
+                $releasingDeviceUids = $this->getReleasingStationDeviceUids();
+                foreach ($releasingDeviceUids as $deviceUid) {
+                    broadcast(new KDSFastFoodTransactionEvent(
+                        $deviceUid,
+                        (object) $transactionData,
+                        [$releasingItemData],
+                        true
+                    ));
+                }
             }
         } else {
             // Broadcast to the target station's device
@@ -866,6 +884,28 @@ class KitchenDisplayMovementService
         return DeviceSettings::where('kitchen_station_bid', $stationBid)
             ->where('device_type', DeviceType::KDS)
             ->value('device_uid');
+    }
+
+    /**
+     * Get all device UIDs for non-releasing stations.
+     */
+    private function getNonReleasingStationDeviceUids(): array
+    {
+        $nonReleasingStationBids = CDISKitchenStation::where('queueing_group_type', '!=', QueueingGroup::RELEASING)
+            ->pluck('bid')
+            ->toArray();
+
+        if (empty($nonReleasingStationBids)) {
+            return [];
+        }
+
+        return DeviceSettings::whereIn('kitchen_station_bid', $nonReleasingStationBids)
+            ->where('device_type', DeviceType::KDS)
+            ->pluck('device_uid')
+            ->unique()
+            ->filter()
+            ->values()
+            ->toArray();
     }
 
     /**

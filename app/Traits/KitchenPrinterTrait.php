@@ -152,4 +152,122 @@ trait KitchenPrinterTrait
         $left = str_pad($left, $width - strlen($right)); // Left padding
         return $left . $right; // Concatenate left and right
     }
+
+    /**
+     * Print a full kitchen order triggered from KDS.
+     * Delegates to printKitchen with the same formatting.
+     */
+    function printKitchenOrder($printerHost, $productItems, $transaction, $cut = true, $openCashdrawer = true)
+    {
+        $this->printKitchen($printerHost, $productItems, $transaction, $cut, $openCashdrawer);
+    }
+
+    /**
+     * Print only the bumped items (moved_quantity > 0 and is_moved = true) from a KDS bump action.
+     */
+    function printBumpItems($printerHost, $bumpedItems, $transaction, $cut = true, $openCashdrawer = false)
+    {
+        $date = parseDateTime(Carbon::now(), 'l jS \of F Y h:i:s A');
+        $headerSeparator = str_repeat("-", 48);
+        $transactionNo = "Transaction #: " . ($transaction['transaction_id'] ?? 'N/A');
+        $orderNumber   = "Order #: " . ($transaction['order_number'] ?? 'N/A');
+
+        $items = [];
+        foreach ($bumpedItems as $item) {
+            $movedQty = floatval($item['moved_quantity'] ?? 0);
+            if ($movedQty <= 0) {
+                continue;
+            }
+            $isAddon       = (bool) ($item['is_addon'] ?? false);
+            $specialRequest = $item['special_request'] ?? '';
+            $items[] = new MenuItem(floatToMoney($movedQty), $item['name'], $isAddon, '(BUMP)');
+            if (!empty($specialRequest)) {
+                $items[] = new MenuItem('', "**{$specialRequest}**", $isAddon, '');
+            }
+        }
+
+        if (empty($items)) {
+            return;
+        }
+
+        $validIPs = IP::extract($printerHost);
+        if (isset($validIPs[0]) && IP::validate($validIPs[0])) {
+            $connector = new NetworkPrintConnector($validIPs[0], 9100);
+        } else {
+            $connector = new WindowsPrintConnector($printerHost);
+        }
+        $printer = new Printer($connector);
+
+        $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $this->title($printer, 'BUMPED ITEMS');
+        $printer->feed(2);
+        $printer->selectPrintMode();
+
+        $printer->setEmphasis(true);
+        $printer->text($this->headerLine('', $transactionNo) . PHP_EOL);
+        $printer->text($this->headerLine('BUMPED', $orderNumber) . PHP_EOL);
+        $printer->selectPrintMode();
+
+        $printer->setEmphasis(false);
+        $printer->text($headerSeparator . PHP_EOL);
+
+        $printer->setJustification(Printer::JUSTIFY_LEFT);
+        foreach ($items as $item) {
+            $printer->text($item);
+        }
+
+        $printer->text($headerSeparator . PHP_EOL);
+        $printer->feed(2);
+        $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $printer->text($date . PHP_EOL);
+
+        if ($cut) {
+            $printer->cut();
+        }
+        if ($openCashdrawer) {
+            $printer->pulse();
+        }
+        $printer->close();
+    }
+
+    /**
+     * Print only the table number in large centered text.
+     */
+    function printTableNumber($printerHost, $transaction, $cut = true)
+    {
+        $tableNumber   = $transaction['table_number'] ?? 'N/A';
+        $orderNumber   = "Order #: " . ($transaction['order_number'] ?? 'N/A');
+        $headerSeparator = str_repeat("-", 48);
+
+        $validIPs = IP::extract($printerHost);
+        if (isset($validIPs[0]) && IP::validate($validIPs[0])) {
+            $connector = new NetworkPrintConnector($validIPs[0], 9100);
+        } else {
+            $connector = new WindowsPrintConnector($printerHost);
+        }
+        $printer = new Printer($connector);
+
+        $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $printer->feed(1);
+        $printer->text($orderNumber . PHP_EOL);
+        $printer->text($headerSeparator . PHP_EOL);
+        $printer->feed(1);
+
+        // "TABLE NO." label in double size
+        $this->title($printer, 'TABLE NO.' . PHP_EOL);
+
+        // Table number value in maximum double-size emphasis
+        $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT | Printer::MODE_DOUBLE_WIDTH);
+        $printer->setEmphasis(true);
+        $printer->text($tableNumber . PHP_EOL);
+        $printer->setEmphasis(false);
+        $printer->selectPrintMode();
+
+        $printer->feed(2);
+
+        if ($cut) {
+            $printer->cut();
+        }
+        $printer->close();
+    }
 }

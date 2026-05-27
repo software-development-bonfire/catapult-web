@@ -59,6 +59,7 @@ class KDSTransactionService
             'order_number' => $terminalTransaction->order_number ?? '',
             'table_number' => $terminalTransaction->table_number ?? '',
             'queue_number' => $terminalTransaction->queue_number ?? '',
+            'guest_count' => $terminalTransaction->guest_count ?? '1',
             'remarks' => $terminalTransaction->remarks ?? '',
         ];
 

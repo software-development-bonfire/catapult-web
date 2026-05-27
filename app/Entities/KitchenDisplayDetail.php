@@ -28,6 +28,7 @@ class KitchenDisplayDetail extends Base
         'terminal_number',
         'started_at',
         'end_at',
+        'max_preparation_time',
     ];
 
     protected $casts = [

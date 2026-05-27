@@ -69,9 +69,13 @@ class TerminalTransactionController extends POSBaseController
         }
 
         // Step 4: Handle kitchen printer, sticker printer, and KDS broadcasting
-        $this->handleKitchenPrinting($transactions);
-        $this->handleStickerPrinting($transactions);
-        $this->handleKDSBroadcasting($transactions, false);
+        if (config('system.kds.printer_failover') == false) {
+            // This will print automatically on the printer
+            $this->handleKitchenPrinting($transactions);
+            $this->handleStickerPrinting($transactions);
+        }
+        $kdsResponded = $this->handleKDSBroadcasting($transactions, false);
+        $this->checkKDSResponseAndPrinterFailover($transactions, $kdsResponded);
 
         return $this->successfulResponse(
             $transactions,
@@ -116,7 +120,8 @@ class TerminalTransactionController extends POSBaseController
         // Process printing and KDS for non-settled fine-dine
         $this->handleKitchenPrinting($transactions);
         $this->handleStickerPrinting($transactions);
-        $this->handleKDSBroadcasting($transactions, true);
+        $kdsResponded = $this->handleKDSBroadcasting($transactions, true);
+        $this->checkKDSResponseAndPrinterFailover($transactions, $kdsResponded);
 
         return $this->successfulResponse(
             $transactions,
@@ -216,9 +221,22 @@ class TerminalTransactionController extends POSBaseController
     }
 
     /**
-     * Handle KDS broadcasting to kitchen displays and releasing stations
+     * If KDS broadcast found no configured devices and printer_failover is enabled,
+     * fall back to kitchen printer to ensure the order is not lost.
      */
-    private function handleKDSBroadcasting($transactions, $isFineDine = false)
+    private function checkKDSResponseAndPrinterFailover($transactions, bool $kdsResponded): void
+    {
+        if (!$kdsResponded && config('system.kds.printer_failover') == true) {
+            Log::alert('KDS failover triggered: no KDS devices responded. Falling back to kitchen printer for transaction_id: ' . ($transactions['transaction_id'] ?? 'N/A'));
+            $this->handleKitchenPrinting($transactions);
+        }
+    }
+
+    /**
+     * Handle KDS broadcasting to kitchen displays and releasing stations.
+     * Returns true if broadcast was actually sent to at least one KDS device, false otherwise.
+     */
+    private function handleKDSBroadcasting($transactions, $isFineDine = false): bool
     {
         $broadcastAllTogether = config('system.kds.broadcast_all_together', false);
 
@@ -233,7 +251,7 @@ class TerminalTransactionController extends POSBaseController
         // Only proceed if we need to send to kitchen display and there are products to send
         if (!$sendToKitchenDisplay || empty($transactions['flatten_products'])) {
             Log::alert('No need to broadcast to KDS for transaction_id: ' . ($transactions['transaction_id'] ?? 'N/A') . ' with transaction_type: ' . ($transactions['transaction_type'] ?? 'N/A') . '. sendToKitchenDisplay: ' . ($sendToKitchenDisplay ? 'true' : 'false') . ' and flatten_products count: ' . count($transactions['flatten_products']));
-            return;
+            return false;
         }
 
         // Build kitchen display products (only non-addon products with kitchen station config)
@@ -248,7 +266,7 @@ class TerminalTransactionController extends POSBaseController
         }
 
         if (count($kitchenDisplayProducts) <= 0) {
-            return;
+            return false;
         }
         Log::alert('Flatten Products: ' . json_encode($transactions['flatten_products']));
         Log::alert('Kitchen DisplayProducts: ' . json_encode($kitchenDisplayProducts));
@@ -261,6 +279,8 @@ class TerminalTransactionController extends POSBaseController
             // If FINE-DINE we will only send to KDS station for preparation, and the releasing station flow will be handled when the order is marked as done by station device.
             $this->broadcastToReleasingStations($kitchenDisplayProducts, $transactions);
         }
+
+        return true;
     }
 
     /**

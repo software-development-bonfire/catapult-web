@@ -19,14 +19,18 @@ class KDSFastFoodOrderMoveEvent extends KDSEventBase
     public $items;
     public $fromStation;
     public $toStation;
+    public $next;
+    public $release;
 
-    public function __construct(string $deviceUid, $transaction, $items, $fromStation, $toStation)
+    public function __construct(string $deviceUid, $transaction, $items, $fromStation, $toStation, bool $next = true, bool $release = false)
     {
         $this->deviceUid = $deviceUid;
         $this->transaction = $transaction;
         $this->items = $items;
         $this->fromStation = $fromStation;
         $this->toStation = $toStation;
+        $this->next = $next;
+        $this->release = $release;
     }
 
     protected function getChannelName(): string
@@ -49,6 +53,8 @@ class KDSFastFoodOrderMoveEvent extends KDSEventBase
             'items' => $this->items,
             'fromStation' => $this->fromStation,
             'toStation' => $this->toStation,
+            'next' => $this->next,
+            'release' => $this->release,
             'timestamp' => now()->toISOString(),
         ];
     }

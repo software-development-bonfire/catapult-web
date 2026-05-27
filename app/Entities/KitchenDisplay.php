@@ -26,6 +26,7 @@ class KitchenDisplay extends Base
         'total_quantity',
         'completed_quantity',
         'completed_at',
+        'ended_at',
     ];
 
     protected $casts = [

@@ -89,6 +89,13 @@ Route::group([
         Route::post('kds-summary', [\App\Http\Controllers\KDS\v1\KdsSummaryController::class, 'summary']);
 
         // ============================================
+        // KITCHEN PRINTER (KDS-triggered)
+        // ============================================
+        Route::post('printer/print-order', [\App\Http\Controllers\KDS\v1\KitchenPrinterController::class, 'printOrder']);
+        Route::post('printer/print-bump-item', [\App\Http\Controllers\KDS\v1\KitchenPrinterController::class, 'printBumpItem']);
+        Route::post('printer/print-table-no', [\App\Http\Controllers\KDS\v1\KitchenPrinterController::class, 'printTableNumber']);
+
+        // ============================================
         // BROADCASTING AUTH (Shared)
         // ============================================
         Route::post('broadcasting/auth', [\App\Http\Controllers\KDS\v1\PusherAuthenticateController::class, 'authChannel']);
