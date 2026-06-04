@@ -104,7 +104,7 @@ class KitchenPrinterController extends Controller
         }
 
         try {
-            $this->printTableNumber($printerHost, $transaction);
+            $this->printTableNo($printerHost, $transaction);
             return $this->successfulResponse([], 'Table number printed successfully.');
         } catch (\Exception $e) {
             Log::error('KitchenPrinterController::printTableNumber — ' . $e->getMessage());

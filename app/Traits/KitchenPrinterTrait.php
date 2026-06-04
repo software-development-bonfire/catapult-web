@@ -59,7 +59,7 @@ trait KitchenPrinterTrait
         /* Information for the receipt */
         $date = parseDateTime(Carbon::now(), 'l jS \of F Y h:i:s A');
         $headerSeparator = str_repeat("-", 48);
-        $orderType = strtoupper(OrderType::getDescription($transaction['type']));
+        $orderType = strtoupper(OrderType::getDescription($transaction['type']  ?? 1));
         $transactionNo = "Transaction #: " . $transaction['transaction_id'];
         $orderNumber = "Order #: " . $transaction['order_number'];
 
@@ -233,7 +233,7 @@ trait KitchenPrinterTrait
     /**
      * Print only the table number in large centered text.
      */
-    function printTableNumber($printerHost, $transaction, $cut = true)
+    function printTableNo($printerHost, $transaction, $cut = true)
     {
         $tableNumber   = $transaction['table_number'] ?? 'N/A';
         $orderNumber   = "Order #: " . ($transaction['order_number'] ?? 'N/A');
@@ -253,11 +253,12 @@ trait KitchenPrinterTrait
         $printer->text($headerSeparator . PHP_EOL);
         $printer->feed(1);
 
-        // "TABLE NO." label in double size
-        $this->title($printer, 'TABLE NO.' . PHP_EOL);
-
+        // "TABLE NO." label in double size  
+        $printer->selectPrintMode(Printer::MODE_FONT_B | Printer::MODE_DOUBLE_HEIGHT | Printer::MODE_DOUBLE_WIDTH);
+        $printer->text('TABLE NO.' . PHP_EOL);
+        $printer->feed(1);
         // Table number value in maximum double-size emphasis
-        $printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT | Printer::MODE_DOUBLE_WIDTH);
+        $printer->selectPrintMode(Printer::MODE_FONT_A | Printer::MODE_DOUBLE_HEIGHT | Printer::MODE_DOUBLE_WIDTH);
         $printer->setEmphasis(true);
         $printer->text($tableNumber . PHP_EOL);
         $printer->setEmphasis(false);
