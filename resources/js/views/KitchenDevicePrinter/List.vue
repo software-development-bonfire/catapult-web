@@ -42,6 +42,7 @@
                         </span>
                     </td>
                     <td class="datatable-cell" align="center">
+                        <i class="fa fa-print fa-lg row-print ml-1" @click.stop="printTest(tableDataIndex, tableData)" title="Print Test"></i>
                         <i class="fa fa-edit fa-lg row-update ml-1" @click.stop="editRow(tableDataIndex, tableData)"></i>
                     </td>
                 </table-row>
@@ -204,6 +205,11 @@ import Modal from '../../components/Modal/Modal.vue';
                             name: "status",
                             label: this.$t('label.status'),
                             width: '90'
+                        },
+                        {
+                            name: "actions",
+                            label: this.$t('label.action'),
+                            width: '90'
                         }
                     ],
                     values: {
@@ -297,6 +303,28 @@ import Modal from '../../components/Modal/Modal.vue';
 
                     }).catch(error => {
                         this.form.errors = error.response.data.errors;
+                    })
+            },
+
+            printTest(index, data) {
+                this.$root.processing(true);
+                axios.post('kitchen-printer/' + data.bid + '/print-test')
+                    .then(response => {
+                        this.$root.processing(false);
+                        this.dialog.visible = true;
+                        this.dialog.status = 'success';
+                        this.dialog.message = this.$t('success.successfully_updated', { value: 'Test print sent to ' + data.code });
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                        };
+                    }).catch(error => {
+                        this.$root.processing(false);
+                        this.dialog.visible = true;
+                        this.dialog.status = 'error';
+                        this.dialog.message = error.response?.data?.message || 'Failed to send test print';
+                        this.dialog.ok.function = () => {
+                            this.dialog.visible = false;
+                        };
                     })
             },
         }

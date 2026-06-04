@@ -88,6 +88,8 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/list', 'BranchUniversalOrderSummaryController@list');
     });
 
+    Route::post('kitchen-printer/{bid}/print-test', 'KitchenDevicePrinterController@printTest');
+
     Route::apiResources([
         'file-storage-setup' => 'FileStorageSetupController',
         'catapult-db-setup' => 'CatapultDbSetupController',

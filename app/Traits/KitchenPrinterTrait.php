@@ -270,4 +270,50 @@ trait KitchenPrinterTrait
         }
         $printer->close();
     }
+
+    /**
+     * Print a test receipt to verify printer connectivity and functionality.
+     */
+    function printerTest($printerHost)
+    {
+        $date = parseDateTime(Carbon::now(), 'l jS \of F Y h:i:s A');
+        $headerSeparator = str_repeat("-", 48);
+
+        $validIPs = IP::extract($printerHost);
+        if (isset($validIPs[0]) && IP::validate($validIPs[0])) {
+            $connector = new NetworkPrintConnector($validIPs[0], 9100);
+        } else {
+            $connector = new WindowsPrintConnector($printerHost);
+        }
+        $printer = new Printer($connector);
+
+        $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $printer->feed(2);
+        $this->title($printer, 'PRINTER TEST' . PHP_EOL);
+        $printer->feed(1);
+        $printer->selectPrintMode();
+
+        $printer->setEmphasis(true);
+        $printer->text("Printer Connection Test" . PHP_EOL);
+        $printer->selectPrintMode();
+
+        $printer->setEmphasis(false);
+        $printer->text($headerSeparator . PHP_EOL);
+        $printer->feed(1);
+
+        $printer->setJustification(Printer::JUSTIFY_LEFT);
+        $printer->text("Printer Host: " . $printerHost . PHP_EOL);
+        $printer->text("Test Date: " . $date . PHP_EOL);
+        $printer->text("Status: OK" . PHP_EOL);
+
+        $printer->feed(1);
+        $printer->setJustification(Printer::JUSTIFY_CENTER);
+        $printer->text($headerSeparator . PHP_EOL);
+        $printer->feed(2);
+        $printer->text("Printer is working correctly!" . PHP_EOL);
+        $printer->feed(2);
+
+        $printer->cut();
+        $printer->close();
+    }
 }

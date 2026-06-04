@@ -7,6 +7,7 @@ use App\Http\Requests\UserAccountRequest;
 use App\Repositories\Contracts\KitchenPrinterRepository;
 use App\Repositories\Contracts\UserAccountRepository;
 use App\Services\KitchenDevicePrinterService;
+use App\Traits\KitchenPrinterTrait;
 use App\Transformers\KitchenPrinterTransformer;
 use App\Transformers\UserAccountTransformer;
 use Illuminate\Http\Request;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Lang;
 
 class KitchenDevicePrinterController extends Controller
 {
+    use KitchenPrinterTrait;
+
     public $kitchenDevicePrinterService;
 
     /**
@@ -66,6 +69,30 @@ class KitchenDevicePrinterController extends Controller
             return $this->errorResponse(
                 [],
                 Lang::get('error.user_failed_update')
+            );
+        }
+        return $this->successfulResponse(
+            [],
+            Lang::get('success.user_updated')
+        );
+    }
+
+    /**
+     * Send a test print to the specified printer.
+     *
+     * @param  string  $bid
+     * @return \Illuminate\Http\Response
+     */
+    public function printTest($bid)
+    {
+        try {
+            $localPrinter = $this->kitchenDevicePrinterService->printTest($bid);
+
+            $this->printerTest($localPrinter);
+        } catch (\Throwable $th) {
+            return $this->errorResponse(
+                [],
+                'Failed to send test print: ' . $th->getMessage()
             );
         }
         return $this->successfulResponse(
