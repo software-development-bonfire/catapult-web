@@ -157,12 +157,12 @@ class TerminalTransactionController extends POSBaseController
      */
     private function handleKitchenPrinting($transactions)
     {
-        $printToKitchen = isset($transactions['transaction_type'])
+        $printToKitchen = true;/* isset($transactions['transaction_type'])
             && (
                 ($transactions['transaction_type'] == TerminalTransactionType::SALES ||
                     $transactions['transaction_type'] == TerminalTransactionType::REFUND) ||
                 $transactions['transaction_type'] == SourceTransactionType::FINEDINE // For fine-dine, we want to send to KDS even if it's not marked as SALES/REFUND for preparation purposes
-            );
+            );*/
         if (!$printToKitchen || empty($transactions['flatten_products'])) {
             return;
         }
@@ -241,12 +241,12 @@ class TerminalTransactionController extends POSBaseController
         $broadcastAllTogether = config('system.kds.broadcast_all_together', false);
 
         // SALES/REFUND is initially from FASTFOOD flow, but for FINE DINE developer put it on the transaction type for some reason.
-        $sendToKitchenDisplay = isset($transactions['transaction_type'])
+        $sendToKitchenDisplay = true; /* isset($transactions['transaction_type'])
             && (
                 ($transactions['transaction_type'] == TerminalTransactionType::SALES ||
                     $transactions['transaction_type'] == TerminalTransactionType::REFUND) ||
                 $transactions['transaction_type'] == SourceTransactionType::FINEDINE // For fine-dine, we want to send to KDS even if it's not marked as SALES/REFUND for preparation purposes
-            );
+            );*/
 
         // Only proceed if we need to send to kitchen display and there are products to send
         if (!$sendToKitchenDisplay || empty($transactions['flatten_products'])) {
