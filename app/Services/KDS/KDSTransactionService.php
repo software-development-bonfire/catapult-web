@@ -112,6 +112,8 @@ class KDSTransactionService
                     'table_number' => $terminalTransaction->table_number ?? '',
                     'queue_number' => $terminalTransaction->queue_number ?? '',
                     'max_prep_time' => $this->getMaxPrepTime($storedProduct->product_bid),
+                    'created_at' => $storedProduct->created_at,
+                    'updated_at' => $storedProduct->updated_at,
                 ];
                 $flattenProducts[] = $productDetail;
 
@@ -151,6 +153,8 @@ class KDSTransactionService
                         'table_number' => $terminalTransaction->table_number ?? '',
                         'queue_number' => $terminalTransaction->queue_number ?? '',
                         'max_prep_time' => $this->getMaxPrepTime($storedAddon->product_bid),
+                        'created_at' => $storedAddon->created_at,
+                        'updated_at' => $storedAddon->updated_at,
                     ];
                     $flattenProducts[] = $addonDetail;
 

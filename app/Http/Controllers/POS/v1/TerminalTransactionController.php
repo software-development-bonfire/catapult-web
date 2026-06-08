@@ -274,11 +274,11 @@ class TerminalTransactionController extends POSBaseController
         $this->broadcastToKDSDevices($kitchenDisplayProducts, $transactions);
 
         // Broadcast to releasing stations by order type
-        if (!$isFineDine) {
+       // if (!$isFineDine) {
             // If FASTFOOD sento releasing stations immediately for order type flow
             // If FINE-DINE we will only send to KDS station for preparation, and the releasing station flow will be handled when the order is marked as done by station device.
             $this->broadcastToReleasingStations($kitchenDisplayProducts, $transactions);
-        }
+       // }
 
         return true;
     }
@@ -364,6 +364,7 @@ class TerminalTransactionController extends POSBaseController
             foreach ($deviceUids as $deviceUid) {
                 $deviceItems = collect($items)->where('device_uid', $deviceUid)->values()->toArray();
                 broadcast(new KDSFastFoodTransactionEvent($deviceUid, $transactions['kds_transaction'], $deviceItems, true));
+                broadcast(new KDSFineDineTransactionEvent($deviceUid, $transactions['kds_transaction'], $deviceItems, true));
             }
         }
     }
