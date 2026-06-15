@@ -5,6 +5,7 @@ namespace App\Repositories\Eloquent;
 use App\Entities\CDISBranch;
 use App\Entities\DeviceSettings;
 use App\Enums\API\DeviceType;
+use App\Enums\KDS\QueueingGroup;
 use App\Enums\Status;
 use App\Repositories\Contracts\DeviceSettingsRepository;
 use Illuminate\Support\Facades\DB;
@@ -167,6 +168,82 @@ class DeviceSettingsRepositoryEloquent extends BaseRepository implements DeviceS
             ->groupBy(['cdis_kitchen_station.bid']);
 
         $result = $this->model->first();
+
+        return $result;
+    }
+
+    
+    /**
+     * Get Online kitchen stations
+     *
+     * @return Collection $result.
+     */
+    public function getOnlineKitchenStations()
+    {
+        $branchBid = CDISBranch::where('code', config('configuration.branch_code'))->whereNull('deleted_at')->value('bid');
+
+        $this->model = $this->model
+            ->select([
+                DB::raw('cdis_kitchen_station.bid as bid'),
+                DB::raw('cdis_kitchen_station.code as code'),
+                DB::raw('cdis_kitchen_station.name as name'),
+                DB::raw('cdis_kitchen_station.order_type as order_type'),
+                DB::raw('cdis_kitchen_station.queueing_group_type as queueing_group_type'),
+                DB::raw('cdis_kitchen_station.screen_prioritization as screen_prioritization'),
+                DB::raw('cdis_kitchen_station.status as status')
+            ])
+            ->leftJoin('cdis_kitchen_station', 'cdis_kitchen_station.bid', '=', 'device_settings.kitchen_station_bid')
+            ->where('device_settings.status', Status::ACTIVE)
+            ->where('device_settings.device_type', DeviceType::KDS)
+            ->where('device_settings.socket_status', Status::ACTIVE)
+            ->whereNull('device_settings.deleted_at')
+            ->where('cdis_kitchen_station.branch_bid', $branchBid)
+            ->where('cdis_kitchen_station.status', Status::ACTIVE)
+            ->whereNull('cdis_kitchen_station.deleted_at')
+            ->groupBy(['cdis_kitchen_station.bid']);
+
+        $result = $this->model->get();
+        $this->resetModel();
+
+        return $result;
+    }
+
+    
+    /**
+     * Get Releasing kitchen stations
+     *
+     * @return Collection $result.
+     */
+    public function getReleasingKitchenStations()
+    {
+        $branchBid = CDISBranch::where('code', config('configuration.branch_code'))->whereNull('deleted_at')->value('bid');
+
+        $this->model = $this->model
+            ->select([
+                DB::raw('device_settings.device_code as device_code'),
+                DB::raw('device_settings.device_uid as device_uid'),
+                DB::raw('device_settings.device_type as device_type'),
+                DB::raw('cdis_kitchen_station.bid as bid'),
+                DB::raw('cdis_kitchen_station.code as code'),
+                DB::raw('cdis_kitchen_station.name as name'),
+                DB::raw('cdis_kitchen_station.order_type as order_type'),
+                DB::raw('cdis_kitchen_station.queueing_group_type as queueing_group_type'),
+                DB::raw('cdis_kitchen_station.screen_prioritization as screen_prioritization'),
+                DB::raw('cdis_kitchen_station.status as status')
+            ])
+            ->leftJoin('cdis_kitchen_station', 'cdis_kitchen_station.bid', '=', 'device_settings.kitchen_station_bid')
+            ->where('device_settings.status', Status::ACTIVE)
+            ->where('device_settings.device_type', DeviceType::KDS)
+            ->where('device_settings.socket_status', Status::ACTIVE)
+            ->whereNull('device_settings.deleted_at')
+            ->where('cdis_kitchen_station.branch_bid', $branchBid)
+            ->where('cdis_kitchen_station.status', Status::ACTIVE)
+            ->where('cdis_kitchen_station.queueing_group_type', QueueingGroup::RELEASING)
+            ->whereNull('cdis_kitchen_station.deleted_at')
+            ->groupBy(['cdis_kitchen_station.bid']);
+
+        $result = $this->model->get();
+        $this->resetModel();
 
         return $result;
     }

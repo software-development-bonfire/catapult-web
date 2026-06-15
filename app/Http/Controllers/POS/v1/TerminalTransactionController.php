@@ -103,7 +103,7 @@ class TerminalTransactionController extends POSBaseController
                 $transactions
             ));
 
-            Log::alert('Fine-dine transaction settled with bid: ' . ($transactions['bid'] ?? 'N/A') . ' and transaction_id: ' . ($transactions['transaction_id'] ?? 'N/A'). ' and table_id: ' . ($transactions['table_id'] ?? 'N/A'));
+            Log::alert('Fine-dine transaction settled with bid: ' . ($transactions['bid'] ?? 'N/A') . ' and transaction_id: ' . ($transactions['transaction_id'] ?? 'N/A') . ' and table_id: ' . ($transactions['table_id'] ?? 'N/A'));
 
             // Clean up OTS transaction
             $this->cleanupOTSTransaction($transactions);
@@ -198,7 +198,7 @@ class TerminalTransactionController extends POSBaseController
         if (!$printToSticker || !isset($transactions['official_receipt']['products'])) {
             return;
         }
-        
+
         $transactionStickersProducts = [];
         foreach ($transactions['official_receipt']['products'] as $product) {
             $productPackaging = app()->make(KitchenPrinterRepository::class)->getProductIsPrintSticker($product['product_bid']);
@@ -274,12 +274,13 @@ class TerminalTransactionController extends POSBaseController
         $this->broadcastToKDSDevices($kitchenDisplayProducts, $transactions);
 
         // Broadcast to releasing stations by order type
-       // if (!$isFineDine) {
-            // If FASTFOOD sento releasing stations immediately for order type flow
-            // If FINE-DINE we will only send to KDS station for preparation, and the releasing station flow will be handled when the order is marked as done by station device.
-            $this->broadcastToReleasingStations($kitchenDisplayProducts, $transactions);
-       // }
+        // if (!$isFineDine) {
+        // If FASTFOOD sento releasing stations immediately for order type flow
+        // If FINE-DINE we will only send to KDS station for preparation, and the releasing station flow will be handled when the order is marked as done by station device.
+        $this->broadcastToReleasingStations($kitchenDisplayProducts, $transactions);
+        // }
 
+        $list = app()->make(DeviceSettingsRepository::class)->getKitchenStations();
         return true;
     }
 
@@ -289,11 +290,11 @@ class TerminalTransactionController extends POSBaseController
     private function broadcastToKDSDevices($kitchenDisplayProducts, $transactions)
     {
         $isFineDine = $this->isFineDineTransaction($transactions);
-        
+
         // Check if we should broadcast all items together to all devices regardless of their assigned station
         $broadcastAllTogether = config('system.kds.broadcast_all_together', false);
         $broadcastToAllUniqueDevices = config('system.kds.broadcast_unique_devices', false);
-        
+
         if ($broadcastAllTogether) {
             // Broadcast all items together to all unique devices
             $allDeviceUids = collect($kitchenDisplayProducts)->pluck('device_uid')->unique()->filter();
@@ -302,7 +303,7 @@ class TerminalTransactionController extends POSBaseController
                 foreach ($allDeviceUids as $device) {
                     if (!empty($device)) {
                         Log::info('Broadcasting all items to device: ' . $device . ' with mode ' . ($isFineDine ? 'FineDine' : 'FastFood') . ' and ' . count($kitchenDisplayProducts) . ' items');
-                        
+
                         if ($isFineDine) {
                             broadcast(new KDSFineDineTransactionEvent($device, $transactions['kds_transaction'], $kitchenDisplayProducts));
                         } else {
@@ -312,13 +313,13 @@ class TerminalTransactionController extends POSBaseController
                 }
             } else {
                 $allKdsDevices = app()->make(DeviceSettingsRepository::class)->getKDSDevices();
-                
+
                 Log::alert('KDS Devices: ' . json_encode($allKdsDevices));
                 foreach ($allKdsDevices as $device) {
-                    if (!empty($device)) {  
+                    if (!empty($device)) {
                         $deviceUid = $device->device_uid;
                         Log::info('Broadcasting all items to device: ' . $deviceUid . ' with mode ' . ($isFineDine ? 'FineDine' : 'FastFood') . ' and ' . count($kitchenDisplayProducts) . ' items');
-                         if ($isFineDine) {
+                        if ($isFineDine) {
                             broadcast(new KDSFineDineTransactionEvent($deviceUid, $transactions['kds_transaction'], $kitchenDisplayProducts));
                         } else {
                             broadcast(new KDSFastFoodTransactionEvent($deviceUid, $transactions['kds_transaction'], $kitchenDisplayProducts));
@@ -357,11 +358,15 @@ class TerminalTransactionController extends POSBaseController
             }
 
             $orderTypeName = OrderType::getDescription($orderType);
-            Log::alert('BROADCAST: ' . $orderType . ': ' . $orderTypeName);
+            Log::alert('broadcastToReleasingStations-->BROADCAST: ' . $orderType . ': ' . $orderTypeName);
 
             // Broadcast releasing transaction to each device that has items
-            $deviceUids = collect($items)->pluck('device_uid')->unique()->filter();
-            foreach ($deviceUids as $deviceUid) {
+            $allReleasingDevices = app()->make(DeviceSettingsRepository::class)->getReleasingKitchenStations();
+
+            Log::alert('Releasing Devices: ' . json_encode($allReleasingDevices));
+            foreach ($allReleasingDevices as $device) {
+                $deviceUid = $device->device_uid;
+                Log::alert('broadcastToReleasingStations-->BROADCASTING TO DEVICE: ' . $deviceUid . ' for order type ' . $orderTypeName . ' with ' . count($items) . ' items');
                 $deviceItems = collect($items)->where('device_uid', $deviceUid)->values()->toArray();
                 broadcast(new KDSFastFoodTransactionEvent($deviceUid, $transactions['kds_transaction'], $deviceItems, true));
                 broadcast(new KDSFineDineTransactionEvent($deviceUid, $transactions['kds_transaction'], $deviceItems, true));
