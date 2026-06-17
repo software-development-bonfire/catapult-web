@@ -27,6 +27,7 @@ class KitchenDisplay extends Base
         'completed_quantity',
         'completed_at',
         'ended_at',
+        'sent_at',
     ];
 
     protected $casts = [
@@ -36,6 +37,7 @@ class KitchenDisplay extends Base
         'terminal_bid' => 'string',
         'total_quantity' => 'decimal:6',
         'completed_quantity' => 'decimal:6',
+        'sent_at' => 'datetime',
     ];
 
     public function details()

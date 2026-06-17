@@ -35,13 +35,15 @@ class CDISTerminalTransactionAddon extends Base
         'special_request',
         'usage_type',
         'supervisor_bid',
-        'supervisor_name'
+        'supervisor_name',
+        'sent_at',
     ];
 
     protected $casts = [
         'bid' => 'string',
         'transaction_product_bid' => 'string',
         'product_bid' => 'string',
+        'sent_at' => 'datetime',
     ];
 
     public function transactionProduct()

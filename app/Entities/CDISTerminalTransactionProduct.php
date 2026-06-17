@@ -36,7 +36,8 @@ class CDISTerminalTransactionProduct extends Base
         'remarks',
         'special_request',
         'supervisor_bid',
-        'supervisor_name'
+        'supervisor_name',
+        'sent_at',
     ];
 
     protected $casts = [
@@ -44,6 +45,7 @@ class CDISTerminalTransactionProduct extends Base
         'transaction_detail_bid' => 'string',
         'product_bid' => 'string',
         'category_bid' => 'string',
+        'sent_at' => 'datetime',
     ];
 
     public function detail()

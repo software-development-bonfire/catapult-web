@@ -29,6 +29,7 @@ class KitchenDisplayDetail extends Base
         'started_at',
         'end_at',
         'max_preparation_time',
+        'sent_at',
     ];
 
     protected $casts = [
@@ -42,6 +43,7 @@ class KitchenDisplayDetail extends Base
         'is_addon' => 'boolean',
         'started_at' => 'datetime',
         'end_at' => 'datetime',
+        'sent_at' => 'datetime',
     ];
 
     public function head()

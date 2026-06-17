@@ -33,12 +33,14 @@ class CDISTerminalTransaction extends Base
         'remarks',
         'special_instruction',
         'created_by',
+        'sent_at',
     ];
 
     protected $casts = [
         'bid' => 'string',
         'terminal_bid' => 'string',
         'transaction_id' => 'string',
+        'sent_at' => 'datetime',
     ];
 
     public function terminal()
