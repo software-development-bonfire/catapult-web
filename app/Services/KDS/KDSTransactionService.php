@@ -119,13 +119,17 @@ class KDSTransactionService
                     'created_at' => $storedProduct->created_at,
                     'updated_at' => $storedProduct->updated_at,
                 ];
-                $flattenProducts[] = $productDetail;
 
                 // Persist to KitchenDisplay/KitchenDisplayDetail tables (products without addons)
                 if ($storedProduct->addons->isEmpty()) {
-                    $this->validateKitchenDisplay($terminalTransaction, $transactionDetail, $storedProduct, $productDetail);
+                    $kitchenDisplay = $this->validateKitchenDisplay($terminalTransaction, $transactionDetail, $storedProduct, $productDetail);
+
+                    $productDetail['kitchen_display_bid'] = $kitchenDisplay ? $kitchenDisplay['kitchen_display_id'] : null;
+                    $productDetail['kitchen_display_detail_bid'] = $kitchenDisplay ? $kitchenDisplay['kitchen_display_detail_id'] : null;
+                    $productDetail['kitchen_transaction_detail_bid'] = $kitchenDisplay ? $kitchenDisplay['kitchen_transaction_detail_bid'] : null;
                 }
 
+                $flattenProducts[] = $productDetail;
                 // Process addons from loaded relationship
                 foreach ($storedProduct->addons as $storedAddon) {
                     $flattenIndex += 1;
@@ -161,10 +165,13 @@ class KDSTransactionService
                         'created_at' => $storedAddon->created_at,
                         'updated_at' => $storedAddon->updated_at,
                     ];
-                    $flattenProducts[] = $addonDetail;
 
                     // Persist to KitchenDisplay/KitchenDisplayDetail tables for addon
-                    $this->validateKitchenDisplay($terminalTransaction, $transactionDetail, $storedAddon, $addonDetail);
+                    $kitchenDisplay = $this->validateKitchenDisplay($terminalTransaction, $transactionDetail, $storedAddon, $addonDetail);
+                    $addonDetail['kitchen_display_bid'] = $kitchenDisplay ? $kitchenDisplay['kitchen_display_id'] : null;
+                    $addonDetail['kitchen_display_detail_bid'] = $kitchenDisplay ? $kitchenDisplay['kitchen_display_detail_id'] : null;
+                    $addonDetail['kitchen_transaction_detail_bid'] = $kitchenDisplay ? $kitchenDisplay['kitchen_transaction_detail_bid'] : null;
+                    $flattenProducts[] = $addonDetail;
                 }
 
                 $flattenIndex += 1;

@@ -51,7 +51,7 @@ trait KitchenDisplayTrait
         }
 
         // Create detail record at the first station
-        $this->createKitchenDisplayDetail($kitchenDisplay, $transactionDetailProduct, $product, $kitchenStationBid);
+        $kitchenDisplayDetail = $this->createKitchenDisplayDetail($kitchenDisplay, $transactionDetailProduct, $product, $kitchenStationBid);
 
         // Update total_quantity on head
         $totalQty = KitchenDisplayDetail::where('head_bid', $kitchenDisplay->bid)->sum('remaining_quantity');
@@ -60,6 +60,7 @@ trait KitchenDisplayTrait
         return [
             'kitchen_display_id' => $kitchenDisplay->bid,
             'kitchen_transaction_detail_bid' => $transactionDetail->bid,
+            'kitchen_display_detail_id' => $kitchenDisplayDetail->bid,
         ];
     }
 
