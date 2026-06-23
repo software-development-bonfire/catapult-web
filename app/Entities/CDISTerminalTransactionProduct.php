@@ -37,6 +37,7 @@ class CDISTerminalTransactionProduct extends Base
         'special_request',
         'supervisor_bid',
         'supervisor_name',
+        'created_at',
         'sent_at',
     ];
 

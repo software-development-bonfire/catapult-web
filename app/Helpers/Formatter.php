@@ -106,6 +106,18 @@ if (! function_exists('parseDateTime')) {
     }
 }
 
+if (! function_exists('parseSqlDateTime')) {
+
+    function parseSqlDateTime($value, $defaultValue = null)
+    {
+        return isset($value)
+            ? Carbon::parse($value)->format('Y-m-d H:i:s')
+            : ($defaultValue !== null
+                ? Carbon::parse($defaultValue)->format('Y-m-d H:i:s')
+                : null);
+    }
+}
+
 if (! function_exists('cleanNonAlphaNumericChars')) {
     function cleanNonAlphaNumericChars($value, $withSpace = false)
     {

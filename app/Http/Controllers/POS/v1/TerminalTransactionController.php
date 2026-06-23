@@ -52,7 +52,7 @@ class TerminalTransactionController extends POSBaseController
         }
 
         // Step 1: Store transaction data to DB
-        $transactions = app()->make(TerminalTransactionService::class)->store($request->transaction);
+        $transactions = app()->make(TerminalTransactionService::class)->storeCreateUpdate($request->transaction);
 
         // Step 2: Construct KDS data and persist to KDS tables
         if (!empty($transactions)) {

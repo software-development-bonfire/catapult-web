@@ -61,9 +61,9 @@ class KDSTransactionService
             'queue_number' => $terminalTransaction->queue_number ?? '',
             'guest_count' => $terminalTransaction->guest_count ?? '1',
             'remarks' => $terminalTransaction->remarks ?? '',
-            'sent_at' => $terminalTransaction->sent_at,
-            'created_at' => $terminalTransaction->created_at,
-            'updated_at' => $terminalTransaction->updated_at,
+            'sent_at' => parseSqlDateTime($terminalTransaction->sent_at),
+            'created_at' => parseSqlDateTime($terminalTransaction->created_at),
+            'updated_at' => parseSqlDateTime($terminalTransaction->updated_at),
         ];
 
         $flattenProducts = [];
@@ -115,9 +115,9 @@ class KDSTransactionService
                     'table_number' => $terminalTransaction->table_number ?? '',
                     'queue_number' => $terminalTransaction->queue_number ?? '',
                     'max_prep_time' => $this->getMaxPrepTime($storedProduct->product_bid),
-                    'sent_at' => $storedProduct->sent_at,
-                    'created_at' => $storedProduct->created_at,
-                    'updated_at' => $storedProduct->updated_at,
+                    'sent_at' => parseSqlDateTime($storedProduct->sent_at),
+                    'created_at' => parseSqlDateTime($storedProduct->created_at),
+                    'updated_at' => parseSqlDateTime($storedProduct->updated_at),
                 ];
 
                 // Persist to KitchenDisplay/KitchenDisplayDetail tables (products without addons)
@@ -161,9 +161,9 @@ class KDSTransactionService
                         'table_number' => $terminalTransaction->table_number ?? '',
                         'queue_number' => $terminalTransaction->queue_number ?? '',
                         'max_prep_time' => $this->getMaxPrepTime($storedAddon->product_bid),
-                        'sent_at' => $storedAddon->sent_at,
-                        'created_at' => $storedAddon->created_at,
-                        'updated_at' => $storedAddon->updated_at,
+                        'sent_at' => parseSqlDateTime($storedAddon->sent_at),
+                        'created_at' => parseSqlDateTime($storedAddon->created_at),
+                        'updated_at' => parseSqlDateTime($storedAddon->updated_at),
                     ];
 
                     // Persist to KitchenDisplay/KitchenDisplayDetail tables for addon
