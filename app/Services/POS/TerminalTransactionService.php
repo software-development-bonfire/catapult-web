@@ -295,7 +295,9 @@ class TerminalTransactionService
                         $this->enableForeignKeyChecks();
                     }
                     $terminalTransactionDetailProduct->addons = $addons;
-                    $terminalTransactionDetailProduct->special_request = $product->special_request;
+                    if (isset($terminalTransactionDetailProduct->special_request)) {
+                        $terminalTransactionDetailProduct->special_request = isset($product->special_request) ? $product->special_request : null;
+                    }
 
                     $products[] = $terminalTransactionDetailProduct;
 
@@ -503,7 +505,7 @@ class TerminalTransactionService
                             'special_request' => isset($product->special_request) ? $product->special_request : null,
                             'supervisor_bid' => $product->supervisor_bid,
                             'supervisor_name' => $product->supervisor_name,
-                            'sent_at' => $product->sent_at,
+                            'sent_at' => isset($product->sent_at) ? $product->sent_at : now(),
                             'created_at' => $product->created_at,
                             'updated_at' => $product->updated_at,
                             'deleted_at' => $product->deleted_at,
@@ -566,7 +568,7 @@ class TerminalTransactionService
                                 'usage_type' => $addon->usage_type,
                                 'supervisor_bid' => $addon->supervisor_bid,
                                 'supervisor_name' => $addon->supervisor_name,
-                                'sent_at' => $addon->sent_at,
+                                'sent_at' => isset($addon->sent_at) ? $addon->sent_at : now(),
                                 'created_at' => $addon->created_at,
                                 'updated_at' => $addon->updated_at,
                                 'deleted_at' => $addon->deleted_at,
@@ -606,7 +608,9 @@ class TerminalTransactionService
                         $this->enableForeignKeyChecks();
                     }
                     $terminalTransactionDetailProduct->addons = $addons;
-                    $terminalTransactionDetailProduct->special_request = $product->special_request;
+                    if (isset($terminalTransactionDetailProduct->special_request)) {
+                        $terminalTransactionDetailProduct->special_request = isset($product->special_request) ? $product->special_request : null;
+                    }
 
                     $products[] = $terminalTransactionDetailProduct;
 

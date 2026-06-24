@@ -10,11 +10,13 @@ use App\Entities\CDISTerminalTransaction;
 use App\Enums\UsageType;
 use App\Repositories\Contracts\KitchenItemSetupRepository;
 use App\Traits\KitchenDisplayTrait;
+use App\Traits\ProductImagePathTrait;
 use App\Traits\QueryHelper;
 
 class KDSTransactionService
 {
     use KitchenDisplayTrait;
+    use ProductImagePathTrait;
     use QueryHelper;
 
     /**
@@ -129,6 +131,9 @@ class KDSTransactionService
                     $productDetail['kitchen_transaction_detail_bid'] = $kitchenDisplay ? $kitchenDisplay['kitchen_transaction_detail_bid'] : null;
                 }
 
+                $productDetail['presentation_url'] = $this->getProductImagePath($storedProduct->product_bid);
+                $productDetail['recipe_url'] = $this->getProductRecipeUrl($storedProduct->product_bid);
+
                 $flattenProducts[] = $productDetail;
                 // Process addons from loaded relationship
                 foreach ($storedProduct->addons as $storedAddon) {
@@ -171,6 +176,10 @@ class KDSTransactionService
                     $addonDetail['kitchen_display_bid'] = $kitchenDisplay ? $kitchenDisplay['kitchen_display_id'] : null;
                     $addonDetail['kitchen_display_detail_bid'] = $kitchenDisplay ? $kitchenDisplay['kitchen_display_detail_id'] : null;
                     $addonDetail['kitchen_transaction_detail_bid'] = $kitchenDisplay ? $kitchenDisplay['kitchen_transaction_detail_bid'] : null;
+
+                    $addonDetail['presentation_url'] = $this->getProductImagePath($storedAddon->product_bid);
+                    $addonDetail['recipe_url'] = $this->getProductRecipeUrl($storedAddon->product_bid);
+                    
                     $flattenProducts[] = $addonDetail;
                 }
 
