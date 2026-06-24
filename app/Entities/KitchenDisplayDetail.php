@@ -15,6 +15,7 @@ class KitchenDisplayDetail extends Base
         'transaction_product_bid',
         'product_uom_packaging_bid',
         'transaction_id',
+        'transaction_type',
         'remaining_quantity',
         'kitchen_station_bid',
         'status',

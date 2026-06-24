@@ -350,26 +350,48 @@ class TerminalTransactionController extends POSBaseController
      */
     private function broadcastToReleasingStations($kitchenDisplayProducts, $transactions)
     {
-        $groupedReleasingDisplays = collect($kitchenDisplayProducts)->groupBy('order_type_id');
+        $isFineDine = $this->isFineDineTransaction($transactions);
 
-        foreach ($groupedReleasingDisplays->toArray() as $orderType => $items) {
-            if (empty($orderType) || count($items) <= 0) {
-                continue;
-            }
+        $broadcastAllToReleasingStations = config('system.kds.broadcast_releasing_stations', false);
 
-            $orderTypeName = OrderType::getDescription($orderType);
-            Log::alert('broadcastToReleasingStations-->BROADCAST: ' . $orderType . ': ' . $orderTypeName);
-
+        $allReleasingDevices = app()->make(DeviceSettingsRepository::class)->getReleasingKitchenStations();
+        if ($broadcastAllToReleasingStations) {
             // Broadcast releasing transaction to each device that has items
-            $allReleasingDevices = app()->make(DeviceSettingsRepository::class)->getReleasingKitchenStations();
-
-            Log::alert('Releasing Devices: ' . json_encode($allReleasingDevices));
+            Log::alert('KDS Releasing Devices: ' . json_encode($allReleasingDevices));
             foreach ($allReleasingDevices as $device) {
-                $deviceUid = $device->device_uid;
-                Log::alert('broadcastToReleasingStations-->BROADCASTING TO DEVICE: ' . $deviceUid . ' for order type ' . $orderTypeName . ' with ' . count($items) . ' items');
-                $deviceItems = collect($items)->where('device_uid', $deviceUid)->values()->toArray();
-                broadcast(new KDSFastFoodTransactionEvent($deviceUid, $transactions['kds_transaction'], $deviceItems, true));
-                broadcast(new KDSFineDineTransactionEvent($deviceUid, $transactions['kds_transaction'], $deviceItems, true));
+                if (!empty($device)) {
+                    $deviceUid = $device->device_uid;
+                    Log::info('Broadcasting all items to releasing device: ' . $deviceUid . ' with mode ' . ($isFineDine ? 'FineDine' : 'FastFood') . ' and ' . count($kitchenDisplayProducts) . ' items');
+                    if ($isFineDine) {
+                        broadcast(new KDSFineDineTransactionEvent($deviceUid, $transactions['kds_transaction'], $kitchenDisplayProducts, true));
+                    } else {
+                        broadcast(new KDSFastFoodTransactionEvent($deviceUid, $transactions['kds_transaction'], $kitchenDisplayProducts, true));
+                    }
+                }
+            }
+        } else {
+            // This broadcasts to releasing stations based on order type, only sending items that belong to that order type for each device.
+          
+            Log::alert('Releasing Devices: ' . json_encode($allReleasingDevices));
+            $groupedReleasingDisplays = collect($kitchenDisplayProducts)->groupBy('order_type_id');
+
+            foreach ($groupedReleasingDisplays->toArray() as $orderType => $items) {
+                if (empty($orderType) || count($items) <= 0) {
+                    continue;
+                }
+
+                $orderTypeName = OrderType::getDescription($orderType);
+                Log::alert('broadcastToReleasingStations-->BROADCAST: ' . $orderType . ': ' . $orderTypeName);
+                foreach ($allReleasingDevices as $device) {
+                    $deviceUid = $device->device_uid;
+                    Log::alert('broadcastToReleasingStations-->BROADCASTING TO DEVICE: ' . $deviceUid . ' for order type ' . $orderTypeName . ' with ' . count($items) . ' items');
+                    $deviceItems = collect($items)->where('device_uid', $deviceUid)->values()->toArray();
+                    if ($isFineDine) {
+                        broadcast(new KDSFineDineTransactionEvent($deviceUid, $transactions['kds_transaction'], $deviceItems, true));
+                    } else {
+                        broadcast(new KDSFastFoodTransactionEvent($deviceUid, $transactions['kds_transaction'], $deviceItems, true));
+                    }
+                }
             }
         }
     }

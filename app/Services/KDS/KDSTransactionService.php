@@ -107,6 +107,7 @@ class KDSTransactionService
                     'special_request' => $storedProduct->special_request ?? '',
                     'is_addon' => false,
                     'transaction_id' => $terminalTransaction->transaction_id,
+                    'transaction_type' => $terminalTransaction->transaction_type, // This help to indetify the transaction type (VOID ORDER, VOID ITEM)for the product in the kitchen display detail table
                     'transaction_product_bid' => $storedProduct->bid,
                     'order_type_id' => $storedProduct->order_type_id,
                     'order_type_name' => $storedProduct->order_type_name,
@@ -130,7 +131,7 @@ class KDSTransactionService
                     $productDetail['kitchen_display_detail_bid'] = $kitchenDisplay ? $kitchenDisplay['kitchen_display_detail_id'] : null;
                     $productDetail['kitchen_transaction_detail_bid'] = $kitchenDisplay ? $kitchenDisplay['kitchen_transaction_detail_bid'] : null;
                 }
-
+  
                 $productDetail['presentation_url'] = $this->getProductImagePath($storedProduct->product_bid);
                 $productDetail['recipe_url'] = $this->getProductRecipeUrl($storedProduct->product_bid);
 
@@ -156,6 +157,7 @@ class KDSTransactionService
                         'special_request' => $storedAddon->special_request ?? '',
                         'is_addon' => true,
                         'transaction_id' => $terminalTransaction->transaction_id,
+                        'transaction_type' => $terminalTransaction->transaction_type, // This help to indetify the transaction type (VOID ORDER, VOID ITEM)for the product in the kitchen display detail table
                         'transaction_product_bid' => $storedAddon->bid,
                         'order_type_id' => $storedAddon->order_type_id,
                         'order_type_name' => $storedAddon->order_type_name,
