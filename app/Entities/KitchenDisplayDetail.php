@@ -17,8 +17,12 @@ class KitchenDisplayDetail extends Base
         'transaction_id',
         'transaction_type',
         'remaining_quantity',
+        'prepared_quantity',
+        'bumped_quantity',
+        'released_quantity',
         'kitchen_station_bid',
         'status',
+        'action_type',
         'order_type_id',
         'order_type_name',
         'usage_type',
@@ -31,6 +35,9 @@ class KitchenDisplayDetail extends Base
         'end_at',
         'max_preparation_time',
         'sent_at',
+        'prepared_at',
+        'bumped_at',
+        'served_at',
     ];
 
     protected $casts = [
@@ -41,10 +48,17 @@ class KitchenDisplayDetail extends Base
         'product_uom_packaging_bid' => 'string',
         'transaction_id' => 'string',
         'remaining_quantity' => 'decimal:6',
+        'prepared_quantity' => 'decimal:6',
+        'bumped_quantity' => 'decimal:6',
+        'released_quantity' => 'decimal:6',
+        'action_type' => 'integer',
         'is_addon' => 'boolean',
         'started_at' => 'datetime',
         'end_at' => 'datetime',
         'sent_at' => 'datetime',
+        'prepared_at' => 'datetime',
+        'bumped_at' => 'datetime',
+        'served_at' => 'datetime',
     ];
 
     public function head()

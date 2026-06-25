@@ -52,9 +52,9 @@ Route::group([
         // ============================================
         // UNIFIED KDS ENDPOINTS
         // ============================================
-        Route::post('action', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'action']);
-        Route::post('move-item', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'moveItem']);
-        Route::post('move-order', [\App\Http\Controllers\KDS\v1\KitchenDisplayController::class, 'moveOrder']);
+        Route::post('action', [\App\Http\Controllers\KDS\v1\KDSManamController::class, 'action']);
+        Route::post('move-item', [\App\Http\Controllers\KDS\v1\KDSManamController::class, 'moveItem']);
+        Route::post('move-order', [\App\Http\Controllers\KDS\v1\KDSManamController::class, 'moveOrder']);
 
         // ============================================
         // LEGACY ENDPOINTS (Backward compatibility)
