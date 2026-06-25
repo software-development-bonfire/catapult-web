@@ -6,6 +6,7 @@ use App\Entities\CDISKitchenStation;
 use App\Entities\DeviceSettings;
 use App\Entities\KitchenDisplay;
 use App\Entities\KitchenDisplayDetail;
+use App\Enums\KDS\MenuStatus;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -61,7 +62,7 @@ class KdsSummaryController extends Controller
                 : 0;
             $itemCount = (int) ($order->completed_quantity ?? $order->total_quantity);
 
-            if ($minutesTaken > $threshold) {
+            if ($minutesTaken > $order->max_preparation_time ?? 60) {
                 $delayDoneTransactions++;
                 $delayDoneItems += $itemCount;
             } else {
@@ -90,7 +91,7 @@ class KdsSummaryController extends Controller
                 : 0;
             $itemCount = max(0, (int) ($order->total_quantity - ($order->completed_quantity ?? 0)));
 
-            if ($minutesElapsed > $threshold) {
+            if ($minutesElapsed > $order->max_preparation_time ?? 60) {
                 $onGoingDelayTransactions++;
                 $onGoingDelayItems += $itemCount;
             } else {
@@ -123,18 +124,22 @@ class KdsSummaryController extends Controller
             $minutesElapsed = $detail->started_at
                 ? (int) now()->diffInMinutes($detail->started_at)
                 : 0;
-            if ($minutesElapsed > $threshold) {
+            if ($minutesElapsed > $detail->max_preparation_time ?? 60) {
                 $itemsMap[$name]['delay']++;
             }
         }
 
         return $this->successfulResponse([
+            'order_summary' => [
+                'total_serve' => ['transactions' => $onTimeDoneTransactions + $delayDoneTransactions,  'items' => $onTimeDoneItems + $delayDoneItems],
+                'serving' => ['transactions' => $onGoingTransactions + $onGoingDelayTransactions,  'items' => $onGoingItems + $onGoingDelayItems],
+            ],
             'legends' => [
                 'on_time_done'   => ['transactions' => $onTimeDoneTransactions,  'items' => $onTimeDoneItems],
                 'delay_done'     => ['transactions' => $delayDoneTransactions,   'items' => $delayDoneItems],
                 'on_going'       => ['transactions' => $onGoingTransactions,      'items' => $onGoingItems],
                 'on_going_delay' => ['transactions' => $onGoingDelayTransactions, 'items' => $onGoingDelayItems],
-                'ticket_count'   => ['transactions' => $ticketCountTransactions,  'items' => $ticketCountItems],
+                // 'ticket_count'   => ['transactions' => $ticketCountTransactions,  'items' => $ticketCountItems],
             ],
             'items' => array_values($itemsMap),
         ], 'Summary retrieved');

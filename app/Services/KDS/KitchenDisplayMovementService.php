@@ -94,7 +94,7 @@ class KitchenDisplayMovementService
         $next = $payload['next'] ?? true;
         $quantity = $payload['quantity'] ?? null;
         $remainingQuantity = $payload['remaining_quantity'] ?? null;
-        $movedQuantity = $payload['moved_quantity'] ?? null;
+        $movedQuantity = $payload['moved_quantity'] ?? $payload['quantity'];
         $release = $payload['release'] ?? false;
 
         if (empty($items) || empty((array) $transaction)) {
@@ -109,7 +109,6 @@ class KitchenDisplayMovementService
 
         // For move_item, only one item in the array
         $item = (object) $items[0];
-
         // Override quantities from payload level if provided
         if ($movedQuantity !== null) {
             $item->moved_quantity = $movedQuantity;
@@ -144,10 +143,10 @@ class KitchenDisplayMovementService
         $currentStationBid = $item->kitchen_station_bid ?? null;
         $movedQuantity = (float) ($item->moved_quantity ?? $item->quantity ?? 0);
         $remainingQuantity = isset($item->remaining_quantity) ? (float) $item->remaining_quantity : null;
-
+        log::info('Marco Current Station: '.$currentStationBid);
         // Find the KitchenDisplayDetail record
         $detail = $this->resolveDetail($transactionId, $transactionProductBid, $productUomPackagingBid, $terminalNumber, $currentStationBid);
-
+        log::info(json_encode($detail));
         if (!$detail) {
             Log::warning('KDS Movement: Detail not found', [
                 'transaction_id' => $transactionId,
@@ -197,7 +196,7 @@ class KitchenDisplayMovementService
             $remainingQuantity, $isPartialMove, $released, $item, $transaction, $orderType, $next
         ) {
             if ($isPartialMove) {
-                $this->handlePartialMove($detail, $nextStationBid, $movedQuantity, $remainingQuantity, $released);
+                $this->handlePartialMove($detail, $nextStationBid, $movedQuantity, $remainingQuantity - $movedQuantity, $released);
             } else {
                 $this->handleFullMove($detail, $nextStationBid, $movedQuantity, $released);
             }
@@ -300,6 +299,10 @@ class KitchenDisplayMovementService
         } else {
             $newStatus = $released ? MenuStatus::RELEASING : MenuStatus::ON_PROCESS;
 
+            if ($sourceDetail->status == MenuStatus::WAITING) {
+                $newStatus = MenuStatus::ON_PROCESS;
+            }
+
             KitchenDisplayDetail::create([
                 'head_bid' => $sourceDetail->head_bid,
                 'transaction_product_bid' => $sourceDetail->transaction_product_bid,
@@ -348,7 +351,7 @@ class KitchenDisplayMovementService
         ?string $kitchenStationBid,
         ?array $statuses = null
     ): ?KitchenDisplayDetail {
-        $statuses = $statuses ?? [MenuStatus::ON_PROCESS];
+        $statuses = $statuses ?? [MenuStatus::ON_PROCESS, MenuStatus::WAITING];
         $query = KitchenDisplayDetail::whereIn('status', $statuses);
 
         if ($transactionId) {
@@ -408,7 +411,7 @@ class KitchenDisplayMovementService
         }
 
         $targetPos = $next ? $currentPos + 1 : $currentPos - 1;
-
+        
         if ($targetPos < 0 || $targetPos >= count($stations)) {
             // Beyond sequence = release
             return null;
@@ -513,7 +516,6 @@ class KitchenDisplayMovementService
     ): void {
         $transactionData = (array) $transaction;
         $transactionData['kitchen_station_bid'] = $toStationBid;
-
         $itemData = [
             'bid' => $detail->product_uom_packaging_bid,
             'product_bid' => $detail->product_uom_packaging_bid,
@@ -579,6 +581,24 @@ class KitchenDisplayMovementService
                     false
                 ));
             }
+
+            // Forward to releasing station display
+                $originalQuantity = (float) ($item->quantity ?? $movedQuantity);
+                $releasingItemData = array_merge($itemData, [
+                    'quantity' => $originalQuantity,
+                    'remaining_quantity' => $movedQuantity,
+                ]);
+
+            $releasingDeviceUids = $this->getReleasingStationDeviceUids();
+                foreach ($releasingDeviceUids as $deviceUid) {
+
+                    broadcast(new KDSFastFoodTransactionEvent(
+                        $deviceUid,
+                        (object) $transactionData,
+                        [$releasingItemData],
+                        true
+                    ));
+                }
         }
 
         // Also broadcast to source station device to update/remove
