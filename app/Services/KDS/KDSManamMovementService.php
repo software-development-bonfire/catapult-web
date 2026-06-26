@@ -11,8 +11,7 @@ use App\Enums\API\DeviceType;
 use App\Enums\KDS\KDSActionType;
 use App\Enums\KDS\MenuStatus;
 use App\Enums\KDS\QueueingGroup;
-use App\Events\KDS\FastFood\KDSFastFoodOrderMoveEvent;
-use App\Events\KDS\KDSFastFoodTransactionEvent;
+use App\Events\KDS\KDSFineDineTransactionEvent;
 use App\Repositories\Contracts\KitchenItemSetupRepository;
 use App\Traits\DatabaseTransaction;
 use Carbon\Carbon;
@@ -240,6 +239,9 @@ class KDSManamMovementService
         // Record movement history
         $this->recordStageMovement($source->bid, KDSActionType::FOR_PREPARE, KDSActionType::FOR_BUMP, $movedQty);
 
+        // Broadcast stage update to releasing stations
+        $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_PREPARE, KDSActionType::FOR_BUMP);
+
         return [
             'success' => true,
             'message' => 'Item moved from Prepare to Bump',
@@ -274,6 +276,9 @@ class KDSManamMovementService
         // Record movement history
         $this->recordStageMovement($source->bid, KDSActionType::FOR_BUMP, KDSActionType::FOR_RECALL, $movedQty);
 
+        // Broadcast stage update to releasing stations
+        $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_BUMP, KDSActionType::FOR_RECALL);
+
         return [
             'success' => true,
             'message' => 'Item moved from Bump to Recall',
@@ -306,6 +311,9 @@ class KDSManamMovementService
 
         // Record movement history
         $this->recordStageMovement($source->bid, KDSActionType::FOR_RECALL, KDSActionType::FOR_BUMP, $movedQty);
+
+        // Broadcast stage update to releasing stations
+        $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_RECALL, KDSActionType::FOR_BUMP);
 
         return [
             'success' => true,
@@ -741,6 +749,83 @@ class KDSManamMovementService
     // HISTORY & BROADCASTING
 
     /**
+     * Broadcast stage movement to all releasing station devices.
+     *
+     * Sends the moved item with target action_type so releasing stations
+     * can create/update a matching row to mirror the preparation progress.
+     *
+     * The releasing station keeps the original P rows unchanged and adds
+     * new rows for B/R stages as items move through preparation.
+     */
+    private function broadcastStageMovement(
+        KitchenDisplayDetail $source,
+        float $movedQty,
+        int $fromActionType,
+        int $toActionType
+    ): void {
+        $releasingDeviceUids = $this->getReleasingStationDeviceUids();
+
+        if (empty($releasingDeviceUids)) {
+            return;
+        }
+
+        // Build transaction data from the head record
+        $head = KitchenDisplay::where('bid', $source->head_bid)->first();
+        $transactionData = [
+            'transaction_id' => $source->transaction_id,
+            'terminal_number' => $source->terminal_number,
+        ];
+        if ($head) {
+            $transactionData['terminal_bid'] = $head->terminal_bid ?? null;
+            $transactionData['transaction_date'] = $head->transaction_date ?? null;
+        }
+
+        // Build item payload with the TARGET action_type
+        $itemData = [
+            'bid' => $source->product_uom_packaging_bid,
+            'product_bid' => $source->product_uom_packaging_bid,
+            'transaction_product_bid' => $source->transaction_product_bid,
+            'product_uom_packaging_bid' => $source->product_uom_packaging_bid,
+            'name' => $source->name,
+            'quantity' => $movedQty,
+            'remaining_quantity' => $movedQty,
+            'moved_quantity' => $movedQty,
+            'prepared_quantity' => 0,
+            'bumped_quantity' => 0,
+            'released_quantity' => 0,
+            'action_type' => $toActionType,
+            'from_action_type' => $fromActionType,
+            'usage_type' => $source->usage_type,
+            'special_request' => $source->special_request,
+            'is_addon' => $source->is_addon,
+            'transaction_id' => $source->transaction_id,
+            'order_type_name' => $source->order_type_name,
+            'order_type_id' => $source->order_type_id ?? '',
+            'terminal_number' => $source->terminal_number,
+            'addons' => $source->addons,
+            'kitchen_station_bid' => $source->kitchen_station_bid,
+            'status' => $source->status,
+        ];
+
+        // Set the quantity fields matching the target action_type
+        if ($toActionType === KDSActionType::FOR_BUMP) {
+            $itemData['prepared_quantity'] = $movedQty;
+        } elseif ($toActionType === KDSActionType::FOR_RECALL) {
+            $itemData['bumped_quantity'] = $movedQty;
+        }
+
+        foreach ($releasingDeviceUids as $deviceUid) {
+            broadcast(new KDSFineDineTransactionEvent(
+                $deviceUid,
+                (object) $transactionData,
+                [$itemData],
+                true,
+                'STAGE_UPDATE'
+            ));
+        }
+    }
+
+    /**
      * Record stage movement in history table.
      */
     private function recordStageMovement(string $detailBid, int $fromActionType, int $toActionType, float $quantity): void
@@ -873,14 +958,12 @@ class KDSManamMovementService
                 // Send-back from releasing → notify non-releasing stations
                 $nonReleasingDeviceUids = $this->getNonReleasingStationDeviceUids();
                 foreach ($nonReleasingDeviceUids as $deviceUid) {
-                    broadcast(new KDSFastFoodOrderMoveEvent(
+                    broadcast(new KDSFineDineTransactionEvent(
                         $deviceUid,
                         (object) $transactionData,
                         [$itemData],
-                        $fromStationBid,
-                        null,
                         false,
-                        true
+                        'RECALL'
                     ));
                 }
             } else {
@@ -893,7 +976,7 @@ class KDSManamMovementService
 
                 $releasingDeviceUids = $this->getReleasingStationDeviceUids();
                 foreach ($releasingDeviceUids as $deviceUid) {
-                    broadcast(new KDSFastFoodTransactionEvent(
+                    broadcast(new KDSFineDineTransactionEvent(
                         $deviceUid,
                         (object) $transactionData,
                         [$releasingItemData],
@@ -905,7 +988,7 @@ class KDSManamMovementService
             // Broadcast to target station device
             $deviceUid = $this->getDeviceUidForStation($toStationBid);
             if ($deviceUid) {
-                broadcast(new KDSFastFoodTransactionEvent(
+                broadcast(new KDSFineDineTransactionEvent(
                     $deviceUid,
                     (object) $transactionData,
                     [$itemData],
@@ -922,7 +1005,7 @@ class KDSManamMovementService
 
             $releasingDeviceUids = $this->getReleasingStationDeviceUids();
             foreach ($releasingDeviceUids as $deviceUid) {
-                broadcast(new KDSFastFoodTransactionEvent(
+                broadcast(new KDSFineDineTransactionEvent(
                     $deviceUid,
                     (object) $transactionData,
                     [$releasingItemData],
@@ -934,7 +1017,7 @@ class KDSManamMovementService
         // Broadcast to source station device to update/remove
         $sourceDeviceUid = $this->getDeviceUidForStation($fromStationBid);
         if ($sourceDeviceUid) {
-            broadcast(new KDSFastFoodTransactionEvent(
+            broadcast(new KDSFineDineTransactionEvent(
                 $sourceDeviceUid,
                 (object) $transactionData,
                 [$itemData],
