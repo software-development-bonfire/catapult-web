@@ -6,6 +6,7 @@ use App\Entities\CDISKitchenStation;
 use App\Entities\DeviceSettings;
 use App\Entities\KitchenDisplay;
 use App\Entities\KitchenDisplayDetail;
+use App\Enums\KDS\KDSActionType;
 use App\Enums\KDS\MenuStatus;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -72,12 +73,13 @@ class KdsSummaryController extends Controller
         }
 
         // ── ACTIVE orders (completed_at IS NULL) ─────────────────────────
-        $activeQuery = KitchenDisplay::whereNull('completed_at');
+        $activeQuery = KitchenDisplay::whereNull('completed_at')
+                ->whereHas('details', function ($q) {
+                    $q->where('action_type', '!=', KDSActionType::FOR_PREPARE);
+                });
 
         if ($stationBid) {
-            $activeQuery->whereHas('details', function ($q) use ($stationBid) {
-                $q->where('kitchen_station_bid', $stationBid);
-            });
+            $activeQuery->where('kitchen_station_bid', $stationBid);
         }
 
         $onGoingTransactions      = 0;
@@ -86,6 +88,8 @@ class KdsSummaryController extends Controller
         $onGoingDelayItems        = 0;
 
         foreach ($activeQuery->get() as $order) {
+            
+
             $minutesElapsed = $order->transaction_date
                 ? (int) now()->diffInMinutes($order->transaction_date)
                 : 0;
@@ -106,7 +110,8 @@ class KdsSummaryController extends Controller
         // ── ACTIVE items breakdown ────────────────────────────────────────
         $detailQuery = KitchenDisplayDetail::query()
             ->whereHas('head', function ($q) {
-                $q->whereNull('completed_at');
+                $q->whereNull('completed_at')
+                ->where('action_type', '!=', KDSActionType::FOR_PREPARE);
             });
 
         if ($stationBid) {
@@ -121,8 +126,8 @@ class KdsSummaryController extends Controller
             }
             $itemsMap[$name]['qty'] += (int) $detail->remaining_quantity;
 
-            $minutesElapsed = $detail->started_at
-                ? (int) now()->diffInMinutes($detail->started_at)
+            $minutesElapsed = $detail->prepared_at
+                ? (int) now()->diffInMinutes($detail->prepared_at)
                 : 0;
             if ($minutesElapsed > $detail->max_preparation_time ?? 60) {
                 $itemsMap[$name]['delay']++;
