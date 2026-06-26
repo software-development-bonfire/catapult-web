@@ -761,7 +761,8 @@ class KDSManamMovementService
         KitchenDisplayDetail $source,
         float $movedQty,
         int $fromActionType,
-        int $toActionType
+        int $toActionType,
+        bool $fullTransaction = true
     ): void {
         $releasingDeviceUids = $this->getReleasingStationDeviceUids();
 
@@ -780,48 +781,94 @@ class KDSManamMovementService
             $transactionData['transaction_date'] = $head->transaction_date ?? null;
         }
 
-        // Build item payload with the TARGET action_type
-        $itemData = [
-            'bid' => $source->product_uom_packaging_bid,
-            'product_bid' => $source->product_uom_packaging_bid,
-            'transaction_product_bid' => $source->transaction_product_bid,
-            'product_uom_packaging_bid' => $source->product_uom_packaging_bid,
-            'name' => $source->name,
-            'quantity' => $movedQty,
-            'remaining_quantity' => $movedQty,
-            'moved_quantity' => $movedQty,
-            'prepared_quantity' => 0,
-            'bumped_quantity' => 0,
-            'released_quantity' => 0,
-            'action_type' => $toActionType,
-            'from_action_type' => $fromActionType,
-            'usage_type' => $source->usage_type,
-            'special_request' => $source->special_request,
-            'is_addon' => $source->is_addon,
-            'transaction_id' => $source->transaction_id,
-            'order_type_name' => $source->order_type_name,
-            'order_type_id' => $source->order_type_id ?? '',
-            'terminal_number' => $source->terminal_number,
-            'addons' => $source->addons,
-            'kitchen_station_bid' => $source->kitchen_station_bid,
-            'status' => $source->status,
-        ];
+        if ($fullTransaction) {
+            // Full transaction sync: send ALL items for the transaction so
+            // releasing station can delete-insert for an accurate mirror.
+            $allDetails = KitchenDisplayDetail::where('transaction_id', $source->transaction_id)
+                ->where('terminal_number', $source->terminal_number)
+                ->whereIn('status', [MenuStatus::ON_PROCESS, MenuStatus::WAITING])
+                ->get();
 
-        // Set the quantity fields matching the target action_type
-        if ($toActionType === KDSActionType::FOR_BUMP) {
-            $itemData['prepared_quantity'] = $movedQty;
-        } elseif ($toActionType === KDSActionType::FOR_RECALL) {
-            $itemData['bumped_quantity'] = $movedQty;
-        }
+            $allItemsPayload = [];
+            foreach ($allDetails as $detail) {
+                $allItemsPayload[] = [
+                    'bid' => $detail->product_uom_packaging_bid,
+                    'product_bid' => $detail->product_uom_packaging_bid,
+                    'transaction_product_bid' => $detail->transaction_product_bid,
+                    'product_uom_packaging_bid' => $detail->product_uom_packaging_bid,
+                    'name' => $detail->name,
+                    'quantity' => $detail->remaining_quantity,
+                    'remaining_quantity' => $detail->remaining_quantity,
+                    'prepared_quantity' => $detail->prepared_quantity ?? 0,
+                    'bumped_quantity' => $detail->bumped_quantity ?? 0,
+                    'released_quantity' => $detail->released_quantity ?? 0,
+                    'action_type' => $detail->action_type ?? KDSActionType::FOR_PREPARE,
+                    'usage_type' => $detail->usage_type,
+                    'special_request' => $detail->special_request,
+                    'is_addon' => $detail->is_addon,
+                    'transaction_id' => $detail->transaction_id,
+                    'order_type_name' => $detail->order_type_name,
+                    'order_type_id' => $detail->order_type_id ?? '',
+                    'terminal_number' => $detail->terminal_number,
+                    'addons' => $detail->addons,
+                    'kitchen_station_bid' => $detail->kitchen_station_bid,
+                    'status' => $detail->status,
+                ];
+            }
 
-        foreach ($releasingDeviceUids as $deviceUid) {
-            broadcast(new KDSFineDineTransactionEvent(
-                $deviceUid,
-                (object) $transactionData,
-                [$itemData],
-                true,
-                'STAGE_UPDATE'
-            ));
+            foreach ($releasingDeviceUids as $deviceUid) {
+                broadcast(new KDSFineDineTransactionEvent(
+                    $deviceUid,
+                    (object) $transactionData,
+                    $allItemsPayload,
+                    true,
+                    'STAGE_UPDATE_FULL'
+                ));
+            }
+        } else {
+            // Incremental: send only the moved item with target action_type
+            $itemData = [
+                'bid' => $source->product_uom_packaging_bid,
+                'product_bid' => $source->product_uom_packaging_bid,
+                'transaction_product_bid' => $source->transaction_product_bid,
+                'product_uom_packaging_bid' => $source->product_uom_packaging_bid,
+                'name' => $source->name,
+                'quantity' => $movedQty,
+                'remaining_quantity' => $movedQty,
+                'moved_quantity' => $movedQty,
+                'prepared_quantity' => 0,
+                'bumped_quantity' => 0,
+                'released_quantity' => 0,
+                'action_type' => $toActionType,
+                'from_action_type' => $fromActionType,
+                'usage_type' => $source->usage_type,
+                'special_request' => $source->special_request,
+                'is_addon' => $source->is_addon,
+                'transaction_id' => $source->transaction_id,
+                'order_type_name' => $source->order_type_name,
+                'order_type_id' => $source->order_type_id ?? '',
+                'terminal_number' => $source->terminal_number,
+                'addons' => $source->addons,
+                'kitchen_station_bid' => $source->kitchen_station_bid,
+                'status' => $source->status,
+            ];
+
+            // Set the quantity fields matching the target action_type
+            if ($toActionType === KDSActionType::FOR_BUMP) {
+                $itemData['prepared_quantity'] = $movedQty;
+            } elseif ($toActionType === KDSActionType::FOR_RECALL) {
+                $itemData['bumped_quantity'] = $movedQty;
+            }
+
+            foreach ($releasingDeviceUids as $deviceUid) {
+                broadcast(new KDSFineDineTransactionEvent(
+                    $deviceUid,
+                    (object) $transactionData,
+                    [$itemData],
+                    true,
+                    'STAGE_UPDATE'
+                ));
+            }
         }
     }
 
