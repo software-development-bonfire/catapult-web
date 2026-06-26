@@ -74,13 +74,12 @@ class KdsSummaryController extends Controller
 
         // ── ACTIVE orders (completed_at IS NULL) ─────────────────────────
         $activeQuery = KitchenDisplay::whereNull('completed_at')
-                ->whereHas('details', function ($q) {
+                ->whereHas('details', function ($q) use ($stationBid) {
                     $q->where('action_type', '!=', KDSActionType::FOR_PREPARE);
+                    if ($stationBid) {
+                        $q->where('kitchen_station_bid', $stationBid);
+                    }
                 });
-
-        if ($stationBid) {
-            $activeQuery->where('kitchen_station_bid', $stationBid);
-        }
 
         $onGoingTransactions      = 0;
         $onGoingItems             = 0;
@@ -109,14 +108,13 @@ class KdsSummaryController extends Controller
 
         // ── ACTIVE items breakdown ────────────────────────────────────────
         $detailQuery = KitchenDisplayDetail::query()
-            ->whereHas('head', function ($q) {
+            ->whereHas('head', function ($q) use ($stationBid) {
                 $q->whereNull('completed_at')
                 ->where('action_type', '!=', KDSActionType::FOR_PREPARE);
+                if ($stationBid) {
+                    $q->where('kitchen_station_bid', $stationBid);
+                }
             });
-
-        if ($stationBid) {
-            $detailQuery->where('kitchen_station_bid', $stationBid);
-        }
 
         $itemsMap = [];
         foreach ($detailQuery->select('name', 'remaining_quantity', 'started_at')->get() as $detail) {
