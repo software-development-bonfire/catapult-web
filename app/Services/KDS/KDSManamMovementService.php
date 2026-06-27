@@ -58,6 +58,7 @@ class KDSManamMovementService
         $originalQuantity = (float) ($payload['original_quantity'] ?? 0);
         $release = $payload['release'] ?? false;
         $actionType = isset($payload['action_type']) ? (int) $payload['action_type'] : null;
+        $isReleasing = $payload['is_releasing'] ?? false;
 
         if (empty($items) || empty((array) $transaction)) {
             return $this->errorResult('Invalid payload: items and transaction are required');
@@ -82,7 +83,7 @@ class KDSManamMovementService
 
         if ($actionType !== null) {
             // Intra-station stage movement
-            return $this->handleStageMovement($item, $transaction, $orderType, $actionType, $movedQuantity, $remainingQuantity, $next);
+            return $this->handleStageMovement($item, $transaction, $orderType, $actionType, $movedQuantity, $remainingQuantity, $next, $isReleasing);
         }
 
         // Legacy inter-station movement
@@ -147,6 +148,76 @@ class KDSManamMovementService
         ];
     }
 
+    /**
+     * Process a bump_order action.
+     * All items in the transaction are updated to FOR_SERVE action_type.
+     * This marks the entire order as ready for serving without deleting items.
+     */
+    public function bumpOrder(array $payload): array
+    {
+        $data = (object) ($payload['data'] ?? []);
+        $items = $data->items ?? [];
+        $transaction = (object) ($data->transaction ?? []);
+
+        if (empty($items) || empty((array) $transaction)) {
+            return $this->errorResult('Invalid payload: items and transaction are required');
+        }
+
+        $transactionId = $transaction->transaction_id ?? null;
+        $terminalNumber = $transaction->terminal_number ?? null;
+
+        if (!$transactionId) {
+            return $this->errorResult('transaction_id is required');
+        }
+
+        Log::info('KDSManamMovementService::bumpOrder', [
+            'transaction_id' => $transactionId,
+            'items_count' => count($items),
+        ]);
+
+        return $this->transaction(function () use ($transactionId, $terminalNumber, $items) {
+            // Update all active items for this transaction to FOR_SERVE
+            $query = KitchenDisplayDetail::where('transaction_id', $transactionId)
+                ->whereIn('status', [MenuStatus::ON_PROCESS, MenuStatus::WAITING]);
+
+            if ($terminalNumber) {
+                $query->where('terminal_number', $terminalNumber);
+            }
+
+            $details = $query->get();
+
+            if ($details->isEmpty()) {
+                return $this->errorResult('No active items found for this transaction');
+            }
+
+            foreach ($details as $detail) {
+                $detail->update([
+                    'action_type' => KDSActionType::FOR_SERVE,
+                    'served_at' => now(),
+                ]);
+            }
+
+            // Broadcast full transaction state to releasing stations
+            $firstDetail = $details->first();
+            $this->broadcastStageMovement(
+                $firstDetail,
+                0,
+                KDSActionType::FOR_BUMP,
+                KDSActionType::FOR_SERVE,
+                true
+            );
+
+            return [
+                'success' => true,
+                'message' => 'Order bumped to serve',
+                'data' => [
+                    'action' => 'bump_order',
+                    'transaction_id' => $transactionId,
+                ],
+            ];
+        });
+    }
+
     // INTRA-STATION STAGE MOVEMENT
 
     /**
@@ -164,7 +235,8 @@ class KDSManamMovementService
         int $actionType,
         float $movedQuantity,
         ?float $remainingQuantity,
-        bool $next
+        bool $next,
+        bool $isReleasing = false
     ): array {
         $transactionId = $item->transaction_id ?? $transaction->transaction_id ?? null;
         $terminalNumber = $item->terminal_number ?? $transaction->terminal_number ?? null;
@@ -186,6 +258,9 @@ class KDSManamMovementService
             Log::warning('KDSManam: Source detail not found for stage movement', [
                 'transaction_id' => $transactionId,
                 'product_bid' => $productBid,
+                'terminal_number' => $terminalNumber,
+                'kitchen_station_bid' => $kitchenStationBid,
+                'addons' => $addons,
                 'action_type' => $actionType,
             ]);
             return $this->errorResult('Source item not found for stage movement');
@@ -199,7 +274,8 @@ class KDSManamMovementService
             $actionType,
             $movedQuantity,
             $remainingQuantity,
-            $next
+            $next,
+            $isReleasing
         ) {
             switch ($actionType) {
                 case KDSActionType::FOR_PREPARE:
@@ -210,6 +286,9 @@ class KDSManamMovementService
 
                 case KDSActionType::FOR_RECALL:
                     return $this->stageForRecall($sourceDetail, $movedQuantity);
+
+                case KDSActionType::FOR_SERVE:
+                    return $this->stageForServe($sourceDetail, $movedQuantity, $isReleasing);
 
                 default:
                     return $this->errorResult("Unsupported action_type: $actionType");
@@ -268,23 +347,23 @@ class KDSManamMovementService
             'prepared_quantity' => $newPrepared,
         ]);
 
-        // Create or update target row at FOR_RECALL stage
-        $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_RECALL, [
+        // Create or update target row at FOR_SERVE stage
+        $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_SERVE, [
             'bumped_quantity' => $movedQty,
         ]);
 
         // Record movement history
-        $this->recordStageMovement($source->bid, KDSActionType::FOR_BUMP, KDSActionType::FOR_RECALL, $movedQty);
+        $this->recordStageMovement($source->bid, KDSActionType::FOR_BUMP, KDSActionType::FOR_SERVE, $movedQty);
 
         // Broadcast stage update to releasing stations
-        $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_BUMP, KDSActionType::FOR_RECALL);
+        $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_BUMP, KDSActionType::FOR_SERVE);
 
         return [
             'success' => true,
-            'message' => 'Item moved from Bump to Recall',
+            'message' => 'Item moved from Bump to Serve',
             'data' => [
                 'action' => 'move_item',
-                'action_type' => KDSActionType::FOR_RECALL,
+                'action_type' => KDSActionType::FOR_SERVE,
                 'moved_quantity' => $movedQty,
             ],
         ];
@@ -292,10 +371,46 @@ class KDSManamMovementService
 
     /**
      * FOR_RECALL stage action:
-     * Deducts bumped_quantity from source (FOR_RECALL row).
-     * Returns item to FOR_BUMP target row with remaining & prepared quantities restored.
+     * Deducts released_quantity from source (FOR_RECALL row).
+     * Returns item to FOR_SERVE target row with bumped_quantity restored.
      */
     private function stageForRecall(KitchenDisplayDetail $source, float $movedQty): array
+    {
+        $newReleased = max(0, (float) $source->released_quantity - $movedQty);
+
+        $source->update([
+            'released_quantity' => $newReleased,
+        ]);
+
+        // Create or update target row back at FOR_SERVE stage
+        $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_SERVE, [
+            'bumped_quantity' => $movedQty,
+        ]);
+
+        // Record movement history
+        $this->recordStageMovement($source->bid, KDSActionType::FOR_RECALL, KDSActionType::FOR_SERVE, $movedQty);
+
+        // Broadcast stage update to releasing stations
+        $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_RECALL, KDSActionType::FOR_SERVE);
+
+        return [
+            'success' => true,
+            'message' => 'Item recalled back to Serve',
+            'data' => [
+                'action' => 'move_item',
+                'action_type' => KDSActionType::FOR_SERVE,
+                'moved_quantity' => $movedQty,
+            ],
+        ];
+    }
+
+    /**
+     * FOR_SERVE stage action (from releasing station):
+     * Deducts bumped_quantity from source (FOR_SERVE row).
+     * Creates or updates a FOR_RECALL target row with released_quantity.
+     * Does NOT broadcast when originating from a releasing station.
+     */
+    private function stageForServe(KitchenDisplayDetail $source, float $movedQty, bool $isReleasing = false): array
     {
         $newBumped = max(0, (float) $source->bumped_quantity - $movedQty);
 
@@ -303,24 +418,25 @@ class KDSManamMovementService
             'bumped_quantity' => $newBumped,
         ]);
 
-        // Create or update target row back at FOR_BUMP stage
-        $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_BUMP, [
-            'remaining_quantity' => $movedQty,
-            'prepared_quantity' => $movedQty,
+        // Create or update target row at FOR_RECALL stage
+        $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_RECALL, [
+            'released_quantity' => $movedQty,
         ]);
 
         // Record movement history
-        $this->recordStageMovement($source->bid, KDSActionType::FOR_RECALL, KDSActionType::FOR_BUMP, $movedQty);
+        $this->recordStageMovement($source->bid, KDSActionType::FOR_SERVE, KDSActionType::FOR_RECALL, $movedQty);
 
-        // Broadcast stage update to releasing stations
-        $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_RECALL, KDSActionType::FOR_BUMP);
+        // Skip broadcast if action originated from a releasing station
+        if (!$isReleasing) {
+            $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_SERVE, KDSActionType::FOR_RECALL);
+        }
 
         return [
             'success' => true,
-            'message' => 'Item recalled back to Bump',
+            'message' => 'Item moved from Serve to Recall',
             'data' => [
                 'action' => 'move_item',
-                'action_type' => KDSActionType::FOR_BUMP,
+                'action_type' => KDSActionType::FOR_RECALL,
                 'moved_quantity' => $movedQty,
             ],
         ];

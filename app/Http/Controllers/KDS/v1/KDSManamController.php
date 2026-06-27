@@ -75,6 +75,9 @@ class KDSManamController extends Controller
             case 'move_order':
                 return $this->movementService->moveOrder($payload);
 
+            case 'bump_order':
+                return $this->movementService->bumpOrder($payload);
+
             default:
                 return [
                     'success' => false,
