@@ -111,9 +111,9 @@ if (! function_exists('parseSqlDateTime')) {
     function parseSqlDateTime($value, $defaultValue = null)
     {
         return isset($value)
-            ? Carbon::parse($value)->format('Y-m-d H:i:s')
+            ? Carbon::parse($value)->utc()->format('Y-m-d\TH:i:s\Z')
             : ($defaultValue !== null
-                ? Carbon::parse($defaultValue)->format('Y-m-d H:i:s')
+                ? Carbon::parse($defaultValue)->utc()->format('Y-m-d\TH:i:s\Z')
                 : null);
     }
 }
