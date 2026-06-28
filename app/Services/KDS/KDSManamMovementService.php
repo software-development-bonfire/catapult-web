@@ -1006,6 +1006,17 @@ class KDSManamMovementService
      */
     private function buildItemPayload(KitchenDisplayDetail $detail, array $overrides = []): array
     {
+        // Resolve station code and name from kitchen_station_bid
+        $stationCode = null;
+        $stationName = null;
+        if ($detail->kitchen_station_bid) {
+            $station = CDISKitchenStation::where('bid', $detail->kitchen_station_bid)->first();
+            if ($station) {
+                $stationCode = $station->code;
+                $stationName = $station->name;
+            }
+        }
+
         $payload = [
             'bid' => $detail->product_uom_packaging_bid,
             'head_bid' => $detail->head_bid,
@@ -1028,8 +1039,8 @@ class KDSManamMovementService
             'kitchen_display_bid' => $detail->head_bid,
             'kitchen_display_detail_bid' => $detail->bid,
             'kitchen_transaction_detail_bid' => null,
-            'station_code' => null,
-            'station_name' => null,
+            'station_code' => $stationCode,
+            'station_name' => $stationName,
             'device_code' => null,
             'device_uid' => null,
             'device_name' => null,
