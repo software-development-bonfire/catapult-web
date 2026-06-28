@@ -261,6 +261,27 @@ class KDSManamMovementService
             $addons
         );
 
+        // BAR station fallback: if requesting FOR_SERVE but item is still at FOR_PREPARE,
+        // auto-bump it first (BAR skips prepare/bump stages entirely)
+        if (!$sourceDetail && $actionType === KDSActionType::FOR_SERVE) {
+            $sourceDetail = $this->resolveDetailByActionType(
+                $transactionId, $productBid, $terminalNumber, $kitchenStationBid,
+                KDSActionType::FOR_PREPARE, $addons
+            );
+
+            if ($sourceDetail) {
+                // Auto-bump: convert FOR_PREPARE → FOR_SERVE in place
+                $qty = (float) $sourceDetail->remaining_quantity;
+                $sourceDetail->update([
+                    'action_type' => KDSActionType::FOR_SERVE,
+                    'bumped_quantity' => $qty,
+                    'remaining_quantity' => 0,
+                    'bumped_at' => now(),
+                ]);
+                $sourceDetail->refresh();
+            }
+        }
+
         if (!$sourceDetail) {
             Log::warning('KDSManam: Source detail not found for stage movement', [
                 'transaction_id' => $transactionId,

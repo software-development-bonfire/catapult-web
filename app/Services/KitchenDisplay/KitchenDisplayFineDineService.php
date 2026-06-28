@@ -5,6 +5,7 @@ namespace App\Services\KitchenDisplay;
 use App\Entities\KitchenDisplay;
 use App\Entities\KitchenDisplayDetail;
 use App\Enums\KDS\MenuStatus;
+use App\Enums\KDS\KDSActionType;
 use App\Events\KDS\FineDine\KDSFineDineItemMoveEvent;
 use App\Events\KDS\FineDine\KDSFineDineItemReleaseEvent;
 use App\Events\KDS\FineDine\KDSFineDineOrderDoneEvent;
@@ -199,6 +200,20 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
             return $existing;
         }
 
+        // Determine if this item is going to a BAR station (auto-serve)
+        $isBarStation = false;
+        if ($kitchenStationBid) {
+            $station = \App\Entities\CDISKitchenStation::where('bid', $kitchenStationBid)->first();
+            if ($station && strtoupper($station->name) === 'BEVERAGES') {
+                $isBarStation = true;
+            }
+        }
+
+        // BAR station items skip Prepare/Bump stages and go directly to FOR_SERVE
+        $actionType = $isBarStation ? KDSActionType::FOR_SERVE : KDSActionType::FOR_PREPARE;
+        $remainingQty = $isBarStation ? 0 : $product->quantity;
+        $bumpedQty = $isBarStation ? $product->quantity : 0;
+
         // Fine-Dine: Start at station 1, but don't auto-move
         $detail = KitchenDisplayDetail::create([
             //'bid' => generateUniqueBid('KDD'),
@@ -209,7 +224,9 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
             'current_station_index' => 1,
             'kitchen_station_bid' => $kitchenStationBid,
             'original_quantity' => $product->quantity,
-            'remaining_quantity' => $product->quantity,
+            'remaining_quantity' => $remainingQty,
+            'bumped_quantity' => $bumpedQty,
+            'action_type' => $actionType,
             'station_sequence' => json_encode([1, 2, 3, 0]), // Flexible sequence
             'current_position_in_sequence' => 0,
             'order_sequence' => $batchSequence, // Batch number
@@ -223,6 +240,7 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
             'order_type_name' => $product->order_type_name ?? 'FINEDINE',
             'terminal_number' => $head->terminal_number,
             'status' => MenuStatus::ON_PROCESS,
+            'bumped_at' => $isBarStation ? now() : null,
         ]);
 
         return $detail;
