@@ -38,6 +38,7 @@ class KitchenDisplayDetail extends Base
         'prepared_at',
         'bumped_at',
         'served_at',
+        'recall_reason',
     ];
 
     protected $casts = [

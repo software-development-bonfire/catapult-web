@@ -59,6 +59,7 @@ class KDSManamMovementService
         $release = $payload['release'] ?? false;
         $actionType = isset($payload['action_type']) ? (int) $payload['action_type'] : null;
         $isReleasing = $payload['is_releasing'] ?? false;
+        $recallReason = $payload['recall_reason'] ?? null;
 
         if (empty($items) || empty((array) $transaction)) {
             return $this->errorResult('Invalid payload: items and transaction are required');
@@ -83,7 +84,7 @@ class KDSManamMovementService
 
         if ($actionType !== null) {
             // Intra-station stage movement
-            return $this->handleStageMovement($item, $transaction, $orderType, $actionType, $movedQuantity, $remainingQuantity, $next, $isReleasing);
+            return $this->handleStageMovement($item, $transaction, $orderType, $actionType, $movedQuantity, $remainingQuantity, $next, $isReleasing, $recallReason);
         }
 
         // Legacy inter-station movement
@@ -241,7 +242,8 @@ class KDSManamMovementService
         float $movedQuantity,
         ?float $remainingQuantity,
         bool $next,
-        bool $isReleasing = false
+        bool $isReleasing = false,
+        ?string $recallReason = null
     ): array {
         $transactionId = $item->transaction_id ?? $transaction->transaction_id ?? null;
         $terminalNumber = $item->terminal_number ?? $transaction->terminal_number ?? null;
@@ -280,7 +282,8 @@ class KDSManamMovementService
             $movedQuantity,
             $remainingQuantity,
             $next,
-            $isReleasing
+            $isReleasing,
+            $recallReason
         ) {
             switch ($actionType) {
                 case KDSActionType::FOR_PREPARE:
@@ -290,7 +293,7 @@ class KDSManamMovementService
                     return $this->stageForBump($sourceDetail, $movedQuantity);
 
                 case KDSActionType::FOR_RECALL:
-                    return $this->stageForRecall($sourceDetail, $movedQuantity);
+                    return $this->stageForRecall($sourceDetail, $movedQuantity, $recallReason);
 
                 case KDSActionType::FOR_SERVE:
                     return $this->stageForServe($sourceDetail, $movedQuantity, $isReleasing);
@@ -377,20 +380,34 @@ class KDSManamMovementService
     /**
      * FOR_RECALL stage action:
      * Deducts released_quantity from source (FOR_RECALL row).
-     * Returns item to FOR_SERVE target row with bumped_quantity restored.
+     * Creates/updates FOR_SERVE target row with bumped_quantity and new bumped_at.
+     * If all released_quantity is moved back, clears served_at on source.
+     * Saves recall_reason on the source row.
      */
-    private function stageForRecall(KitchenDisplayDetail $source, float $movedQty): array
+    private function stageForRecall(KitchenDisplayDetail $source, float $movedQty, ?string $recallReason = null): array
     {
         $newReleased = max(0, (float) $source->released_quantity - $movedQty);
 
-        $source->update([
+        $updateData = [
             'released_quantity' => $newReleased,
-        ]);
+        ];
 
-        // Create or update target row back at FOR_SERVE stage
+        // Save recall reason on the source row
+        if ($recallReason) {
+            $updateData['recall_reason'] = $recallReason;
+        }
+
+        // If all released_quantity is recalled, clear served_at
+        if ($newReleased <= 0) {
+            $updateData['served_at'] = null;
+        }
+
+        $source->update($updateData);
+
+        // Create or update target row back at FOR_SERVE stage with new bumped_at
         $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_SERVE, [
             'bumped_quantity' => $movedQty,
-        ]);
+        ], ['bumped_at' => now()]);
 
         // Record movement history
         $this->recordStageMovement($source->bid, KDSActionType::FOR_RECALL, KDSActionType::FOR_SERVE, $movedQty);
@@ -455,7 +472,8 @@ class KDSManamMovementService
         KitchenDisplayDetail $source,
         float $movedQty,
         int $targetActionType,
-        array $incrementFields
+        array $incrementFields,
+        array $extraUpdates = []
     ): void {
         $targetCondition = [
             'head_bid' => $source->head_bid,
@@ -482,6 +500,11 @@ class KDSManamMovementService
                 $updateData[$field] = $currentValue + $value;
             }
             $updateData['updated_at'] = $currentDateTime;
+
+            // Apply extra updates (e.g. bumped_at timestamp)
+            foreach ($extraUpdates as $key => $value) {
+                $updateData[$key] = $value;
+            }
 
             // Restore if soft-deleted
             if ($existing->trashed()) {
@@ -1034,6 +1057,7 @@ class KDSManamMovementService
             'prepared_at' => $detail->prepared_at ? (is_string($detail->prepared_at) ? $detail->prepared_at : $detail->prepared_at->format('Y-m-d H:i:s')) : null,
             'bumped_at' => $detail->bumped_at ? (is_string($detail->bumped_at) ? $detail->bumped_at : $detail->bumped_at->format('Y-m-d H:i:s')) : null,
             'served_at' => $detail->served_at ? (is_string($detail->served_at) ? $detail->served_at : $detail->served_at->format('Y-m-d H:i:s')) : null,
+            'recall_reason' => $detail->recall_reason,
             'deleted_at' => $detail->deleted_at ? $detail->deleted_at->format('Y-m-d H:i:s') : null,
         ];
 
