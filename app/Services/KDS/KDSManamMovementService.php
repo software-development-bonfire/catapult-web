@@ -191,9 +191,14 @@ class KDSManamMovementService
             }
 
             foreach ($details as $detail) {
+                $currentRemaining = (float) ($detail->remaining_quantity ?? 0);
+                $currentBumped = (float) ($detail->bumped_quantity ?? 0);
+
                 $detail->update([
+                    'bumped_quantity' => $currentBumped + $currentRemaining,
+                    'remaining_quantity' => 0,
                     'action_type' => KDSActionType::FOR_SERVE,
-                    'served_at' => now(),
+                    'bumped_at' => now(),
                 ]);
             }
 
