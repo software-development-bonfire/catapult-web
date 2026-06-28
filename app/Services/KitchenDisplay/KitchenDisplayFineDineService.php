@@ -185,6 +185,20 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
         $kitchenSetup = app()->make(KitchenItemSetupRepository::class)
             ->getKitchenStation($product->product_bid, 1);
 
+        $kitchenStationBid = $kitchenSetup['station_bid_1'] ?? null;
+
+        // Check for duplicate: same head + product + station (prevent double-submit)
+        $existing = KitchenDisplayDetail::where('head_bid', $head->bid)
+            ->where('transaction_product_bid', $product->product_bid)
+            ->where('product_uom_packaging_bid', $product->product_bid)
+            ->where('kitchen_station_bid', $kitchenStationBid)
+            ->where('terminal_number', $head->terminal_number)
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
         // Fine-Dine: Start at station 1, but don't auto-move
         $detail = KitchenDisplayDetail::create([
             //'bid' => generateUniqueBid('KDD'),
@@ -193,7 +207,7 @@ class KitchenDisplayFineDineService extends KitchenDisplayService
             'transaction_product_bid' => $product->product_bid,
             'product_uom_packaging_bid' => $product->product_bid,
             'current_station_index' => 1,
-            'kitchen_station_bid' => $kitchenSetup['station_bid_1'] ?? null,
+            'kitchen_station_bid' => $kitchenStationBid,
             'original_quantity' => $product->quantity,
             'remaining_quantity' => $product->quantity,
             'station_sequence' => json_encode([1, 2, 3, 0]), // Flexible sequence
