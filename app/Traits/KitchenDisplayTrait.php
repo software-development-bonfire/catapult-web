@@ -51,7 +51,7 @@ trait KitchenDisplayTrait
         }
 
         // Create detail record at the first station
-        $kitchenDisplayDetail = $this->createKitchenDisplayDetail($kitchenDisplay, $transactionDetailProduct, $product, $kitchenStationBid);
+        $kitchenDisplayDetail = $this->createKitchenDisplayDetail($kitchenDisplay, $terminalTransaction, $transactionDetailProduct, $product, $kitchenStationBid);
 
         // Update total_quantity on head
         $totalQty = KitchenDisplayDetail::where('head_bid', $kitchenDisplay->bid)->sum('remaining_quantity');
@@ -95,12 +95,13 @@ trait KitchenDisplayTrait
      * Create a KitchenDisplayDetail record if it doesn't already exist.
      *
      * @param KitchenDisplay $kitchenDisplay
+     * @param object $terminalTransaction
      * @param object $transactionDetailProduct
      * @param object $product
      * @param string|null $kitchenStationBid
      * @return KitchenDisplayDetail|null
      */
-    private function createKitchenDisplayDetail($kitchenDisplay, $transactionDetailProduct, $product, $kitchenStationBid)
+    private function createKitchenDisplayDetail($kitchenDisplay, $terminalTransaction, $transactionDetailProduct, $product, $kitchenStationBid)
     {
         // Check for duplicate: same head + product + station
         $exists = KitchenDisplayDetail::where('head_bid', $kitchenDisplay->bid)
@@ -118,7 +119,7 @@ trait KitchenDisplayTrait
             'transaction_product_bid' => $transactionDetailProduct->bid,
             'product_uom_packaging_bid' => $transactionDetailProduct->product_bid,
             'transaction_id' => $product->transaction_id,
-            'transaction_type' => $kitchenDisplay->transaction_type,
+            'transaction_type' => $terminalTransaction->transaction_type,
             'remaining_quantity' => $transactionDetailProduct->quantity,
             'kitchen_station_bid' => $kitchenStationBid,
             'status' => MenuStatus::WAITING,

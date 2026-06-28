@@ -427,9 +427,9 @@ class KDSManamMovementService
         $this->recordStageMovement($source->bid, KDSActionType::FOR_SERVE, KDSActionType::FOR_RECALL, $movedQty);
 
         // Skip broadcast if action originated from a releasing station
-        if (!$isReleasing) {
+        //if (!$isReleasing) {
             $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_SERVE, KDSActionType::FOR_RECALL);
-        }
+        //}
 
         return [
             'success' => true,
@@ -468,6 +468,7 @@ class KDSManamMovementService
 
         $existing = KitchenDisplayDetail::withTrashed()->where($targetCondition)->first();
 
+        $currentDateTime = now();
         if ($existing) {
             // Update existing target row — increment the fields
             $updateData = [];
@@ -475,7 +476,7 @@ class KDSManamMovementService
                 $currentValue = (float) ($existing->{$field} ?? 0);
                 $updateData[$field] = $currentValue + $value;
             }
-            $updateData['updated_at'] = now();
+            $updateData['updated_at'] = $currentDateTime;
 
             // Restore if soft-deleted
             if ($existing->trashed()) {
@@ -503,20 +504,22 @@ class KDSManamMovementService
                 'name' => $source->name,
                 'terminal_number' => $source->terminal_number,
                 'max_preparation_time' => $source->max_preparation_time,
-                'sent_at' => now(),
+                'sent_at' => $source->sent_at,
                 'started_at' => $source->started_at,
                 // Quantity fields from increment
                 'remaining_quantity' => $incrementFields['remaining_quantity'] ?? 0,
                 'prepared_quantity' => $incrementFields['prepared_quantity'] ?? 0,
                 'bumped_quantity' => $incrementFields['bumped_quantity'] ?? 0,
-                'released_quantity' => 0,
+                'released_quantity' => $incrementFields['released_quantity'] ?? 0,
             ];
 
             // Set stage timestamps
             if ($targetActionType === KDSActionType::FOR_BUMP) {
-                $newData['prepared_at'] = now();
+                $newData['prepared_at'] = $currentDateTime;
+            } elseif ($targetActionType === KDSActionType::FOR_SERVE) {
+                $newData['bumped_at'] = $currentDateTime;
             } elseif ($targetActionType === KDSActionType::FOR_RECALL) {
-                $newData['bumped_at'] = now();
+                $newData['served_at'] = $currentDateTime;
             }
 
             KitchenDisplayDetail::create($newData);
@@ -906,30 +909,8 @@ class KDSManamMovementService
                 ->get();
 
             $allItemsPayload = [];
-            foreach ($allDetails as $detail) {
-                $allItemsPayload[] = [
-                    'bid' => $detail->product_uom_packaging_bid,
-                    'product_bid' => $detail->product_uom_packaging_bid,
-                    'transaction_product_bid' => $detail->transaction_product_bid,
-                    'product_uom_packaging_bid' => $detail->product_uom_packaging_bid,
-                    'name' => $detail->name,
-                    'quantity' => $detail->remaining_quantity,
-                    'remaining_quantity' => $detail->remaining_quantity,
-                    'prepared_quantity' => $detail->prepared_quantity ?? 0,
-                    'bumped_quantity' => $detail->bumped_quantity ?? 0,
-                    'released_quantity' => $detail->released_quantity ?? 0,
-                    'action_type' => $detail->action_type ?? KDSActionType::FOR_PREPARE,
-                    'usage_type' => $detail->usage_type,
-                    'special_request' => $detail->special_request,
-                    'is_addon' => $detail->is_addon,
-                    'transaction_id' => $detail->transaction_id,
-                    'order_type_name' => $detail->order_type_name,
-                    'order_type_id' => $detail->order_type_id ?? '',
-                    'terminal_number' => $detail->terminal_number,
-                    'addons' => $detail->addons,
-                    'kitchen_station_bid' => $detail->kitchen_station_bid,
-                    'status' => $detail->status,
-                ];
+            foreach ($allDetails as $detail) {               
+                $allItemsPayload[] = $this->buildItemPayload($detail);
             }
 
             foreach ($releasingDeviceUids as $deviceUid) {
@@ -943,37 +924,23 @@ class KDSManamMovementService
             }
         } else {
             // Incremental: send only the moved item with target action_type
-            $itemData = [
-                'bid' => $source->product_uom_packaging_bid,
-                'product_bid' => $source->product_uom_packaging_bid,
-                'transaction_product_bid' => $source->transaction_product_bid,
-                'product_uom_packaging_bid' => $source->product_uom_packaging_bid,
-                'name' => $source->name,
-                'quantity' => $movedQty,
+            $itemData = $this->buildItemPayload($source, [
                 'remaining_quantity' => $movedQty,
                 'moved_quantity' => $movedQty,
+                'action_type' => $toActionType,
+                'from_action_type' => $fromActionType,
                 'prepared_quantity' => 0,
                 'bumped_quantity' => 0,
                 'released_quantity' => 0,
-                'action_type' => $toActionType,
-                'from_action_type' => $fromActionType,
-                'usage_type' => $source->usage_type,
-                'special_request' => $source->special_request,
-                'is_addon' => $source->is_addon,
-                'transaction_id' => $source->transaction_id,
-                'order_type_name' => $source->order_type_name,
-                'order_type_id' => $source->order_type_id ?? '',
-                'terminal_number' => $source->terminal_number,
-                'addons' => $source->addons,
-                'kitchen_station_bid' => $source->kitchen_station_bid,
-                'status' => $source->status,
-            ];
+            ]);
 
             // Set the quantity fields matching the target action_type
             if ($toActionType === KDSActionType::FOR_BUMP) {
                 $itemData['prepared_quantity'] = $movedQty;
-            } elseif ($toActionType === KDSActionType::FOR_RECALL) {
+            } elseif ($toActionType === KDSActionType::FOR_SERVE) {
                 $itemData['bumped_quantity'] = $movedQty;
+            } elseif ($toActionType === KDSActionType::FOR_RECALL) {
+                $itemData['released_quantity'] = $movedQty;
             }
 
             foreach ($releasingDeviceUids as $deviceUid) {
@@ -1003,6 +970,69 @@ class KDSManamMovementService
             'status_before' => MenuStatus::ON_PROCESS,
             'status_after' => MenuStatus::ON_PROCESS,
         ]);
+    }
+
+    /**
+     * Build a standardized item payload matching Flutter Item.fromMap properties.
+     * Used for broadcasting stage movements to releasing stations.
+     */
+    private function buildItemPayload(KitchenDisplayDetail $detail, array $overrides = []): array
+    {
+        $payload = [
+            'bid' => $detail->product_uom_packaging_bid,
+            'head_bid' => $detail->head_bid,
+            'product_bid' => $detail->product_uom_packaging_bid,
+            'transaction_product_bid' => $detail->transaction_product_bid,
+            'product_uom_packaging_bid' => $detail->product_uom_packaging_bid,
+            'transaction_id' => $detail->transaction_id,
+            'transaction_type' => $detail->transaction_type,
+            'name' => $detail->name,
+            'quantity' => $detail->remaining_quantity,
+            'remaining_quantity' => $detail->remaining_quantity,
+            'prepared_quantity' => $detail->prepared_quantity ?? 0,
+            'bumped_quantity' => $detail->bumped_quantity ?? 0,
+            'released_quantity' => $detail->released_quantity ?? 0,
+            'usage_type' => $detail->usage_type,
+            'special_request' => $detail->special_request,
+            'is_addon' => $detail->is_addon,
+            'kitchen_station_process_bid' => null,
+            'kitchen_station_index' => 1,
+            'kitchen_display_bid' => $detail->head_bid,
+            'kitchen_display_detail_bid' => $detail->bid,
+            'kitchen_transaction_detail_bid' => null,
+            'station_code' => null,
+            'station_name' => null,
+            'device_code' => null,
+            'device_uid' => null,
+            'device_name' => null,
+            'order_type' => $detail->order_type_id,
+            'order_type_id' => $detail->order_type_id ?? '',
+            'order_type_name' => $detail->order_type_name,
+            'terminal_number' => $detail->terminal_number,
+            'table_number' => null,
+            'queue_number' => null,
+            'addons' => $detail->addons,
+            'max_prep_time' => $detail->max_preparation_time ?? 0,
+            'pos_description' => null,
+            'short_description' => null,
+            'long_description' => null,
+            'menu_description' => null,
+            'item_type' => 1,
+            'action_type' => $detail->action_type ?? KDSActionType::FOR_PREPARE,
+            'presentation_url' => null,
+            'recipe_url' => null,
+            'kitchen_station_bid' => $detail->kitchen_station_bid,
+            'status' => $detail->status,
+            'created_at' => $detail->created_at ? $detail->created_at->format('Y-m-d H:i:s') : null,
+            'updated_at' => $detail->updated_at ? $detail->updated_at->format('Y-m-d H:i:s') : null,
+            'sent_at' => $detail->sent_at ? (is_string($detail->sent_at) ? $detail->sent_at : $detail->sent_at->format('Y-m-d H:i:s')) : null,
+            'prepared_at' => $detail->prepared_at ? (is_string($detail->prepared_at) ? $detail->prepared_at : $detail->prepared_at->format('Y-m-d H:i:s')) : null,
+            'bumped_at' => $detail->bumped_at ? (is_string($detail->bumped_at) ? $detail->bumped_at : $detail->bumped_at->format('Y-m-d H:i:s')) : null,
+            'served_at' => $detail->served_at ? (is_string($detail->served_at) ? $detail->served_at : $detail->served_at->format('Y-m-d H:i:s')) : null,
+            'deleted_at' => $detail->deleted_at ? $detail->deleted_at->format('Y-m-d H:i:s') : null,
+        ];
+
+        return array_merge($payload, $overrides);
     }
 
     /**
@@ -1097,7 +1127,7 @@ class KDSManamMovementService
             'product_bid' => $detail->product_uom_packaging_bid,
             'transaction_product_bid' => $detail->transaction_product_bid,
             'name' => $detail->name,
-            'quantity' => $movedQuantity,
+            'quantity' => $detail->quantity,
             'remaining_quantity' => $detail->remaining_quantity,
             'moved_quantity' => $movedQuantity,
             'prepared_quantity' => $detail->prepared_quantity,
