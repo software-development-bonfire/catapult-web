@@ -250,16 +250,29 @@ class KDSManamMovementService
         $productBid = $item->product_uom_packaging_bid ?? $item->product_bid ?? null;
         $addons = $item->addons ?? null;
         $kitchenStationBid = $item->kitchen_station_bid ?? null;
+        $detailBid = $item->kitchen_display_detail_bid ?? null;
 
-        // Resolve the source detail record matching the item's current action_type
-        $sourceDetail = $this->resolveDetailByActionType(
-            $transactionId,
-            $productBid,
-            $terminalNumber,
-            $kitchenStationBid,
-            $actionType,
-            $addons
-        );
+        // Resolve the source detail record — prefer exact match by bid + action_type
+        $sourceDetail = null;
+        if ($detailBid) {
+            $sourceDetail = KitchenDisplayDetail::where('bid', $detailBid)
+                ->where('action_type', $actionType)
+                ->whereIn('status', [MenuStatus::ON_PROCESS, MenuStatus::WAITING])
+                ->first();
+        }
+
+        // Fallback: resolve by action_type + identifiers
+        if (!$sourceDetail) {
+            $sourceDetail = $this->resolveDetailByActionType(
+                $transactionId,
+                $productBid,
+                $terminalNumber,
+                $kitchenStationBid,
+                $actionType,
+                $addons,
+                $movedQuantity
+            );
+        }
 
         // BAR station fallback: if requesting FOR_SERVE but item is still at FOR_PREPARE,
         // auto-bump it first (BAR skips prepare/bump stages entirely)
@@ -338,8 +351,8 @@ class KDSManamMovementService
             'remaining_quantity' => $newRemaining,
         ]);
 
-        // Create or update target row at FOR_BUMP stage
-        $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_BUMP, [
+        // Create target row at FOR_BUMP stage
+        $targetBid = $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_BUMP, [
             'remaining_quantity' => $movedQty,
             'prepared_quantity' => $movedQty,
         ]);
@@ -357,6 +370,7 @@ class KDSManamMovementService
                 'action' => 'move_item',
                 'action_type' => KDSActionType::FOR_BUMP,
                 'moved_quantity' => $movedQty,
+                'target_bid' => $targetBid,
             ],
         ];
     }
@@ -376,8 +390,8 @@ class KDSManamMovementService
             'prepared_quantity' => $newPrepared,
         ]);
 
-        // Create or update target row at FOR_SERVE stage
-        $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_SERVE, [
+        // Create target row at FOR_SERVE stage
+        $targetBid = $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_SERVE, [
             'bumped_quantity' => $movedQty,
         ]);
 
@@ -394,6 +408,7 @@ class KDSManamMovementService
                 'action' => 'move_item',
                 'action_type' => KDSActionType::FOR_SERVE,
                 'moved_quantity' => $movedQty,
+                'target_bid' => $targetBid,
             ],
         ];
     }
@@ -426,7 +441,7 @@ class KDSManamMovementService
         $source->update($updateData);
 
         // Create or update target row back at FOR_SERVE stage with new bumped_at
-        $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_SERVE, [
+        $targetBid = $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_SERVE, [
             'bumped_quantity' => $movedQty,
         ], ['bumped_at' => now()]);
 
@@ -443,6 +458,7 @@ class KDSManamMovementService
                 'action' => 'move_item',
                 'action_type' => KDSActionType::FOR_SERVE,
                 'moved_quantity' => $movedQty,
+                'target_bid' => $targetBid,
             ],
         ];
     }
@@ -462,7 +478,7 @@ class KDSManamMovementService
         ]);
 
         // Create or update target row at FOR_RECALL stage
-        $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_RECALL, [
+        $targetBid = $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_RECALL, [
             'released_quantity' => $movedQty,
         ]);
 
@@ -481,13 +497,17 @@ class KDSManamMovementService
                 'action' => 'move_item',
                 'action_type' => KDSActionType::FOR_RECALL,
                 'moved_quantity' => $movedQty,
+                'target_bid' => $targetBid,
             ],
         ];
     }
 
     /**
      * Creates a new target row or updates an existing one for the given action_type.
-     * Mirrors Flutter's _createOrUpdateTargetRow.
+     *
+     * FOR_RECALL target: merges into existing row (all recalled items accumulate).
+     * All other targets (FOR_BUMP, FOR_SERVE): always creates a new row so each
+     * batch retains its own elapsed time from the moment it was moved.
      */
     private function createOrUpdateTargetRow(
         KitchenDisplayDetail $source,
@@ -495,84 +515,92 @@ class KDSManamMovementService
         int $targetActionType,
         array $incrementFields,
         array $extraUpdates = []
-    ): void {
-        $targetCondition = [
-            'head_bid' => $source->head_bid,
-            'transaction_product_bid' => $source->transaction_product_bid,
-            'product_uom_packaging_bid' => $source->product_uom_packaging_bid,
-            'terminal_number' => $source->terminal_number,
-            'kitchen_station_bid' => $source->kitchen_station_bid,
-            'action_type' => $targetActionType,
-        ];
-
-        // Include addons in condition if present
-        if ($source->addons) {
-            $targetCondition['addons'] = $source->addons;
-        }
-
-        $existing = KitchenDisplayDetail::withTrashed()->where($targetCondition)->first();
-
+    ): ?string {
         $currentDateTime = now();
-        if ($existing) {
-            // Update existing target row — increment the fields
-            $updateData = [];
-            foreach ($incrementFields as $field => $value) {
-                $currentValue = (float) ($existing->{$field} ?? 0);
-                $updateData[$field] = $currentValue + $value;
-            }
-            $updateData['updated_at'] = $currentDateTime;
 
-            // Apply extra updates (e.g. bumped_at timestamp)
-            foreach ($extraUpdates as $key => $value) {
-                $updateData[$key] = $value;
-            }
-
-            // Restore if soft-deleted
-            if ($existing->trashed()) {
-                $existing->restore();
-            }
-
-            $existing->update($updateData);
-        } else {
-            // Create new target row
-            $newData = [
+        // FOR_RECALL: merge into existing row (accumulate recalled items)
+        if ($targetActionType === KDSActionType::FOR_RECALL) {
+            $targetCondition = [
                 'head_bid' => $source->head_bid,
                 'transaction_product_bid' => $source->transaction_product_bid,
                 'product_uom_packaging_bid' => $source->product_uom_packaging_bid,
-                'transaction_id' => $source->transaction_id,
-                'transaction_type' => $source->transaction_type,
-                'kitchen_station_bid' => $source->kitchen_station_bid,
-                'status' => $source->status,
-                'action_type' => $targetActionType,
-                'order_type_id' => $source->order_type_id,
-                'order_type_name' => $source->order_type_name,
-                'usage_type' => $source->usage_type,
-                'special_request' => $source->special_request,
-                'addons' => $source->addons,
-                'is_addon' => $source->is_addon,
-                'name' => $source->name,
                 'terminal_number' => $source->terminal_number,
-                'max_preparation_time' => $source->max_preparation_time,
-                'sent_at' => $source->sent_at,
-                'started_at' => $source->started_at,
-                // Quantity fields from increment
-                'remaining_quantity' => $incrementFields['remaining_quantity'] ?? 0,
-                'prepared_quantity' => $incrementFields['prepared_quantity'] ?? 0,
-                'bumped_quantity' => $incrementFields['bumped_quantity'] ?? 0,
-                'released_quantity' => $incrementFields['released_quantity'] ?? 0,
+                'kitchen_station_bid' => $source->kitchen_station_bid,
+                'action_type' => $targetActionType,
             ];
 
-            // Set stage timestamps
-            if ($targetActionType === KDSActionType::FOR_BUMP) {
-                $newData['prepared_at'] = $currentDateTime;
-            } elseif ($targetActionType === KDSActionType::FOR_SERVE) {
-                $newData['bumped_at'] = $currentDateTime;
-            } elseif ($targetActionType === KDSActionType::FOR_RECALL) {
-                $newData['served_at'] = $currentDateTime;
+            if ($source->addons) {
+                $targetCondition['addons'] = $source->addons;
             }
 
-            KitchenDisplayDetail::create($newData);
+            $existing = KitchenDisplayDetail::withTrashed()->where($targetCondition)->first();
+
+            if ($existing) {
+                $updateData = [];
+                foreach ($incrementFields as $field => $value) {
+                    $currentValue = (float) ($existing->{$field} ?? 0);
+                    $updateData[$field] = $currentValue + $value;
+                }
+                $updateData['updated_at'] = $currentDateTime;
+
+                foreach ($extraUpdates as $key => $value) {
+                    $updateData[$key] = $value;
+                }
+
+                if ($existing->trashed()) {
+                    $existing->restore();
+                }
+
+                $existing->update($updateData);
+                return $existing->bid;
+            }
         }
+
+        // FOR_BUMP, FOR_SERVE, or new FOR_RECALL: always create a new row
+        // Each batch has its own timing for elapsed time display
+        $newData = [
+            'head_bid' => $source->head_bid,
+            'transaction_product_bid' => $source->transaction_product_bid,
+            'product_uom_packaging_bid' => $source->product_uom_packaging_bid,
+            'transaction_id' => $source->transaction_id,
+            'transaction_type' => $source->transaction_type,
+            'kitchen_station_bid' => $source->kitchen_station_bid,
+            'status' => $source->status,
+            'action_type' => $targetActionType,
+            'order_type_id' => $source->order_type_id,
+            'order_type_name' => $source->order_type_name,
+            'usage_type' => $source->usage_type,
+            'special_request' => $source->special_request,
+            'addons' => $source->addons,
+            'is_addon' => $source->is_addon,
+            'name' => $source->name,
+            'terminal_number' => $source->terminal_number,
+            'max_preparation_time' => $source->max_preparation_time,
+            'sent_at' => $currentDateTime,
+            'started_at' => $source->started_at,
+            // Quantity fields from increment
+            'remaining_quantity' => $incrementFields['remaining_quantity'] ?? 0,
+            'prepared_quantity' => $incrementFields['prepared_quantity'] ?? 0,
+            'bumped_quantity' => $incrementFields['bumped_quantity'] ?? 0,
+            'released_quantity' => $incrementFields['released_quantity'] ?? 0,
+        ];
+
+        // Set stage timestamps
+        if ($targetActionType === KDSActionType::FOR_BUMP) {
+            $newData['prepared_at'] = $currentDateTime;
+        } elseif ($targetActionType === KDSActionType::FOR_SERVE) {
+            $newData['bumped_at'] = $currentDateTime;
+        } elseif ($targetActionType === KDSActionType::FOR_RECALL) {
+            $newData['served_at'] = $currentDateTime;
+        }
+
+        // Apply extra updates
+        foreach ($extraUpdates as $key => $value) {
+            $newData[$key] = $value;
+        }
+
+        $newRow = KitchenDisplayDetail::create($newData);
+        return $newRow->bid ?? null;
     }
 
     // INTER-STATION MOVEMENT, dati from legacy move_item logic, now refactored to support both move_item and move_order
@@ -807,6 +835,7 @@ class KDSManamMovementService
 
     /**
      * Resolve KitchenDisplayDetail by action_type for stage movement.
+     * Only returns rows that still have relevant quantity to move (skips depleted rows).
      */
     private function resolveDetailByActionType(
         ?string $transactionId,
@@ -814,10 +843,20 @@ class KDSManamMovementService
         ?string $terminalNumber,
         ?string $kitchenStationBid,
         int $actionType,
-        ?string $addons = null
+        ?string $addons = null,
+        ?float $movedQuantity = null
     ): ?KitchenDisplayDetail {
         $query = KitchenDisplayDetail::whereIn('status', [MenuStatus::ON_PROCESS, MenuStatus::WAITING])
             ->where('action_type', $actionType);
+
+        // Only resolve rows with non-zero relevant quantity for the action type
+        if ($actionType === KDSActionType::FOR_PREPARE || $actionType === KDSActionType::FOR_BUMP) {
+            $query->where('remaining_quantity', '>', 0);
+        } elseif ($actionType === KDSActionType::FOR_SERVE) {
+            $query->where('bumped_quantity', '>', 0);
+        } elseif ($actionType === KDSActionType::FOR_RECALL) {
+            $query->where('released_quantity', '>', 0);
+        }
 
         if ($transactionId) {
             $query->where('transaction_id', $transactionId);
@@ -839,7 +878,22 @@ class KDSManamMovementService
             $query->where('addons', $addons);
         }
 
-        return $query->first();
+        // Prefer row with exact relevant-quantity match (likely the row the client is acting on),
+        // then fall back to FIFO ordering for deterministic picking
+        if ($movedQuantity !== null && $movedQuantity > 0) {
+            $quantityField = 'remaining_quantity';
+            if ($actionType === KDSActionType::FOR_SERVE) {
+                $quantityField = 'bumped_quantity';
+            } elseif ($actionType === KDSActionType::FOR_RECALL) {
+                $quantityField = 'released_quantity';
+            }
+            $exactMatch = (clone $query)->where($quantityField, $movedQuantity)->orderBy('created_at', 'asc')->first();
+            if ($exactMatch) {
+                return $exactMatch;
+            }
+        }
+
+        return $query->orderBy('created_at', 'asc')->first();
     }
 
     /**
@@ -950,11 +1004,18 @@ class KDSManamMovementService
         }
 
         if ($fullTransaction) {
-            // Full transaction sync: send ALL items for the transaction so
+            // Full transaction sync: send ALL non-depleted items for the transaction so
             // releasing station can delete-insert for an accurate mirror.
             $allDetails = KitchenDisplayDetail::where('transaction_id', $source->transaction_id)
                 ->where('terminal_number', $source->terminal_number)
                 ->whereIn('status', [MenuStatus::ON_PROCESS, MenuStatus::WAITING])
+                ->where(function ($q) {
+                    // Exclude depleted rows (all quantities are 0)
+                    $q->where('remaining_quantity', '>', 0)
+                      ->orWhere('prepared_quantity', '>', 0)
+                      ->orWhere('bumped_quantity', '>', 0)
+                      ->orWhere('released_quantity', '>', 0);
+                })
                 ->get();
 
             $allItemsPayload = [];
@@ -1083,14 +1144,14 @@ class KDSManamMovementService
             'recipe_url' => null,
             'kitchen_station_bid' => $detail->kitchen_station_bid,
             'status' => $detail->status,
-            'created_at' => $detail->created_at ? $detail->created_at->format('Y-m-d H:i:s') : null,
-            'updated_at' => $detail->updated_at ? $detail->updated_at->format('Y-m-d H:i:s') : null,
-            'sent_at' => $detail->sent_at ? (is_string($detail->sent_at) ? $detail->sent_at : $detail->sent_at->format('Y-m-d H:i:s')) : null,
-            'prepared_at' => $detail->prepared_at ? (is_string($detail->prepared_at) ? $detail->prepared_at : $detail->prepared_at->format('Y-m-d H:i:s')) : null,
-            'bumped_at' => $detail->bumped_at ? (is_string($detail->bumped_at) ? $detail->bumped_at : $detail->bumped_at->format('Y-m-d H:i:s')) : null,
-            'served_at' => $detail->served_at ? (is_string($detail->served_at) ? $detail->served_at : $detail->served_at->format('Y-m-d H:i:s')) : null,
+            'created_at' => $detail->created_at ? $detail->created_at->utc()->format('Y-m-d\TH:i:s\Z') : null,
+            'updated_at' => $detail->updated_at ? $detail->updated_at->utc()->format('Y-m-d\TH:i:s\Z') : null,
+            'sent_at' => $detail->sent_at ? (is_string($detail->sent_at) ? Carbon::parse($detail->sent_at)->utc()->format('Y-m-d\TH:i:s\Z') : $detail->sent_at->utc()->format('Y-m-d\TH:i:s\Z')) : null,
+            'prepared_at' => $detail->prepared_at ? (is_string($detail->prepared_at) ? Carbon::parse($detail->prepared_at)->utc()->format('Y-m-d\TH:i:s\Z') : $detail->prepared_at->utc()->format('Y-m-d\TH:i:s\Z')) : null,
+            'bumped_at' => $detail->bumped_at ? (is_string($detail->bumped_at) ? Carbon::parse($detail->bumped_at)->utc()->format('Y-m-d\TH:i:s\Z') : $detail->bumped_at->utc()->format('Y-m-d\TH:i:s\Z')) : null,
+            'served_at' => $detail->served_at ? (is_string($detail->served_at) ? Carbon::parse($detail->served_at)->utc()->format('Y-m-d\TH:i:s\Z') : $detail->served_at->utc()->format('Y-m-d\TH:i:s\Z')) : null,
             'recall_reason' => $detail->recall_reason,
-            'deleted_at' => $detail->deleted_at ? $detail->deleted_at->format('Y-m-d H:i:s') : null,
+            'deleted_at' => $detail->deleted_at ? $detail->deleted_at->utc()->format('Y-m-d\TH:i:s\Z') : null,
         ];
 
         return array_merge($payload, $overrides);
