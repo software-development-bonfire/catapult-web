@@ -117,16 +117,45 @@ class KdsSummaryController extends Controller
             });
 
         $itemsMap = [];
-        foreach ($detailQuery->select('name', 'remaining_quantity', 'started_at')->get() as $detail) {
+        $minutesElapsed = 0;
+        foreach ($detailQuery->select(
+            'name', 
+            'remaining_quantity', 
+            'started_at', 
+            'prepared_at', 
+            'bumped_at' , 
+            'served_at' , 
+            'action_type',
+            'prepared_quantity',
+            'bumped_quantity',
+            'released_quantity'
+            )->get() as $detail) {
             $name = $detail->name ?? 'Unknown';
             if (!isset($itemsMap[$name])) {
                 $itemsMap[$name] = ['name' => $name, 'qty' => 0, 'delay' => 0];
             }
-            $itemsMap[$name]['qty'] += (int) $detail->remaining_quantity;
 
-            $minutesElapsed = $detail->prepared_at
-                ? (int) now()->diffInMinutes($detail->prepared_at)
-                : 0;
+            if ($detail->action_type == KDSActionType::FOR_BUMP) {
+                $itemsMap[$name]['qty'] += (int) $detail->prepared_quantity;
+
+                $minutesElapsed = $detail->prepared_at
+                    ? (int) now()->diffInMinutes($detail->prepared_at)
+                    : 0;
+            } else if ($detail->action_type == KDSActionType::FOR_SERVE) {
+                $itemsMap[$name]['qty'] += (int) $detail->released_quantity;
+
+                $minutesElapsed = $detail->bumped_at
+                    ? (int) now()->diffInMinutes($detail->bumped_at)
+                    : 0;
+            } else {
+                $itemsMap[$name]['qty'] += (int) $detail->released_quantity;
+
+                $minutesElapsed = $detail->served_at
+                    ? (int) now()->diffInMinutes($detail->served_at)
+                    : 0;
+            }
+           
+
             if ($minutesElapsed > $detail->max_preparation_time ?? 60) {
                 $itemsMap[$name]['delay']++;
             }
