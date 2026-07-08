@@ -88,7 +88,7 @@ class KDSTransactionService
                     }
                     $addonNames[] = $prefix . $addon->name;
                 }
-
+                $maxColumnTime = $this->getMaxColumnTime($storedProduct->product_bid);
                 // Build flatten product detail from stored product data
                 $productDetail = [
                     'index' => $flattenIndex,
@@ -117,7 +117,9 @@ class KDSTransactionService
                     'kitchen_station_index' => 1,
                     'table_number' => $terminalTransaction->table_number ?? '',
                     'queue_number' => $terminalTransaction->queue_number ?? '',
-                    'max_prep_time' => $this->getMaxPrepTime($storedProduct->product_bid),
+                    'max_waiting_time' => $maxColumnTime['max_waiting_time'],
+                    'max_prep_time' => $maxColumnTime['max_prep_time'],
+                    'max_serving_time' => $maxColumnTime['max_serving_time'],
                     'sent_at' => parseSqlDateTime($storedProduct->sent_at),
                     'created_at' => parseSqlDateTime($storedProduct->created_at),
                     'updated_at' => parseSqlDateTime($storedProduct->updated_at),
@@ -139,7 +141,7 @@ class KDSTransactionService
                 // Process addons from loaded relationship
                 foreach ($storedProduct->addons as $storedAddon) {
                     $flattenIndex += 1;
-
+                    $maxColumnTime = $this->getMaxColumnTime($storedAddon->product_bid);
                     $addonDetail = [
                         'index' => $flattenIndex,
                         'bid' => $storedAddon->product_bid,
@@ -167,7 +169,9 @@ class KDSTransactionService
                         'kitchen_station_index' => 1,
                         'table_number' => $terminalTransaction->table_number ?? '',
                         'queue_number' => $terminalTransaction->queue_number ?? '',
-                        'max_prep_time' => $this->getMaxPrepTime($storedAddon->product_bid),
+                        'max_waiting_time' => $maxColumnTime['max_waiting_time'],
+                        'max_prep_time' => $maxColumnTime['max_prep_time'],
+                        'max_serving_time' => $maxColumnTime['max_serving_time'],
                         'sent_at' => parseSqlDateTime($storedAddon->sent_at),
                         'created_at' => parseSqlDateTime($storedAddon->created_at),
                         'updated_at' => parseSqlDateTime($storedAddon->updated_at),
@@ -202,7 +206,7 @@ class KDSTransactionService
      * Get max preparation time for a product from kitchen item setup detail,
      * filtered by the current branch configuration.
      */
-    private function getMaxPrepTime($productBid): float
+    private function getMaxColumnTime($productBid): array
     {
         $branchBid = CDISBranch::where('code', config('configuration.branch_code'))
             ->whereNull('deleted_at')
@@ -220,10 +224,25 @@ class KDSTransactionService
             ->first();
 
         if ($detail) {
-            return (float) $detail->max_prep_time;
+            $data = [
+                "max_waiting_time" => (float) $detail->max_waiting_time,
+                "max_prep_time" => (float) $detail->max_prep_time,
+                "max_serving_time" => (float) $detail->max_serving_time
+            ];
+
+            return $data;
         }
 
         $packaging = CDISProductUomPackaging::where('bid', $productBid)->first();
-        return $packaging ? (float) $packaging->max_prep_time : 0;
+
+        if ($packaging) {
+            $data = [
+                "max_waiting_time" => (float) $packaging->max_waiting_time ?? 0,
+                "max_prep_time" => (float) $packaging->max_prep_time ?? 0,
+                "max_serving_time" => (float) $packaging->max_serving_time ?? 0
+            ];
+
+            return $data;
+        }
     }
 }

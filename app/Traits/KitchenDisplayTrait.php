@@ -130,6 +130,8 @@ trait KitchenDisplayTrait
             'addons' => $product->addons ?? '',
             'is_addon' => $product->is_addon ?? false,
             'max_preparation_time' => $product->max_prep_time ?? 60,
+            'max_waiting_time' => $product->max_waiting_time ?? 60,
+            'max_serving_time' => $product->max_serving_time ?? 60,
             'name' => $transactionDetailProduct->name,
             'terminal_number' => $product->terminal_number,
             'started_at' => now(),

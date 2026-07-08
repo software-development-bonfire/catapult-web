@@ -1134,6 +1134,8 @@ class KDSManamMovementService
             'queue_number' => null,
             'addons' => $detail->addons,
             'max_prep_time' => $detail->max_preparation_time ?? 0,
+            'max_waiting_time' => $detail->max_waiting_time ?? 0,
+            'max_serving_time' => $detail->max_serving_time ?? 0,
             'pos_description' => null,
             'short_description' => null,
             'long_description' => null,
