@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\KDS\v1;
 
 use App\Entities\CDISTerminalTransaction;
+use App\Entities\KitchenDisplay;
 use App\Http\Controllers\Controller;
 use App\Repositories\Contracts\KitchenPrinterRepository;
 use App\Traits\KitchenPrinterTrait;
@@ -69,7 +70,8 @@ class KitchenPrinterController extends Controller
         $items       = $request->get('items', []);
 
         // Use bumped_quantity from KDS payload to build consolidated bumped items
-        $bumpedItems = $this->consolidateBumpedItems($items);
+        // If items is empty, fetches from KitchenDisplay/KitchenDisplayDetail
+        $bumpedItems = $this->consolidateBumpedItems($items, $transaction);
 
         if (empty($bumpedItems)) {
             return $this->errorResponse([], 'No bumped items found (bumped_quantity > 0 required).');
@@ -153,68 +155,44 @@ class KitchenPrinterController extends Controller
 
     /**
      * Reconstruct all items from the database for a given transaction.
-     * Groups by product_bid and sums quantities so the printed receipt shows
-     * consolidated original items regardless of KDS station assignment.
+     * Uses KitchenDisplay/KitchenDisplayDetail to get all items and sums
+     * remaining_quantity by product to get the original quantity per item.
      */
     private function reconstructItems(array $transaction): array
     {
         $transactionId = $transaction['transaction_id'] ?? null;
         $terminalBid = $transaction['terminal_bid'] ?? null;
-        $logDate = $transaction['log_date'] ?? null;
 
         if (!$transactionId || !$terminalBid) {
             return [];
         }
 
-        $query = CDISTerminalTransaction::with('details.products.addons')
+        $kitchenDisplay = KitchenDisplay::with('details')
             ->where('transaction_id', $transactionId)
-            ->where('terminal_bid', $terminalBid);
+            ->where('terminal_bid', $terminalBid)
+            ->get();
 
-        if ($logDate) {
-            $query->where('log_date', $logDate);
-        }
-
-        $terminalTransaction = $query->first();
-
-        if (!$terminalTransaction) {
+        if ($kitchenDisplay->isEmpty()) {
             return [];
         }
 
         $consolidated = [];
 
-        foreach ($terminalTransaction->details as $detail) {
-            foreach ($detail->products as $product) {
-                $key = $product->product_bid;
+        foreach ($kitchenDisplay as $display) {
+            foreach ($display->details as $detail) {
+                $key = $detail->product_uom_packaging_bid ?? $detail->transaction_product_bid;
 
                 if (isset($consolidated[$key])) {
-                    $consolidated[$key]['quantity'] += floatval($product->quantity);
+                    $consolidated[$key]['quantity'] += floatval($detail->quantity ?? $detail->remaining_quantity);
                 } else {
                     $consolidated[$key] = [
-                        'product_bid' => $product->product_bid,
-                        'name' => $product->name,
-                        'quantity' => floatval($product->quantity),
-                        'usage_type' => null,
-                        'special_request' => $product->special_request ?? '',
-                        'is_addon' => false,
+                        'product_bid' => $detail->product_uom_packaging_bid,
+                        'name' => $detail->name,
+                        'quantity' => floatval($detail->quantity ?? $detail->remaining_quantity),
+                        'usage_type' => $detail->usage_type,
+                        'special_request' => $detail->special_request ?? '',
+                        'is_addon' => (bool) $detail->is_addon,
                     ];
-                }
-
-                // Include addons as separate line items
-                foreach ($product->addons as $addon) {
-                    $addonKey = $addon->product_bid . '_addon_' . $product->product_bid;
-
-                    if (isset($consolidated[$addonKey])) {
-                        $consolidated[$addonKey]['quantity'] += floatval($addon->quantity);
-                    } else {
-                        $consolidated[$addonKey] = [
-                            'product_bid' => $addon->product_bid,
-                            'name' => $addon->name,
-                            'quantity' => floatval($addon->quantity),
-                            'usage_type' => $addon->usage_type,
-                            'special_request' => $addon->special_request ?? '',
-                            'is_addon' => true,
-                        ];
-                    }
                 }
             }
         }
@@ -223,15 +201,64 @@ class KitchenPrinterController extends Controller
     }
 
     /**
-     * Consolidate bumped items from KDS payload by product_bid, summing bumped_quantity.
+     * Consolidate bumped items by product_bid, summing released_quantity.
+     * If items from request are empty, fetches from KitchenDisplay/KitchenDisplayDetail
+     * where released_quantity > 0.
      * Returns items in the format expected by printBumpItems().
      */
-    private function consolidateBumpedItems(array $items): array
+    private function consolidateBumpedItems(array $items, array $transaction = []): array
     {
+        // If no items from request, reconstruct from KitchenDisplay/KitchenDisplayDetail
+        if (empty($items)) {
+            $transactionId = $transaction['transaction_id'] ?? null;
+            $terminalBid = $transaction['terminal_bid'] ?? null;
+
+            if (!$transactionId || !$terminalBid) {
+                return [];
+            }
+
+            $kitchenDisplays = KitchenDisplay::with(['details' => function ($query) {
+                $query->where('released_quantity', '>', 0);
+            }])
+                ->where('transaction_id', $transactionId)
+                ->where('terminal_bid', $terminalBid)
+                ->get();
+
+            if ($kitchenDisplays->isEmpty()) {
+                return [];
+            }
+
+            $consolidated = [];
+
+            foreach ($kitchenDisplays as $display) {
+                foreach ($display->details as $detail) {
+                    $key = $detail->product_uom_packaging_bid ?? $detail->transaction_product_bid;
+
+                    if (isset($consolidated[$key])) {
+                        $consolidated[$key]['moved_quantity'] += floatval($detail->released_quantity);
+                    } else {
+                        $consolidated[$key] = [
+                            'product_bid' => $detail->product_uom_packaging_bid,
+                            'name' => $detail->name,
+                            'quantity' => floatval($detail->quantity ?? $detail->remaining_quantity),
+                            'moved_quantity' => floatval($detail->released_quantity),
+                            'is_moved' => true,
+                            'usage_type' => $detail->usage_type,
+                            'special_request' => $detail->special_request ?? '',
+                            'is_addon' => (bool) $detail->is_addon,
+                        ];
+                    }
+                }
+            }
+
+            return array_values($consolidated);
+        }
+
+        // Consolidate from request payload
         $consolidated = [];
 
         foreach ($items as $item) {
-            $releasedQty = floatval($item['released_quantity'] ?? 0);
+            $releasedQty = floatval($item['released_quantity'] ?? $item['bumped_quantity'] ?? $item['moved_quantity'] ?? 0);
             if ($releasedQty <= 0) {
                 continue;
             }
@@ -239,14 +266,14 @@ class KitchenPrinterController extends Controller
             $key = $item['product_bid'] ?? $item['name'] ?? uniqid();
 
             if (isset($consolidated[$key])) {
-                $consolidated[$key]['released_quantity'] += $releasedQty;
+                $consolidated[$key]['moved_quantity'] += $releasedQty;
             } else {
                 $consolidated[$key] = [
                     'product_bid' => $item['product_bid'] ?? null,
                     'name' => $item['name'] ?? '',
                     'quantity' => floatval($item['quantity'] ?? 0),
-                    'released_quantity' => $releasedQty,
-                    'is_released' => true,
+                    'moved_quantity' => $releasedQty,
+                    'is_moved' => true,
                     'usage_type' => $item['usage_type'] ?? null,
                     'special_request' => $item['special_request'] ?? '',
                     'is_addon' => $item['is_addon'] ?? false,

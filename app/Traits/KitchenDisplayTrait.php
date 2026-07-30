@@ -120,6 +120,7 @@ trait KitchenDisplayTrait
             'product_uom_packaging_bid' => $transactionDetailProduct->product_bid,
             'transaction_id' => $product->transaction_id,
             'transaction_type' => $terminalTransaction->transaction_type,
+            'quantity' => $transactionDetailProduct->quantity,
             'remaining_quantity' => $transactionDetailProduct->quantity,
             'kitchen_station_bid' => $kitchenStationBid,
             'status' => MenuStatus::WAITING,
