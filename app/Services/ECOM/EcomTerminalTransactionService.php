@@ -78,14 +78,15 @@ class EcomTerminalTransactionService
                 'is_reset' => 0,
                 'receipt' => 0,
             ];
-            if ($transaction->type == 1) {
-                $emailData = [
-                    'customer' => $customer,
-                    'cart' => $detail,
-                    'order_information' => $transaction
-                ];
-                $email = app()->make(CDISApiService::class)->post('/api/ecommerce/customer/email', ['data' => $emailData]);
-            }
+
+            // if ($transaction->type == 1) {
+            //     $emailData = [
+            //         'customer' => $customer,
+            //         'cart' => $detail,
+            //         'order_information' => $transaction
+            //     ];
+            //     $email = app()->make(CDISApiService::class)->post('/api/ecommerce/customer/email', ['data' => $emailData]);
+            // }
 
             if(! count($hasTransaction)) {
                 $posTransaction = POSTerminalTransaction::create($transactionData);
