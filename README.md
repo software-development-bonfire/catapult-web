@@ -5,16 +5,30 @@
 2. Run the following commands:
 
 ```bash
+copy .env.example .env #edit the content of .env file
+
 composer install
-copy .env.example .env
+npm install --global yarn && npm install --save laravel-echo pusher-js
 php artisan key:generate
 php artisan make:schema
 php artisan migrate:install
 php artisan migrate
 php artisan seed:install
-php artisan seed
-php artisan db:seed
-yarn install
+php artisan seed && php artisan db:seed
+php artisan optimize
+#-----Perform import SQL file from mapping
+php artisan pos:import-sql
+php artisan resolve:api-urls # Make sure to setup CDIS_URL on .ENV
+php artisan resolve:path # Make sure to setup CDIS_PATH on .ENV
+
+php artisan set:client_id
+php artisan set:branch_code
+php artisan passport:install
+yarn install && npm install pm2 -g && npm install pm2-windows-startup -g
+pm2 start ecosystem.config.js
+pm2 save
+pm2-startup install
+pm2 save
 yarn run dev
 php artisan serve
 ```
@@ -64,9 +78,12 @@ git rebase --abort
 In backgound it execute windows command [ **_netsh int ip reset_** ] and [ **ipconfig /flushdns** ]._
 * `php artisan clear:cache`  _#Clear all defined caches such; **sync** and **convert**_
 
+* `php artisan pos:import-sql`  _#Import SQL files from mappings/EBC directory in sequence with per-file validation_.
+* `php artisan resolve:api-urls`  _#Update end_point URLs in api_setups table with new domain from .env file_.
+* `php artisan resolve:path`  _#Resolve and update CDIS_PATH in file storage and terminal configurations from .env configuration_.
 - ``` php artisan pos:upload```  *#automatically upload all files and it depends on the configuration of Terminal File Setup;*
 
-- ``` php artisan pos:pm2```  *#Simply restart the running pm2, but **optimize** is called to make sure it would take effects if there are configurations in Catapult;*
+- `php artisan pos:pm2`  *#Simply restart the running pm2, but **optimize** is called to make sure it would take effects if there are configurations in Catapult;*
      **This command is equivalent to;**
 ```
 pm2 stop all

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\KDS\v1;
 
+use App\Entities\CDISTerminalTransaction;
+use App\Entities\KitchenDisplay;
 use App\Http\Controllers\Controller;
 use App\Repositories\Contracts\KitchenPrinterRepository;
 use App\Traits\KitchenPrinterTrait;
@@ -15,19 +17,25 @@ class KitchenPrinterController extends Controller
 
     /**
      * Print a full kitchen order triggered from KDS.
+     * Reconstructs items from the database to include ALL items under the transaction,
+     * not just those visible on the current KDS station.
      *
      * Request body:
      * {
      *   "transaction": { "transaction_id": "...", "order_number": "...", "type": 1, ... },
-     *   "items": [ { "name": "...", "quantity": 1, "is_addon": false, "usage_type": 1, "special_request": "" } ],
+     *   "items": [ ... ],
      *   "printer_host": "optional — IP or Windows printer name"
      * }
      */
     public function printOrder(Request $request): JsonResponse
     {
         $transaction = $request->get('transaction', []);
-        $items       = $request->get('items', []);
+        $items       = $this->reconstructItems($transaction);
         $printerHost = $request->get('printer_host') ?? $this->resolvePrinterHost($items);
+
+        if (empty($items)) {
+            return $this->errorResponse([], 'No items found for this transaction.');
+        }
 
         if (empty($printerHost)) {
             return $this->errorResponse([], 'No printer host configured or found for the given items.');
@@ -44,13 +52,14 @@ class KitchenPrinterController extends Controller
 
     /**
      * Print bumped items from KDS.
-     * Only items with moved_quantity > 0 and is_moved = true are printed.
+     * Reconstructs items from the database and uses bumped_quantity from KDS payload
+     * to determine which items and quantities to print.
      *
      * Request body:
      * {
      *   "transaction": { "transaction_id": "...", "order_number": "...", ... },
      *   "items": [
-     *     { "name": "...", "quantity": 2, "moved_quantity": 1, "is_moved": true, "is_addon": false, "special_request": "" }
+     *     { "product_bid": "...", "name": "...", "quantity": 2, "bumped_quantity": 1, "is_addon": false, "special_request": "" }
      *   ],
      *   "printer_host": "optional"
      * }
@@ -60,14 +69,12 @@ class KitchenPrinterController extends Controller
         $transaction = $request->get('transaction', []);
         $items       = $request->get('items', []);
 
-        // Server-side guard: keep only genuinely bumped items
-        $bumpedItems = array_values(array_filter($items, function ($item) {
-            return floatval($item['moved_quantity'] ?? 0) > 0
-                && filter_var($item['is_moved'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        }));
+        // Use bumped_quantity from KDS payload to build consolidated bumped items
+        // If items is empty, fetches from KitchenDisplay/KitchenDisplayDetail
+        $bumpedItems = $this->consolidateBumpedItems($items, $transaction);
 
         if (empty($bumpedItems)) {
-            return $this->errorResponse([], 'No bumped items found (moved_quantity > 0 and is_moved = true required).');
+            return $this->errorResponse([], 'No bumped items found (bumped_quantity > 0 required).');
         }
 
         $printerHost = $request->get('printer_host') ?? $this->resolvePrinterHost($bumpedItems);
@@ -112,10 +119,6 @@ class KitchenPrinterController extends Controller
         }
     }
 
-    // ──────────────────────────────────────────
-    // Helpers
-    // ──────────────────────────────────────────
-
     /**
      * Resolve the printer host from the first item that has a product_bid or
      * product_uom_packaging_bid mapped to a kitchen printer.
@@ -148,5 +151,136 @@ class KitchenPrinterController extends Controller
     private function resolveDefaultPrinterHost(): ?string
     {
         return config('system.printers.kitchen') ?: null;
+    }
+
+    /**
+     * Reconstruct all items from the database for a given transaction.
+     * Uses KitchenDisplay/KitchenDisplayDetail to get all items and sums
+     * remaining_quantity by product to get the original quantity per item.
+     */
+    private function reconstructItems(array $transaction): array
+    {
+        $transactionId = $transaction['transaction_id'] ?? null;
+        $terminalBid = $transaction['terminal_bid'] ?? null;
+
+        if (!$transactionId || !$terminalBid) {
+            return [];
+        }
+
+        $kitchenDisplay = KitchenDisplay::with('details')
+            ->where('transaction_id', $transactionId)
+            ->where('terminal_bid', $terminalBid)
+            ->get();
+
+        if ($kitchenDisplay->isEmpty()) {
+            return [];
+        }
+
+        $consolidated = [];
+
+        foreach ($kitchenDisplay as $display) {
+            foreach ($display->details as $detail) {
+                $key = $detail->product_uom_packaging_bid ?? $detail->transaction_product_bid;
+
+                if (isset($consolidated[$key])) {
+                    $consolidated[$key]['quantity'] += floatval($detail->quantity ?? $detail->remaining_quantity);
+                } else {
+                    $consolidated[$key] = [
+                        'product_bid' => $detail->product_uom_packaging_bid,
+                        'name' => $detail->name,
+                        'quantity' => floatval($detail->quantity ?? $detail->remaining_quantity),
+                        'usage_type' => $detail->usage_type,
+                        'special_request' => $detail->special_request ?? '',
+                        'is_addon' => (bool) $detail->is_addon,
+                    ];
+                }
+            }
+        }
+
+        return array_values($consolidated);
+    }
+
+    /**
+     * Consolidate bumped items by product_bid, summing released_quantity.
+     * If items from request are empty, fetches from KitchenDisplay/KitchenDisplayDetail
+     * where released_quantity > 0.
+     * Returns items in the format expected by printBumpItems().
+     */
+    private function consolidateBumpedItems(array $items, array $transaction = []): array
+    {
+        // If no items from request, reconstruct from KitchenDisplay/KitchenDisplayDetail
+        if (empty($items)) {
+            $transactionId = $transaction['transaction_id'] ?? null;
+            $terminalBid = $transaction['terminal_bid'] ?? null;
+
+            if (!$transactionId || !$terminalBid) {
+                return [];
+            }
+
+            $kitchenDisplays = KitchenDisplay::with(['details' => function ($query) {
+                $query->where('released_quantity', '>', 0);
+            }])
+                ->where('transaction_id', $transactionId)
+                ->where('terminal_bid', $terminalBid)
+                ->get();
+
+            if ($kitchenDisplays->isEmpty()) {
+                return [];
+            }
+
+            $consolidated = [];
+
+            foreach ($kitchenDisplays as $display) {
+                foreach ($display->details as $detail) {
+                    $key = $detail->product_uom_packaging_bid ?? $detail->transaction_product_bid;
+
+                    if (isset($consolidated[$key])) {
+                        $consolidated[$key]['moved_quantity'] += floatval($detail->released_quantity);
+                    } else {
+                        $consolidated[$key] = [
+                            'product_bid' => $detail->product_uom_packaging_bid,
+                            'name' => $detail->name,
+                            'quantity' => floatval($detail->quantity ?? $detail->remaining_quantity),
+                            'moved_quantity' => floatval($detail->released_quantity),
+                            'is_moved' => true,
+                            'usage_type' => $detail->usage_type,
+                            'special_request' => $detail->special_request ?? '',
+                            'is_addon' => (bool) $detail->is_addon,
+                        ];
+                    }
+                }
+            }
+
+            return array_values($consolidated);
+        }
+
+        // Consolidate from request payload
+        $consolidated = [];
+
+        foreach ($items as $item) {
+            $releasedQty = floatval($item['released_quantity'] ?? $item['bumped_quantity'] ?? $item['moved_quantity'] ?? 0);
+            if ($releasedQty <= 0) {
+                continue;
+            }
+
+            $key = $item['product_bid'] ?? $item['name'] ?? uniqid();
+
+            if (isset($consolidated[$key])) {
+                $consolidated[$key]['moved_quantity'] += $releasedQty;
+            } else {
+                $consolidated[$key] = [
+                    'product_bid' => $item['product_bid'] ?? null,
+                    'name' => $item['name'] ?? '',
+                    'quantity' => floatval($item['quantity'] ?? 0),
+                    'moved_quantity' => $releasedQty,
+                    'is_moved' => true,
+                    'usage_type' => $item['usage_type'] ?? null,
+                    'special_request' => $item['special_request'] ?? '',
+                    'is_addon' => $item['is_addon'] ?? false,
+                ];
+            }
+        }
+
+        return array_values($consolidated);
     }
 }

@@ -38,10 +38,9 @@ class KdsSummaryController extends Controller
                 ->value('kitchen_station_bid');
         }
 
-        $threshold = self::DELAY_THRESHOLD_MINUTES;
         $today     = now()->startOfDay();
 
-        // ── DONE orders (today) ──────────────────────────────────────────
+        // DONE orders (today)
         $doneQuery = KitchenDisplay::whereNotNull('completed_at')
             ->where('completed_at', '>=', $today);
 
@@ -72,7 +71,7 @@ class KdsSummaryController extends Controller
             }
         }
 
-        // ── ACTIVE orders (completed_at IS NULL) ─────────────────────────
+        // ACTIVE orders (completed_at IS NULL)
         $activeQuery = KitchenDisplay::whereNull('completed_at')
                 ->whereHas('details', function ($q) use ($stationBid) {
                     $q->where('action_type', '!=', KDSActionType::FOR_PREPARE);
@@ -106,11 +105,11 @@ class KdsSummaryController extends Controller
         $ticketCountTransactions = $onGoingTransactions + $onGoingDelayTransactions;
         $ticketCountItems        = $onGoingItems        + $onGoingDelayItems;
 
-        // ── ACTIVE items breakdown ────────────────────────────────────────
+        // ACTIVE items breakdown
         $detailQuery = KitchenDisplayDetail::query()
             ->whereHas('head', function ($q) use ($stationBid) {
                 $q->whereNull('completed_at')
-                ->where('action_type', '!=', KDSActionType::FOR_PREPARE);
+                ;//->where('action_type', '!=', KDSActionType::FOR_PREPARE);
                 if ($stationBid) {
                     $q->where('kitchen_station_bid', $stationBid);
                 }
@@ -134,33 +133,55 @@ class KdsSummaryController extends Controller
             if (!isset($itemsMap[$name])) {
                 $itemsMap[$name] = ['name' => $name, 'qty' => 0, 'delay' => 0];
             }
+            if ($detail->action_type == KDSActionType::FOR_PREPARE) {
+                $itemsMap[$name]['qty'] += (int) $detail->remaining_quantity;
 
-            if ($detail->action_type == KDSActionType::FOR_BUMP) {
+                $minutesElapsed = $detail->sent_at
+                    ? (int) now()->diffInMinutes($detail->sent_at)
+                    : 0;
+
+
+                if ($minutesElapsed > $detail->max_waiting_time ?? 60) {
+                    $itemsMap[$name]['delay']++;
+                }
+            } else  if ($detail->action_type == KDSActionType::FOR_BUMP) {
                 $itemsMap[$name]['qty'] += (int) $detail->prepared_quantity;
 
                 $minutesElapsed = $detail->prepared_at
                     ? (int) now()->diffInMinutes($detail->prepared_at)
                     : 0;
+
+                if ($minutesElapsed > $detail->max_waiting_time ?? 60) {
+                    $itemsMap[$name]['delay']++;
+                }
             } else if ($detail->action_type == KDSActionType::FOR_SERVE) {
                 $itemsMap[$name]['qty'] += (int) $detail->released_quantity;
 
                 $minutesElapsed = $detail->bumped_at
                     ? (int) now()->diffInMinutes($detail->bumped_at)
                     : 0;
+
+                    
+                if ($minutesElapsed > $detail->max_serving_time ?? 60) {
+                    $itemsMap[$name]['delay']++;
+                }
             } else {
                 $itemsMap[$name]['qty'] += (int) $detail->released_quantity;
 
                 $minutesElapsed = $detail->served_at
                     ? (int) now()->diffInMinutes($detail->served_at)
                     : 0;
+
+                     $itemsMap[$name]['qty'] += 0;
             }
            
 
-            if ($minutesElapsed > $detail->max_preparation_time ?? 60) {
-                $itemsMap[$name]['delay']++;
-            }
         }
 
+        $items = array_values($itemsMap);
+        usort($items, function ($a, $b) {
+            return (int)$b['qty'] <=> (int)$a['qty'];
+        });
         return $this->successfulResponse([
             'order_summary' => [
                 'total_serve' => ['transactions' => $onTimeDoneTransactions + $delayDoneTransactions,  'items' => $onTimeDoneItems + $delayDoneItems],
@@ -173,7 +194,7 @@ class KdsSummaryController extends Controller
                 'on_going_delay' => ['transactions' => $onGoingDelayTransactions, 'items' => $onGoingDelayItems],
                 // 'ticket_count'   => ['transactions' => $ticketCountTransactions,  'items' => $ticketCountItems],
             ],
-            'items' => array_values($itemsMap),
+            'items' => $items,
         ], 'Summary retrieved');
     }
 }

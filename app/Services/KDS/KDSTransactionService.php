@@ -47,6 +47,11 @@ class KDSTransactionService
             $terminalTransaction->load('details.products.addons');
         }
 
+        // Get customer/cashier info from the first detail record
+        $firstDetail = $terminalTransaction instanceof CDISTerminalTransaction
+            ? $terminalTransaction->details->first()
+            : null;
+
         // Build KDS transaction header as plain array for deterministic broadcast serialization
         $kdsTransaction = [
             'bid' => $terminalTransaction->bid,
@@ -63,6 +68,12 @@ class KDSTransactionService
             'queue_number' => $terminalTransaction->queue_number ?? '',
             'guest_count' => $terminalTransaction->guest_count ?? '1',
             'remarks' => $terminalTransaction->remarks ?? '',
+            'customer_type' => $firstDetail->customer_type ?? '',
+            'customer_bid' => $firstDetail->customer_bid ?? '',
+            'customer_name' => $firstDetail->customer_name ?? '',
+            'customer_address' => $firstDetail->customer_address ?? '',
+            'cashier_bid' => $firstDetail->cashier_bid ?? '',
+            'cashier_name' => $firstDetail->cashier_name ?? '',
             'sent_at' => parseSqlDateTime($terminalTransaction->sent_at),
             'created_at' => parseSqlDateTime($terminalTransaction->created_at),
             'updated_at' => parseSqlDateTime($terminalTransaction->updated_at),
@@ -213,7 +224,11 @@ class KDSTransactionService
             ->value('bid');
 
         if (!$branchBid) {
-            return 0;
+            return [
+                "max_waiting_time" => 0,
+                "max_prep_time" => 0,
+                "max_serving_time" => 0
+            ];
         }
 
         $detail = CDISKitchenItemSetupDetail::where('product_uom_packaging_bid', $productBid)
