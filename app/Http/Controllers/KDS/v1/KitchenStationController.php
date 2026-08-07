@@ -25,9 +25,10 @@ class KitchenStationController extends Controller
     public function list(Request $request)
     {
         $filters = stringToJson($request->get('filters'));
+        $includeDevice = filter_var($request->get('include_device', false), FILTER_VALIDATE_BOOLEAN);
 
         $stations = app()->make(KitchenStationRepository::class)
-            ->list($filters);
+            ->list($filters, $includeDevice);
 
         $stations = fractal($stations, ListTransformer::class)->serializeWith(new ArraySerializer());
 

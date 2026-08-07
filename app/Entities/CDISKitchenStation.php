@@ -24,6 +24,12 @@ class CDISKitchenStation extends BaseModel
         return $this->hasMany(CDISKitchenUserStation::class, 'kitchen_station_bid', 'bid');
     }
 
+    public function boundDevice()
+    {
+        return $this->hasOne(DeviceSettings::class, 'kitchen_station_bid', 'bid')
+            ->whereNull('deleted_at');
+    }
+
     public function syncDetails()
     {
         return (object) array(

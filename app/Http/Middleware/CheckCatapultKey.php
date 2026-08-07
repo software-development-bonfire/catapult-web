@@ -7,6 +7,7 @@ use App\Traits\APIRequestTrait;
 use App\Traits\TokenResponsesJson;
 use Closure;
 
+// Add this to your middleware to check for the Catapult key and app_id in the request
 class CheckCatapultKey
 {
     use TokenResponsesJson, APIRequestTrait;

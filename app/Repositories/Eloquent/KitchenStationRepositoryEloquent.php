@@ -22,7 +22,7 @@ class KitchenStationRepositoryEloquent extends BaseEloquent implements KitchenSt
      * @param Object $filters
      * @return Collection $result.
      */
-    public function list($filters = null)
+    public function list($filters = null, $includeDevice = false)
     {
         $branchBid = CDISBranch::where('code', config('configuration.branch_code'))->whereNull('deleted_at')->value('bid');
 
@@ -37,6 +37,10 @@ class KitchenStationRepositoryEloquent extends BaseEloquent implements KitchenSt
             ])
             ->where('branch_bid', $branchBid)
             ->orderBy('screen_prioritization', 'ASC');
+
+        if ($includeDevice) {
+            $this->model = $this->model->with('boundDevice:bid,device_uid,device_code,name,kitchen_station_bid,status');
+        }
 
         return $this->model->get();
     }
