@@ -78,7 +78,7 @@ class TerminalTransactionController extends POSBaseController
         $this->checkKDSResponseAndPrinterFailover($transactions, $kdsResponded);
 
         return $this->successfulResponse(
-            null, //$transactions,
+            $transactions,
             Lang::get('success.successfully_created', ['value' => __('label.terminal_transaction')])
         );
     }
@@ -109,7 +109,7 @@ class TerminalTransactionController extends POSBaseController
             $this->cleanupOTSTransaction($transactions);
 
             return $this->successfulResponse(
-                null,//$transactions,
+                $transactions,
                 Lang::get('success.successfully_created', ['value' => __('label.terminal_transaction')])
             );
         }
@@ -124,7 +124,7 @@ class TerminalTransactionController extends POSBaseController
         $this->checkKDSResponseAndPrinterFailover($transactions, $kdsResponded);
 
         return $this->successfulResponse(
-            null,//$transactions,
+            $transactions,
             Lang::get('success.successfully_created', ['value' => __('label.terminal_transaction')])
         );
     }
