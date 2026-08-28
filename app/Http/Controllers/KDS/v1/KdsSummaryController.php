@@ -189,6 +189,7 @@ class KdsSummaryController extends Controller
             ],
             'legends' => [
                 'on_time_done'   => ['transactions' => $onTimeDoneTransactions,  'items' => $onTimeDoneItems],
+                'near_beyond'     => ['transactions' => $delayDoneTransactions,   'items' => $delayDoneItems],
                 'delay_done'     => ['transactions' => $delayDoneTransactions,   'items' => $delayDoneItems],
                 'on_going'       => ['transactions' => $onGoingTransactions,      'items' => $onGoingItems],
                 'on_going_delay' => ['transactions' => $onGoingDelayTransactions, 'items' => $onGoingDelayItems],

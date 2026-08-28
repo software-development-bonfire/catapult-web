@@ -326,6 +326,9 @@ class KDSManamMovementService
                 case KDSActionType::FOR_BUMP:
                     return $this->stageForBump($sourceDetail, $movedQuantity);
 
+                case KDSActionType::FOR_ASSEMBLY:
+                    return $this->stageForAssemble($sourceDetail, $movedQuantity);
+
                 case KDSActionType::FOR_RECALL:
                     return $this->stageForRecall($sourceDetail, $movedQuantity, $recallReason);
 
@@ -376,7 +379,7 @@ class KDSManamMovementService
     }
 
     /**
-     * FOR_BUMP stage action:
+     * FOR_ASSEMBLY stage action:
      * Deducts remaining_quantity and prepared_quantity from source (FOR_BUMP row).
      * Creates or updates a FOR_RECALL target row with bumped_quantity.
      */
@@ -390,16 +393,52 @@ class KDSManamMovementService
             'prepared_quantity' => $newPrepared,
         ]);
 
-        // Create target row at FOR_SERVE stage
-        $targetBid = $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_SERVE, [
+        // Create target row at FOR_ASSEMBLY stage
+        $targetBid = $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_ASSEMBLY, [
             'bumped_quantity' => $movedQty,
         ]);
 
         // Record movement history
-        $this->recordStageMovement($source->bid, KDSActionType::FOR_BUMP, KDSActionType::FOR_SERVE, $movedQty);
+        $this->recordStageMovement($source->bid, KDSActionType::FOR_BUMP, KDSActionType::FOR_ASSEMBLY, $movedQty);
 
         // Broadcast stage update to releasing stations
-        $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_BUMP, KDSActionType::FOR_SERVE);
+        $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_BUMP, KDSActionType::FOR_ASSEMBLY);
+
+        return [
+            'success' => true,
+            'message' => 'Item moved from Bump to Serve',
+            'data' => [
+                'action' => 'move_item',
+                'action_type' => KDSActionType::FOR_ASSEMBLY,
+                'moved_quantity' => $movedQty,
+                'target_bid' => $targetBid,
+            ],
+        ];
+    }
+
+    /**
+     * FOR_BUMP stage action:
+     * Deducts bumped_quantity  from source (FOR_ASSEMBLY row).
+     * Creates or updates a FOR_RECALL target row with assembled_quantity.
+     */
+    private function stageForAssemble(KitchenDisplayDetail $source, float $movedQty): array
+    {
+        $newBumped = max(0, (float) $source->bumped_quantity - $movedQty);
+
+        $source->update([
+            'bumped_quantity' => $newBumped,
+        ]);
+
+        // Create target row at FOR_SERVE stage
+        $targetBid = $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_SERVE, [
+            'assembled_quantity' => $movedQty,
+        ]);
+
+        // Record movement history
+        $this->recordStageMovement($source->bid, KDSActionType::FOR_ASSEMBLY, KDSActionType::FOR_SERVE, $movedQty);
+
+        // Broadcast stage update to releasing stations
+        $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_ASSEMBLY, KDSActionType::FOR_SERVE);
 
         return [
             'success' => true,
@@ -471,10 +510,10 @@ class KDSManamMovementService
      */
     private function stageForServe(KitchenDisplayDetail $source, float $movedQty, bool $isReleasing = false): array
     {
-        $newBumped = max(0, (float) $source->bumped_quantity - $movedQty);
+        $newBumped = max(0, (float) $source->assembled_quantity - $movedQty);
 
         $source->update([
-            'bumped_quantity' => $newBumped,
+            'assembled_quantity' => $newBumped,
         ]);
 
         // Create or update target row at FOR_RECALL stage
@@ -582,6 +621,7 @@ class KDSManamMovementService
             'remaining_quantity' => $incrementFields['remaining_quantity'] ?? 0,
             'prepared_quantity' => $incrementFields['prepared_quantity'] ?? 0,
             'bumped_quantity' => $incrementFields['bumped_quantity'] ?? 0,
+            'assembled_quantity' => $incrementFields['assembled_quantity'] ?? 0,
             'released_quantity' => $incrementFields['released_quantity'] ?? 0,
         ];
 
@@ -1136,6 +1176,7 @@ class KDSManamMovementService
             'max_prep_time' => $detail->max_preparation_time ?? 0,
             'max_waiting_time' => $detail->max_waiting_time ?? 0,
             'max_serving_time' => $detail->max_serving_time ?? 0,
+            'max_assembly_time' => $detail->max_assembly_time ?? 1,
             'pos_description' => null,
             'short_description' => null,
             'long_description' => null,

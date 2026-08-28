@@ -26,6 +26,7 @@ class CDISProductUomPackaging extends BaseModel
         'allergens',
         'calories',
         'max_prep_time',
+        'max_assembly_time',
         'max_waiting_time',
         'max_serving_time',
 		'image_path',

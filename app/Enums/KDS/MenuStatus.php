@@ -12,4 +12,5 @@ final class MenuStatus extends Enum
     const DELETED = 2;
     const DONE = 3;
     const RELEASING = 4;
+    const ASSEMBLY = 5;
 }

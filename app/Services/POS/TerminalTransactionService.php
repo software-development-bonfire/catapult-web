@@ -337,6 +337,7 @@ class TerminalTransactionService
     public function storeCreateUpdate($data)
     {
         $transactions = [];
+        $additionalTransaction = false;
         foreach ($data as $datum) {
             $datum = (object) $datum;
 
@@ -497,6 +498,7 @@ class TerminalTransactionService
                     $terminalTransactionDetailProduct = [];
 
                     if (isset($product->is_additional) && $product->is_additional == 1) {
+                        $additionalTransaction = true;
                         $create = [
                             'transaction_detail_bid' => $product->transaction_detail_bid,
                             'name' => $product->name,
@@ -715,6 +717,7 @@ class TerminalTransactionService
             }
 
             $transactions['official_receipt'] = $official_receipt;
+            $transactions['is_additional'] = $additionalTransaction;
         }
 
         return $transactions;

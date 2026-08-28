@@ -10,6 +10,7 @@ class CDISKitchenItemSetupDetail extends BaseModel
         'bid',
         'head_bid',
         'max_prep_time',
+        'max_assembly_time',
         'max_waiting_time',
         'max_serving_time',
         'kitchen_station_process_bid',
