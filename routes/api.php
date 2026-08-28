@@ -102,6 +102,22 @@ Route::group([
     });
 });
 
+// ============================================
+// TMG KDS
+// ============================================
+Route::group([
+    'prefix' => 'tmg/v1',
+], function () {
+    Route::post('login', [\App\Http\Controllers\TMG\TmgController::class, 'login']);
+    Route::post('logout', [\App\Http\Controllers\TMG\TmgController::class, 'logout']);
+    Route::get('kitchen-stations', [\App\Http\Controllers\TMG\TmgController::class, 'kitchenStations']);
+
+    Route::get('transactions', [\App\Http\Controllers\TMG\TmgController::class, 'transactions']);
+    Route::get('transactions/{headBid}', [\App\Http\Controllers\TMG\TmgController::class, 'transactionDetail']);
+    Route::post('action', [\App\Http\Controllers\TMG\TmgController::class, 'action']);
+    Route::get('summary', [\App\Http\Controllers\TMG\TmgController::class, 'summary']);
+});
+
 Route::group([
     'prefix' => 'kiosk/v1',
     'namespace' => 'KIOSK\v1'

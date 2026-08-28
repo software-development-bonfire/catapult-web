@@ -11,5 +11,5 @@ use Prettus\Repository\Contracts\RepositoryInterface;
  */
 interface KitchenStationRepository extends RepositoryInterface
 {
-    public function list($filters);
+    public function list($filters, $includeDevice = false);
 }

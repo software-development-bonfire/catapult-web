@@ -16,7 +16,9 @@ return [
             'pda' => 'PDA',
             'kiosk' => 'Kiosk OTS',
             'mobile' => 'QR Mobile',
-            'sce' => 'Sirius Computation Engine'
+            'sce' => 'Sirius Computation Engine',
+            'kds' => 'Kitchen Display System',
+            //'tmg-pos' => 'TMG POS', // Uncomment this line if you want to allow TMG POS to connect to the API
         ],
 
         /*

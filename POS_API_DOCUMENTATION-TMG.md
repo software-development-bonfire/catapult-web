@@ -236,6 +236,7 @@ sequenceDiagram
               "category_name": null,
               "order_type_id": 1,
               "order_type_name": "DINE IN",
+              "is_additional": 0,
               "created_at": "2026-07-30 16:29:21",
               "updated_at": "2026-07-30 16:29:21",
               "deleted_at": null,
@@ -316,6 +317,7 @@ sequenceDiagram
 | `transaction[].official_receipt[].product[].price` | numeric | Yes | - | Unit price of product |
 | `transaction[].official_receipt[].product[].order_type_id` | integer | Yes | - | Order type ID. Valid values: `1`=DINE_IN, `2`=TAKE_OUT, `3`=DELIVERY, `4`=DRIVE_THRU |
 | `transaction[].official_receipt[].product[].order_type_name` | string | Yes | - | Order type name. Valid values: `"DINE IN"` (id:1), `"TAKE OUT"` (id:2), `"DELIVERY"` (id:3), `"DRIVE THRU"` (id:4). Note: Additional order types require discussion and coordination across all systems. |
+| `transaction[].official_receipt[].product[].is_additional` | integer | Yes | 0 | Flag if the item is additional (`0` = existing or `1` = new) |
 | `transaction[].official_receipt[].product[].special_request` | string | No | null | Special instructions for product |
 | `transaction[].official_receipt[].number` | integer | No | 0 | Receipt number |
 | `transaction[].official_receipt[].total` | numeric | Yes | - | Receipt total amount |
@@ -425,6 +427,8 @@ Payment method structure:
 
  **Additional Items on Existing Order:** 
  To add items to an existing order, submit a new transaction via `/transaction/store` with the same `transaction_id` but include all products (existing + new) in the `transaction[].official_receipt[].product` array. The system will validate the `created_at` timestamp to ensure order consistency and prevent duplicate entries. Each product object must have a valid `created_at` timestamp.
+ 
+ **Important:** Both existing products and newly added items will appear in the product list. Use the `is_additional` flag (`0` = existing, `1` = new) to distinguish between them. The API request header structure remains the same regardless of whether you are adding new items or modifying existing order data.
 
 **Validation:**
 - `transaction` must not be empty
@@ -436,6 +440,64 @@ Payment method structure:
 - `order_type_id` and `order_type_name` must be one of the pre-defined order type pairs (see Reference Definitions)
 
 ---
+
+
+#### POST `/table`
+
+Create or update table records. Requires valid `app_key`.
+
+**Request Body:**
+
+```json
+{
+  "app_id": "tmg-pos",
+  "app_key": "Y2Rpcy0xMTEy",
+  "data": [
+    {
+      "id": 0,
+      "location_id": 1,
+      "table_ref": "T01",
+      "seat_number": 4,
+      "status": 1,
+      "is_available": 1,
+      "position_x": 100.0,
+      "position_y": 200.0,
+      "width": 50.0,
+      "height": 50.0,
+      "angle": 0.0
+    }
+  ]
+}
+```
+
+**Validation Rules:**
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `id` | integer | Yes | 0 | Table ID. Use `0` to create a new table, or provide existing ID to update |
+| `location_id` | integer | Yes | - | Location ID. If table does not jave location set as `0` |
+| `table_ref` | string | Yes | - | Table reference/name. Maximum 255 characters |
+| `seat_number` | integer | Yes | - | Number of seats |
+| `status` | integer | Yes | - | Table status (`0` = INACTIVE, `1` = ACTIVE) |
+| `is_available` | integer | Yes | - | Availability flag. `0` = unavailable, `1` = available |
+| `position_x` | numeric | No | null | X-axis position for table layout (nullable) |
+| `position_y` | numeric | No | null | Y-axis position for table layout (nullable) |
+| `width` | numeric | No | null | Table width dimension (nullable) |
+| `height` | numeric | No | null | Table height dimension (nullable) |
+| `angle` | numeric | No | null | Table rotation angle in degrees (nullable) |
+
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "data": [ ... ],
+  "message": "Tables saved successfully",
+  "errors": [],
+  "alert": false
+}
+```
+
 
 ## Error Codes
 

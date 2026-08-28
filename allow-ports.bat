@@ -24,9 +24,81 @@ if '%errorlevel%' NEQ '0' (
     pushd "%CD%"
     CD /D "%~dp0"
 :--------------------------------------
+:: ============================================================
+:: Read configuration from .env
+:: ============================================================
 
+set "env_file=%~dp0.env"
+
+if not exist "%env_file%" (
+    echo.
+    echo ERROR: .env file not found:
+    echo "%env_file%"
+    echo.
+    pause
+    exit /b 1
+)
+
+for /f "tokens=1,* delims==" %%A in ('findstr /b "PUSHER_APP_PORT=" "%env_file%"') do (
+    set "web_socket_port=%%B"
+)
+
+for /f "tokens=1,* delims==" %%A in ('findstr /b "CATAPULT_PORT=" "%env_file%"') do (
+    set "catapult_port=%%B"
+)
+
+:: Validate values
+if not defined web_socket_port (
+    echo ERROR: PUSHER_APP_PORT is not defined in .env
+    pause
+    exit /b 1
+)
+
+if not defined catapult_port (
+    echo ERROR: CATAPULT_PORT is not defined in .env
+    pause
+    exit /b 1
+)
+
+echo.
+echo ==========================================
+echo Configuration
+echo ==========================================
+echo WebSocket Port : %web_socket_port%
+echo Catapult Port  : %catapult_port%
+echo ==========================================
+echo.
+
+:: Set default values in case .env is not found
 set web_socket_port=6100
 set catapult_port=81
+
+set "env_file=%~dp0.env"
+
+if exist "%env_file%" (
+    echo .env found. Reading configuration...
+    :: Read PUSHER_APP_PORT
+    for /f "tokens=1,* delims==" %%A in ('findstr /b "PUSHER_APP_PORT=" "%env_file%" 2^>nul') do (
+        if not "%%B"=="" (
+            set "web_socket_port=%%B"
+        )
+    )
+    :: Read CATAPULT_PORT
+    for /f "tokens=1,* delims==" %%A in ('findstr /b "CATAPULT_PORT=" "%env_file%" 2^>nul') do (
+        if not "%%B"=="" (
+            set "catapult_port=%%B"
+        )
+    )
+
+) else (
+    echo .env not found. Using default configuration...
+)
+
+echo.
+echo Configuration
+echo WebSocket Port : %web_socket_port%
+echo Catapult Port  : %catapult_port%
+echo.
 
 netsh advfirewall firewall show rule name="Catapult inbound websocket %web_socket_port%" >nul
 if not ERRORLEVEL 1 (

@@ -48,12 +48,22 @@ class Kernel extends HttpKernel
             'bindings',
             \App\Http\Middleware\ForceJsonRequestMiddleware::class,
             \App\Http\Middleware\AccessToken\KDS::class,
+            //\App\Http\Middleware\CheckCatapultKey::class,
+            // Temporarily disabled to accommodate the current integration requirements.
+            // Retain this line, as similar requirements have historically resurfaced.
+            // For now as security is not a big concern according to the management, 
+            // we just comment this out for now, but we will add it back in the future when security is a concern
         ],
 
         'pos-token' => [
             'throttle:60,1',
             'bindings',
-           // \App\Http\Middleware\AccessToken\POS::class, temporarily removed, to bypass token
+            //\App\Http\Middleware\AccessToken\POS::class, temporarily removed, to bypass token
+            //\App\Http\Middleware\CheckCatapultKey::class,
+            // Temporarily disabled to accommodate the current integration requirements.
+            // Retain this line, as similar requirements have historically resurfaced.
+            // For now as security is not a big concern according to the management, 
+            // we just comment this out for now, but we will add it back in the future when security is a concern
         ],
     ];
 
@@ -75,7 +85,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'has-permission' => \App\Http\Middleware\CheckPermission::class,
-        
+
     ];
 
     /**
