@@ -5,12 +5,14 @@ namespace App\Services\POS;
 use App\Entities\CDISTerminal;
 use App\Entities\CDISTerminalTransaction;
 use App\Entities\POSTerminalTransaction;
+use App\Entities\CDISProductUomPackaging;
 use App\Enums\PaymentStatus;
 use App\Enums\UsageType;
 use App\Repositories\Contracts\CDIS\TerminalTransactionRepository;
 use App\Traits\DatabaseTransaction;
 use App\Traits\QueryHelper;
 use App\Traits\TerminalTransactionDiscountTrait;
+use Illuminate\Support\Facades\Log;
 
 class TerminalTransactionService
 {
@@ -469,14 +471,76 @@ class TerminalTransactionService
                 foreach ($officialReceipt->product as $key => $product) {
                     $product = (object) $product;
 
-                    $this->disableForeignKeyChecks();
+                    $productUomViaBid = CDISProductUomPackaging::where([
+                        'bid' => $product->id,
+                        'barcode' => $product->menu_code,
+                    ])->first();
 
-                    $terminalTransactionDetailProduct = $terminalTransactionDetail->products()->updateOrCreate(
-                        [
+                    $productUomViaMenuCode = [];
+                    $attribute = [
                             'transaction_detail_bid' => $product->transaction_detail_bid,
                             'product_bid' => $product->id,
-                        ],
-                        [
+                        ];
+
+                    if (! $productUomViaBid) {
+                        $productUomViaMenuCode = CDISProductUomPackaging::where([
+                            'barcode' => $product->menu_code,
+                        ])->first();
+
+                        $attribute = [
+                            'transaction_detail_bid' => $product->transaction_detail_bid,
+                            'menu_code' => $product->menu_code,
+                        ];
+                    }
+
+                    $this->disableForeignKeyChecks();
+                    $terminalTransactionDetailProduct = [];
+
+                    if (isset($product->is_additional) && $product->is_additional == 1) {
+                        $create = [
+                            'transaction_detail_bid' => $product->transaction_detail_bid,
+                            'name' => $product->name,
+                            'description' => $product->description,
+                            'long_description' => $product->long_description,
+                            'menu_code' => $product->menu_code,
+                            'category_bid' => $product->category_bid,
+                            'category_name' => $product->category_name,
+                            'quantity' => $product->quantity,
+                            'tax_percentage' => $product->tax_percentage,
+                            'order_type_id' => $product->order_type_id,
+                            'order_type_name' => $product->order_type_name,
+                            'is_free' => $product->is_free,
+                            'is_additional' => $product->is_additional,
+                            'is_vatable' => $product->is_vatable,
+                            'original_price' => $product->original_price,
+                            'price' => $product->price,
+                            'total_addon' => $product->total_addon,
+                            'total_amount' => $product->total_amount,
+                            'entire_discount' => $product->entire_discount,
+                            'amount_discount' => $product->amount_discount,
+                            'vatable_sales' => $product->vatable_sales,
+                            'zero_rated_sales' => $product->zero_rated_sales,
+                            'tax' => $product->tax,
+                            'vat_deduct' => $product->vat_deduct,
+                            'vat_exempt' => $product->vat_exempt,
+                            'split_number' => $product->split_number,
+                            'remarks' => isset($product->remarks) ? $product->remarks : null,
+                            'special_request' => isset($product->special_request) ? $product->special_request : null,
+                            'supervisor_bid' => $product->supervisor_bid,
+                            'supervisor_name' => $product->supervisor_name,
+                            'sent_at' => isset($product->sent_at) ? $product->sent_at : now(),
+                            'created_at' => $product->created_at,
+                            'updated_at' => $product->updated_at,
+                            'deleted_at' => $product->deleted_at,
+                        ];
+                        if (! $productUomViaBid) {
+                           $create['product_bid'] = $productUomViaMenuCode->bid;
+                        } else {
+                            $create['product_bid'] = $product->id;
+                        }
+                        $terminalTransactionDetailProduct = $terminalTransactionDetail->products()->create($create);
+                    } else {
+                        $updateCreate = [
                             'name' => $product->name,
                             'description' => $product->description,
                             'long_description' => $product->long_description,
@@ -509,8 +573,17 @@ class TerminalTransactionService
                             'created_at' => $product->created_at,
                             'updated_at' => $product->updated_at,
                             'deleted_at' => $product->deleted_at,
-                        ]
-                    );
+                        ];
+                        if (! $productUomViaBid) {
+                           $updateCreate['product_bid'] = $productUomViaMenuCode->bid;
+                        }
+
+                        $terminalTransactionDetailProduct = $terminalTransactionDetail->products()->updateOrCreate(
+                            $attribute,
+                            $updateCreate
+                        );
+                    }
+                    
 
                     if (isset($product->price_override_details)) {
                         $terminalTransactionDetail->priceOverride()->updateOrCreate(

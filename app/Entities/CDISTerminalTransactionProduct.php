@@ -20,6 +20,7 @@ class CDISTerminalTransactionProduct extends Base
         'order_type_id',
         'order_type_name',
         'is_free',
+        'is_additional',
         'is_vatable',
         'original_price',
         'price',
