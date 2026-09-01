@@ -424,8 +424,10 @@ class KDSManamMovementService
     private function stageForAssemble(KitchenDisplayDetail $source, float $movedQty): array
     {
         $newBumped = max(0, (float) $source->bumped_quantity - $movedQty);
+        $newRemaining = max(0, (float) $source->remaining_quantity - $movedQty);
 
         $source->update([
+            'remaining_quantity' => $newRemaining,
             'bumped_quantity' => $newBumped,
         ]);
         
