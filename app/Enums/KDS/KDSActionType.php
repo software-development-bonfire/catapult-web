@@ -9,7 +9,8 @@ final class KDSActionType extends Enum
     const FOR_PREPARE = 1;
     const FOR_SERVE  = 2;
     const FOR_BUMP  = 3;
-    const FOR_RECALL  = 4;
-    const FOR_DONE  = 5;
-    const FOR_ASSEMBLY  = 6;
+    const FOR_ASSEMBLY  = 4;
+    const FOR_RECALL  = 5;
+    const FOR_DONE  = 6;
+
 }

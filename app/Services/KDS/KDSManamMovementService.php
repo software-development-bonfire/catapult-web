@@ -406,7 +406,7 @@ class KDSManamMovementService
 
         return [
             'success' => true,
-            'message' => 'Item moved from Bump to Serve',
+            'message' => 'Item moved from Bump to Assemble',
             'data' => [
                 'action' => 'move_item',
                 'action_type' => KDSActionType::FOR_ASSEMBLY,
@@ -892,8 +892,10 @@ class KDSManamMovementService
         // Only resolve rows with non-zero relevant quantity for the action type
         if ($actionType === KDSActionType::FOR_PREPARE || $actionType === KDSActionType::FOR_BUMP) {
             $query->where('remaining_quantity', '>', 0);
-        } elseif ($actionType === KDSActionType::FOR_SERVE) {
+        } elseif ($actionType === KDSActionType::FOR_ASSEMBLY) {
             $query->where('bumped_quantity', '>', 0);
+        } elseif ($actionType === KDSActionType::FOR_SERVE) {
+            $query->where('assembled_quantity', '>', 0);
         } elseif ($actionType === KDSActionType::FOR_RECALL) {
             $query->where('released_quantity', '>', 0);
         }
@@ -923,7 +925,7 @@ class KDSManamMovementService
         if ($movedQuantity !== null && $movedQuantity > 0) {
             $quantityField = 'remaining_quantity';
             if ($actionType === KDSActionType::FOR_SERVE) {
-                $quantityField = 'bumped_quantity';
+                $quantityField = 'assembled_quantity';
             } elseif ($actionType === KDSActionType::FOR_RECALL) {
                 $quantityField = 'released_quantity';
             }
