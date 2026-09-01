@@ -1063,6 +1063,7 @@ class KDSManamMovementService
                     // Exclude depleted rows (all quantities are 0)
                     $q->where('remaining_quantity', '>', 0)
                       ->orWhere('prepared_quantity', '>', 0)
+                      ->orWhere('assembled_quantity', '>', 0)
                       ->orWhere('bumped_quantity', '>', 0)
                       ->orWhere('released_quantity', '>', 0);
                 })
