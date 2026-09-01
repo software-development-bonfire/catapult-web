@@ -42,6 +42,7 @@ class KitchenDisplayDetail extends Base
         'sent_at',
         'prepared_at',
         'bumped_at',
+        'assembled_at',
         'served_at',
         'recall_reason',
     ];

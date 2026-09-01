@@ -40,6 +40,9 @@ class AddMaxAssemblyTimeKitchenItemSetupDetailTable extends Migration
                 if (!Schema::hasColumn(self::KITCHEN_DISPLAY_DETAIL_TABLE, 'assembled_quantity')) {
                     $table->decimal('assembled_quantity', 23, 6)->default(0.000000)->after('bumped_quantity');
                 }
+                if (!Schema::hasColumn(self::KITCHEN_DISPLAY_DETAIL_TABLE, 'assembled_at')) {
+                    $table->timestamp('assembled_at')->nullable()->after('bumped_at');
+                }
             });
         }
     }
@@ -74,6 +77,9 @@ class AddMaxAssemblyTimeKitchenItemSetupDetailTable extends Migration
                 }
                 if (Schema::hasColumn(self::KITCHEN_DISPLAY_DETAIL_TABLE, 'assembled_quantity')) {
                     $table->dropColumn('assembled_quantity');
+                }
+                if (Schema::hasColumn(self::KITCHEN_DISPLAY_DETAIL_TABLE, 'assembled_at')) {
+                    $table->dropColumn('assembled_at');
                 }
             });
         }

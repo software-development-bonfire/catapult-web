@@ -428,6 +428,7 @@ class KDSManamMovementService
         $source->update([
             'bumped_quantity' => $newBumped,
         ]);
+        
 
         // Create target row at FOR_SERVE stage
         $targetBid = $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_SERVE, [
@@ -594,6 +595,7 @@ class KDSManamMovementService
                 return $existing->bid;
             }
         }
+        
 
         // FOR_BUMP, FOR_SERVE, or new FOR_RECALL: always create a new row
         // Each batch has its own timing for elapsed time display
@@ -625,11 +627,15 @@ class KDSManamMovementService
             'released_quantity' => $incrementFields['released_quantity'] ?? 0,
         ];
 
+
+        
         // Set stage timestamps
         if ($targetActionType === KDSActionType::FOR_BUMP) {
             $newData['prepared_at'] = $currentDateTime;
-        } elseif ($targetActionType === KDSActionType::FOR_SERVE) {
+        } elseif ($targetActionType === KDSActionType::FOR_ASSEMBLY) {
             $newData['bumped_at'] = $currentDateTime;
+        } elseif ($targetActionType === KDSActionType::FOR_SERVE) {
+            $newData['assembled_at'] = $currentDateTime;
         } elseif ($targetActionType === KDSActionType::FOR_RECALL) {
             $newData['served_at'] = $currentDateTime;
         }
