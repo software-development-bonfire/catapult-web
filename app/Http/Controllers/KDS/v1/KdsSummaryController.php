@@ -178,10 +178,19 @@ class KdsSummaryController extends Controller
 
         }
 
-        $items = array_values($itemsMap);
-        usort($items, function ($a, $b) {
-            return (int)$b['qty'] <=> (int)$a['qty'];
+        $items = array_filter($itemsMap, function ($item) {
+            return (int) $item['qty'] > 0;
         });
+
+        $items = array_values($items);
+
+        usort($items, function ($a, $b) {
+            return (int) $b['qty'] <=> (int) $a['qty'];
+        });
+        // $items = array_values($itemsMap);
+        // usort($items, function ($a, $b) {
+        //     return (int)$b['qty'] <=> (int)$a['qty'];
+        // });
         return $this->successfulResponse([
             'order_summary' => [
                 'total_serve' => ['transactions' => $onTimeDoneTransactions + $delayDoneTransactions,  'items' => $onTimeDoneItems + $delayDoneItems],
