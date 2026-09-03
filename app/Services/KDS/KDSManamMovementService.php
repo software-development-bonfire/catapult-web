@@ -441,7 +441,7 @@ class KDSManamMovementService
         $this->recordStageMovement($source->bid, KDSActionType::FOR_ASSEMBLY, KDSActionType::FOR_SERVE, $movedQty);
 
         // Broadcast stage update to releasing stations
-        $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_ASSEMBLY, KDSActionType::FOR_SERVE);
+        $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_ASSEMBLY, KDSActionType::FOR_SERVE, false);
 
         return [
             'success' => true,
@@ -1092,14 +1092,17 @@ class KDSManamMovementService
                 'from_action_type' => $fromActionType,
                 'prepared_quantity' => 0,
                 'bumped_quantity' => 0,
+                'assembled_quantity' => 0,
                 'released_quantity' => 0,
             ]);
 
             // Set the quantity fields matching the target action_type
             if ($toActionType === KDSActionType::FOR_BUMP) {
                 $itemData['prepared_quantity'] = $movedQty;
-            } elseif ($toActionType === KDSActionType::FOR_SERVE) {
+            } elseif ($toActionType === KDSActionType::FOR_ASSEMBLY) {
                 $itemData['bumped_quantity'] = $movedQty;
+            } elseif ($toActionType === KDSActionType::FOR_SERVE) {
+                $itemData['assembled_quantity'] = $movedQty;
             } elseif ($toActionType === KDSActionType::FOR_RECALL) {
                 $itemData['released_quantity'] = $movedQty;
             }
