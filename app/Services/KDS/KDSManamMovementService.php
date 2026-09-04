@@ -335,10 +335,18 @@ class KDSManamMovementService
                 case KDSActionType::FOR_SERVE:
                     return $this->stageForServe($sourceDetail, $movedQuantity, $isReleasing);
 
+                case KDSActionType::UNDO:
+                    return $this->undoStage($sourceDetail, $movedQuantity, $isReleasing);
+
                 default:
                     return $this->errorResult("Unsupported action_type: $actionType");
             }
         });
+    }
+
+    private function undoStage(KitchenDisplayDetail $source, float $movedQty) : array
+    {
+
     }
 
     /**
@@ -441,7 +449,7 @@ class KDSManamMovementService
         $this->recordStageMovement($source->bid, KDSActionType::FOR_ASSEMBLY, KDSActionType::FOR_SERVE, $movedQty);
 
         // Broadcast stage update to releasing stations
-        $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_ASSEMBLY, KDSActionType::FOR_SERVE, false);
+        $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_ASSEMBLY, KDSActionType::FOR_SERVE);
 
         return [
             'success' => true,
@@ -1166,6 +1174,7 @@ class KDSManamMovementService
             'remaining_quantity' => $detail->remaining_quantity,
             'prepared_quantity' => $detail->prepared_quantity ?? 0,
             'bumped_quantity' => $detail->bumped_quantity ?? 0,
+            'assembled_quantity' => $detail->assembled_quantity ?? 0,
             'released_quantity' => $detail->released_quantity ?? 0,
             'usage_type' => $detail->usage_type,
             'special_request' => $detail->special_request,
@@ -1187,6 +1196,7 @@ class KDSManamMovementService
             'table_number' => null,
             'queue_number' => null,
             'addons' => $detail->addons,
+            'is_additional' => $detail->is_additional ?? 0,
             'max_prep_time' => $detail->max_preparation_time ?? 0,
             'max_waiting_time' => $detail->max_waiting_time ?? 0,
             'max_serving_time' => $detail->max_serving_time ?? 0,
@@ -1206,6 +1216,7 @@ class KDSManamMovementService
             'sent_at' => $detail->sent_at ? (is_string($detail->sent_at) ? Carbon::parse($detail->sent_at)->utc()->format('Y-m-d\TH:i:s\Z') : $detail->sent_at->utc()->format('Y-m-d\TH:i:s\Z')) : null,
             'prepared_at' => $detail->prepared_at ? (is_string($detail->prepared_at) ? Carbon::parse($detail->prepared_at)->utc()->format('Y-m-d\TH:i:s\Z') : $detail->prepared_at->utc()->format('Y-m-d\TH:i:s\Z')) : null,
             'bumped_at' => $detail->bumped_at ? (is_string($detail->bumped_at) ? Carbon::parse($detail->bumped_at)->utc()->format('Y-m-d\TH:i:s\Z') : $detail->bumped_at->utc()->format('Y-m-d\TH:i:s\Z')) : null,
+            'assembled_at' => $detail->assembled_at ? (is_string($detail->assembled_at) ? Carbon::parse($detail->assembled_at)->utc()->format('Y-m-d\TH:i:s\Z') : $detail->assembled_at->utc()->format('Y-m-d\TH:i:s\Z')) : null,
             'served_at' => $detail->served_at ? (is_string($detail->served_at) ? Carbon::parse($detail->served_at)->utc()->format('Y-m-d\TH:i:s\Z') : $detail->served_at->utc()->format('Y-m-d\TH:i:s\Z')) : null,
             'recall_reason' => $detail->recall_reason,
             'deleted_at' => $detail->deleted_at ? $detail->deleted_at->utc()->format('Y-m-d\TH:i:s\Z') : null,
@@ -1311,6 +1322,7 @@ class KDSManamMovementService
             'moved_quantity' => $movedQuantity,
             'prepared_quantity' => $detail->prepared_quantity,
             'bumped_quantity' => $detail->bumped_quantity,
+            'assembled_quantity' => $detail->assembled_quantity,
             'released_quantity' => $detail->released_quantity,
             'action_type' => $detail->action_type,
             'usage_type' => $detail->usage_type,

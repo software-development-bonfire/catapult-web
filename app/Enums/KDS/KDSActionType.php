@@ -13,4 +13,5 @@ final class KDSActionType extends Enum
     const FOR_RECALL  = 5;
     const FOR_DONE  = 6;
 
+    const UNDO = 99;
 }
