@@ -52,7 +52,7 @@ class KDSManamController extends Controller
         if (empty($payload)) {
             return $this->errorResponse([], 'payload is required');
         }
-
+        
         $result = $this->dispatchAction($action, $payload);
 
         if (!$result['success']) {
@@ -77,6 +77,9 @@ class KDSManamController extends Controller
 
             case 'bump_order':
                 return $this->movementService->bumpOrder($payload);
+
+            case 'undo_item':
+                return $this->movementService->undoItem($payload);
 
             default:
                 return [

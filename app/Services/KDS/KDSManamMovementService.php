@@ -92,6 +92,115 @@ class KDSManamMovementService
     }
 
     /**
+     * Process a undo_item action.
+     *
+     */
+    public function undoItem(array $payload): array
+    {
+        $data = (object) ($payload['data'] ?? []);
+        $items = $data->items ?? [];
+        $transaction = (object) ($data->transaction ?? []);
+        $orderType = (object) ($data->order_type ?? []);
+        $next = $payload['next'] ?? true;
+        $movedQuantity = (float) ($payload['moved_quantity'] ?? $payload['quantity'] ?? 0);
+        $remainingQuantity = isset($payload['remaining_quantity']) ? (float) $payload['remaining_quantity'] : null;
+        $originalQuantity = (float) ($payload['original_quantity'] ?? 0);
+        $release = $payload['release'] ?? false;
+        $actionType = isset($payload['action_type']) ? (int) $payload['action_type'] : null;
+        $isReleasing = $payload['is_releasing'] ?? false;
+        $recallReason = $payload['recall_reason'] ?? null;
+        
+        if (empty($items) || empty((array) $transaction)) {
+            return $this->errorResult('Invalid payload: items and transaction are required');
+        }
+
+        if (empty($items) || empty((array) $transaction)) {
+            return $this->errorResult('Invalid payload: items and transaction are required');
+        }
+
+        $transactionId = $transaction->transaction_id ?? null;
+        if (!$transactionId) {
+            return $this->errorResult('transaction_id is required');
+        }
+
+        // For move_item, only one item in the array
+        $item = (object) $items[0];
+
+        Log::info('KDSManamMovementService::undoItem', [
+            'transaction_id' => $transactionId,
+            'action_type' => $actionType,
+            'moved_quantity' => $movedQuantity,
+            'remaining_quantity' => $remainingQuantity,
+            'next' => $next,
+            'release' => $release,
+        ]);
+
+        $transactionId = $item->transaction_id ?? $transaction->transaction_id ?? null;
+        $terminalNumber = $item->terminal_number ?? $transaction->terminal_number ?? null;
+        $productBid = $item->product_uom_packaging_bid ?? $item->product_bid ?? null;
+        $addons = $item->addons ?? null;
+        $kitchenStationBid = $item->kitchen_station_bid ?? null;
+        $detailBid = $item->kitchen_display_detail_bid ?? null;
+
+        // Resolve the source detail record — prefer exact match by bid + action_type
+        $sourceDetail = null;
+        if ($detailBid) {
+            $sourceDetail = KitchenDisplayDetail::where('bid', $detailBid)
+                ->where('action_type', $actionType)
+                ->whereIn('status', [MenuStatus::ON_PROCESS, MenuStatus::WAITING])
+                ->first();
+        }
+
+        // Fallback: resolve by action_type + identifiers
+        if (!$sourceDetail) {
+            $sourceDetail = $this->resolveDetailByActionType(
+                $transactionId,
+                $productBid,
+                $terminalNumber,
+                $kitchenStationBid,
+                $actionType,
+                $addons,
+                $movedQuantity
+            );
+        }
+
+        // BAR station fallback: if requesting FOR_SERVE but item is still at FOR_PREPARE,
+        // auto-bump it first (BAR skips prepare/bump stages entirely)
+        if (!$sourceDetail && $actionType === KDSActionType::FOR_SERVE) {
+            $sourceDetail = $this->resolveDetailByActionType(
+                $transactionId, $productBid, $terminalNumber, $kitchenStationBid,
+                KDSActionType::FOR_PREPARE, $addons
+            );
+
+            if ($sourceDetail) {
+                // Auto-bump: convert FOR_PREPARE → FOR_SERVE in place
+                $qty = (float) $sourceDetail->remaining_quantity;
+                $sourceDetail->update([
+                    'action_type' => KDSActionType::FOR_SERVE,
+                    'bumped_quantity' => $qty,
+                    'remaining_quantity' => 0,
+                    'bumped_at' => now(),
+                ]);
+                $sourceDetail->refresh();
+            }
+        }
+
+        if (!$sourceDetail) {
+            Log::warning('KDSManam: Source detail not found for stage movement', [
+                'transaction_id' => $transactionId,
+                'product_bid' => $productBid,
+                'terminal_number' => $terminalNumber,
+                'kitchen_station_bid' => $kitchenStationBid,
+                'addons' => $addons,
+                'action_type' => $actionType,
+            ]);
+            return $this->errorResult('Source item not found for stage movement');
+        }
+
+        return $this->undoStage($sourceDetail, $movedQuantity);
+    }
+
+    /**
      * Process a move_order action.
      * All items in the transaction move to the next station.
      */
@@ -335,18 +444,10 @@ class KDSManamMovementService
                 case KDSActionType::FOR_SERVE:
                     return $this->stageForServe($sourceDetail, $movedQuantity, $isReleasing);
 
-                case KDSActionType::UNDO:
-                    return $this->undoStage($sourceDetail, $movedQuantity, $isReleasing);
-
                 default:
                     return $this->errorResult("Unsupported action_type: $actionType");
             }
         });
-    }
-
-    private function undoStage(KitchenDisplayDetail $source, float $movedQty) : array
-    {
-
     }
 
     /**
@@ -432,10 +533,10 @@ class KDSManamMovementService
     private function stageForAssemble(KitchenDisplayDetail $source, float $movedQty): array
     {
         $newBumped = max(0, (float) $source->bumped_quantity - $movedQty);
-        $newRemaining = max(0, (float) $source->remaining_quantity - $movedQty);
+        // $newRemaining = max(0, (float) $source->remaining_quantity - $movedQty);
 
         $source->update([
-            'remaining_quantity' => $newRemaining,
+            // 'remaining_quantity' => $newRemaining,
             'bumped_quantity' => $newBumped,
         ]);
         
@@ -453,7 +554,7 @@ class KDSManamMovementService
 
         return [
             'success' => true,
-            'message' => 'Item moved from Bump to Serve',
+            'message' => 'Item moved from Assemble to Serve',
             'data' => [
                 'action' => 'move_item',
                 'action_type' => KDSActionType::FOR_SERVE,
@@ -550,6 +651,106 @@ class KDSManamMovementService
                 'target_bid' => $targetBid,
             ],
         ];
+    }
+    
+    /**
+     * UNDO stage action (from any station):
+     * Deducts quantity from source (ANY row).
+     * Updates a  target row with quantity.
+     */
+    private function undoStage(KitchenDisplayDetail $source, float $movedQty) : array
+    {
+        $kdsMovement = [
+            0,
+            KDSActionType::FOR_PREPARE,
+            KDSActionType::FOR_BUMP,
+            KDSActionType::FOR_ASSEMBLY,
+            KDSActionType::FOR_SERVE,
+        ];
+        $index = array_search($source->action_type, $kdsMovement);
+
+        $kdsQuantity = [
+            KDSActionType::FOR_SERVE => 'assembled_quantity',
+            KDSActionType::FOR_ASSEMBLY => 'bumped_quantity',
+            KDSActionType::FOR_BUMP => 'prepared_quantity',
+        ];
+
+        $kdsUndoQuantity = [
+            KDSActionType::FOR_SERVE => 'assembled_quantity',
+            KDSActionType::FOR_ASSEMBLY => 'bumped_quantity',
+            KDSActionType::FOR_BUMP => 'prepared_quantity',
+        ];
+
+        $kdsUndoAction = [
+            KDSActionType::FOR_SERVE => KDSActionType::FOR_ASSEMBLY,
+            KDSActionType::FOR_ASSEMBLY => KDSActionType::FOR_BUMP,
+            KDSActionType::FOR_BUMP => KDSActionType::FOR_PREPARE,
+        ];
+
+        $column = $kdsQuantity[$source->action_type];
+        $value = $source->{$column};
+
+        $newQuantity = max(0, (float) $value - $movedQty);
+
+        $source->update([
+            $kdsUndoQuantity[$source->action_type] => $newQuantity,
+        ]);
+
+        // Update target action for UNDO
+        $targetBid = $this->updatePreviousAction($source, $movedQty, $kdsUndoAction[$source->action_type]);
+
+        $this->recordStageMovement($source->bid, $source->action_type, $kdsMovement[$index - 1], $movedQty);
+
+        $this->broadcastStageMovement($source, $movedQty, $source->action_type, $kdsMovement[$index - 1]);
+        
+        return [
+            'success' => true,
+            'message' => 'Item Undo movement',
+            'data' => [
+                'action' => 'move_item',
+                'action_type' => KDSActionType::UNDO,
+                'moved_quantity' => $movedQty,
+                'target_bid' => $targetBid,
+            ],
+        ];
+    }
+
+    private function updatePreviousAction(
+        KitchenDisplayDetail $source,
+        float $movedQty,
+        int $targetActionType
+    ) {
+        $currentDateTime = now();
+
+        $kdsQuantity = [
+            KDSActionType::FOR_SERVE => 'assembled_quantity',
+            KDSActionType::FOR_ASSEMBLY => 'bumped_quantity',
+            KDSActionType::FOR_BUMP => 'prepared_quantity',
+        ];
+        
+        $targetCondition = [
+            'head_bid' => $source->head_bid,
+            'transaction_product_bid' => $source->transaction_product_bid,
+            'product_uom_packaging_bid' => $source->product_uom_packaging_bid,
+            'terminal_number' => $source->terminal_number,
+            'kitchen_station_bid' => $source->kitchen_station_bid,
+            'action_type' => $targetActionType,
+        ];
+
+        $existing = KitchenDisplayDetail::withTrashed()->where($targetCondition)->first();
+
+        if ($existing) {
+            $updateData = [];
+            $value = $kdsQuantity[$targetActionType];
+            $updateData['updated_at'] = $currentDateTime;
+            $updateData[$value] = $existing->{$value} + $movedQty;
+            if ($existing->trashed()) {
+                $existing->restore();
+            }
+
+            $existing->update($updateData);
+            return $existing->bid;
+        }
     }
 
     /**
