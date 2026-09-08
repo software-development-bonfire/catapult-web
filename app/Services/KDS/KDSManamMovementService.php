@@ -707,7 +707,7 @@ class KDSManamMovementService
             'success' => true,
             'message' => 'Item Undo movement',
             'data' => [
-                'action' => 'move_item',
+                'action' => 'undo_item',
                 'action_type' => KDSActionType::UNDO,
                 'moved_quantity' => $movedQty,
                 'target_bid' => $targetBid,
@@ -726,6 +726,7 @@ class KDSManamMovementService
             KDSActionType::FOR_SERVE => 'assembled_quantity',
             KDSActionType::FOR_ASSEMBLY => 'bumped_quantity',
             KDSActionType::FOR_BUMP => 'prepared_quantity',
+            KDSActionType::FOR_PREPARE => 'remaining_quantity',
         ];
         
         $targetCondition = [
@@ -1107,8 +1108,10 @@ class KDSManamMovementService
             ->where('action_type', $actionType);
 
         // Only resolve rows with non-zero relevant quantity for the action type
-        if ($actionType === KDSActionType::FOR_PREPARE || $actionType === KDSActionType::FOR_BUMP) {
+        if ($actionType === KDSActionType::FOR_PREPARE) {
             $query->where('remaining_quantity', '>', 0);
+        } else if ($actionType === KDSActionType::FOR_BUMP) {
+             $query->where('prepared_quantity', '>', 0);
         } elseif ($actionType === KDSActionType::FOR_ASSEMBLY) {
             $query->where('bumped_quantity', '>', 0);
         } elseif ($actionType === KDSActionType::FOR_SERVE) {
@@ -1136,7 +1139,7 @@ class KDSManamMovementService
         if ($addons !== null) {
             $query->where('addons', $addons);
         }
-
+        
         // Prefer row with exact relevant-quantity match (likely the row the client is acting on),
         // then fall back to FIFO ordering for deterministic picking
         if ($movedQuantity !== null && $movedQuantity > 0) {
