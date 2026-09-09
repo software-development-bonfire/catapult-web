@@ -135,7 +135,7 @@ class KDSTransactionService
                         'queue_number' => $terminalTransaction->queue_number ?? '',
                         'max_waiting_time' => $maxColumnTime['max_waiting_time'],
                         'max_prep_time' => $maxColumnTime['max_prep_time'],
-                        'max_assembly_time' => $maxColumnTime['max_assembly_time'],
+                        'max_assembling_time' => $maxColumnTime['max_assembly_time'],
                         'max_serving_time' => $maxColumnTime['max_serving_time'],
                         'sent_at' => parseSqlDateTime($storedProduct->sent_at),
                         'created_at' => parseSqlDateTime($storedProduct->created_at),
@@ -237,7 +237,7 @@ class KDSTransactionService
             return [
                 "max_waiting_time" => 0,
                 "max_prep_time" => 0,
-                "max_assembly_time" => 0,
+                "max_assembling_time" => 0,
                 "max_serving_time" => 0
             ];
         }
@@ -253,7 +253,7 @@ class KDSTransactionService
             $data = [
                 "max_waiting_time" => (float) $detail->max_waiting_time,
                 "max_prep_time" => (float) $detail->max_prep_time,
-                "max_assembly_time" => (float) $detail->max_assembly_time,
+                "max_assembling_time" => (float) $detail->max_assembly_time,
                 "max_serving_time" => (float) $detail->max_serving_time
             ];
 
@@ -266,7 +266,7 @@ class KDSTransactionService
             $data = [
                 "max_waiting_time" => (float) $packaging->max_waiting_time ?? 0,
                 "max_prep_time" => (float) $packaging->max_prep_time ?? 0,
-                "max_assembly_time" => (float) $packaging->max_assembly_time ?? 0,
+                "max_assembling_time" => (float) $packaging->max_assembly_time ?? 0,
                 "max_serving_time" => (float) $packaging->max_serving_time ?? 0
             ];
 
