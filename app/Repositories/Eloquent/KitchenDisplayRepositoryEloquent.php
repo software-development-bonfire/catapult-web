@@ -37,6 +37,7 @@ class KitchenDisplayRepositoryEloquent extends BaseEloquent implements KitchenDi
                 'cdis_kitchen_item_setup_detail.kitchen_station_process_bid',
                 'cdis_kitchen_item_setup_detail.max_prep_time',
                 'cdis_kitchen_item_setup_detail.max_waiting_time',
+                'cdis_kitchen_item_setup_detail.max_assembly_time',
                 'cdis_kitchen_item_setup_detail.max_serving_time',
                 'cdis_terminal_transaction_detail.or_number',
                 'cdis_product_uom_packaging.variant_option',

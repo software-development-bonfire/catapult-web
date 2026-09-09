@@ -50,6 +50,7 @@ class MenuListTransformer extends TransformerAbstract
             'quantity' => number_format($model->quantity, $decimal),
             'max_prep_time' => $model->max_prep_time,
             'max_waiting_time' => $model->max_waiting_time,
+            'max_assembly_time' => $model->max_assembly_time,
             'max_serving_time' => $model->max_serving_time,
             'remaining_quantity' => number_format($model->remaining_quantity, $decimal),
             'remarks' => $model->remarks,
