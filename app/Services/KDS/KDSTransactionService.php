@@ -237,7 +237,7 @@ class KDSTransactionService
             return [
                 "max_waiting_time" => 0,
                 "max_prep_time" => 0,
-                "max_assembling_time" => 0,
+                "max_assembly_time" => 0,
                 "max_serving_time" => 0
             ];
         }
@@ -251,10 +251,10 @@ class KDSTransactionService
 
         if ($detail) {
             $data = [
-                "max_waiting_time" => (float) $detail->max_waiting_time,
-                "max_prep_time" => (float) $detail->max_prep_time,
-                "max_assembling_time" => (float) $detail->max_assembly_time,
-                "max_serving_time" => (float) $detail->max_serving_time
+                "max_waiting_time" => (float) $detail->max_waiting_time ?? 0,
+                "max_prep_time" => (float) $detail->max_prep_time ?? 0,
+                "max_assembly_time" => (float) $detail->max_assembly_time ?? 0,
+                "max_serving_time" => (float) $detail->max_serving_time ?? 0
             ];
 
             return $data;
@@ -266,7 +266,7 @@ class KDSTransactionService
             $data = [
                 "max_waiting_time" => (float) $packaging->max_waiting_time ?? 0,
                 "max_prep_time" => (float) $packaging->max_prep_time ?? 0,
-                "max_assembling_time" => (float) $packaging->max_assembly_time ?? 0,
+                "max_assembly_time" => (float) $packaging->max_assembly_time ?? 0,
                 "max_serving_time" => (float) $packaging->max_serving_time ?? 0
             ];
 
