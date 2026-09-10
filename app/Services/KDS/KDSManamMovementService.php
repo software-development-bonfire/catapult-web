@@ -593,8 +593,8 @@ class KDSManamMovementService
 
         // Create or update target row back at FOR_SERVE stage with new bumped_at
         $targetBid = $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_SERVE, [
-            'bumped_quantity' => $movedQty,
-        ], ['bumped_at' => now()]);
+            'assembled_quantity' => $movedQty,
+        ], ['assembled_at' => now()]);
 
         // Record movement history
         $this->recordStageMovement($source->bid, KDSActionType::FOR_RECALL, KDSActionType::FOR_SERVE, $movedQty);
@@ -622,10 +622,12 @@ class KDSManamMovementService
      */
     private function stageForServe(KitchenDisplayDetail $source, float $movedQty, bool $isReleasing = false): array
     {
-        $newBumped = max(0, (float) $source->assembled_quantity - $movedQty);
+        $newAssembled = max(0, (float) $source->assembled_quantity - $movedQty);
+        $newRemaining = max(0, (float) $source->remaining_quantity - $movedQty);
 
         $source->update([
-            'assembled_quantity' => $newBumped,
+            'assembled_quantity' => $newAssembled,
+            'remaining_quantity' => $newRemaining,
         ]);
 
         // Create or update target row at FOR_RECALL stage
@@ -676,9 +678,9 @@ class KDSManamMovementService
         ];
 
         $kdsUndoQuantity = [
-            KDSActionType::FOR_SERVE => 'assembled_quantity',
-            KDSActionType::FOR_ASSEMBLY => 'bumped_quantity',
-            KDSActionType::FOR_BUMP => 'prepared_quantity',
+            KDSActionType::FOR_SERVE => 'bumped_quantity',
+            KDSActionType::FOR_ASSEMBLY => 'prepared_quantity',
+            KDSActionType::FOR_BUMP => 'remaining_quantity',
         ];
 
         $kdsUndoAction = [
@@ -771,42 +773,42 @@ class KDSManamMovementService
         $currentDateTime = now();
 
         // FOR_RECALL: merge into existing row (accumulate recalled items)
-        if ($targetActionType === KDSActionType::FOR_RECALL) {
-            $targetCondition = [
-                'head_bid' => $source->head_bid,
-                'transaction_product_bid' => $source->transaction_product_bid,
-                'product_uom_packaging_bid' => $source->product_uom_packaging_bid,
-                'terminal_number' => $source->terminal_number,
-                'kitchen_station_bid' => $source->kitchen_station_bid,
-                'action_type' => $targetActionType,
-            ];
+        // if ($targetActionType === KDSActionType::FOR_RECALL) {
+        //     $targetCondition = [
+        //         'head_bid' => $source->head_bid,
+        //         'transaction_product_bid' => $source->transaction_product_bid,
+        //         'product_uom_packaging_bid' => $source->product_uom_packaging_bid,
+        //         'terminal_number' => $source->terminal_number,
+        //         'kitchen_station_bid' => $source->kitchen_station_bid,
+        //         'action_type' => $targetActionType,
+        //     ];
 
-            if ($source->addons) {
-                $targetCondition['addons'] = $source->addons;
-            }
+        //     if ($source->addons) {
+        //         $targetCondition['addons'] = $source->addons;
+        //     }
 
-            $existing = KitchenDisplayDetail::withTrashed()->where($targetCondition)->first();
+        //     $existing = KitchenDisplayDetail::withTrashed()->where($targetCondition)->first();
 
-            if ($existing) {
-                $updateData = [];
-                foreach ($incrementFields as $field => $value) {
-                    $currentValue = (float) ($existing->{$field} ?? 0);
-                    $updateData[$field] = $currentValue + $value;
-                }
-                $updateData['updated_at'] = $currentDateTime;
+        //     if ($existing) {
+        //         $updateData = [];
+        //         foreach ($incrementFields as $field => $value) {
+        //             $currentValue = (float) ($existing->{$field} ?? 0);
+        //             $updateData[$field] = $currentValue + $value;
+        //         }
+        //         $updateData['updated_at'] = $currentDateTime;
 
-                foreach ($extraUpdates as $key => $value) {
-                    $updateData[$key] = $value;
-                }
+        //         foreach ($extraUpdates as $key => $value) {
+        //             $updateData[$key] = $value;
+        //         }
 
-                if ($existing->trashed()) {
-                    $existing->restore();
-                }
+        //         if ($existing->trashed()) {
+        //             $existing->restore();
+        //         }
 
-                $existing->update($updateData);
-                return $existing->bid;
-            }
-        }
+        //         $existing->update($updateData);
+        //         return $existing->bid;
+        //     }
+        // }
         
 
         // FOR_BUMP, FOR_SERVE, or new FOR_RECALL: always create a new row
@@ -1404,7 +1406,7 @@ class KDSManamMovementService
             'max_prep_time' => $detail->max_preparation_time ?? 0,
             'max_waiting_time' => $detail->max_waiting_time ?? 0,
             'max_serving_time' => $detail->max_serving_time ?? 0,
-            'max_assembly_time' => $detail->max_assembly_time ?? 1,
+            'max_assembling_time' => $detail->max_assembly_time ?? 1,
             'pos_description' => null,
             'short_description' => null,
             'long_description' => null,
