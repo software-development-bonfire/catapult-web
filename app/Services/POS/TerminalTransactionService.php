@@ -587,19 +587,19 @@ class TerminalTransactionService
                         );
                     }
                     
-                    if (! $terminalTransactionDetailProduct->wasRecentlyCreated) {
-                        $oldQty = (int) $terminalTransactionDetailProduct->getOriginal('quantity');
-                        $newQty = (int) $terminalTransactionDetailProduct->quantity;
+                    // if (! $terminalTransactionDetailProduct->wasRecentlyCreated) {
+                    //     $oldQty = (int) $terminalTransactionDetailProduct->getOriginal('quantity');
+                    //     $newQty = (int) $terminalTransactionDetailProduct->quantity;
 
-                        $difference = abs($newQty - $oldQty);
+                    //     $difference = abs($newQty - $oldQty);
 
-                        $terminalTransactionDetailProduct->difference = $difference;
-                        if ($$terminalTransactionDetailProduct->is_additional != 1) {
-                            $terminalTransactionDetailProduct->is_additional = $newQty > $oldQty ? 1 : 0;
-                        }
-                        $terminalTransactionDetailProduct->is_remove = $oldQty > $newQty;
-                    }
-                    dd($terminalTransactionDetailProduct);
+                    //     $terminalTransactionDetailProduct->difference = $difference;
+                    //     if ($$terminalTransactionDetailProduct->is_additional != 1) {
+                    //         $terminalTransactionDetailProduct->is_additional = $newQty > $oldQty ? 1 : 0;
+                    //     }
+                    //     $terminalTransactionDetailProduct->is_remove = $oldQty > $newQty;
+                    // }
+                    // dd($terminalTransactionDetailProduct);
                     if (isset($product->price_override_details)) {
                         $terminalTransactionDetail->priceOverride()->updateOrCreate(
                             [
