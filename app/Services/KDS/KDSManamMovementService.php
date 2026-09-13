@@ -623,11 +623,11 @@ class KDSManamMovementService
     private function stageForServe(KitchenDisplayDetail $source, float $movedQty, bool $isReleasing = false): array
     {
         $newAssembled = max(0, (float) $source->assembled_quantity - $movedQty);
-        // $newRemaining = max(0, (float) $source->remaining_quantity - $movedQty);
+        $newRemaining = max(0, (float) $source->bumped_quantity - $movedQty);
 
         $source->update([
             'assembled_quantity' => $newAssembled,
-            // 'remaining_quantity' => $newRemaining,
+            'bumped_quantity' => $newRemaining,
         ]);
 
         // Create or update target row at FOR_RECALL stage

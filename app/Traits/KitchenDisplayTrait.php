@@ -6,7 +6,7 @@ use App\Entities\KitchenDisplay;
 use App\Entities\KitchenDisplayDetail;
 use App\Enums\KDS\MenuStatus;
 use App\Repositories\Contracts\KitchenItemSetupRepository;
-
+use Illuminate\Support\Facades\Log;
 /**
  * Trait KitchenDisplayTrait
  *
@@ -37,18 +37,20 @@ trait KitchenDisplayTrait
             ->getKitchenStation($transactionDetailProduct->product_bid, 1);
 
         // No station configured for this product, skip
-        if (!$setup) {
-            return null;
-        }
+        // if (!$setup) {
+        //     return null;
+        // }
 
         $kitchenStationBid = $setup['station_bid_1'] ?? null;
 
         // Get or create the KitchenDisplay head record
+        log::info("KitchenStation" . json_encode($kitchenStationBid));
+
         $kitchenDisplay = $this->getOrCreateKitchenDisplay($terminalTransaction, $transactionDetail, $product);
 
-        if (!$kitchenDisplay) {
-            return null;
-        }
+        // if (!$kitchenDisplay) {
+        //     return null;
+        // }
 
         // Create detail record at the first station
         $kitchenDisplayDetail = $this->createKitchenDisplayDetail($kitchenDisplay, $terminalTransaction, $transactionDetailProduct, $product, $kitchenStationBid);
@@ -59,7 +61,7 @@ trait KitchenDisplayTrait
 
         return [
             'kitchen_display_id' => $kitchenDisplay->bid,
-            'kitchen_transaction_detail_bid' => $transactionDetail->bid,
+            'kitchen_transaction_detail_bid' => $transactionDetail->bid ?? $terminalTransaction->bid,
             'kitchen_display_detail_id' => $kitchenDisplayDetail->bid,
         ];
     }
@@ -74,14 +76,14 @@ trait KitchenDisplayTrait
      */
     private function getOrCreateKitchenDisplay($terminalTransaction, $transactionDetail, $product)
     {
-        $kitchenDisplay = KitchenDisplay::where('transaction_detail_bid', $transactionDetail->bid)->first();
+        $kitchenDisplay = KitchenDisplay::where('transaction_detail_bid', $transactionDetail->bid ?? $terminalTransaction->bid)->first();
 
         if (!$kitchenDisplay) {
             $kitchenDisplay = KitchenDisplay::create([
-                'transaction_detail_bid' => $transactionDetail->bid,
+                'transaction_detail_bid' => $transactionDetail->bid ?? $terminalTransaction->bid,
                 'transaction_date' => $terminalTransaction->transaction_date ?? now()->toDateString(),
                 'transaction_id' => $product->transaction_id,
-                'terminal_bid' => $terminalTransaction->terminal_bid,
+                'terminal_bid' => $terminalTransaction->terminal_bid ?? $terminalTransaction->terminal_id,
                 'terminal_number' => $product->terminal_number,
                 'total_quantity' => 0,
                 'completed_quantity' => 0,
@@ -101,12 +103,12 @@ trait KitchenDisplayTrait
      * @param string|null $kitchenStationBid
      * @return KitchenDisplayDetail|null
      */
-    private function createKitchenDisplayDetail($kitchenDisplay, $terminalTransaction, $transactionDetailProduct, $product, $kitchenStationBid)
+    private function createKitchenDisplayDetail($kitchenDisplay, $terminalTransaction, $transactionDetailProduct, $product, $kitchenStationBid, $isAdditonal = false)
     {
         // Check for duplicate: same head + product + station
         $exists = KitchenDisplayDetail::where('head_bid', $kitchenDisplay->bid)
             ->where('transaction_product_bid', $transactionDetailProduct->bid)
-            ->where('product_uom_packaging_bid', $transactionDetailProduct->product_bid)
+            ->where('product_uom_packaging_bid', $transactionDetailProduct->product_bid ?? $transactionDetailProduct->product_uom_bid)
             ->where('kitchen_station_bid', $kitchenStationBid)
             ->first();
 
@@ -117,7 +119,7 @@ trait KitchenDisplayTrait
         return KitchenDisplayDetail::create([
             'head_bid' => $kitchenDisplay->bid,
             'transaction_product_bid' => $transactionDetailProduct->bid,
-            'product_uom_packaging_bid' => $transactionDetailProduct->product_bid,
+            'product_uom_packaging_bid' => $transactionDetailProduct->product_bid ?? $transactionDetailProduct->product_uom_bid,
             'transaction_id' => $product->transaction_id,
             'transaction_type' => $terminalTransaction->transaction_type,
             'quantity' => $transactionDetailProduct->quantity,

@@ -27,7 +27,10 @@ class CreateStoreOrderDetailTable extends Migration
             $table->string('long_description')->nullable();
             $table->decimal('quantity', 23, 6)->default(0.000000);
             $table->tinyInteger('usage_type')->default(UsageType::PRODUCT);
+            $table->unsignedBigInteger('parent_bid')->nullable();
             $table->tinyInteger('is_addon')->default(0);
+            $table->tinyInteger('is_additional')->default(0);
+            $table->tinyInteger('is_removed')->default(0);
             $table->tinyInteger('order_type_id')->default(OrderType::DINE_IN);
             $table->longText('special_request')->nullable();
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));

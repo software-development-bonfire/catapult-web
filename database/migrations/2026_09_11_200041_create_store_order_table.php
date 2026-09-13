@@ -17,6 +17,7 @@ class CreateStoreOrderTable extends Migration
         Schema::create('store_order', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('bid')->index();
+            $table->unsignedBigInteger('terminal_bid')->nullable();
             $table->unsignedBigInteger('terminal_id')->nullable();
             $table->unsignedBigInteger('transaction_id')->nullable();
             $table->unsignedBigInteger('order_number')->nullable();

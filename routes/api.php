@@ -47,6 +47,7 @@ Route::group([
     Route::post('logout', [\App\Http\Controllers\KDS\v1\LoginController::class, 'logout']);
     Route::get('config', [\App\Http\Controllers\KDS\v1\DeviceSettingsController::class, 'getConfig']);
 
+    Route::post('order/store', [\App\Http\Controllers\KDS\v1\KDSStoreOrderController::class, 'store']);
     Route::group(['middleware' => 'access-token'], function () {
 
         // ============================================
@@ -55,6 +56,8 @@ Route::group([
         Route::post('action', [\App\Http\Controllers\KDS\v1\KDSManamController::class, 'action']);
         Route::post('move-item', [\App\Http\Controllers\KDS\v1\KDSManamController::class, 'moveItem']);
         Route::post('move-order', [\App\Http\Controllers\KDS\v1\KDSManamController::class, 'moveOrder']);
+
+        
 
         // ============================================
         // LEGACY ENDPOINTS (Backward compatibility)
