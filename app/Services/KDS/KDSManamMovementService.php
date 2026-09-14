@@ -150,6 +150,9 @@ class KDSManamMovementService
                 ->whereIn('status', [MenuStatus::ON_PROCESS, MenuStatus::WAITING])
                 ->first();
         }
+
+        log::info("detail BID:". $detailBid);
+        log::info("source detail via detail bid:". json_encode($sourceDetail));
         // Fallback: resolve by action_type + identifiers
         if (!$sourceDetail) {
             $sourceDetail = $this->resolveDetailByActionType(
@@ -162,6 +165,8 @@ class KDSManamMovementService
                 $movedQuantity
             );
         }
+
+        log::info("source detail via action type:". json_encode($sourceDetail));
         // BAR station fallback: if requesting FOR_SERVE but item is still at FOR_PREPARE,
         // auto-bump it first (BAR skips prepare/bump stages entirely)
 
@@ -593,7 +598,7 @@ class KDSManamMovementService
         // Create or update target row back at FOR_SERVE stage with new bumped_at
         $targetBid = $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_SERVE, [
             'assembled_quantity' => $movedQty,
-        ], ['assembled_at' => now()]);
+        ], ['assembled_at' => now ()]);
 
         // Record movement history
         $this->recordStageMovement($source->bid, KDSActionType::FOR_RECALL, KDSActionType::FOR_SERVE, $movedQty);
@@ -780,42 +785,42 @@ class KDSManamMovementService
         $currentDateTime = now();
 
         // FOR_RECALL: merge into existing row (accumulate recalled items)
-        // if ($targetActionType === KDSActionType::FOR_RECALL) {
-        //     $targetCondition = [
-        //         'head_bid' => $source->head_bid,
-        //         'transaction_product_bid' => $source->transaction_product_bid,
-        //         'product_uom_packaging_bid' => $source->product_uom_packaging_bid,
-        //         'terminal_number' => $source->terminal_number,
-        //         'kitchen_station_bid' => $source->kitchen_station_bid,
-        //         'action_type' => $targetActionType,
-        //     ];
+        if ($targetActionType === KDSActionType::FOR_RECALL) {
+            $targetCondition = [
+                'head_bid' => $source->head_bid,
+                'transaction_product_bid' => $source->transaction_product_bid,
+                'product_uom_packaging_bid' => $source->product_uom_packaging_bid,
+                'terminal_number' => $source->terminal_number,
+                'kitchen_station_bid' => $source->kitchen_station_bid,
+                'action_type' => $targetActionType,
+            ];
 
-        //     if ($source->addons) {
-        //         $targetCondition['addons'] = $source->addons;
-        //     }
+            if ($source->addons) {
+                $targetCondition['addons'] = $source->addons;
+            }
 
-        //     $existing = KitchenDisplayDetail::withTrashed()->where($targetCondition)->first();
+            $existing = KitchenDisplayDetail::withTrashed()->where($targetCondition)->first();
 
-        //     if ($existing) {
-        //         $updateData = [];
-        //         foreach ($incrementFields as $field => $value) {
-        //             $currentValue = (float) ($existing->{$field} ?? 0);
-        //             $updateData[$field] = $currentValue + $value;
-        //         }
-        //         $updateData['updated_at'] = $currentDateTime;
+            if ($existing) {
+                $updateData = [];
+                foreach ($incrementFields as $field => $value) {
+                    $currentValue = (float) ($existing->{$field} ?? 0);
+                    $updateData[$field] = $currentValue + $value;
+                }
+                $updateData['updated_at'] = $currentDateTime;
 
-        //         foreach ($extraUpdates as $key => $value) {
-        //             $updateData[$key] = $value;
-        //         }
+                foreach ($extraUpdates as $key => $value) {
+                    $updateData[$key] = $value;
+                }
 
-        //         if ($existing->trashed()) {
-        //             $existing->restore();
-        //         }
+                if ($existing->trashed()) {
+                    $existing->restore();
+                }
 
-        //         $existing->update($updateData);
-        //         return $existing->bid;
-        //     }
-        // }
+                $existing->update($updateData);
+                return $existing->bid;
+            }
+        }
         
 
         // FOR_BUMP, FOR_SERVE, or new FOR_RECALL: always create a new row
@@ -1309,6 +1314,7 @@ class KDSManamMovementService
                     'STAGE_UPDATE_FULL'
                 ));
             }
+            $this->broadcastToNonReleasingDevice($source);
         } else {
             // Incremental: send only the moved item with target action_type
             $itemData = $this->buildItemPayload($source, [
@@ -1342,6 +1348,53 @@ class KDSManamMovementService
                     'STAGE_UPDATE'
                 ));
             }
+        }
+    }
+
+    private function broadcastToNonReleasingDevice(KitchenDisplayDetail $source)
+    {
+        // Build transaction data from the head record
+        $head = KitchenDisplay::where('bid', $source->head_bid)->first();
+        $transactionData = [
+            'transaction_id' => $source->transaction_id,
+            'terminal_number' => $source->terminal_number,
+        ];
+        if ($head) {
+            $transactionData['terminal_bid'] = $head->terminal_bid ?? null;
+            $transactionData['transaction_date'] = $head->transaction_date ?? null;
+        }
+
+        $barBidStation = [
+            1000000000000000040
+        ];
+        // Full transaction sync: send 1st station non-depleted items for the transaction so
+        // non releasing station can delete-insert for an accurate mirror.
+        $allDetails = KitchenDisplayDetail::where('transaction_id', $source->transaction_id)
+            ->where('terminal_number', $source->terminal_number)
+            ->whereIn('status', [MenuStatus::ON_PROCESS, MenuStatus::WAITING])
+            ->where(function ($q) {
+                // Exclude depleted rows (all quantities are 0)
+                $q->where('remaining_quantity', '>', 0)
+                    ->orWhere('prepared_quantity', '>', 0);
+            })
+            //remove bar items in releasing station
+            ->whereNotIn('kitchen_station_bid', $barBidStation)
+            ->get();
+        $allItemsPayload = [];
+        foreach ($allDetails as $detail) {               
+            $allItemsPayload[] = $this->buildItemPayload($detail);
+        }
+
+        $allDeviceUids = collect($allDetails)->pluck('device_uid')->unique()->filter();
+
+        foreach ($allDeviceUids as $device) {
+            broadcast(new KDSFineDineTransactionEvent(
+                $device,
+                (object) $transactionData,
+                $allItemsPayload,
+                true,
+                'STAGE_UPDATE_FULL'
+            ));
         }
     }
 
