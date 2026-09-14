@@ -1277,7 +1277,7 @@ class KDSManamMovementService
 
         if ($fullTransaction) {
             $barBidStation = [
-
+                1000000000000000040
             ];
             // Full transaction sync: send ALL non-depleted items for the transaction so
             // releasing station can delete-insert for an accurate mirror.
@@ -1292,7 +1292,7 @@ class KDSManamMovementService
                       ->orWhere('bumped_quantity', '>', 0)
                       ->orWhere('released_quantity', '>', 0);
                 })
-                ->whereNotIn()
+                ->whereNotIn('kitchen_station_bid', $barBidStation)
                 ->get();
 
             $allItemsPayload = [];
