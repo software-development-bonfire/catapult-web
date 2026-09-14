@@ -668,22 +668,26 @@ class KDSManamMovementService
             KDSActionType::FOR_BUMP,
             KDSActionType::FOR_ASSEMBLY,
             KDSActionType::FOR_SERVE,
+            KDSActionType::FOR_RECALL
         ];
         $index = array_search($source->action_type, $kdsMovement);
 
         $kdsQuantity = [
+            KDSActionType::FOR_RECALL => 'released_quantity',
             KDSActionType::FOR_SERVE => 'assembled_quantity',
             KDSActionType::FOR_ASSEMBLY => 'bumped_quantity',
             KDSActionType::FOR_BUMP => 'prepared_quantity',
         ];
 
         $kdsUndoQuantity = [
+            KDSActionType::FOR_RECALL => 'assembled_quantity',
             KDSActionType::FOR_SERVE => 'bumped_quantity',
             KDSActionType::FOR_ASSEMBLY => 'prepared_quantity',
             KDSActionType::FOR_BUMP => 'remaining_quantity',
         ];
 
         $kdsUndoAction = [
+            KDSActionType::FOR_RECALL => KDSActionType::FOR_SERVE,
             KDSActionType::FOR_SERVE => KDSActionType::FOR_ASSEMBLY,
             KDSActionType::FOR_ASSEMBLY => KDSActionType::FOR_BUMP,
             KDSActionType::FOR_BUMP => KDSActionType::FOR_PREPARE,
@@ -698,9 +702,12 @@ class KDSManamMovementService
             $kdsUndoQuantity[$source->action_type] => $newQuantity,
         ]);
 
+        log::alert("Source: ". json_encode($source));
+        log::alert("Action Type Send By KDS: ", $source->action_type);
+        log::alert("Undo Value Action Type : ", $kdsUndoAction[$source->action_type]);
         // Update target action for UNDO
         $targetBid = $this->updatePreviousAction($source, $movedQty, $kdsUndoAction[$source->action_type]);
-
+        log::alert("BID of previous action: ", $source->action_type);
         $this->recordStageMovement($source->bid, $source->action_type, $kdsMovement[$index - 1], $movedQty);
 
         $this->broadcastStageMovement($source, $movedQty, $source->action_type, $kdsMovement[$index - 1]);
@@ -725,6 +732,7 @@ class KDSManamMovementService
         $currentDateTime = now();
 
         $kdsQuantity = [
+            KDSActionType::FOR_RECALL => 'released_quantity',
             KDSActionType::FOR_SERVE => 'assembled_quantity',
             KDSActionType::FOR_ASSEMBLY => 'bumped_quantity',
             KDSActionType::FOR_BUMP => 'prepared_quantity',
@@ -1268,6 +1276,9 @@ class KDSManamMovementService
         }
 
         if ($fullTransaction) {
+            $barBidStation = [
+
+            ];
             // Full transaction sync: send ALL non-depleted items for the transaction so
             // releasing station can delete-insert for an accurate mirror.
             $allDetails = KitchenDisplayDetail::where('transaction_id', $source->transaction_id)
@@ -1281,6 +1292,7 @@ class KDSManamMovementService
                       ->orWhere('bumped_quantity', '>', 0)
                       ->orWhere('released_quantity', '>', 0);
                 })
+                ->whereNotIn()
                 ->get();
 
             $allItemsPayload = [];
