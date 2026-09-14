@@ -132,6 +132,8 @@ trait KitchenDisplayTrait
             'special_request' => $product->special_request ?? '',
             'addons' => $product->addons ?? '',
             'is_addon' => $product->is_addon ?? false,
+            'is_additional' => $product->is_additonal ?? false,
+            'is_removed' => $product->is_removed ?? false,
             'max_preparation_time' => $product->max_prep_time ?? 60,
             'max_waiting_time' => $product->max_waiting_time ?? 60,
             'max_serving_time' => $product->max_serving_time ?? 60,
