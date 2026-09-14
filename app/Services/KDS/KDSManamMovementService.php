@@ -150,7 +150,7 @@ class KDSManamMovementService
                 ->whereIn('status', [MenuStatus::ON_PROCESS, MenuStatus::WAITING])
                 ->first();
         }
-
+        log::alert("SOURCE DETAIL 1st", json_encode($sourceDetail));
         // Fallback: resolve by action_type + identifiers
         if (!$sourceDetail) {
             $sourceDetail = $this->resolveDetailByActionType(
@@ -164,26 +164,29 @@ class KDSManamMovementService
             );
         }
 
+        log::alert("SOURCE DETAIL Resolve by Action Type", json_encode($sourceDetail));
+
         // BAR station fallback: if requesting FOR_SERVE but item is still at FOR_PREPARE,
         // auto-bump it first (BAR skips prepare/bump stages entirely)
-        if (!$sourceDetail && $actionType === KDSActionType::FOR_SERVE) {
-            $sourceDetail = $this->resolveDetailByActionType(
-                $transactionId, $productBid, $terminalNumber, $kitchenStationBid,
-                KDSActionType::FOR_PREPARE, $addons
-            );
 
-            if ($sourceDetail) {
-                // Auto-bump: convert FOR_PREPARE → FOR_SERVE in place
-                $qty = (float) $sourceDetail->remaining_quantity;
-                $sourceDetail->update([
-                    'action_type' => KDSActionType::FOR_SERVE,
-                    'bumped_quantity' => $qty,
-                    'remaining_quantity' => 0,
-                    'bumped_at' => now(),
-                ]);
-                $sourceDetail->refresh();
-            }
-        }
+        // if (!$sourceDetail && $actionType === KDSActionType::FOR_SERVE) {
+        //     $sourceDetail = $this->resolveDetailByActionType(
+        //         $transactionId, $productBid, $terminalNumber, $kitchenStationBid,
+        //         KDSActionType::FOR_PREPARE, $addons
+        //     );
+
+        //     if ($sourceDetail) {
+        //         // Auto-bump: convert FOR_PREPARE → FOR_SERVE in place
+        //         $qty = (float) $sourceDetail->remaining_quantity;
+        //         $sourceDetail->update([
+        //             'action_type' => KDSActionType::FOR_SERVE,
+        //             'bumped_quantity' => $qty,
+        //             'remaining_quantity' => 0,
+        //             'bumped_at' => now(),
+        //         ]);
+        //         $sourceDetail->refresh();
+        //     }
+        // }
 
         if (!$sourceDetail) {
             Log::warning('KDSManam: Source detail not found for stage movement', [
@@ -623,11 +626,11 @@ class KDSManamMovementService
     private function stageForServe(KitchenDisplayDetail $source, float $movedQty, bool $isReleasing = false): array
     {
         $newAssembled = max(0, (float) $source->assembled_quantity - $movedQty);
-        $newRemaining = max(0, (float) $source->bumped_quantity - $movedQty);
+        $newRemaining = max(0, (float) $source->remaining_quantity - $movedQty);
 
         $source->update([
             'assembled_quantity' => $newAssembled,
-            'bumped_quantity' => $newRemaining,
+            'remaining_quantity' => $newRemaining,
         ]);
 
         // Create or update target row at FOR_RECALL stage
@@ -1292,6 +1295,7 @@ class KDSManamMovementService
                       ->orWhere('bumped_quantity', '>', 0)
                       ->orWhere('released_quantity', '>', 0);
                 })
+                //remove bar items in releasing station
                 ->whereNotIn('kitchen_station_bid', $barBidStation)
                 ->get();
 
