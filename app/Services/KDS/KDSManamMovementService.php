@@ -150,7 +150,6 @@ class KDSManamMovementService
                 ->whereIn('status', [MenuStatus::ON_PROCESS, MenuStatus::WAITING])
                 ->first();
         }
-        log::alert("SOURCE DETAIL 1st", json_encode($sourceDetail));
         // Fallback: resolve by action_type + identifiers
         if (!$sourceDetail) {
             $sourceDetail = $this->resolveDetailByActionType(
@@ -163,9 +162,6 @@ class KDSManamMovementService
                 $movedQuantity
             );
         }
-
-        log::alert("SOURCE DETAIL Resolve by Action Type", json_encode($sourceDetail));
-
         // BAR station fallback: if requesting FOR_SERVE but item is still at FOR_PREPARE,
         // auto-bump it first (BAR skips prepare/bump stages entirely)
 
