@@ -481,6 +481,9 @@ class KDSManamMovementService
 
         // Broadcast stage update to releasing stations
         $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_PREPARE, KDSActionType::FOR_BUMP);
+        
+        // Broadcast stage update to non releasing device
+        $this->broadcastToNonReleasingDevice($source);
 
         return [
             'success' => true,
@@ -519,7 +522,9 @@ class KDSManamMovementService
 
         // Broadcast stage update to releasing stations
         $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_BUMP, KDSActionType::FOR_ASSEMBLY);
-
+        
+        // Broadcast stage update to non releasing device
+        $this->broadcastToNonReleasingDevice($source);
         return [
             'success' => true,
             'message' => 'Item moved from Bump to Assemble',
@@ -558,7 +563,9 @@ class KDSManamMovementService
 
         // Broadcast stage update to releasing stations
         $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_ASSEMBLY, KDSActionType::FOR_SERVE);
-
+        
+        // Broadcast stage update to non releasing device
+        $this->broadcastToNonReleasingDevice($source);
         return [
             'success' => true,
             'message' => 'Item moved from Assemble to Serve',
@@ -599,16 +606,19 @@ class KDSManamMovementService
         $source->update($updateData);
 
         // Create or update target row back at FOR_SERVE stage with new bumped_at
-        $targetBid = $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_SERVE, [
-            'assembled_quantity' => $movedQty,
-        ], ['assembled_at' => now ()]);
+        $this->updatePreviousAction($source, $movedQty, KDSActionType::FOR_SERVE);
+        // $targetBid = $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_SERVE, [
+        //     'assembled_quantity' => $movedQty,
+        // ], ['assembled_at' => now ()]);
 
         // Record movement history
         $this->recordStageMovement($source->bid, KDSActionType::FOR_RECALL, KDSActionType::FOR_SERVE, $movedQty);
 
         // Broadcast stage update to releasing stations
         $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_RECALL, KDSActionType::FOR_SERVE);
-
+        
+        // Broadcast stage update to non releasing device
+        $this->broadcastToNonReleasingDevice($source);
         return [
             'success' => true,
             'message' => 'Item recalled back to Serve',
@@ -649,7 +659,9 @@ class KDSManamMovementService
         //if (!$isReleasing) {
             $this->broadcastStageMovement($source, $movedQty, KDSActionType::FOR_SERVE, KDSActionType::FOR_RECALL);
         //}
-
+        
+        // Broadcast stage update to non releasing device
+        $this->broadcastToNonReleasingDevice($source);
         return [
             'success' => true,
             'message' => 'Item moved from Serve to Recall',
@@ -706,19 +718,21 @@ class KDSManamMovementService
         $newQuantity = max(0, (float) $value - $movedQty);
 
         $source->update([
-            $kdsUndoQuantity[$source->action_type] => $newQuantity,
+            $kdsQuantity[$source->action_type] => $newQuantity,
         ]);
 
-        log::alert("Source: ". json_encode($source));
-        log::alert("Action Type Send By KDS: ", $source->action_type);
-        log::alert("Undo Value Action Type : ", $kdsUndoAction[$source->action_type]);
+        log::info("Source: ". json_encode($source));
+        log::info("Action Type Send By KDS: ". $source->action_type);
+        log::info("Undo Value Action Type : ". $kdsUndoAction[$source->action_type]);
         // Update target action for UNDO
         $targetBid = $this->updatePreviousAction($source, $movedQty, $kdsUndoAction[$source->action_type]);
-        log::alert("BID of previous action: ", $source->action_type);
+        log::info("BID of previous action: ". $source->action_type);
         $this->recordStageMovement($source->bid, $source->action_type, $kdsMovement[$index - 1], $movedQty);
 
         $this->broadcastStageMovement($source, $movedQty, $source->action_type, $kdsMovement[$index - 1]);
         
+        // Broadcast stage update to non releasing device
+        $this->broadcastToNonReleasingDevice($source);
         return [
             'success' => true,
             'message' => 'Item Undo movement',
@@ -1317,7 +1331,7 @@ class KDSManamMovementService
                     'STAGE_UPDATE_FULL'
                 ));
             }
-            $this->broadcastToNonReleasingDevice($source);
+            
         } else {
             // Incremental: send only the moved item with target action_type
             $itemData = $this->buildItemPayload($source, [
@@ -1381,7 +1395,7 @@ class KDSManamMovementService
                     ->orWhere('prepared_quantity', '>', 0);
             })
             //remove bar items in releasing station
-            ->whereNotIn('kitchen_station_bid', $barBidStation)
+            // ->whereNotIn('kitchen_station_bid', $barBidStation)
             ->get();
         $allItemsPayload = [];
         foreach ($allDetails as $detail) {               
