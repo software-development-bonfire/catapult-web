@@ -255,6 +255,7 @@ class TerminalTransactionController extends POSBaseController
         }
 
         // Build kitchen display products (only non-addon products with kitchen station config)
+        // $getNonReleasingProducts = $transactions['flatten_products'];
         $kitchenDisplayProducts = [];
         foreach ($transactions['flatten_products'] as $product) {
             if ($product['has_addon'] == false) {
@@ -311,6 +312,7 @@ class TerminalTransactionController extends POSBaseController
                         Log::info('Broadcasting all items to device: ' . $device . ' with mode ' . ($isFineDine ? 'FineDine' : 'FastFood') . ' and ' . count($kitchenDisplayProducts) . ' items');
 
                         if ($isFineDine) {
+                            log::info("KDS First Broadcast: ". json_encode($kitchenDisplayProducts));
                             broadcast(new KDSFineDineTransactionEvent($device, $transactions['kds_transaction'], $kitchenDisplayProducts));
                         } else {
                             broadcast(new KDSFastFoodTransactionEvent($device, $transactions['kds_transaction'], $kitchenDisplayProducts));

@@ -721,12 +721,9 @@ class KDSManamMovementService
             $kdsQuantity[$source->action_type] => $newQuantity,
         ]);
 
-        log::info("Source: ". json_encode($source));
-        log::info("Action Type Send By KDS: ". $source->action_type);
-        log::info("Undo Value Action Type : ". $kdsUndoAction[$source->action_type]);
         // Update target action for UNDO
         $targetBid = $this->updatePreviousAction($source, $movedQty, $kdsUndoAction[$source->action_type]);
-        log::info("BID of previous action: ". $source->action_type);
+
         $this->recordStageMovement($source->bid, $source->action_type, $kdsMovement[$index - 1], $movedQty);
 
         $this->broadcastStageMovement($source, $movedQty, $source->action_type, $kdsMovement[$index - 1]);
