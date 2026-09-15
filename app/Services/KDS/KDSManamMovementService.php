@@ -97,6 +97,9 @@ class KDSManamMovementService
      */
     public function undoItem(array $payload): array
     {
+
+        log::info("UNDO Payload: ". json_encode($payload));
+        log::info("End of payload");
         $data = (object) ($payload['data'] ?? []);
         $items = $data->items ?? [];
         $transaction = (object) ($data->transaction ?? []);
