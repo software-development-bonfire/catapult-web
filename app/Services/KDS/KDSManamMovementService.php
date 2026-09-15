@@ -1404,7 +1404,11 @@ class KDSManamMovementService
             $allItemsPayload[] = $this->buildItemPayload($detail);
         }
 
-        $allDeviceUids = collect($allDetails)->pluck('device_uid')->unique()->filter();
+        $allDeviceUids = collect($allItemsPayload)
+                        ->pluck('device_uid')
+                        ->filter()
+                        ->unique()
+                        ->values();
          log::info("Broadcasting Payload: ". json_encode($allItemsPayload));
          log::info("Broadcasting DeviceUIDs: ". json_encode($allDeviceUids));
         foreach ($allDeviceUids as $device) {
@@ -1447,12 +1451,14 @@ class KDSManamMovementService
         // Resolve station code and name from kitchen_station_bid
         $stationCode = null;
         $stationName = null;
+        $deviceUID = null;
         if ($detail->kitchen_station_bid) {
             $station = CDISKitchenStation::where('bid', $detail->kitchen_station_bid)->first();
             if ($station) {
                 $stationCode = $station->code;
                 $stationName = $station->name;
             }
+            $deviceUID = $this->getDeviceUidForStation($detail->kitchen_station_bid);
         }
 
         $payload = [
@@ -1483,7 +1489,7 @@ class KDSManamMovementService
             'station_code' => $stationCode,
             'station_name' => $stationName,
             'device_code' => null,
-            'device_uid' => null,
+            'device_uid' => $deviceUID,
             'device_name' => null,
             'order_type' => $detail->order_type_id,
             'order_type_id' => $detail->order_type_id ?? '',
