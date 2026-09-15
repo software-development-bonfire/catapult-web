@@ -1417,7 +1417,7 @@ class KDSManamMovementService
                 $device,
                 (object) $transactionData,
                 $allItemsPayload,
-                true,
+                false,
                 'STAGE_UPDATE_FULL'
             ));
         }
