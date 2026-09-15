@@ -606,7 +606,7 @@ class KDSManamMovementService
         $source->update($updateData);
 
         // Create or update target row back at FOR_SERVE stage with new bumped_at
-        $this->updatePreviousAction($source, $movedQty, KDSActionType::FOR_SERVE);
+        $targetBid = $this->updatePreviousAction($source, $movedQty, KDSActionType::FOR_SERVE);
         // $targetBid = $this->createOrUpdateTargetRow($source, $movedQty, KDSActionType::FOR_SERVE, [
         //     'assembled_quantity' => $movedQty,
         // ], ['assembled_at' => now ()]);
@@ -1370,6 +1370,8 @@ class KDSManamMovementService
 
     private function broadcastToNonReleasingDevice(KitchenDisplayDetail $source)
     {
+
+        log::info("Broadcasting Source: ". json_encode($source));
         // Build transaction data from the head record
         $head = KitchenDisplay::where('bid', $source->head_bid)->first();
         $transactionData = [
@@ -1403,8 +1405,10 @@ class KDSManamMovementService
         }
 
         $allDeviceUids = collect($allDetails)->pluck('device_uid')->unique()->filter();
-
+         log::info("Broadcasting Payload: ". json_encode($allItemsPayload));
+         log::info("Broadcasting DeviceUIDs: ". json_encode($allDeviceUids));
         foreach ($allDeviceUids as $device) {
+            log::info("broadcast to device:". $device);
             broadcast(new KDSFineDineTransactionEvent(
                 $device,
                 (object) $transactionData,
@@ -1413,6 +1417,8 @@ class KDSManamMovementService
                 'STAGE_UPDATE_FULL'
             ));
         }
+
+        log::info("done broadcasting");
     }
 
     /**
