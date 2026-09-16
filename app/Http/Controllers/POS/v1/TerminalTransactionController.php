@@ -19,6 +19,7 @@ use App\Repositories\Contracts\KitchenItemSetupRepository;
 use App\Repositories\Contracts\KitchenPrinterRepository;
 use App\Repositories\Contracts\POS\TerminalTransactionRepository;
 use App\Services\KDS\KDSTransactionService;
+use App\Services\KDS\KDSManamMovementService;
 use App\Services\POS\TerminalTransactionService;
 use App\Traits\KitchenDisplayTrait;
 use App\Traits\KitchenPrinterTrait;
@@ -57,7 +58,6 @@ class TerminalTransactionController extends POSBaseController
         // Step 2: Construct KDS data and persist to KDS tables
         if (!empty($transactions)) {
             $kdsData = app()->make(KDSTransactionService::class)->store($transactions);
-
             // Merge KDS data into transactions for broadcasting
             $transactions['kds_transaction'] = $kdsData['kds_transaction'] ?? null;
             $transactions['flatten_products'] = $kdsData['flatten_products'] ?? [];
@@ -74,13 +74,23 @@ class TerminalTransactionController extends POSBaseController
             $this->handleKitchenPrinting($transactions);
             $this->handleStickerPrinting($transactions);
         }
+        //Terminal Transaction Flatten Products
         $kdsResponded = $this->handleKDSBroadcasting($transactions, false);
+        
+        // KDS Transaction with KDS Data Broadcasting
+        $kdsResponded = $this->handleKDSBroadcastingV2($transactions);
+
         $this->checkKDSResponseAndPrinterFailover($transactions, $kdsResponded);
 
         return $this->successfulResponse(
             $transactions,
             Lang::get('success.successfully_created', ['value' => __('label.terminal_transaction')])
         );
+    }
+
+    private function handleKDSBroadcastingV2($transactions)
+    {
+        return app()->make(KDSManamMovementService::class)->handlePOSToKDSBroadcasting($transactions['kds_transaction']);
     }
 
     /**

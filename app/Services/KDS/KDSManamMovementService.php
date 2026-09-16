@@ -1365,6 +1365,61 @@ class KDSManamMovementService
         }
     }
 
+    public function handlePOSToKDSBroadcasting($data)
+    {
+        log::info("Broadcasting Source: ". json_encode($data));
+        
+        $data = (object) $data;
+        // Build transaction data from the head record
+
+        $head = KitchenDisplay::where('bid', $data->bid)->first();
+        $transactionData = [
+            'transaction_id' => $data->transaction_id,
+            'terminal_number' => $data->terminal_number,
+        ];
+        if ($head) {
+            $transactionData['terminal_bid'] = $head->terminal_bid ?? null;
+            $transactionData['transaction_date'] = $head->transaction_date ?? null;
+        }
+
+        $allDetails = KitchenDisplayDetail::where('transaction_id', $data->transaction_id)
+            ->where('terminal_number', $data->terminal_number)
+            ->whereIn('status', [MenuStatus::ON_PROCESS, MenuStatus::WAITING])
+            ->where(function ($q) {
+                // Exclude depleted rows (all quantities are 0)
+                $q->where('remaining_quantity', '>', 0)
+                    ->orWhere('prepared_quantity', '>', 0);
+            })
+            //remove bar items in releasing station
+            // ->whereNotIn('kitchen_station_bid', $barBidStation)
+            ->get();
+
+        $allItemsPayload = [];
+        foreach ($allDetails as $detail) {               
+            $allItemsPayload[] = $this->buildItemPayload($detail);
+        }
+
+        $allDeviceUids = collect($allItemsPayload)
+                        ->pluck('device_uid')
+                        ->filter()
+                        ->unique()
+                        ->values();
+         log::info("Broadcasting Payload: ". json_encode($allItemsPayload));
+         log::info("Broadcasting DeviceUIDs: ". json_encode($allDeviceUids));
+        foreach ($allDeviceUids as $device) {
+            log::info("broadcast to device:". $device);
+            broadcast(new KDSFineDineTransactionEvent(
+                $device,
+                (object) $transactionData,
+                $allItemsPayload,
+                false,
+                'STAGE_UPDATE_FULL'
+            ));
+        }
+
+        return true;
+    }
+
     private function broadcastToNonReleasingDevice(KitchenDisplayDetail $source)
     {
 
