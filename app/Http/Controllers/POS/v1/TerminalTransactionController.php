@@ -64,9 +64,9 @@ class TerminalTransactionController extends POSBaseController
         }
 
         // Step 3: Handle fine-dine (non-fast-food) flow
-        if ($this->isFineDineTransaction($transactions)) {
-            return $this->handleFineDineTransaction($transactions);
-        }
+        // if ($this->isFineDineTransaction($transactions)) {
+        //     return $this->handleFineDineTransaction($transactions);
+        // }
 
         // Step 4: Handle kitchen printer, sticker printer, and KDS broadcasting
         if (config('system.kds.printer_failover') == false) {

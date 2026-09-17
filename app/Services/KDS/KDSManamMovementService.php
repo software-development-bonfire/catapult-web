@@ -1376,6 +1376,10 @@ class KDSManamMovementService
         $transactionData = [
             'transaction_id' => $data->transaction_id,
             'terminal_number' => $data->terminal_number,
+            'guest_count' => $data->guest_count ?? 0,
+            'cashier_name' => $data->cashier_name ?? "",
+            'sent_at' => $data->sent_at,
+            'table_number' => $data->table_number ?? 0,
         ];
         if ($head) {
             $transactionData['terminal_bid'] = $head->terminal_bid ?? null;

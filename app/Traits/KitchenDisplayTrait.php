@@ -139,6 +139,7 @@ trait KitchenDisplayTrait
             'max_serving_time' => $product->max_serving_time ?? 60,
             'name' => $transactionDetailProduct->name,
             'terminal_number' => $product->terminal_number,
+            'sent_at' => now(),
             'started_at' => now(),
         ]);
     }
