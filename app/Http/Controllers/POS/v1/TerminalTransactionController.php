@@ -75,7 +75,7 @@ class TerminalTransactionController extends POSBaseController
             $this->handleStickerPrinting($transactions);
         }
         //Terminal Transaction Flatten Products
-        $kdsResponded = $this->handleKDSBroadcasting($transactions, false);
+        // $kdsResponded = $this->handleKDSBroadcasting($transactions, false);
         
         // KDS Transaction with KDS Data Broadcasting
         $kdsResponded = $this->handleKDSBroadcastingV2($transactions);

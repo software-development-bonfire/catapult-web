@@ -1522,7 +1522,7 @@ class KDSManamMovementService
             'transaction_id' => $detail->transaction_id,
             'transaction_type' => $detail->transaction_type,
             'name' => $detail->name,
-            'quantity' => $detail->remaining_quantity,
+            'quantity' => $detail->quantity,
             'remaining_quantity' => $detail->remaining_quantity,
             'prepared_quantity' => $detail->prepared_quantity ?? 0,
             'bumped_quantity' => $detail->bumped_quantity ?? 0,
